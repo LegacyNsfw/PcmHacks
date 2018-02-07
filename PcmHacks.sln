@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CaptureSerial", "CaptureSer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hex2Bin", "Hex2Bin\Hex2Bin.csproj", "{DC37866F-E503-4333-8DF4-AD4145F855E3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindThisInThat", "FindThisInThat\FindThisInThat.csproj", "{D2F62829-1647-4E99-A308-BA76378E0C71}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{DC37866F-E503-4333-8DF4-AD4145F855E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC37866F-E503-4333-8DF4-AD4145F855E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC37866F-E503-4333-8DF4-AD4145F855E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2F62829-1647-4E99-A308-BA76378E0C71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2F62829-1647-4E99-A308-BA76378E0C71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2F62829-1647-4E99-A308-BA76378E0C71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2F62829-1647-4E99-A308-BA76378E0C71}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
