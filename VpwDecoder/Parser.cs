@@ -19,6 +19,7 @@ namespace VpwDecoder
         private bool physical;
         private byte modeByte;
         private string modeName;
+        private string readWriteBlockName;
         private string header;
         private string destination;
         private string sender;
@@ -44,10 +45,16 @@ namespace VpwDecoder
                 using (Stream output = File.OpenWrite(fileName))
                 {
                     foreach (byte b in this.payload)
+                    {
                         output.WriteByte(b);
+                    }
                 }
             }
 
+            if (this.readWriteBlockName != null)
+            {
+                modeName += " / " + this.readWriteBlockName;
+            }
 
             Console.WriteLine(
                 string.Format(
@@ -92,6 +99,15 @@ namespace VpwDecoder
                     {
                         this.modeName = this.GetFunctionalMode(this.modeByte);
                     }
+                    state++;
+                    break;
+
+                case 4:
+                    if((this.modeByte == 0x3B) || (this.modeByte == 0x3C))
+                    {
+                        this.readWriteBlockName = this.GetReadWriteBlock(value);
+                    }
+                    this.payload.Add(value);
                     state++;
                     break;
 
@@ -320,6 +336,68 @@ namespace VpwDecoder
                 case 0xA2: return "Programming Prompt";
                 case 0xAE: return "Request Device Control";
                 default: return "Undefined mode: " + mode.ToString("X2");
+            }
+        }
+
+        /// <summary>
+        /// Get the name of the read/write block used for the 3B and 3C modes.
+        /// </summary>
+        /// <remarks>
+        /// Based on information found at https://pcmhacking.net/forums/viewtopic.php?f=8&t=5456
+        /// </remarks>
+        private string GetReadWriteBlock(byte block)
+        {
+            switch (block)
+            {
+                case 0x00: return "N/A";
+                case 0x01: return "VIN 1 (ASCII)";
+                case 0x02: return "VIN 2 (ASCII)";
+                case 0x03: return "VIN 3 (ASCII)";
+                case 0x04: return "HDW No. (UINT32)";
+                case 0x05: return "Serial No 1 (ASCII)";
+                case 0x06: return "Serial No 2 (ASCII)";
+                case 0x07: return "Serial No 3 (ASCII)";
+                case 0x08: return "calibration ID (UINT32)";
+                case 0x09: return "N/A";
+                case 0x0A: return "4-byte Operating System ID";
+                case 0x0B: return "4-byte Engine Calibration ID";
+                case 0x0C: return "4-byte Engine Diagnostics ID";
+                case 0x0D: return "4-byte Transmission Calibration ID";
+                case 0x0E: return "4-byte Transmission Diagnostics ID";
+                case 0x0F: return "4-byte Fuel System ID";
+                case 0x10: return "4-byte System ID";
+                case 0x11: return "4-byte Speedometer ID";
+                case 0x12: return "N/A";
+                case 0x13: return "N/A";
+                case 0x14: return "Broadcast Code (BCC) (ASCII)";
+                case 0x41: return "AT Gear 1 Shift Pressure 1";
+                case 0x42: return "AT Gear 1 Shift Pressure 2";
+                case 0x43: return "AT Gear 1 Shift Pressure 3";
+                case 0x44: return "AT Gear 2 Shift Pressure 1";
+                case 0x45: return "AT Gear 2 Shift Pressure 2";
+                case 0x46: return "AT Gear 2 Shift Pressure 3";
+                case 0x47: return "AT Gear 3 Shift Pressure 1";
+                case 0x48: return "AT Gear 3 Shift Pressure 2";
+                case 0x49: return "AT Gear 3 Shift Pressure 3";
+                case 0x4A: return "N/A";
+                case 0x4B: return "N/A";
+                case 0x4C: return "N/A";
+                case 0x4D: return "Unknown";
+                case 0x4E: return "Unknown";
+                case 0x4F: return "Unknown";
+                case 0x6E: return "N/A";
+                case 0x72: return "N/A";
+                case 0x73: return "0x00";
+                case 0x93: return "OS level";
+                case 0x94: return "Calibration Level";
+                case 0x95: return "Diagnostic Level";
+                case 0x96: return "Transmission Calibration Level";
+                case 0x97: return "Transmission Diagnostic Level";
+                case 0x98: return "Fuel System Level";
+                case 0x99: return "Vehicle System Level";
+                case 0x9A: return "Speedometer Calibration Level";
+                case 0xA0: return "Manufacturer Enable Counter";
+                default: return "Unknown";
             }
         }
     }
