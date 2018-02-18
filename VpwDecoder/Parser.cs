@@ -11,6 +11,7 @@ namespace VpwDecoder
     {
         private int state = 0;
         private List<byte> payload = new List<byte>();
+        private int crc = 0xFF;
         private string fileNameBase;
         private int lineNumber;
 
@@ -38,7 +39,7 @@ namespace VpwDecoder
             }
             else
             {
-                string fileName = fileNameBase + "-Line-" + this.lineNumber.ToString() + ".bin";
+                string fileName = string.Format("{0}-Line-{1:D6}.bin", fileNameBase, this.lineNumber);
                 message = "Payload saved to " + fileName;
                 using (Stream output = File.OpenWrite(fileName))
                 {
@@ -50,13 +51,13 @@ namespace VpwDecoder
 
             Console.WriteLine(
                 string.Format(
-                    "{4} ({0}), {1,-30} {2} {5,-40} {3}",
-                    this.header,
-                    this.sender + " to " + this.destination + ", ",
-                    this.crcMessage,
-                    message,
-                    this.firstByte.ToString("X2"),
-                    this.modeName));
+                    "{4} ({0}), {1,-40} {5,-50} {2}  {3}",
+                    this.header, // 0
+                    this.sender + " to " + this.destination + ", ", // 1
+                    this.crcMessage, // 2
+                    message, // 3
+                    this.firstByte.ToString("X2"), // 4
+                    this.modeName)); // 5
         }
 
         public void Push(string hex, byte value)
@@ -111,19 +112,20 @@ namespace VpwDecoder
             this.header = "Pri" + priority.ToString() + " " + header + " " + inFrameResponse + " " + addressMode;
         }
 
-        public void CheckCrc(byte value)
+        public bool CheckCrc(byte value)
         {
             if(this.GetCrc() == value)
             {
                 this.crcMessage = string.Empty; //  "CRC Valid (" + value + "),";
+                return true;
             }
             else
             {
                 this.crcMessage = string.Format("Actual CRC {0}, expected {1}", value, this.GetCrc());
+                return false;
             }
         }
 
-        private int crc = 0xFF;
         private void Crc(byte value)
         {
             crc ^= value;
@@ -235,7 +237,7 @@ namespace VpwDecoder
                     default:
                         if (value < 0xF0)
                         {
-                            return "Undocumented";
+                            return "Undocumented (" + value.ToString("X2") + ")";
                         }
                         else if (value < 0xFE)
                         {

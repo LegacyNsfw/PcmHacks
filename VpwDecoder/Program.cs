@@ -57,6 +57,9 @@ namespace VpwDecoder
                 char[] whitespace = new char[] { ' ' };
                 int lineNumber = 0;
                 string line;
+
+                Parser parser = new Parser(fileName, 1);
+
                 while (true)
                 {
                     lineNumber++;
@@ -67,33 +70,43 @@ namespace VpwDecoder
                     }
 
                     line = line.Trim();
-                    string[] hexStrings = line.Split(whitespace);
-                    using (Parser parser = new Parser(fileName, lineNumber))
+                    if (line.Length == 0)
                     {
-                        for (int index = 0; index < hexStrings.Length; index++)
+                        continue;
+                    }
+
+                    string[] hexStrings = line.Split(whitespace);
+                    for (int index = 0; index < hexStrings.Length; index++)
+                    {
+                        string hex = hexStrings[index];
+                        if (hex.Length != 2)
                         {
-                            string hex = hexStrings[index];
-                            if (hex.Length != 2)
-                            {
-                                Console.WriteLine("Line {0} byte size syntax error: {1}", lineNumber, line);
-                                continue;
-                            }
+                            Console.WriteLine("Line {0} byte size syntax error: {1}", lineNumber, line);
+                            continue;
+                        }
 
-                            int value = GetByte(hex[0], hex[1]);
-                            if (value < 0)
-                            {
-                                Console.WriteLine("Line {0} byte value sytax error: {1}", lineNumber, line);
-                                continue;
-                            }
+                        int value = GetByte(hex[0], hex[1]);
+                        if (value < 0)
+                        {
+                            Console.WriteLine("Line {0} byte value sytax error: {1}", lineNumber, line);
+                            continue;
+                        }
 
-                            if (index == hexStrings.Length - 1)
+                        if (index == hexStrings.Length - 1)
+                        {
+                            if (parser.CheckCrc((byte)value))
                             {
-                                parser.CheckCrc((byte)value);
+                                parser.Dispose();
+                                parser = new Parser(fileName, lineNumber);
                             }
                             else
                             {
-                                parser.Push(hex, (byte)value);
+                                parser.ToString();
                             }
+                        }
+                        else
+                        {
+                            parser.Push(hex, (byte)value);
                         }
                     }
                 }
