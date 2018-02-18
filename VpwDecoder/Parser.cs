@@ -15,6 +15,9 @@ namespace VpwDecoder
         private int lineNumber;
 
         private byte firstByte;
+        private bool physical;
+        private byte modeByte;
+        private string modeName;
         private string header;
         private string destination;
         private string sender;
@@ -47,12 +50,13 @@ namespace VpwDecoder
 
             Console.WriteLine(
                 string.Format(
-                    "{4} ({0}), {1,-30} {2} {3}",
+                    "{4} ({0}), {1,-30} {2} {5,-40} {3}",
                     this.header,
                     this.sender + " to " + this.destination + ", ",
                     this.crcMessage,
                     message,
-                    this.firstByte.ToString("X2")));
+                    this.firstByte.ToString("X2"),
+                    this.modeName));
         }
 
         public void Push(string hex, byte value)
@@ -76,6 +80,20 @@ namespace VpwDecoder
                     state++;
                     break;
 
+                case 3:
+                    this.modeByte = value;
+
+                    if (this.physical)
+                    {
+                        this.modeName = this.GetPhysicalMode(this.modeByte);
+                    }
+                    else
+                    {
+                        this.modeName = this.GetFunctionalMode(this.modeByte);
+                    }
+                    state++;
+                    break;
+
                 default:
                     this.payload.Add(value);
                     break;
@@ -87,7 +105,8 @@ namespace VpwDecoder
             byte priority = (byte) ((value & 0xE0) >> 5);
             string header = (value & 0x10) > 0 ? "GM3" : "GM1";
             string inFrameResponse = (value & 0x08) > 0 ? "No_IFR" : "YesIFR";
-            string addressMode = (value & 0x04) > 0 ? "Phy" : "Fun";
+            this.physical = (value & 0x04) > 0;
+            string addressMode = this.physical ? "Phy" : "Fun";
 
             this.header = "Pri" + priority.ToString() + " " + header + " " + inFrameResponse + " " + addressMode;
         }
@@ -127,32 +146,6 @@ namespace VpwDecoder
         {
             return (byte)((~this.crc) & 0xFF);
         }
-        /*
-        private int crc8(Frame_T frame)
-        {
-            unsigned t_crc;
-            int f, b;
-
-            t_crc = 0xFF;
-            for (f = 0; f < frame.length; f++ ) 
-            {
-                t_crc ^= frame.data[f];
-                for (b = 0; b < 8 ; b++ )
-                {
-                    if ((t_crc & 0x80) != 0)
-                    {
-                        t_crc <<= 1;
-                        t_crc ^= 0x11D;
-                    }
-                    else
-                    {
-                        t_crc <<= 1;
-                    }
-                }
-            }
-            return (~t_crc) & 0xFF;
-        }
-        */
 
         private string ParseDevice(byte value)
         {
@@ -261,6 +254,70 @@ namespace VpwDecoder
                             return "Undefined";
                         }
                 }
+            }
+        }
+
+        private string GetFunctionalMode(byte mode)
+        {
+            switch (mode)
+            {
+                case 0x01: return "Request Current Powertrain Diagnostic Data";
+                case 0x02: return "Request Powertrain Freeze Frame Data";
+                case 0x03: return "Request Powertrain Diagnostic Trouble Codes";
+                case 0x04: return "Request to Clear/ Reset Diagnostic Trouble Codes";
+                case 0x05: return "Request Oxygen Sensor Monitoring Test Results";
+                case 0x06: return "Request On - Board Monitoring Test Results";
+                case 0x07: return "Request Pending Powertrain Trouble Codes";
+                case 0x08: return "Request Control of On-Board System, Test, or Component";
+                case 0x09: return "Request Vehicle Information";
+                default: return "Undefined mode: " + mode.ToString("X2");
+            }
+        }
+
+        private string GetPhysicalMode(byte mode)
+        {
+            switch(mode)
+            {
+                case 0x10: return "Initiate Diagnostics Operation";
+                case 0x11: return "Request Module Reset";
+                case 0x12: return "Request Diagnostic Freeze Frame Data";
+                case 0x13: return "Request Diagnostic Trouble Code Information";
+                case 0x14: return "Clear Diagnostic Information";
+                case 0x17: return "Request Status of Diagnostic Trouble Codes";
+                case 0x19: return "Request Diagnostic Trouble Codes by Status";
+                case 0x20: return "Return to Normal Mode";
+                case 0x21: return "Request Diagnostic Data";
+                case 0x22: return "Request Diagnostic Data by PID";
+                case 0x23: return "Request Diagnostic Data by Memory Address";
+                case 0x25: return "Stop Transmitting Requested Data";
+                case 0x26: return "Specifiy Data Rates";
+                case 0x27: return "Security Access Mode";
+                case 0x28: return "Disable Normal Message Transmission";
+                case 0x29: return "Enable Normal Message Transmission";
+                case 0x2A: return "Request Diagnostic Data Packets";
+                case 0x2B: return "Dynamically Define Data Packet by Single Data Offsets";
+                case 0x2C: return "Dynamically Define Diagnostic Data Packet";
+                case 0x2F: return "Input/Output Control by PID";
+                case 0x30: return "Input/Output Control by Data Value ID";
+                case 0x31: return "Enter/Start Diagnostic Routine by Test Number";
+                case 0x32: return "Exit/Stop Diagnostic Routine by Test Number";
+                case 0x33: return "Request Diagnostic Routine Results by Test Number";
+                case 0x34: return "Request Download (tool to module)";
+                case 0x35: return "Request Upload (module to tool)";
+                case 0x36: return "Block Transfer Message";
+                case 0x37: return "Request Data Transfer Exit";
+                case 0x38: return "Enter Diagnostic Routine by Address";
+                case 0x39: return "Exit Diagnostic Routine by Address";
+                case 0x3A: return "Request Diagnostic Routine Results";
+                case 0x3B: return "Write Data Block";
+                case 0x3C: return "Read Data Block";
+                case 0x3F: return "Test Device Present";
+                case 0x7F: return "General Response Message";
+                case 0xA0: return "Request High Speed Mode";
+                case 0xA1: return "Begin High Speed Mode";
+                case 0xA2: return "Programming Prompt";
+                case 0xAE: return "Request Device Control";
+                default: return "Undefined mode: " + mode.ToString("X2");
             }
         }
     }
