@@ -1,0 +1,75 @@
+This page will outline commands that are used to read and write some of the basic items found in the pcm such as the Vin number, Serial Number, Operating System ID Number Etc. 
+
+To do this you need to understand the basic message structure of the header, content and checksum and then what to expect for a response. 
+
+The header - 6C 10 F0
+6C = Priority, how much attention should our message get
+10 = Destination (Hint the pcm will also be node 10 regardless if it is sending or receiving data) 
+F0 = Source of the request, the tool being used is our source
+
+The data you are looking for will be reported in HEX values. But Hex is easy to convert to ASCii or Decimal format. I will same you the time and list how easy item outputs it’s data and what you are going to be converting. 
+
+Checksum – Just know it’s not part of the data your looking at. 
+
+
+How we send messages to various computers on the data bus
+If we send 6C 10 F0 
+We are sending 6C(priority of our message)     To the Pcm(node 10)     From F0(Our tool)
+
+We would get a response that looks like this 6C F0 10
+6C(priority of the response)    To your  tool(F0)     From the Pcm(Node 10)
+
+When using Mode 3C the pcm will always respond with an answer that starts with 7C.
+
+
+********************READ VIN NUMBER***********************
+ We send this:
+  Header        Requesting      
+[6C 10 F0]       [3C 01] 3C is what mode we want to use, 01 is the data we are resquesting from mode 3C     
+
+
+The Pcm Sends this back:
+  Header     What was Requested     This is what we asked for
+[6C F0 10]       [7C 01]            [00 31 47 54 47 47] This is Hex that needs to be converted to ASCII for us to understand
+                                     00=N/A - The vin is 17 digets long so the pcm ommits the 1st diget in the block of 6 digets.
+                                        31=1
+                                           47=G
+                                               54=T
+                                                 47=G
+                                                    47=G
+So we have requested the 1st 6 digests of the vin number and they are 1GTGG
+
+We send the next request:
+  Header        Requesting
+[6C 10 F0]      [3C 02 ]
+The Pcm Send this back:
+ Header     What was Requested     This is what we asked for
+[6C F0 10]     [ 7C 02]              [32 39 55 58 34 31]
+                                      32=2
+                                         39=9
+                                            55=U
+                                               58=X
+                                                  34=4
+                                                     31=1
+So we have requested the middle 6 digests of the vin number and they are 29UX41
+
+
+We send the next request:
+  Header        Requesting
+[6C 10 F0]      [3C 03 ]
+The Pcm Send this back:
+  Header     What was Requested     This is what we asked for
+[6C F0 10]      [7C 03]               [31 32 33 33 35 30]            123350
+                                       31=1
+                                          32=2
+                                             33=3
+                                                33=3
+                                                   35=5
+                                                      30=0                                                     
+So we have requested the last 6 digests of the vin number and they are 123350
+
+So we now have our complete vin number:1GTGG29UX41123350
+If we run this Vin number on dmv.org this comes back as a 2004 GMC Savana 2500 Ext. with a 6.0 engine in it. 
+
+
+More to come........
