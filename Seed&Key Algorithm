@@ -1,0 +1,49 @@
+ 99-02 Pcm's (512K) 
+The somewhat common formula floating around on the net goes...
+key = 0x934D-swapab(seed)
+
+It has been my experience that that formula does not work on very many of the 03+ 1mb pcm's
+
+Here’s an example using the Seed found in a 2005 Silverado Pcm.
+Seed=77 EC
+Key=A6D6
+
+To solve:  key = 0x934D-seed(byte swapped)
+
+So 934D - EC77 = -592A
+The math is correct but it didn’t work. 
+
+So I reversed the formula….
+EC77 + A6D6 = 1934D  
+
+It appears that GM changed the starting value of the equation so they could cover a 
+broader range of possible Seed and Key combinations in the 03+ 1mb pcm’s.  
+
+Here is an example of the pseudo code I used to solve this for all the 3rd gen Ls pcms
+
+if (solveKey = true)
+       	   If (Key= 4 bytesLong)
+              	   then (write key)
+
+        	  Else( Key =  5 bytesLong)
+            		     read bytes 2,3,4,5 (throw out 1st digit) 
+Then ( write key)
+ 
+else (solveKey = false)
+
+
+So to solve for all 99-07 Pcms use the equation:
+key = 0x1934D-seed(byte swapped)
+If you get a 5 byte answer just toss out the first byte and you have your key.
+
+I’m sure there are other ways to do this but I have yet to find a pcm I can’t unlock with this method; 
+assuming that no one has altered the factory key such as a “tuner lock” to prevent you from reading 
+the pcm and seeing what they have done. 
+
+
+
+You can find calculators online that will add and subtract the HEX for you such as:
+http://www.calculator.net/hex-calculator.html
+
+And if you’re not sure how to count bytes then this page can help you with that:
+https://lingojam.com/ByteCounter
