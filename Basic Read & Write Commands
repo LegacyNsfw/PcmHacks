@@ -4,7 +4,7 @@ To do this you need to understand the basic message structure of the header, con
 
 The header - 6C 10 F0
 6C = Priority, how much attention should our message get
-10 = Destination (Hint the pcm will also be node 10 regardless if it is sending or receiving data) 
+10 = Destination (Hint the pcm will always be 10) 
 F0 = Source of the request, the tool being used is our source
 
 The data you are looking for will be reported in HEX values. But Hex is easy to convert to ASCii or Decimal format. I will save you the time and list how easy item outputs it’s data and what you are going to be converting. 
