@@ -7,7 +7,7 @@ The header - 6C 10 F0
 10 = Destination (Hint the pcm will also be node 10 regardless if it is sending or receiving data) 
 F0 = Source of the request, the tool being used is our source
 
-The data you are looking for will be reported in HEX values. But Hex is easy to convert to ASCii or Decimal format. I will same you the time and list how easy item outputs it’s data and what you are going to be converting. 
+The data you are looking for will be reported in HEX values. But Hex is easy to convert to ASCii or Decimal format. I will save you the time and list how easy item outputs it’s data and what you are going to be converting. 
 
 Checksum – Just know it’s not part of the data your looking at. 
 
@@ -22,7 +22,7 @@ We would get a response that looks like this 6C F0 10
 When using Mode 3C the pcm will always respond with an answer that starts with 7C.
 
 
-********************READ VIN NUMBER***********************
+******************** READ VIN NUMBER - PCM RESPONSE  IS IN HEX **********
  We send this:
   Header        Requesting      
 [6C 10 F0]       [3C 01] 3C is what mode we want to use, 01 is the data we are resquesting from mode 3C     
