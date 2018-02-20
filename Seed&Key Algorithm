@@ -33,8 +33,8 @@ else (solveKey = false)
 
 
 So to solve for all 99-07 Pcms use the equation:
-key = 0x1934D-seed(byte swapped)
-If you get a 5 byte answer just toss out the first byte and you have your key.
+key = 0x1934D-swapab(seed)
+Then if you get a 5 byte answer just toss out the first byte and you have your key.
 
 I’m sure there are other ways to do this but I have yet to find a pcm I can’t unlock with this method; 
 assuming that no one has altered the factory key such as a “tuner lock” to prevent you from reading 
