@@ -12,4 +12,4 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.506.6682&rep=rep1&type=
 
 Motorola 68k programmer's reference manual:
 
-https://www.nxp.com/docs/en/reference-manual/M68000PRM.pdf
+https://www.nxp.com/docs/en/reference-manual/M68000PRM.pdf - instruction set summary on pages 72-104
