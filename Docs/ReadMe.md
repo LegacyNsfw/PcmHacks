@@ -7,3 +7,5 @@ VPW Wire Format Info:
 http://www.interfacebus.com/Automotive_SAE_J1850_Bus.html
 
 http://auto-diagnostics.info/j1850
+
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.506.6682&rep=rep1&type=pdf
