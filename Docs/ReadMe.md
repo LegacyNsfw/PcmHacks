@@ -1,3 +1,6 @@
+VPW Protocol Info:
+
+http://www.fastfieros.com/tech/vpw_communication_protocol.htm
 
 VPW Wire Format Info:
 
