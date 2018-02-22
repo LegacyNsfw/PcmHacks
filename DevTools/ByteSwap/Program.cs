@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Hex2Bin
+namespace ByteSwap
 {
     class Program
     {
@@ -21,12 +21,12 @@ namespace Hex2Bin
                     Console.WriteLine();
                     Console.WriteLine("Usage instructions:");
                     Console.WriteLine();
-                    Console.WriteLine("    Hex2Bin <input-file> [output-file]");
+                    Console.WriteLine("    ByteSwap <input-file> [output-file]");
                     Console.WriteLine();
                     Console.WriteLine("input-file: name of the file to read from. Required.");
                     Console.WriteLine("output-file: name of the file to write to. Optional.");
                     Console.WriteLine();
-                    Console.WriteLine("If no output file name is provided, the input name will be used, with '.bin' appended.");
+                    Console.WriteLine("If no output file name is provided, the input name will be used, with '.swap' appended.");
                     return;
                 }
 
@@ -44,7 +44,7 @@ namespace Hex2Bin
             {
                 case 1:
                     inputFile = args[0];
-                    outputFile = inputFile + ".bin";
+                    outputFile = inputFile + ".swap";
                     return true;
 
                 case 2:
@@ -66,57 +66,25 @@ namespace Hex2Bin
             using (Stream input = File.OpenRead(inputFile))
             using (Stream output = File.OpenWrite(outputFile))
             {
-                int state = 0;
-                int newCharacter = 0;
-                int newByte = 0;
-
-                while((newCharacter = input.ReadByte()) != -1)
+                while (true)
                 {
-                    int hex = Program.GetHex((char)newCharacter);
-                    if (hex == -1)
+                    int b1 = input.ReadByte();
+                    if (b1 == -1)
                     {
-                        state = 0;
-                        continue;
+                        return;
                     }
-                    else
-                    {
-                        switch (state)
-                        {
-                            case 0:
-                                newByte = hex;
-                                state = 1;
-                                continue;
 
-                            case 1:
-                                newByte <<= 4;
-                                newByte += hex;
-                                output.WriteByte((byte)newByte);
-                                state = 0;
-                                break;
-                        }
+                    int b2 = input.ReadByte();
+                    if (b2 == -1)
+                    {
+                        Console.WriteLine("The input file is not an even number of bytes.");
+                        return;
                     }
+
+                    output.WriteByte((byte)b2);
+                    output.WriteByte((byte)b1);
                 }
             }
-        }
-
-        private static int GetHex(char newCharacter)
-        {
-            if (newCharacter >= '0' && (newCharacter <= '9'))
-            {
-                return newCharacter - '0';
-            }
-
-            if (newCharacter >= 'a' && (newCharacter <= 'f'))
-            {
-                return 10 + (newCharacter - 'a');
-            }
-
-            if (newCharacter >= 'A' && (newCharacter <= 'F'))
-            {
-                return 10 + (newCharacter - 'A');
-            }
-
-            return -1;
         }
     }
 }

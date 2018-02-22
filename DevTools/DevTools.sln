@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FindThisInThat", "FindThisI
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VpwDecoder", "VpwDecoder\VpwDecoder.csproj", "{16E39F02-4325-43E7-8282-3987277C2A32}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bin2Hex", "Bin2Hex\Bin2Hex.csproj", "{78323095-F349-4EAA-A2BE-7A44DDF55966}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ByteSwap", "ByteSwap\ByteSwap.csproj", "{2E10098D-7AD0-4900-A631-E6906CD6313A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +37,14 @@ Global
 		{16E39F02-4325-43E7-8282-3987277C2A32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16E39F02-4325-43E7-8282-3987277C2A32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16E39F02-4325-43E7-8282-3987277C2A32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78323095-F349-4EAA-A2BE-7A44DDF55966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78323095-F349-4EAA-A2BE-7A44DDF55966}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78323095-F349-4EAA-A2BE-7A44DDF55966}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78323095-F349-4EAA-A2BE-7A44DDF55966}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E10098D-7AD0-4900-A631-E6906CD6313A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E10098D-7AD0-4900-A631-E6906CD6313A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E10098D-7AD0-4900-A631-E6906CD6313A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E10098D-7AD0-4900-A631-E6906CD6313A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
