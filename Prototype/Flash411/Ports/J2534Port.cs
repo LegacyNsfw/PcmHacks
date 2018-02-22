@@ -1,0 +1,62 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Flash411
+{
+    /// <summary>
+    /// This class is responsible for sending and receiving data over a J2534 passthrough device.
+    /// </summary>
+    class J2534Port : IPort
+    {
+        private const string PortName = "J2534";
+
+        /// <summary>
+        /// This returns the string that appears in the drop-down list.
+        /// </summary>
+        public override string ToString()
+        {
+            return PortName;
+        }
+
+        /// <summary>
+        /// Open the J2534 device.
+        /// </summary>
+        /// <returns></returns>
+        Task IPort.Open()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Close the J2534 device.
+        /// </summary>
+        public void Dispose()
+        {
+        }
+
+        /// <summary>
+        /// Send a sequence of bytes.
+        /// </summary>
+        Task IPort.Send(byte[] buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Receive a sequence of bytes.
+        /// </summary>
+        Task<int> IPort.Receive(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool IsPresent()
+        {
+            // TODO: Add code to determine whether a J2534 device is present.
+            return false;
+        }
+    }
+}
