@@ -2,7 +2,7 @@ The Pcm also supports mode 3B that allows writing new values into certain ID’s
 Vin Number –  You need to convert the asci values into hex before trying to write them
 A vin will always be 17 charterers long  so we will always send 00 at the start of the vin number
 Desired Vin Number 22222222222222222
-*****Send****     Ascii converted to Hex
+*****Send*****     Ascii converted to Hex
 
 Send - 6C 10 F0 3B 01 00 32 32 32 32 32   (00 32 32 32 32 32)
 Response - 6C F0 10 7B 01 
