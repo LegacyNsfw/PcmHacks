@@ -1,0 +1,15 @@
+The Pcm also supports mode 3B that allows writing new values into certain ID’s that can be read with 3C commands.  Extreme caution should be exercised any time you alter values with this mode since you may alter how the Pcm interacts with other modules in the vehicle or how diagnostic tools recognize the pcm with new values.  Step by step examples will not be provided for these commands but follow the same structure as the 3C commands to read. 
+Vin Number –  You need to convert the asci values into hex before trying to write them
+A vin will always be 17 charterers long  so we will always send 00 at the start of the vin number
+Desired Vin Number 22222222222222222
+*****Send****     Ascii converted to Hex
+
+Send - 6C 10 F0 3B 01 00 32 32 32 32 32   (00 32 32 32 32 32)
+Response - 6C F0 10 7B 01 
+Send - 6C 10 F0 3B 02 32 32 32 32 32 32
+Response - 6C F0 10 7B 02 
+Send - 6C 10 F0 3B 03 32 32 32 32 32 32
+Response - 6C F0 10 7B 03 
+
+
+A number of values can not be changed using 3B commands and require writing to the pcm's ram and side loading the new inforamtion but the method used to do this requires extreme care as the pcm can be damaged when wiriting values outsude of the 3B commands. 

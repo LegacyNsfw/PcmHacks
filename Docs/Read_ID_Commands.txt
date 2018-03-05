@@ -1,4 +1,4 @@
-This page will outline commands that are used to read and write some of the basic items found in the pcm such as the Vin number, Serial Number, Operating System ID Number Etc. 
+This page will outline commands that are used to read basic information from the pcm such as the Vin number, Serial Number, Operating System ID Number Etc. 
 
 To do this you need to understand the basic message structure of the header, content and checksum and then what to expect for a response. 
 
@@ -16,7 +16,7 @@ How we send messages to various computers on the data bus
 If we send 6C 10 F0 
 We are sending 6C(priority of our message)     To the Pcm(node 10)     From F0(Our tool)
 
-We would get a response that looks like this 6C F0 10
+We would get a response that looks like this - 6C F0 10
 6C(priority of the response)    To your  tool(F0)     From the Pcm(Node 10)
 
 When using Mode 3C the pcm will always respond with an answer that starts with 7C.
@@ -72,4 +72,35 @@ So we now have our complete vin number:1GTGG29UX41123350
 If we run this Vin number on dmv.org this comes back as a 2004 GMC Savana 2500 Ext. with a 6.0 engine in it. 
 
 
-More to come........
+
+********************************** ALL COMMANDS BELOW **********************
+To prevent this page from becoming bloated by giving every command in an example; below you will find all the
+relevant 3C commands to read ID data from the 99-07 LS1B pcm. 
+
+Vin Number – Response needs to be converted from HEX to ASCII
+6C 10 F0 3C 01 – Vin number pt 1
+6C 10 F0 3C 02 – Vin number pt 2
+6C 10 F0 3C 03 – Vin number pt 3
+
+Serial Number - Response needs to be converted from HEX to ASCII
+6C 10 F0 3C 05 – Serial Number pt. 1
+6C 10 F0 3C 06 – Serial Number pt. 2
+6C 10 F0 3C 07 – Serial Number pt. 3
+
+Hardware ID Number - Response needs to be converted from HEX to Decimal 
+6C 10 F0 3C 04 – Hardware ID number
+6C 10 F0 3C 08 – Calibration IS number
+6C 10 F0 3C 0A – Operating System ID number
+6C 10 F0 3C 14 – Broadcast Code(BCC)
+6C 10 F0 3C 0B – Engine Calibration ID number
+6C 10 F0 3C 0C – Engine Diagnostics ID number
+6C 10 F0 3C 0D - Transmission Calibration ID number
+6C 10 F0 3C 0E - Transmission Diagnostics ID number
+6C 10 F0 3C 0F - Fuel System ID number
+6C 10 F0 3C 10 - System ID number
+6C 10 F0 3C 11 - Speedometer ID number
+
+
+
+The preceding information has been provided by pcmhacking.net
+
