@@ -37,15 +37,12 @@ namespace Flash411
 
         protected virtual void Dispose(bool disposing)
         {
-            this.ClosePort();
+            this.Close();
         }
 
-        public virtual async Task OpenPort()
-        {
-            await this.Port.Open();
-        }
+        public abstract Task Initialize();
 
-        protected virtual void ClosePort()
+        protected virtual void Close()
         {
             if (this.Port != null)
             {
@@ -53,16 +50,14 @@ namespace Flash411
             }
         }
 
-        public abstract Task<string> QueryVin();
+        /// <summary>
+        /// Send a message, do not expect a response.
+        /// </summary>
+        public abstract Task<bool> SendMessage(Message message);
 
-        public abstract Task<string> QueryOS();
-
-        public abstract Task<int> QuerySeed();
-
-        public abstract Task<bool> SendKey(int key);
-
-        public abstract Task<bool> SendKernel();
-
-        public abstract Task<Stream> ReadContents();
+        /// <summary>
+        /// Send a message, wait for a response, return the response.
+        /// </summary>
+        public abstract Task<Response<byte[]>> SendRequest(Message message);
     }
 }

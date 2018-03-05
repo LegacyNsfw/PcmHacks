@@ -22,34 +22,25 @@ namespace Flash411
             return "ScanTool MX";
         }
 
-        public override Task<string> QueryVin()
+        public override Task Initialize()
         {
             throw new NotImplementedException();
         }
 
-        public override Task<string> QueryOS()
+        /// <summary>
+        /// Send a message, do not expect a response.
+        /// </summary>
+        public override Task<bool> SendMessage(Message message)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
-        public override Task<int> QuerySeed()
+        /// <summary>
+        /// Send a message, wait for a response, return the response.
+        /// </summary>
+        public override Task<Response<byte[]>> SendRequest(Message message)
         {
-            throw new NotImplementedException();
-        }
-
-        public override Task<bool> SendKey(int key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Task<bool> SendKernel()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Task<Stream> ReadContents()
-        {
-            throw new NotImplementedException();
+            return Task.FromResult(Response.Create(ResponseStatus.Success, new byte[] { }));
         }
     }
 }

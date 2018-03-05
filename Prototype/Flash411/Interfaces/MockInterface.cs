@@ -22,43 +22,25 @@ namespace Flash411
             return "Mock Interface";
         }
 
-        public override async Task<string> QueryVin()
+        public override Task Initialize()
         {
-            /*
-            byte[] message = Protocol.CreateVinQuery();
-            await this.Port.Send(message);
-
-            byte[] buffer = new byte[1000];
-            int bytesRead = await this.Port.Receive(buffer, 0, buffer.Length);
-
-            string vin = Protocol.ExtractVin(buffer);
-            */
-            return await Task.FromResult("Mock VIN");
+            throw new NotImplementedException();
         }
 
-        public override async Task<string> QueryOS()
+        /// <summary>
+        /// Send a message, do not expect a response.
+        /// </summary>
+        public override Task<bool> SendMessage(Message message)
         {
-            return await Task.FromResult("Mock OS");
+            return Task.FromResult(true);
         }
 
-        public override async Task<int> QuerySeed()
+        /// <summary>
+        /// Send a message, wait for a response, return the response.
+        /// </summary>
+        public override Task<Response<byte[]>> SendRequest(Message message)
         {
-            return await Task.FromResult(0x1234);
-        }
-
-        public override async Task<bool> SendKey(int key)
-        {
-            return await Task.FromResult(true);
-        }
-
-        public override async Task<bool> SendKernel()
-        {
-            return await Task.FromResult(true);
-        }
-
-        public override Task<Stream> ReadContents()
-        {
-            return Task.FromResult((Stream)new MemoryStream());
+            return Task.FromResult(Response.Create(ResponseStatus.Success, new byte[] { }));
         }
     }
 }

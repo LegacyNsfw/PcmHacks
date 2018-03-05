@@ -14,7 +14,8 @@ namespace Flash411
 {
     public partial class MainForm : Form
     {
-        private Interface currentInterface;
+        //private Interface currentInterface;
+        private Vehicle vehicle;
 
         public MainForm()
         {
@@ -79,21 +80,23 @@ namespace Flash411
 
         private async void interfaceTypeList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (this.currentInterface != null)
+            if (this.vehicle != null)
             {
-                this.currentInterface.Dispose();
+                this.vehicle.Dispose();
             }
 
-            this.currentInterface = this.interfaceTypeList.SelectedItem as Interface;
+            Interface device = this.interfaceTypeList.SelectedItem as Interface;
 
-            if (this.currentInterface == null)
+            if (device == null)
             {
                 // This shoudn't actually happen, but just in case...
                 this.DisableOperationButtons();
                 return;
             }
 
-            await this.currentInterface.OpenPort();
+            await device.Initialize();
+
+            this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser());
 
             this.EnableOperationButtons();
         }
@@ -121,7 +124,7 @@ namespace Flash411
 
         private async void readPropertiesButton_Click(object sender, EventArgs e)
         {
-            if (this.currentInterface == null)
+            if (this.vehicle == null)
             {
                 // This shouldn't be possible - it would mean the buttons 
                 // were enabled when they shouldn't be.
@@ -130,32 +133,37 @@ namespace Flash411
 
             this.Enabled = false;
 
-            string vin = await this.currentInterface.QueryVin();
-            this.AppendResults("VIN: " + vin);
+            var vinResponse = await this.vehicle.QueryVin();
+            if (vinResponse.Status != ResponseStatus.Success)
+            {
+                this.AppendResults("VIN query failed: " + vinResponse.Status.ToString());
+                return;
+            }
 
-            string os = await this.currentInterface.QueryOS();
-            this.AppendResults("OS: " + os);
+            this.AppendResults("VIN: " + vinResponse.Value);
+
+            var osResponse = await this.vehicle.QueryOperatingSystemId();
+            if (osResponse.Status != ResponseStatus.Success)
+            {
+                this.AppendResults("OS ID query failed: " + osResponse.Status.ToString());
+            }
+
+            this.AppendResults("OS: " + osResponse.Value.ToString());
 
             this.Enabled = true;
         }
 
         private async void readFullContentsButton_Click(object sender, EventArgs e)
         {
-            if (this.currentInterface == null)
+            if (this.vehicle == null)
             {
                 // This shouldn't be possible - it would mean the buttons 
                 // were enabled when they shouldn't be.
                 return;
             }
 
-            int seed = await this.currentInterface.QuerySeed();
-            this.AppendResults("Seed: " + seed.ToString("X4"));
-
-            int key = Protocol.GetKey(seed);
-            this.AppendResults("Key: " + key.ToString("X2"));
-
-            bool unlocked = await this.currentInterface.SendKey(key);
-            if (!unlocked)
+            Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
+            if (unlockResponse.Status != ResponseStatus.Success)
             {
                 this.AppendResults("Unlock was not successful.");
                 return;
@@ -163,7 +171,7 @@ namespace Flash411
 
             this.AppendResults("Unlock succeeded.");
 
-            Stream contents = await this.currentInterface.ReadContents();
+            Stream contents = await this.vehicle.ReadContents();
 
             string path = await this.ShowSaveAsDialog();
             if (path == null)
