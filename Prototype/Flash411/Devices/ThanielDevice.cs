@@ -10,9 +10,9 @@ namespace Flash411
     /// <summary>
     /// This class encapsulates all code that is unique to the Arduino-based interface that Thaniel has created.
     /// </summary>
-    class ThanielInterface : Interface
+    class ThanielDevice : Device
     {
-        public ThanielInterface(IPort port) : base (port)
+        public ThanielDevice(IPort port) : base (port)
         {
 
         }
@@ -22,7 +22,7 @@ namespace Flash411
             return "Thaniel 1.0";
         }
 
-        public override Task Initialize()
+        public override Task<bool> Initialize()
         {
             throw new NotImplementedException();
         }

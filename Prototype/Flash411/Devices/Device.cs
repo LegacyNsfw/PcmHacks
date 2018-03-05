@@ -16,16 +16,16 @@ namespace Flash411
     /// 
     /// They use the IPort interface to communicate with the hardware.
     /// </summary>
-    abstract class Interface : IDisposable
+    abstract class Device : IDisposable
     {
         protected IPort Port { get; private set; }
 
-        public Interface(IPort port)
+        public Device(IPort port)
         {
             this.Port = port;
         }
 
-        ~Interface()
+        ~Device()
         {
             this.Dispose(false);
         }
@@ -40,7 +40,7 @@ namespace Flash411
             this.Close();
         }
 
-        public abstract Task Initialize();
+        public abstract Task<bool> Initialize();
 
         protected virtual void Close()
         {

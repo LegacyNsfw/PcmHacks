@@ -10,9 +10,9 @@ namespace Flash411
     /// <summary>
     /// This class provides a way to test most of the app without any interface hardware.
     /// </summary>
-    class MockInterface : Interface
+    class MockDevice : Device
     {
-        public MockInterface(IPort port) : base(port)
+        public MockDevice(IPort port) : base(port)
         {
 
         }
@@ -22,9 +22,9 @@ namespace Flash411
             return "Mock Interface";
         }
 
-        public override Task Initialize()
+        public override Task<bool> Initialize()
         {
-            throw new NotImplementedException();
+            return Task.FromResult(true);
         }
 
         /// <summary>

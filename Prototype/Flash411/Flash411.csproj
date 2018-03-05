@@ -45,10 +45,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Interfaces\Avt852Interface.cs" />
-    <Compile Include="Interfaces\Interface.cs" />
-    <Compile Include="Interfaces\MockInterface.cs" />
-    <Compile Include="Interfaces\ScanToolInterface.cs" />
+    <Compile Include="Devices\Avt852Device.cs" />
+    <Compile Include="Devices\Device.cs" />
+    <Compile Include="Devices\MockDevice.cs" />
+    <Compile Include="Devices\ScanToolDevice.cs" />
+    <Compile Include="Devices\ThanielDevice.cs" />
     <Compile Include="Messages\BlockId.cs" />
     <Compile Include="Messages\Message.cs" />
     <Compile Include="Messages\MessageFactory.cs" />
@@ -66,7 +67,6 @@
     <Compile Include="Ports\MockPort.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Interfaces\ThanielInterface.cs" />
     <Compile Include="Ports\StandardPort.cs" />
     <Compile Include="Vehicle.cs" />
     <EmbeddedResource Include="MainForm.resx">

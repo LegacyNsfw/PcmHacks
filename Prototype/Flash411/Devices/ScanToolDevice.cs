@@ -10,9 +10,9 @@ namespace Flash411
     /// <summary>
     /// This class encapsulates all code that is unique to the ScanTool MX interface.
     /// </summary>
-    class ScanToolMxInterface : Interface
+    class ScanToolMxDevice : Device
     {
-        public ScanToolMxInterface(IPort port) : base(port)
+        public ScanToolMxDevice(IPort port) : base(port)
         {
 
         }
@@ -22,7 +22,7 @@ namespace Flash411
             return "ScanTool MX";
         }
 
-        public override Task Initialize()
+        public override Task<bool> Initialize()
         {
             throw new NotImplementedException();
         }

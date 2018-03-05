@@ -10,9 +10,9 @@ namespace Flash411
     /// <summary>
     /// This class encapsulates all code that is unique to the AVT 852 interface.
     /// </summary>
-    class Avt852Interface : Interface
+    class Avt852Device : Device
     {
-        public Avt852Interface(IPort port) : base(port)
+        public Avt852Device(IPort port) : base(port)
         {
         }
 
@@ -21,7 +21,7 @@ namespace Flash411
             return "AVT 852";
         }
 
-        public override Task Initialize()
+        public override Task<bool> Initialize()
         {
             throw new NotImplementedException();
         }

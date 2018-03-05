@@ -9,12 +9,12 @@ namespace Flash411
 {
     class Vehicle : IDisposable
     {
-        private Interface device;
+        private Device device;
         private MessageFactory messageFactory;
         private MessageParser messageParser;
 
         public Vehicle(
-            Interface device, 
+            Device device, 
             MessageFactory messageFactory,
             MessageParser messageParser)
         {

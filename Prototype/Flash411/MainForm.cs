@@ -63,16 +63,16 @@ namespace Flash411
 
             if (selectedPort is MockPort)
             {
-                this.interfaceTypeList.Items.Add(new MockInterface(selectedPort));
+                this.interfaceTypeList.Items.Add(new MockDevice(selectedPort));
                 this.interfaceTypeList.SelectedIndex = 0;
             }
             else
             {
                 // I don't really expect to support all of these. They're just 
                 // placeholders until we know which ones we really will support.
-                this.interfaceTypeList.Items.Add(new Avt852Interface(selectedPort));
-                this.interfaceTypeList.Items.Add(new ScanToolMxInterface(selectedPort));
-                this.interfaceTypeList.Items.Add(new ThanielInterface(selectedPort));
+                this.interfaceTypeList.Items.Add(new Avt852Device(selectedPort));
+                this.interfaceTypeList.Items.Add(new ScanToolMxDevice(selectedPort));
+                this.interfaceTypeList.Items.Add(new ThanielDevice(selectedPort));
             }
 
             this.interfaceTypeList.Enabled = true;
@@ -85,7 +85,7 @@ namespace Flash411
                 this.vehicle.Dispose();
             }
 
-            Interface device = this.interfaceTypeList.SelectedItem as Interface;
+            Device device = this.interfaceTypeList.SelectedItem as Device;
 
             if (device == null)
             {
@@ -94,7 +94,11 @@ namespace Flash411
                 return;
             }
 
-            await device.Initialize();
+            bool initialized = await device.Initialize();
+            if (!initialized)
+            {
+                this.AppendResults("Unable to initalize device.");
+            }
 
             this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser());
 
