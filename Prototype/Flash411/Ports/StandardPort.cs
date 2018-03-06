@@ -32,10 +32,17 @@ namespace Flash411
         /// <summary>
         /// Open the serial port.
         /// </summary>
-        Task IPort.Open()
+        Task IPort.OpenAsync(PortConfiguration configuration)
         {
+            SerialPortConfiguration config = configuration as SerialPortConfiguration;
             this.port = new SerialPort(this.name);
+            this.port.BaudRate = config.BaudRate;
+            this.port.DataBits = 8;
+            this.port.Parity = Parity.None;
+            this.port.StopBits = StopBits.One;
+            
             this.port.Open();
+
             return Task.CompletedTask;
         }
 

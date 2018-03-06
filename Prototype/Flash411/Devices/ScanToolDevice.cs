@@ -10,21 +10,42 @@ namespace Flash411
     /// <summary>
     /// This class encapsulates all code that is unique to the ScanTool MX interface.
     /// </summary>
-    class ScanToolMxDevice : Device
+    class ScanToolDevice : Device
     {
-        public ScanToolMxDevice(IPort port) : base(port)
+        public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
 
         }
 
         public override string ToString()
         {
-            return "ScanTool MX";
+            return "ScanTool MX or SX";
         }
 
-        public override Task<bool> Initialize()
+        public override async Task<bool> Initialize()
         {
-            throw new NotImplementedException();
+            SerialPortConfiguration configuration = new SerialPortConfiguration();
+            configuration.BaudRate = 38400;
+            await this.Port.OpenAsync(configuration);
+
+            await this.Port.Send(Encoding.ASCII.GetBytes("ATDI"));
+            string deviceId = await ReceiveString();
+
+            await this.Port.Send(Encoding.ASCII.GetBytes("ATI"));
+            string firmware = await ReceiveString();
+
+            this.Logger.AddUserMessage("Connected to " + deviceId);
+            this.Logger.AddUserMessage("Firmware " + firmware);
+
+            return true;
+        }
+
+        private async Task<string> ReceiveString()
+        {
+            byte[] responseBytes = new byte[100];
+            await this.Port.Receive(responseBytes, 0, 100);
+            string response = Encoding.ASCII.GetString(responseBytes);
+            return response;
         }
 
         /// <summary>

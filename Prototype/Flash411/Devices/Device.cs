@@ -12,17 +12,17 @@ namespace Flash411
     /// The Interface classes are responsible for commanding a hardware
     /// interface to send and receive VPW messages.
     /// 
-    /// They use the Protocol class to generate and interpret VPW messages.
-    /// 
     /// They use the IPort interface to communicate with the hardware.
     /// </summary>
     abstract class Device : IDisposable
     {
         protected IPort Port { get; private set; }
+        protected ILogger Logger { get; private set; }
 
-        public Device(IPort port)
+        public Device(IPort port, ILogger logger)
         {
             this.Port = port;
+            this.Logger = logger;
         }
 
         ~Device()

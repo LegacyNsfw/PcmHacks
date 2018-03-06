@@ -12,7 +12,7 @@ namespace Flash411
     /// </summary>
     class MockDevice : Device
     {
-        public MockDevice(IPort port) : base(port)
+        public MockDevice(IPort port, ILogger logger) : base(port, logger)
         {
 
         }
@@ -32,6 +32,9 @@ namespace Flash411
         /// </summary>
         public override Task<bool> SendMessage(Message message)
         {
+            StringBuilder builder = new StringBuilder();
+            this.Logger.AddDebugMessage("Sending message " + message.GetBytes().ToHex());
+            this.Port.Send(message.GetBytes());
             return Task.FromResult(true);
         }
 
@@ -40,7 +43,14 @@ namespace Flash411
         /// </summary>
         public override Task<Response<byte[]>> SendRequest(Message message)
         {
-            return Task.FromResult(Response.Create(ResponseStatus.Success, new byte[] { }));
+            StringBuilder builder = new StringBuilder();
+            this.Logger.AddDebugMessage("Sending request " + message.GetBytes().ToHex());
+            this.Port.Send(message.GetBytes());
+
+            byte[] response = new byte[100];
+            this.Port.Receive(response, 0, 100);
+
+            return Task.FromResult(Response.Create(ResponseStatus.Success, response));
         }
     }
 }

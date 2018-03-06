@@ -23,6 +23,7 @@ namespace Flash411
                 return Response.Create(status, result);
             }
 
+            result = BitConverter.ToUInt32(response.Value, 5);
             return Response.Create(response.Status, result);
         }
 
@@ -50,9 +51,9 @@ namespace Flash411
             }
 
             byte[] vinBytes = new byte[13];
-            Buffer.BlockCopy(response1.Value, 6, vinBytes, 0, 5);
-            Buffer.BlockCopy(response1.Value, 6, vinBytes, 5, 4);
-            Buffer.BlockCopy(response1.Value, 6, vinBytes, 9, 4);
+            Buffer.BlockCopy(response1.Value, 5, vinBytes, 0, 5);
+            Buffer.BlockCopy(response2.Value, 5, vinBytes, 5, 4);
+            Buffer.BlockCopy(response3.Value, 5, vinBytes, 9, 4);
             string vin = System.Text.Encoding.ASCII.GetString(vinBytes);
             return Response.Create(ResponseStatus.Success, vin);
         }

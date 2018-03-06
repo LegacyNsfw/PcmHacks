@@ -12,7 +12,7 @@ namespace Flash411
     /// </summary>
     class Avt852Device : Device
     {
-        public Avt852Device(IPort port) : base(port)
+        public Avt852Device(IPort port, ILogger logger) : base(port, logger)
         {
         }
 

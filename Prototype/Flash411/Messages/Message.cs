@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +19,7 @@ namespace Flash411
             this.message = message;
         }
 
+        [DebuggerStepThrough]
         public byte[] GetBytes()
         {
             return this.message;

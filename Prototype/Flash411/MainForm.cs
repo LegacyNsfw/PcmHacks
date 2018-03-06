@@ -12,7 +12,7 @@ using System.Windows.Forms;
 
 namespace Flash411
 {
-    public partial class MainForm : Form
+    public partial class MainForm : Form, ILogger
     {
         //private Interface currentInterface;
         private Vehicle vehicle;
@@ -22,6 +22,27 @@ namespace Flash411
             InitializeComponent();
         }
         
+        public void AddUserMessage(string message)
+        {
+            this.userLog.Invoke(
+                (MethodInvoker)delegate()
+                {
+                    this.userLog.Text = this.userLog.Text + message + Environment.NewLine;
+
+                    // User messages are added to the debug log as well, so that the debug log has everything.
+                    this.debugLog.Text = this.debugLog.Text + message + Environment.NewLine;
+                });
+        }
+
+        public void AddDebugMessage(string message)
+        {
+            this.debugLog.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.debugLog.Text = this.debugLog.Text + message + Environment.NewLine;
+                });
+        }
+
         private void MainForm_Load(object sender, EventArgs e)
         {
             this.DisableOperationButtons();
@@ -34,7 +55,7 @@ namespace Flash411
             this.interfacePortList.Items.Add("Select...");
             this.interfacePortList.SelectedIndex = 0;
 
-            this.interfacePortList.Items.Add(new MockPort());
+            this.interfacePortList.Items.Add(new MockPort(this));
 
             if (J2534Port.IsPresent())
             {
@@ -63,16 +84,16 @@ namespace Flash411
 
             if (selectedPort is MockPort)
             {
-                this.interfaceTypeList.Items.Add(new MockDevice(selectedPort));
+                this.interfaceTypeList.Items.Add(new MockDevice(selectedPort, this));
                 this.interfaceTypeList.SelectedIndex = 0;
             }
             else
             {
                 // I don't really expect to support all of these. They're just 
                 // placeholders until we know which ones we really will support.
-                this.interfaceTypeList.Items.Add(new Avt852Device(selectedPort));
-                this.interfaceTypeList.Items.Add(new ScanToolMxDevice(selectedPort));
-                this.interfaceTypeList.Items.Add(new ThanielDevice(selectedPort));
+                this.interfaceTypeList.Items.Add(new Avt852Device(selectedPort, this));
+                this.interfaceTypeList.Items.Add(new ScanToolDevice(selectedPort, this));
+                this.interfaceTypeList.Items.Add(new ThanielDevice(selectedPort, this));
             }
 
             this.interfaceTypeList.Enabled = true;
@@ -97,10 +118,10 @@ namespace Flash411
             bool initialized = await device.Initialize();
             if (!initialized)
             {
-                this.AppendResults("Unable to initalize device.");
+                this.AddUserMessage("Unable to initalize device.");
             }
 
-            this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser());
+            this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), this);
 
             this.EnableOperationButtons();
         }
@@ -120,12 +141,7 @@ namespace Flash411
             this.modifyVinButton.Enabled = true;
             this.writeFullContentsButton.Enabled = true;
         }
-
-        private void AppendResults(string message)
-        {
-            this.results.Text = this.results.Text + Environment.NewLine + message;
-        }
-
+        
         private async void readPropertiesButton_Click(object sender, EventArgs e)
         {
             if (this.vehicle == null)
@@ -135,26 +151,31 @@ namespace Flash411
                 return;
             }
 
-            this.Enabled = false;
-
-            var vinResponse = await this.vehicle.QueryVin();
-            if (vinResponse.Status != ResponseStatus.Success)
+            try
             {
-                this.AppendResults("VIN query failed: " + vinResponse.Status.ToString());
-                return;
+                this.DisableOperationButtons();
+                
+                var vinResponse = await this.vehicle.QueryVin();
+                if (vinResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("VIN query failed: " + vinResponse.Status.ToString());
+                    return;
+                }
+
+                this.AddUserMessage("VIN: " + vinResponse.Value);
+
+                var osResponse = await this.vehicle.QueryOperatingSystemId();
+                if (osResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("OS ID query failed: " + osResponse.Status.ToString());
+                }
+
+                this.AddUserMessage("OS: " + osResponse.Value.ToString());
             }
-
-            this.AppendResults("VIN: " + vinResponse.Value);
-
-            var osResponse = await this.vehicle.QueryOperatingSystemId();
-            if (osResponse.Status != ResponseStatus.Success)
+            finally
             {
-                this.AppendResults("OS ID query failed: " + osResponse.Status.ToString());
+                this.EnableOperationButtons();
             }
-
-            this.AppendResults("OS: " + osResponse.Value.ToString());
-
-            this.Enabled = true;
         }
 
         private async void readFullContentsButton_Click(object sender, EventArgs e)
@@ -169,18 +190,18 @@ namespace Flash411
             Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
             if (unlockResponse.Status != ResponseStatus.Success)
             {
-                this.AppendResults("Unlock was not successful.");
+                this.AddUserMessage("Unlock was not successful.");
                 return;
             }
 
-            this.AppendResults("Unlock succeeded.");
+            this.AddUserMessage("Unlock succeeded.");
 
             Stream contents = await this.vehicle.ReadContents();
 
             string path = await this.ShowSaveAsDialog();
             if (path == null)
             {
-                this.AppendResults("Save canceled.");
+                this.AddUserMessage("Save canceled.");
                 return;
             }
 
@@ -193,7 +214,7 @@ namespace Flash411
             }
             catch(IOException exception)
             {
-                this.AppendResults(exception.Message);
+                this.AddUserMessage(exception.Message);
             }
         }
 

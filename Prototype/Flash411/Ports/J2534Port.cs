@@ -24,8 +24,7 @@ namespace Flash411
         /// <summary>
         /// Open the J2534 device.
         /// </summary>
-        /// <returns></returns>
-        Task IPort.Open()
+        Task IPort.OpenAsync(PortConfiguration configuration)
         {
             throw new NotImplementedException();
         }

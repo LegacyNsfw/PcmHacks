@@ -40,9 +40,9 @@
             this.readPropertiesButton = new System.Windows.Forms.Button();
             this.tabs = new System.Windows.Forms.TabControl();
             this.resultsTab = new System.Windows.Forms.TabPage();
+            this.userLog = new System.Windows.Forms.TextBox();
             this.debugTab = new System.Windows.Forms.TabPage();
-            this.results = new System.Windows.Forms.TextBox();
-            this.log = new System.Windows.Forms.TextBox();
+            this.debugLog = new System.Windows.Forms.TextBox();
             this.interfaceBox.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -159,9 +159,11 @@
             // 
             // tabs
             // 
+            this.tabs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tabs.Controls.Add(this.resultsTab);
             this.tabs.Controls.Add(this.debugTab);
-            this.tabs.Enabled = false;
             this.tabs.Location = new System.Drawing.Point(317, 12);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
@@ -170,7 +172,7 @@
             // 
             // resultsTab
             // 
-            this.resultsTab.Controls.Add(this.results);
+            this.resultsTab.Controls.Add(this.userLog);
             this.resultsTab.Location = new System.Drawing.Point(4, 25);
             this.resultsTab.Name = "resultsTab";
             this.resultsTab.Padding = new System.Windows.Forms.Padding(3);
@@ -179,9 +181,21 @@
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
             // 
+            // userLog
+            // 
+            this.userLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.userLog.Location = new System.Drawing.Point(6, 6);
+            this.userLog.Multiline = true;
+            this.userLog.Name = "userLog";
+            this.userLog.ReadOnly = true;
+            this.userLog.Size = new System.Drawing.Size(686, 402);
+            this.userLog.TabIndex = 0;
+            // 
             // debugTab
             // 
-            this.debugTab.Controls.Add(this.log);
+            this.debugTab.Controls.Add(this.debugLog);
             this.debugTab.Location = new System.Drawing.Point(4, 25);
             this.debugTab.Name = "debugTab";
             this.debugTab.Padding = new System.Windows.Forms.Padding(3);
@@ -190,22 +204,17 @@
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
             // 
-            // results
+            // debugLog
             // 
-            this.results.Enabled = false;
-            this.results.Location = new System.Drawing.Point(6, 6);
-            this.results.Multiline = true;
-            this.results.Name = "results";
-            this.results.Size = new System.Drawing.Size(686, 402);
-            this.results.TabIndex = 0;
-            // 
-            // log
-            // 
-            this.log.Location = new System.Drawing.Point(6, 6);
-            this.log.Multiline = true;
-            this.log.Name = "log";
-            this.log.Size = new System.Drawing.Size(686, 402);
-            this.log.TabIndex = 0;
+            this.debugLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.debugLog.Location = new System.Drawing.Point(6, 6);
+            this.debugLog.Multiline = true;
+            this.debugLog.Name = "debugLog";
+            this.debugLog.ReadOnly = true;
+            this.debugLog.Size = new System.Drawing.Size(686, 402);
+            this.debugLog.TabIndex = 0;
             // 
             // MainForm
             // 
@@ -244,9 +253,9 @@
         private System.Windows.Forms.Button readPropertiesButton;
         private System.Windows.Forms.TabControl tabs;
         private System.Windows.Forms.TabPage resultsTab;
-        private System.Windows.Forms.TextBox results;
+        private System.Windows.Forms.TextBox userLog;
         private System.Windows.Forms.TabPage debugTab;
-        private System.Windows.Forms.TextBox log;
+        private System.Windows.Forms.TextBox debugLog;
     }
 }
 

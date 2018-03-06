@@ -12,7 +12,7 @@ namespace Flash411
     /// </summary>
     class ThanielDevice : Device
     {
-        public ThanielDevice(IPort port) : base (port)
+        public ThanielDevice(IPort port, ILogger logger) : base (port, logger)
         {
 
         }

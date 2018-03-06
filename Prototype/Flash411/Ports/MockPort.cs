@@ -16,6 +16,13 @@ namespace Flash411
     {
         public const string PortName = "Mock Port";
 
+        private MockPcm pcm;
+    
+        public MockPort(ILogger logger)
+        {
+            this.pcm = new MockPcm(logger);
+        }
+
         /// <summary>
         /// This returns the string that appears in the drop-down list.
         /// </summary>
@@ -27,7 +34,7 @@ namespace Flash411
         /// <summary>
         /// Pretend to open a port.
         /// </summary>
-        Task IPort.Open()
+        Task IPort.OpenAsync(PortConfiguration configuration)
         {
             return Task.CompletedTask;
         }
@@ -40,19 +47,35 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Pretend to send a sequence of bytes.
+        /// Send bytes to the mock PCM.
         /// </summary>
         Task IPort.Send(byte[] buffer)
         {
+            this.pcm.ResetCommunications();
+
+            foreach(byte b in buffer)
+            {
+                this.pcm.Push(b);
+            }
+
+            this.pcm.EndOfData();
+
             return Task.CompletedTask;
         }
 
         /// <summary>
-        /// Pretend to receive a sequence of bytes.
+        /// Receive bytes from the mock PCM.
         /// </summary>
         Task<int> IPort.Receive(byte[] buffer, int offset, int count)
         {
-            return Task.FromResult(buffer.Length);
+            byte[] responseBuffer = this.pcm.GetResponse();
+
+            for(int index = 0; index < count && index < responseBuffer.Length; index++)
+            {
+                buffer[offset + index] = responseBuffer[index];
+            }
+
+            return Task.FromResult(count);
         }
     }
 }

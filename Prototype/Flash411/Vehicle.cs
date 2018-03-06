@@ -7,20 +7,29 @@ using System.Threading.Tasks;
 
 namespace Flash411
 {
+    /// <summary>
+    /// From the application's perspective, this class is the API to the vehicle.
+    /// </summary>
+    /// <remarks>
+    /// Methods in this class are high-level operations like "get the VIN," or "read the contents of the EEPROM."
+    /// </remarks>
     class Vehicle : IDisposable
     {
         private Device device;
         private MessageFactory messageFactory;
         private MessageParser messageParser;
+        private ILogger logger;
 
         public Vehicle(
             Device device, 
             MessageFactory messageFactory,
-            MessageParser messageParser)
+            MessageParser messageParser,
+            ILogger logger)
         {
             this.device = device;
             this.messageFactory = messageFactory;
             this.messageParser = messageParser;
+            this.logger = logger;
         }
 
         ~Vehicle()
