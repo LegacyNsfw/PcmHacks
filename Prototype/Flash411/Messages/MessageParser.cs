@@ -58,9 +58,19 @@ namespace Flash411
             return Response.Create(ResponseStatus.Success, vin);
         }
 
-        public UInt16 ParseSeed(Response<byte[]> response)
+        public Response<UInt16> ParseSeed(Response<byte[]> response)
         {
-            throw new NotImplementedException();
+            UInt16 result = 0;
+            ResponseStatus status;
+
+            byte[] expected = new byte[] { 0x6C, 0x10, 0xF0, 0x27, 0x02, };
+            if (!TryVerifyInitialBytes(response.Value, expected, out status))
+            {
+                return Response.Create(status, result);
+            }
+
+            result = BitConverter.ToUInt16(response.Value, 5);
+            return Response.Create(ResponseStatus.Success, result);
         }
 
         private bool TryVerifyInitialBytes(byte[] actual, byte[] expected, out ResponseStatus status)

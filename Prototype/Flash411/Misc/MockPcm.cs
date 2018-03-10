@@ -133,7 +133,20 @@ namespace Flash411
                     this.firstByte.ToString("X2"), // 4
                     this.modeName)); // 5
 
-            if (this.modeByte == 0x3C)
+            if (this.modeByte == 0x27)
+            {
+                if (this.payload[0] == 0x01)
+                {
+                    this.responseBuffer = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x01, 0x2A, 0xED, 0x03 };
+                }
+                else if (this.payload[0] == 0x02)
+                {
+                    // TODO: validate the key.
+                    // For now we'll just return a 'success' response every time.
+                    this.responseBuffer = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x02, 0x34, 0x4B };
+                }
+            }
+            else if (this.modeByte == 0x3C)
             {
                 byte[] responseData = new byte[0];
                 switch (this.readWriteBlockId)

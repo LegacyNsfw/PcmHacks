@@ -198,12 +198,14 @@ namespace Flash411
 
             Stream contents = await this.vehicle.ReadContents();
 
-            string path = await this.ShowSaveAsDialog();
+            string path = this.ShowSaveAsDialog();
             if (path == null)
             {
                 this.AddUserMessage("Save canceled.");
                 return;
             }
+
+            this.AddUserMessage("Saving to " + path);
 
             try
             {
@@ -218,9 +220,21 @@ namespace Flash411
             }
         }
 
-        private Task<string> ShowSaveAsDialog()
+        private string ShowSaveAsDialog()
         {
-            return Task.FromResult((string)null);
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.DefaultExt = ".bin";
+            dialog.Filter = "Binary Files(*.bin) | *.bin | All Files(*.*) | *.*";
+            dialog.FilterIndex = 0;
+            dialog.OverwritePrompt = true;
+            dialog.ValidateNames = true;
+            DialogResult result = dialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                return dialog.FileName;
+            }
+
+            return null;
         }
     }
 }
