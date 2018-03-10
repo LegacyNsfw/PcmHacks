@@ -91,8 +91,13 @@ namespace Flash411
                 return Response.Create(seedResponse.Status, false);
             }
 
-            UInt16 seed = this.messageParser.ParseSeed(seedResponse);
-            UInt16 key = KeyAlgorithm.GetKey(seed);
+            Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse);
+            if (seedValueResponse.Status != ResponseStatus.Success)
+            {
+                return Response.Create(seedValueResponse.Status, false);
+            }
+
+            UInt16 key = KeyAlgorithm.GetKey(seedValueResponse.Value);
 
             Message unlockRequest = this.messageFactory.CreateUnlockRequest(key);
             var unlockResponse = await this.device.SendRequest(unlockRequest);
@@ -106,7 +111,7 @@ namespace Flash411
 
         public Task<Stream> ReadContents()
         {
-            return null;
+            return Task.FromResult((Stream)new MemoryStream(new byte[] { 0x01, 0x02, 0x03 }));
         }
     }
 }
