@@ -89,7 +89,7 @@
             this.label1.Location = new System.Drawing.Point(6, 23);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(34, 17);
-            this.label1.TabIndex = 1;
+            this.label1.TabIndex = 0;
             this.label1.Text = "&Port";
             // 
             // interfacePortList
@@ -99,7 +99,7 @@
             this.interfacePortList.Location = new System.Drawing.Point(7, 43);
             this.interfacePortList.Name = "interfacePortList";
             this.interfacePortList.Size = new System.Drawing.Size(286, 24);
-            this.interfacePortList.TabIndex = 0;
+            this.interfacePortList.TabIndex = 1;
             this.interfacePortList.SelectedIndexChanged += new System.EventHandler(this.interfacePortList_SelectedIndexChanged);
             // 
             // groupBox1
@@ -131,7 +131,7 @@
             this.readFullContentsButton.Location = new System.Drawing.Point(7, 59);
             this.readFullContentsButton.Name = "readFullContentsButton";
             this.readFullContentsButton.Size = new System.Drawing.Size(285, 31);
-            this.readFullContentsButton.TabIndex = 2;
+            this.readFullContentsButton.TabIndex = 1;
             this.readFullContentsButton.Text = "&Read Full Contents";
             this.readFullContentsButton.UseVisualStyleBackColor = true;
             this.readFullContentsButton.Click += new System.EventHandler(this.readFullContentsButton_Click);
@@ -142,7 +142,7 @@
             this.modifyVinButton.Location = new System.Drawing.Point(7, 96);
             this.modifyVinButton.Name = "modifyVinButton";
             this.modifyVinButton.Size = new System.Drawing.Size(285, 31);
-            this.modifyVinButton.TabIndex = 1;
+            this.modifyVinButton.TabIndex = 2;
             this.modifyVinButton.Text = "Modify &VIN";
             this.modifyVinButton.UseVisualStyleBackColor = true;
             // 
