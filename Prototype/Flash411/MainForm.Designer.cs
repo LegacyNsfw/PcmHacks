@@ -124,6 +124,7 @@
             this.writeFullContentsButton.TabIndex = 3;
             this.writeFullContentsButton.Text = "&Write Full Contents";
             this.writeFullContentsButton.UseVisualStyleBackColor = true;
+            this.writeFullContentsButton.Click += new System.EventHandler(this.writeFullContentsButton_Click);
             // 
             // readFullContentsButton
             // 

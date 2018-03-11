@@ -236,5 +236,59 @@ namespace Flash411
 
             return null;
         }
+
+        private async void writeFullContentsButton_Click(object sender, EventArgs e)
+        {
+            if (this.vehicle == null)
+            {
+                // This shouldn't be possible - it would mean the buttons 
+                // were enabled when they shouldn't be.
+                return;
+            }
+
+            Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
+            if (unlockResponse.Status != ResponseStatus.Success)
+            {
+                this.AddUserMessage("Unlock was not successful.");
+                return;
+            }
+
+            this.AddUserMessage("Unlock succeeded.");
+
+            string path = this.ShowOpenDialog();
+            if (path == null)
+            {
+                return;
+            }
+
+            this.AddUserMessage("Pretending to update PCM with content from " + path);
+
+            try
+            {
+                using (Stream stream = File.OpenRead(path))
+                {
+                    await this.vehicle.WriteContents(stream);
+                }
+            }
+            catch(IOException exception)
+            {
+                this.AddUserMessage(exception.ToString());
+            }
+        }
+
+        private string ShowOpenDialog()
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.DefaultExt = ".bin";
+            dialog.Filter = "Binary Files(*.bin) | *.bin | All Files(*.*) | *.*";
+            dialog.FilterIndex = 0;
+            DialogResult result = dialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                return dialog.FileName;
+            }
+
+            return null;
+        }
     }
 }
