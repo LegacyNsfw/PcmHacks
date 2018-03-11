@@ -63,13 +63,15 @@ namespace Flash411
             UInt16 result = 0;
             ResponseStatus status;
 
-            byte[] expected = new byte[] { 0x6C, 0x10, 0xF0, 0x27, 0x02, };
+            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x01, };
             if (!TryVerifyInitialBytes(response.Value, expected, out status))
             {
                 return Response.Create(status, result);
             }
 
+            // Do we need to byte-swap this value?
             result = BitConverter.ToUInt16(response.Value, 5);
+
             return Response.Create(ResponseStatus.Success, result);
         }
 
