@@ -111,6 +111,7 @@ namespace Flash411
 
         public Task<Stream> ReadContents()
         {
+            // TODO: actually read from the ECU.
             return Task.FromResult((Stream)new MemoryStream(new byte[] { 0x01, 0x02, 0x03 }));
         }
     }
