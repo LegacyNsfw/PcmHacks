@@ -40,8 +40,16 @@ namespace Flash411
             this.port.DataBits = 8;
             this.port.Parity = Parity.None;
             this.port.StopBits = StopBits.One;
-            
+            this.port.ReadTimeout = 1000;
             this.port.Open();
+
+            // This line must come AFTER the call to port.Open().
+            // Attempting to use the BaseStream member will throw an exception otherwise.
+            //
+            // However, even after setting the BaseStream.ReadTimout property, calls to
+            // BaseStream.ReadAsync will hang indefinitely. It turns out that you have 
+            // to implement the timeout yourself if you use the async approach.
+            this.port.BaseStream.ReadTimeout = this.port.ReadTimeout;
 
             return Task.CompletedTask;
         }
@@ -51,7 +59,10 @@ namespace Flash411
         /// </summary>
         public void Dispose()
         {
-            this.port.Dispose();
+            if (this.port != null)
+            {
+                this.port.Dispose();
+            }
         }
 
         /// <summary>
@@ -67,7 +78,15 @@ namespace Flash411
         /// </summary>
         async Task<int> IPort.Receive(byte[] buffer, int offset, int count)
         {
-            return await this.port.BaseStream.ReadAsync(buffer, offset, count);
+            var readTask = this.port.BaseStream.ReadAsync(buffer, offset, count);
+            if (await readTask.AwaitWithTimeout(TimeSpan.FromMilliseconds(500)))
+            {
+                return readTask.Result;
+            }
+            else
+            {
+                throw new TimeoutException();
+            }
         }
     }
 }

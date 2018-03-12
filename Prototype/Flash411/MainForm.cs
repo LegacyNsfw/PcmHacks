@@ -115,10 +115,21 @@ namespace Flash411
                 return;
             }
 
-            bool initialized = await device.Initialize();
-            if (!initialized)
+            try
             {
-                this.AddUserMessage("Unable to initalize device.");
+                // TODO: this should not return a boolean, it should just throw 
+                // an exception if it is not able to initialize the device.
+                bool initialized = await device.Initialize();
+                if (!initialized)
+                {
+                    this.AddUserMessage("Unable to initalize " + device.ToString());
+                    return;
+                }
+            }
+            catch (Exception exception)
+            {
+                this.AddUserMessage("Unable to initalize " + device.ToString());
+                this.AddDebugMessage(exception.ToString());
             }
 
             this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), this);
