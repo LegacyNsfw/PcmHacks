@@ -36,7 +36,7 @@ namespace Flash411
             int result = 0;
             ResponseStatus status;
 
-            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.OperatingSystemId };
+            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.OperatingSystemID };
             if (!TryVerifyInitialBytes(response.Value, expected, out status))
             {
                 return Response.Create(status, (UInt32)result);
