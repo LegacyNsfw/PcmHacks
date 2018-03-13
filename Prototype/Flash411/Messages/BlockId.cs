@@ -16,7 +16,7 @@ namespace Flash411
         public const byte Serial3            = 0x06; // 4 bytes of Serial
         public const byte HardwareID         = 0x07; // Hardware ID
         public const byte CalibrationID      = 0x08; // Calibration ID
-        public const byte OSID               = 0x0A; // Operating System ID
+        public const byte OperatingSystemID  = 0x0A; // Operating System ID aka OSID
         public const byte EngineCalID        = 0x0B; // Engine Segment Calibration ID
         public const byte EngineDiagCalID    = 0x0C; // Engine Diagnostic Calibration ID
         public const byte TransCalID         = 0x0D; // Transmission Segment Calibration ID
