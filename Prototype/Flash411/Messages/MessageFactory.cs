@@ -35,7 +35,7 @@ namespace Flash411
         /// <returns></returns>
         public Message CreateOperatingSystemIdReadRequest()
         {
-            return CreateReadRequest(BlockId.OperatingSystemId);
+            return CreateReadRequest(BlockId.OperatingSystemID);
         }
 
         /// <summary>
