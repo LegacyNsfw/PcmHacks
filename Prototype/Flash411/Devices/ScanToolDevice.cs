@@ -12,6 +12,11 @@ namespace Flash411
     /// </summary>
     class ScanToolDevice : Device
     {
+        /// <summary>
+        /// Every response from an ELM device ends with this.
+        /// </summary>
+        private const string Prompt = "\r\r>";
+
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
 
@@ -42,10 +47,9 @@ namespace Flash411
             string voltage = await this.SendRequest("AT RV");
             this.Logger.AddUserMessage("Voltage: " + voltage);
 
-            const string prompt = "\r\r>";
-            if (!await this.SendAndVerify("AT AL", "OK" + prompt) ||
-                !await this.SendAndVerify("AT SP2", "OK" + prompt) ||
-                !await this.SendAndVerify("AT DP", "SAE J1850 VPW" + prompt))
+            if (!await this.SendAndVerify("AT AL", "OK" + Prompt) ||
+                !await this.SendAndVerify("AT SP2", "OK" + Prompt) ||
+                !await this.SendAndVerify("AT DP", "SAE J1850 VPW" + Prompt))
             {
                 throw new Exception("Could not initalize " + this.ToString());
             }
@@ -73,7 +77,7 @@ namespace Flash411
             await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
 
             // This is to make sure the whole response is available.
-            await Task.Delay(100);
+            await Task.Delay(250);
 
             byte[] responseBytes = new byte[100];
             int length = await this.Port.Receive(responseBytes, 0, 100);
@@ -95,18 +99,34 @@ namespace Flash411
         /// </summary>
         public async override Task<Response<byte[]>> SendRequest(Message message)
         {
-            byte[] bytes = message.GetBytes();
-            byte crc = Utility.ComputeCrc(bytes);
-            byte[] bytesWithCrc = new byte[bytes.Length + 1];
-            bytes.CopyTo(bytesWithCrc, 0);
-            bytesWithCrc[bytes.Length] = crc;
+            byte[] messageBytes = message.GetBytes();            
+            string hexRequest = messageBytes.ToHex(); // bytes.ToHex(); // 
+            string header = hexRequest.Substring(0, 9);
 
-            string hexRequest = bytesWithCrc.ToHex(); // bytes.ToHex(); // 
+            string setHeaderResponse = await this.SendRequest("AT SH " + header);
+            if (setHeaderResponse != "OK" + Prompt)
+            {
+                this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
+                Response<byte[]> result = new Response<byte[]>(ResponseStatus.UnexpectedResponse, new byte[0]);
+                return result;
+            }
+
+            string payload = hexRequest.Substring(9);
 
             try
             {
-                string hexResponse = await this.SendRequest(hexRequest);
-                
+                string hexResponse = await this.SendRequest(payload);
+                if (hexResponse.EndsWith(Prompt))
+                {
+                    hexResponse = hexResponse.Substring(0, hexResponse.Length - Prompt.Length);
+                }
+                else
+                {
+                    this.Logger.AddDebugMessage("Unexpected response: " + hexResponse);
+                    Response<byte[]> result = new Response<byte[]>(ResponseStatus.UnexpectedResponse, new byte[0]);
+                    return result;
+                }
+
                 if (!hexResponse.IsHex())
                 {
                     this.Logger.AddDebugMessage("Unexpected response: " + hexResponse);
@@ -114,8 +134,16 @@ namespace Flash411
                     return result;
                 }
 
-                byte[] value = hexResponse.ToBytes();
-                return new Response<byte[]>(ResponseStatus.Success, value);
+                byte[] deviceResponseBytes = hexResponse.ToBytes();
+
+                // Add the header bytes that the ELM hides from us.
+                byte[] completeResponseBytes = new byte[deviceResponseBytes.Length + 3];
+                completeResponseBytes[0] = messageBytes[0];
+                completeResponseBytes[1] = messageBytes[2];
+                completeResponseBytes[2] = messageBytes[1];
+                deviceResponseBytes.CopyTo(completeResponseBytes, 3);
+
+                return new Response<byte[]>(ResponseStatus.Success, completeResponseBytes);
             }
             catch (TimeoutException)
             {

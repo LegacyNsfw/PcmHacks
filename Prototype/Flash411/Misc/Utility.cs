@@ -25,6 +25,11 @@ namespace Flash411
         {
             for (int index = 0; index < value.Length; index++)
             {
+                if (value[index] == ' ')
+                {
+                    continue;
+                }
+
                 if (Utility.GetHex(value[index]) == -1)
                 {
                     return false;

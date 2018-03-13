@@ -14,17 +14,21 @@ namespace Flash411
 
         public Response<UInt32> ParseOperatingSystemId(Response<byte[]> response)
         {
-            UInt32 result = 0;
+            int result = 0;
             ResponseStatus status;
 
             byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.OperatingSystemId };
             if (!TryVerifyInitialBytes(response.Value, expected, out status))
             {
-                return Response.Create(status, result);
+                return Response.Create(status, (UInt32)result);
             }
 
-            result = BitConverter.ToUInt32(response.Value, 5);
-            return Response.Create(response.Status, result);
+            result = response.Value[5] << 24;
+            result += response.Value[6] << 16;
+            result += response.Value[7] << 8;
+            result += response.Value[8];
+
+            return Response.Create(response.Status, (UInt32)result);
         }
 
         public Response<string> ParseVinResponses(Response<byte[]> response1, Response<byte[]> response2, Response<byte[]> response3)
@@ -51,9 +55,9 @@ namespace Flash411
             }
 
             byte[] vinBytes = new byte[13];
-            Buffer.BlockCopy(response1.Value, 5, vinBytes, 0, 5);
-            Buffer.BlockCopy(response2.Value, 5, vinBytes, 5, 4);
-            Buffer.BlockCopy(response3.Value, 5, vinBytes, 9, 4);
+            Buffer.BlockCopy(response1.Value, 6, vinBytes, 0, 5);
+            Buffer.BlockCopy(response2.Value, 6, vinBytes, 5, 4);
+            Buffer.BlockCopy(response3.Value, 6, vinBytes, 9, 4);
             string vin = System.Text.Encoding.ASCII.GetString(vinBytes);
             return Response.Create(ResponseStatus.Success, vin);
         }
