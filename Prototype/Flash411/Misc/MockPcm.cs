@@ -164,12 +164,12 @@ namespace Flash411
                         break;
 
                     case 10:
-                        responseData = BitConverter.GetBytes((UInt32)12202088);
+                        responseData = new byte[] { 0xBA, 0x48, 0xC2, 0x00 };
                         break;
                 }
 
                 List<byte> response = new List<byte>();
-                response.AddRange(new byte[] { 0x6C, 0xF0, 0x10, 0x7C, this.readWriteBlockId });
+                response.AddRange(new byte[] { 0x6C, 0xF0, 0x10, 0x7C, this.readWriteBlockId, 0x00 });
                 response.AddRange(responseData);
 
                 this.crc = 0xFF;
