@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Flash411
 {
+    /// <summary>
+    /// These values indicate what went wrong when we were trying to recevie a response from the ECU.
+    /// </summary>
     public enum ResponseStatus
     {
         /// <summary>
@@ -35,8 +38,9 @@ namespace Flash411
     }
 
     /// <summary>
-    /// See the Response`1 class below. This one just contains Response-
-    /// related methods that without requiring explicit generic parameters.
+    /// See the Response[T] class below. This one just contains Response-
+    /// related methods that can be called without requiring explicit 
+    /// generic parameters.
     /// </summary>
     class Response
     {
@@ -55,12 +59,34 @@ namespace Flash411
     /// <summary>
     /// Response objects contain response data, or an error status and placeholder data.
     /// </summary>
+    /// <remarks>
+    /// The idea here is to make it easy to communicate values and errors from 
+    /// low-level code up to the UI, using a single object.
+    /// </remarks>
     class Response<T>
     {
+        /// <summary>
+        /// Indicates success or gives us some idea of what went wrong.
+        /// </summary>
         public ResponseStatus Status { get; private set; }
 
+        /// <summary>
+        /// The value that came from the PCM.
+        /// </summary>
+        /// <remarks>
+        /// Lower-level code operates on byte arrays, but higher level code can
+        /// operate on strings or integers or other data types. 
+        /// 
+        /// If the Status property is not 'Success' then the value of this 
+        /// property should be null, zero, empty string, etc.
+        /// </remarks>
         public T Value { get; private set; }
 
+        /// <summary>
+        /// Create a Response object with the given status and value.
+        /// </summary>
+        /// <param name="status"></param>
+        /// <param name="value"></param>
         public Response(ResponseStatus status, T value)
         {
             this.Status = status;
