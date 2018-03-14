@@ -178,25 +178,49 @@ namespace Flash411
         {
             this.Logger.AddDebugMessage("Sending " + request);
             await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
-
-            await Task.Delay(250);
-
+            
             List<byte> responseBytes = new List<byte>(100);
+            int pauseCount = 0;
 
-            // TODO: pause after zero bytes received, retry a couple times, then exit
-            for (int iterations = 0; iterations < 100; iterations++)
+            // This 'for' loop just sets an upper limit on the number of times we'll retry,
+            // to ensure that we won't just loop indefinitely if something goes wrong.
+            //
+            // In practice, the loop should always end when the "\r\r>" marker is received.
+            for(int iterations = 0; iterations < 1000; iterations++)
             {
                 byte[] buffer = new byte[100];
                 int length = await this.Port.Receive(buffer, 0, buffer.Length);
 
+                if (length == 0) 
+                {
+                    // When no data is received, pause and try again - but only a couple times.
+                    if (pauseCount <= 2)
+                    {
+                        pauseCount++;
+                        await Task.Delay(100);
+                        continue;
+                    }
+                    else
+                    {
+                        // No data, and we tried waiting for more, so we give up.
+                        break;
+                    }
+                }
+
+                // Since we received some data, we'll allow pausing for more data in future iterations.
+                pauseCount = 0;
+
+                // Add the latest bytes to the list.
                 responseBytes.AddRange(buffer.Take(length));
 
+                // Look for the end-of-response bytes.
                 if (responseBytes.Count > 2)
                 {
                     if ((responseBytes[length - 3] == '\r') &&
                         (responseBytes[length - 2] == '\r') &&
                         (responseBytes[length - 1] == '>'))
                     {
+                        // Hopefully the loop will always exit here.
                         break;
                     }
                 }
