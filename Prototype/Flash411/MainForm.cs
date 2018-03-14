@@ -27,10 +27,11 @@ namespace Flash411
             this.userLog.Invoke(
                 (MethodInvoker)delegate()
                 {
-                    this.userLog.Text = this.userLog.Text + message + Environment.NewLine;
+                    this.userLog.AppendText(message + Environment.NewLine);
 
                     // User messages are added to the debug log as well, so that the debug log has everything.
-                    this.debugLog.Text = this.debugLog.Text + message + Environment.NewLine;
+                    this.debugLog.AppendText(message + Environment.NewLine);
+
                 });
         }
 
@@ -39,13 +40,15 @@ namespace Flash411
             this.debugLog.Invoke(
                 (MethodInvoker)delegate ()
                 {
-                    this.debugLog.Text = this.debugLog.Text + message + Environment.NewLine;
+                    this.debugLog.AppendText(message + Environment.NewLine);
                 });
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            this.DisableOperationButtons();
+            this.interfaceBox.Enabled = true;
+            this.operationsBox.Enabled = false;
+
             this.FillPortList();
         }
 
@@ -70,87 +73,80 @@ namespace Flash411
 
         private void interfacePortList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            this.interfaceTypeList.Items.Clear();
-
-            IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
-
-            // It doesn't count if the user selected the prompt.
-            if (selectedPort == null)
-            {
-                return;
-            }
-
-            this.interfaceTypeList.Items.Add("Select...");
-
-            if (selectedPort is MockPort)
-            {
-                this.interfaceTypeList.Items.Add(new MockDevice(selectedPort, this));
-                this.interfaceTypeList.SelectedIndex = 0;
-            }
-            else
-            {
-                // I don't really expect to support all of these. They're just 
-                // placeholders until we know which ones we really will support.
-                this.interfaceTypeList.Items.Add(new Avt852Device(selectedPort, this));
-                this.interfaceTypeList.Items.Add(new ScanToolDevice(selectedPort, this));
-                this.interfaceTypeList.Items.Add(new ThanielDevice(selectedPort, this));
-            }
-
-            this.interfaceTypeList.Enabled = true;
-        }
-
-        private async void interfaceTypeList_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (this.vehicle != null)
-            {
-                this.vehicle.Dispose();
-            }
-
-            Device device = this.interfaceTypeList.SelectedItem as Device;
-
-            if (device == null)
-            {
-                // This shoudn't actually happen, but just in case...
-                this.DisableOperationButtons();
-                return;
-            }
-
             try
             {
-                // TODO: this should not return a boolean, it should just throw 
-                // an exception if it is not able to initialize the device.
-                bool initialized = await device.Initialize();
-                if (!initialized)
+                this.interfaceTypeList.Items.Clear();
+
+                IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
+
+                // It doesn't count if the user selected the prompt.
+                if (selectedPort == null)
                 {
-                    this.AddUserMessage("Unable to initalize " + device.ToString());
                     return;
                 }
+
+                this.interfaceTypeList.Items.Add("Select...");
+
+                if (selectedPort is MockPort)
+                {
+                    this.interfaceTypeList.Items.Add(new MockDevice(selectedPort, this));
+                    this.interfaceTypeList.SelectedIndex = 0;
+                }
+                else
+                {
+                    // I don't really expect to support all of these. They're just 
+                    // placeholders until we know which ones we really will support.
+                    this.interfaceTypeList.Items.Add(new Avt852Device(selectedPort, this));
+                    this.interfaceTypeList.Items.Add(new ScanToolDevice(selectedPort, this));
+                    this.interfaceTypeList.Items.Add(new ThanielDevice(selectedPort, this));
+                }
+
+                this.interfaceTypeList.Enabled = true;
             }
             catch (Exception exception)
             {
-                this.AddUserMessage("Unable to initalize " + device.ToString());
-                this.AddDebugMessage(exception.ToString());
+                this.AddDebugMessage("Error in interfacePortList_SelectedIndexChanged: " + exception.ToString());
             }
-
-            this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), this);
-
-            this.EnableOperationButtons();
+            finally
+            {
+                // Enabling and disabling controls causes the focus to be stolen.
+                this.interfacePortList.Focus();
+            }
         }
 
-        private void DisableOperationButtons()
+        private void interfaceTypeList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            this.readPropertiesButton.Enabled = false;
+            try
+            {
+                this.reinitializeButton_Click(sender, e);
+            }
+            finally
+            {
+                // Enabling and disabling controls causes the focus to be stolen.
+                this.interfaceTypeList.Focus();
+            }
+        }
+
+        private void DisableUserInput()
+        {
+            this.interfaceBox.Enabled = false;
+            this.operationsBox.Enabled = false;
+            /*this.readPropertiesButton.Enabled = false;
             this.readFullContentsButton.Enabled = false;
             this.modifyVinButton.Enabled = false;
             this.writeFullContentsButton.Enabled = false;
+            this.reinitializeButton.Enabled = false;*/
         }
 
-        private void EnableOperationButtons()
+        private void EnableUserInput()
         {
-            this.readPropertiesButton.Enabled = true;
+            this.interfaceBox.Enabled = true;
+            this.operationsBox.Enabled = true;
+            /*this.readPropertiesButton.Enabled = true;
             this.readFullContentsButton.Enabled = true;
             this.modifyVinButton.Enabled = true;
             this.writeFullContentsButton.Enabled = true;
+            this.reinitializeButton.Enabled = true;*/
         }
         
         private async void readPropertiesButton_Click(object sender, EventArgs e)
@@ -164,7 +160,7 @@ namespace Flash411
 
             try
             {
-                this.DisableOperationButtons();
+                this.DisableUserInput();
                 
                 var vinResponse = await this.vehicle.QueryVin();
                 if (vinResponse.Status != ResponseStatus.Success)
@@ -190,49 +186,58 @@ namespace Flash411
             }
             finally
             {
-                this.EnableOperationButtons();
+                this.EnableUserInput();
             }
         }
 
         private async void readFullContentsButton_Click(object sender, EventArgs e)
         {
-            if (this.vehicle == null)
-            {
-                // This shouldn't be possible - it would mean the buttons 
-                // were enabled when they shouldn't be.
-                return;
-            }
-
-            Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
-            if (unlockResponse.Status != ResponseStatus.Success)
-            {
-                this.AddUserMessage("Unlock was not successful.");
-                return;
-            }
-
-            this.AddUserMessage("Unlock succeeded.");
-
-            Stream contents = await this.vehicle.ReadContents();
-
-            string path = this.ShowSaveAsDialog();
-            if (path == null)
-            {
-                this.AddUserMessage("Save canceled.");
-                return;
-            }
-
-            this.AddUserMessage("Saving to " + path);
+            this.DisableUserInput();
 
             try
             {
-                using (Stream output = File.OpenWrite(path))
+                if (this.vehicle == null)
                 {
-                    await contents.CopyToAsync(output);
+                    // This shouldn't be possible - it would mean the buttons 
+                    // were enabled when they shouldn't be.
+                    return;
                 }
+
+                Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
+                if (unlockResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Unlock was not successful.");
+                    return;
+                }
+
+                this.AddUserMessage("Unlock succeeded.");
+
+                Stream contents = await this.vehicle.ReadContents();
+
+                string path = this.ShowSaveAsDialog();
+                if (path == null)
+                {
+                    this.AddUserMessage("Save canceled.");
+                    return;
+                }
+
+                this.AddUserMessage("Saving to " + path);
+
+                try
+                {
+                    using (Stream output = File.OpenWrite(path))
+                    {
+                        await contents.CopyToAsync(output);
+                    }
+                }
+                catch (IOException exception)
+                {
+                    this.AddUserMessage(exception.Message);
+                }                
             }
-            catch(IOException exception)
+            finally
             {
-                this.AddUserMessage(exception.Message);
+                this.EnableUserInput();
             }
         }
 
@@ -305,6 +310,50 @@ namespace Flash411
             }
 
             return null;
+        }
+
+        private async void reinitializeButton_Click(object sender, EventArgs e)
+        {
+            this.DisableUserInput();
+
+            if (this.vehicle != null)
+            {
+                this.vehicle.Dispose();
+                this.vehicle = null;
+            }
+            
+            Device device = this.interfaceTypeList.SelectedItem as Device;
+
+            if (device == null)
+            {
+                // The user selected the mock device. Let them continue;
+                this.interfaceBox.Enabled = true;
+                return;
+            }
+
+            try
+            {
+                // TODO: this should not return a boolean, it should just throw 
+                // an exception if it is not able to initialize the device.
+                bool initialized = await device.Initialize();
+                if (!initialized)
+                {
+                    this.AddUserMessage("Unable to initalize " + device.ToString());
+                    this.interfaceBox.Enabled = true;
+                    return;
+                }
+            }
+            catch (Exception exception)
+            {
+                this.AddUserMessage("Unable to initalize " + device.ToString());
+                this.AddDebugMessage(exception.ToString());
+                this.interfaceBox.Enabled = true;
+                return;
+            }
+
+            this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), this);
+
+            this.EnableUserInput();
         }
     }
 }

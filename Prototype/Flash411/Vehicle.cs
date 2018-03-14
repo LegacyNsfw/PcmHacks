@@ -71,7 +71,11 @@ namespace Flash411
         /// </summary>
         protected void Dispose(bool isDisposing)
         {
-            this.device.Dispose();
+            if (this.device != null)
+            {
+                this.device.Dispose();
+                this.device = null;
+            }
         }
 
         /// <summary>
