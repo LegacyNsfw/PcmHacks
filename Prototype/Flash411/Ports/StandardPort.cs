@@ -16,6 +16,9 @@ namespace Flash411
         private string name;
         private SerialPort port;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public StandardPort(string name)
         {
             this.name = name;
@@ -34,6 +37,12 @@ namespace Flash411
         /// </summary>
         Task IPort.OpenAsync(PortConfiguration configuration)
         {
+            // Clean up the existing SerialPort object, if we have one.
+            if (this.port != null)
+            {
+                this.port.Dispose();
+            }
+
             SerialPortConfiguration config = configuration as SerialPortConfiguration;
             this.port = new SerialPort(this.name);
             this.port.BaudRate = config.BaudRate;
@@ -62,6 +71,7 @@ namespace Flash411
             if (this.port != null)
             {
                 this.port.Dispose();
+                this.port = null;
             }
         }
 

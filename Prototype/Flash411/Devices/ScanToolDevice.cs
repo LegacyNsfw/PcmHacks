@@ -46,23 +46,32 @@ namespace Flash411
 
             this.Port.DiscardBuffers();
 
-            // Turn off echo.
-            this.Logger.AddDebugMessage(await this.SendRequest("ATE0"));
-
-            string elmId = await this.SendRequest("AT I");
-            this.Logger.AddUserMessage("Device supports " + elmId);
-
-            string stId = await this.SendRequest("ST I");
-            this.Logger.AddUserMessage("Device supports " + stId);
-
-            string voltage = await this.SendRequest("AT RV");
-            this.Logger.AddUserMessage("Voltage: " + voltage);
-
-            if (!await this.SendAndVerify("AT AL", "OK" + Prompt) ||
-                !await this.SendAndVerify("AT SP2", "OK" + Prompt) ||
-                !await this.SendAndVerify("AT DP", "SAE J1850 VPW" + Prompt))
+            try
             {
-                throw new Exception("Could not initalize " + this.ToString());
+                // Turn off echo.
+                this.Logger.AddDebugMessage(await this.SendRequest("ATE0"));                
+
+                string elmId = await this.SendRequest("AT I");
+                this.Logger.AddUserMessage("Device supports " + elmId);
+
+                string stId = await this.SendRequest("ST I");
+                this.Logger.AddUserMessage("Device supports " + stId);
+
+                string voltage = await this.SendRequest("AT RV");
+                this.Logger.AddUserMessage("Voltage: " + voltage);
+
+                if (!await this.SendAndVerify("AT AL", "OK") ||
+                    !await this.SendAndVerify("AT SP2", "OK") ||
+                    !await this.SendAndVerify("AT DP", "SAE J1850 VPW"))
+                {
+                    return false;
+                }
+            }
+            catch (Exception exception)
+            {
+                this.Logger.AddDebugMessage("Unable to initalize " + this.ToString());
+                this.Logger.AddDebugMessage(exception.ToString());
+                return false;
             }
 
             return true;
@@ -96,7 +105,7 @@ namespace Flash411
             string header = hexRequest.Substring(0, 9);
 
             string setHeaderResponse = await this.SendRequest("AT SH " + header);
-            if (setHeaderResponse != "OK" + Prompt)
+            if (setHeaderResponse != "OK")
             {
                 this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
                 Response<byte[]> result = new Response<byte[]>(ResponseStatus.UnexpectedResponse, new byte[0]);
@@ -108,18 +117,6 @@ namespace Flash411
             try
             {
                 string hexResponse = await this.SendRequest(payload);
-
-                // Make sure the device reports success.
-                if (hexResponse.EndsWith(Prompt))
-                {
-                    hexResponse = hexResponse.Substring(0, hexResponse.Length - Prompt.Length);
-                }
-                else
-                {
-                    this.Logger.AddDebugMessage("Unexpected response: " + hexResponse);
-                    Response<byte[]> result = new Response<byte[]>(ResponseStatus.UnexpectedResponse, new byte[0]);
-                    return result;
-                }
 
                 // Make sure we can parse the response.
                 if (!hexResponse.IsHex())
@@ -179,24 +176,52 @@ namespace Flash411
             this.Logger.AddDebugMessage("Sending " + request);
             await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
 
+            // I hate this, but it improves reliability...
             await Task.Delay(250);
 
             List<byte> responseBytes = new List<byte>(100);
+            int pauseCount = 0;
 
-            // TODO: pause after zero bytes received, retry a couple times, then exit
-            for (int iterations = 0; iterations < 100; iterations++)
+            // This 'for' loop just sets an upper limit on the number of times we'll retry,
+            // to ensure that we won't just loop indefinitely if something goes wrong.
+            //
+            // In practice, the loop should always end when the "\r\r>" marker is received.
+            for(int iterations = 0; iterations < 1000; iterations++)
             {
                 byte[] buffer = new byte[100];
                 int length = await this.Port.Receive(buffer, 0, buffer.Length);
 
+                if (length == 0) 
+                {
+                    // When no data is received, pause and try again - but only a couple times.
+                    if (pauseCount <= 2)
+                    {
+                        pauseCount++;
+                        await Task.Delay(100);
+                        continue;
+                    }
+                    else
+                    {
+                        // No data, and we tried waiting for more, so we give up.
+                        break;
+                    }
+                }
+
+                // Since we received some data, we'll allow pausing for more data in future iterations.
+                pauseCount = 0;
+
+                // Add the latest bytes to the list.
                 responseBytes.AddRange(buffer.Take(length));
 
+                // Look for the end-of-response bytes.
                 if (responseBytes.Count > 2)
                 {
                     if ((responseBytes[length - 3] == '\r') &&
                         (responseBytes[length - 2] == '\r') &&
                         (responseBytes[length - 1] == '>'))
                     {
+                        // Hopefully the loop will always exit here.
+                        responseBytes.RemoveRange(responseBytes.Count - 3, 3);
                         break;
                     }
                 }
