@@ -88,6 +88,15 @@ namespace Flash411
                 throw new TimeoutException();
             }
         }
+
+        /// <summary>
+        /// Discard anything in the input and output buffers.
+        /// </summary>
+        public void DiscardBuffers()
+        {
+            this.port.DiscardInBuffer();
+            this.port.DiscardOutBuffer();
+        }
     }
 }
 

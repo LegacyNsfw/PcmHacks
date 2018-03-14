@@ -77,5 +77,12 @@ namespace Flash411
 
             return Task.FromResult(count);
         }
+
+        /// <summary>
+        /// Discard anything in the input and output buffers.
+        /// </summary>
+        public void DiscardBuffers()
+        {
+        }
     }
 }

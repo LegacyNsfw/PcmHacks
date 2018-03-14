@@ -52,6 +52,13 @@ namespace Flash411
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Discard anything in the input and output buffers.
+        /// </summary>
+        public void DiscardBuffers()
+        {
+        }
+
         public static bool IsPresent()
         {
             // TODO: Add code to determine whether a J2534 device is present.

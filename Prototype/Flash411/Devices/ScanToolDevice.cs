@@ -44,6 +44,8 @@ namespace Flash411
             configuration.BaudRate = 115200;
             await this.Port.OpenAsync(configuration);
 
+            this.Port.DiscardBuffers();
+
             // Turn off echo.
             this.Logger.AddDebugMessage(await this.SendRequest("ATE0"));
 
@@ -179,9 +181,28 @@ namespace Flash411
 
             await Task.Delay(250);
 
-            byte[] responseBytes = new byte[100];
-            int length = await this.Port.Receive(responseBytes, 0, 100);
-            string response = Encoding.ASCII.GetString(responseBytes, 0, length);
+            List<byte> responseBytes = new List<byte>(100);
+
+            // TODO: pause after zero bytes received, retry a couple times, then exit
+            for (int iterations = 0; iterations < 100; iterations++)
+            {
+                byte[] buffer = new byte[100];
+                int length = await this.Port.Receive(buffer, 0, buffer.Length);
+
+                responseBytes.AddRange(buffer.Take(length));
+
+                if (responseBytes.Count > 2)
+                {
+                    if ((responseBytes[length - 3] == '\r') &&
+                        (responseBytes[length - 2] == '\r') &&
+                        (responseBytes[length - 1] == '>'))
+                    {
+                        break;
+                    }
+                }
+            }
+            
+            string response = Encoding.ASCII.GetString(responseBytes.ToArray(), 0, responseBytes.Count);
             this.Logger.AddDebugMessage("Received " + response);
             return response;
         }

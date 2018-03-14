@@ -15,11 +15,25 @@ namespace Flash411
     /// </remarks>
     interface IPort : IDisposable
     {
+        /// <summary>
+        /// OPen the port.
+        /// </summary>
         Task OpenAsync(PortConfiguration configuration);
 
+        /// <summary>
+        /// Send a sequence of bytes.
+        /// </summary>
         Task Send(byte[] buffer);
 
+        /// <summary>
+        /// Receive a buffer of bytes.
+        /// </summary>
         Task<int> Receive(byte[] buffer, int offset, int count);
+
+        /// <summary>
+        /// Discard anything in the input and output buffers.
+        /// </summary>
+        void DiscardBuffers();
     }
 
     class PortConfiguration
