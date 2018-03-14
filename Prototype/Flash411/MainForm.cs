@@ -183,6 +183,11 @@ namespace Flash411
 
                 this.AddUserMessage("OS: " + osResponse.Value.ToString());
             }
+            catch(Exception exception)
+            {
+                this.AddUserMessage(exception.Message);
+                this.AddDebugMessage(exception.ToString());
+            }
             finally
             {
                 this.EnableOperationButtons();
