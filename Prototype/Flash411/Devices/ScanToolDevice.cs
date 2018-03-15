@@ -44,12 +44,18 @@ namespace Flash411
             configuration.BaudRate = 115200;
             await this.Port.OpenAsync(configuration);
 
-            this.Port.DiscardBuffers();
+            await this.Port.DiscardBuffers();
 
             try
             {
+                // Reset
+                // this.Logger.AddDebugMessage(await this.SendRequest("AT Z"));
+
                 // Turn off echo.
-                this.Logger.AddDebugMessage(await this.SendRequest("ATE0"));                
+                this.Logger.AddDebugMessage(await this.SendRequest("AT E0"));
+
+                // TODO: Turn off whitespace.
+                // this.Logger.AddDebugMessage(await this.SendRequest("AT S0"));
 
                 string elmId = await this.SendRequest("AT I");
                 this.Logger.AddUserMessage("Device supports " + elmId);

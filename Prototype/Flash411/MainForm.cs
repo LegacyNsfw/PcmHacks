@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -47,8 +48,9 @@ namespace Flash411
         private void MainForm_Load(object sender, EventArgs e)
         {
             this.interfaceBox.Enabled = true;
-            this.operationsBox.Enabled = false;
-
+            this.operationsBox.Enabled = true;
+            this.startServerButton.Enabled = false;
+            
             this.FillPortList();
         }
 
@@ -60,6 +62,7 @@ namespace Flash411
 
             this.interfacePortList.Items.Add(new MockPort(this));
             this.interfacePortList.Items.Add(new MockAvt852(this));
+            this.interfacePortList.Items.Add(new HttpPort(this));
 
             if (J2534Port.IsPresent())
             {
@@ -85,6 +88,8 @@ namespace Flash411
                 {
                     return;
                 }
+
+                this.startServerButton.Enabled = true;
 
                 this.interfaceTypeList.Items.Add("Select...");
 
@@ -117,6 +122,8 @@ namespace Flash411
 
         private void interfaceTypeList_SelectedIndexChanged(object sender, EventArgs e)
         {
+            this.startServerButton.Enabled = false;
+
             try
             {
                 this.reinitializeButton_Click(sender, e);
@@ -131,23 +138,29 @@ namespace Flash411
         private void DisableUserInput()
         {
             this.interfaceBox.Enabled = false;
-            this.operationsBox.Enabled = false;
-            /*this.readPropertiesButton.Enabled = false;
+
+            // The operation buttons have to be enabled/disabled individually
+            // (rather than via the parent GroupBox) because we sometimes want
+            // to enable the re-initialize operation while the others are disabled.
+            this.readPropertiesButton.Enabled = false;
             this.readFullContentsButton.Enabled = false;
             this.modifyVinButton.Enabled = false;
             this.writeFullContentsButton.Enabled = false;
-            this.reinitializeButton.Enabled = false;*/
+            this.reinitializeButton.Enabled = false;
         }
 
         private void EnableUserInput()
         {
             this.interfaceBox.Enabled = true;
-            this.operationsBox.Enabled = true;
-            /*this.readPropertiesButton.Enabled = true;
+
+            // The operation buttons have to be enabled/disabled individually
+            // (rather than via the parent GroupBox) because we sometimes want
+            // to enable the re-initialize operation while the others are disabled.
+            this.readPropertiesButton.Enabled = true;
             this.readFullContentsButton.Enabled = true;
             this.modifyVinButton.Enabled = true;
             this.writeFullContentsButton.Enabled = true;
-            this.reinitializeButton.Enabled = true;*/
+            this.reinitializeButton.Enabled = true;
         }
         
         private async void readPropertiesButton_Click(object sender, EventArgs e)
@@ -344,22 +357,43 @@ namespace Flash411
                 bool initialized = await device.Initialize();
                 if (!initialized)
                 {
-                    this.AddUserMessage("Unable to initalize " + device.ToString());
+                    this.AddUserMessage("Unable to initialize " + device.ToString());
                     this.interfaceBox.Enabled = true;
+                    this.reinitializeButton.Enabled = true;
                     return;
                 }
             }
             catch (Exception exception)
             {
-                this.AddUserMessage("Unable to initalize " + device.ToString());
+                this.AddUserMessage("Unable to initialize " + device.ToString());
                 this.AddDebugMessage(exception.ToString());
                 this.interfaceBox.Enabled = true;
+                this.reinitializeButton.Enabled = true;
                 return;
             }
 
             this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), this);
 
             this.EnableUserInput();
+        }
+
+        private void startServerButton_Click(object sender, EventArgs e)
+        {
+            this.DisableUserInput();
+            this.startServerButton.Enabled = false;
+
+            IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
+
+            // It doesn't count if the user selected the prompt.
+            if (selectedPort == null)
+            {
+                this.AddUserMessage("You must select an actual port before starting the server.");
+                return;
+            }
+
+            this.AddUserMessage("There is no way to exit the HTTP server. Just close the app when you're done.");
+
+            HttpServer.StartWebServer(selectedPort, this);
         }
     }
 }

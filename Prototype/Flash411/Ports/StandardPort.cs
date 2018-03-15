@@ -102,10 +102,11 @@ namespace Flash411
         /// <summary>
         /// Discard anything in the input and output buffers.
         /// </summary>
-        public void DiscardBuffers()
+        public Task DiscardBuffers()
         {
             this.port.DiscardInBuffer();
             this.port.DiscardOutBuffer();
+            return Task.FromResult(0);
         }
     }
 }
