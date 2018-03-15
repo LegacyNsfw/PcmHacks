@@ -59,6 +59,7 @@ namespace Flash411
             this.interfacePortList.SelectedIndex = 0;
 
             this.interfacePortList.Items.Add(new MockPort(this));
+            this.interfacePortList.Items.Add(new MockAvt852(this));
 
             if (J2534Port.IsPresent())
             {
