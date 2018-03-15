@@ -1,4 +1,4 @@
-﻿using System;
+﻿    using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -128,6 +128,43 @@ namespace Flash411
 
             status = ResponseStatus.Success;
             return true;
+        }
+
+        /// <summary>
+        /// Determine whether we were able to unlock the PCM.
+        /// </summary>
+        internal Response<bool> ParseUnlockResponse(Response<byte[]> unlockResponse, out string errorMessage)
+        {
+            if (unlockResponse.Value.Length != 6)
+            {
+                errorMessage = $"Unlock response was {unlockResponse.Value.Length} bytes long, expected 6.";
+                return Response.Create(ResponseStatus.UnexpectedResponse, false);
+            }
+
+            byte unlockCode = unlockResponse.Value[5];
+
+            if (unlockCode == 0x34)
+            {
+                errorMessage = null;
+                return Response.Create(ResponseStatus.Success, true);
+            }
+
+            switch (unlockCode)
+            {
+                case 0x36:
+                    errorMessage = $"The PCM didn't accept the unlock key value.";
+                    break;
+
+                case 0x37:
+                    errorMessage = $"The PCM didn't accept the unlock key value, and you've tried too many times.";
+                    break;
+
+                default:
+                    errorMessage = $"Unlock code 0x{unlockCode}. What does that mean?";
+                    break;
+            }
+
+            return Response.Create(ResponseStatus.UnexpectedResponse, false);
         }
     }
 }
