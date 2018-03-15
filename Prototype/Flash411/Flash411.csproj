@@ -54,11 +54,13 @@
     <Compile Include="Messages\Message.cs" />
     <Compile Include="Messages\MessageFactory.cs" />
     <Compile Include="Messages\MessageParser.cs" />
+    <Compile Include="Misc\HttpServer.cs" />
     <Compile Include="Misc\ILogger.cs" />
     <Compile Include="Misc\MockPcm.cs" />
     <Compile Include="Misc\Response.cs" />
     <Compile Include="Misc\KeyAlgorithm.cs" />
     <Compile Include="Misc\Utility.cs" />
+    <Compile Include="Ports\HttpPort.cs" />
     <Compile Include="Ports\IPort.cs" />
     <Compile Include="Ports\J2534Port.cs" />
     <Compile Include="MainForm.cs">
