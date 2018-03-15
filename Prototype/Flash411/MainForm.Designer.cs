@@ -34,16 +34,17 @@
             this.label1 = new System.Windows.Forms.Label();
             this.interfacePortList = new System.Windows.Forms.ComboBox();
             this.operationsBox = new System.Windows.Forms.GroupBox();
-            this.reinitializeButton = new System.Windows.Forms.Button();
             this.writeFullContentsButton = new System.Windows.Forms.Button();
             this.readFullContentsButton = new System.Windows.Forms.Button();
             this.modifyVinButton = new System.Windows.Forms.Button();
             this.readPropertiesButton = new System.Windows.Forms.Button();
+            this.reinitializeButton = new System.Windows.Forms.Button();
             this.tabs = new System.Windows.Forms.TabControl();
             this.resultsTab = new System.Windows.Forms.TabPage();
             this.userLog = new System.Windows.Forms.TextBox();
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
+            this.startServerButton = new System.Windows.Forms.Button();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -120,25 +121,14 @@
             this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
             this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
-            this.operationsBox.Size = new System.Drawing.Size(224, 170);
+            this.operationsBox.Size = new System.Drawing.Size(224, 174);
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
             // 
-            // reinitializeButton
-            // 
-            this.reinitializeButton.Location = new System.Drawing.Point(5, 137);
-            this.reinitializeButton.Margin = new System.Windows.Forms.Padding(2);
-            this.reinitializeButton.Name = "reinitializeButton";
-            this.reinitializeButton.Size = new System.Drawing.Size(214, 25);
-            this.reinitializeButton.TabIndex = 4;
-            this.reinitializeButton.Text = "Re-&Initialize Device";
-            this.reinitializeButton.UseVisualStyleBackColor = true;
-            this.reinitializeButton.Click += new System.EventHandler(this.reinitializeButton_Click);
-            // 
             // writeFullContentsButton
             // 
-            this.writeFullContentsButton.Location = new System.Drawing.Point(4, 108);
+            this.writeFullContentsButton.Location = new System.Drawing.Point(5, 108);
             this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
             this.writeFullContentsButton.Name = "writeFullContentsButton";
             this.writeFullContentsButton.Size = new System.Drawing.Size(214, 25);
@@ -178,6 +168,17 @@
             this.readPropertiesButton.Text = "Read &Properties";
             this.readPropertiesButton.UseVisualStyleBackColor = true;
             this.readPropertiesButton.Click += new System.EventHandler(this.readPropertiesButton_Click);
+            // 
+            // reinitializeButton
+            // 
+            this.reinitializeButton.Location = new System.Drawing.Point(5, 137);
+            this.reinitializeButton.Margin = new System.Windows.Forms.Padding(2);
+            this.reinitializeButton.Name = "reinitializeButton";
+            this.reinitializeButton.Size = new System.Drawing.Size(214, 25);
+            this.reinitializeButton.TabIndex = 4;
+            this.reinitializeButton.Text = "Re-&Initialize Device";
+            this.reinitializeButton.UseVisualStyleBackColor = true;
+            this.reinitializeButton.Click += new System.EventHandler(this.reinitializeButton_Click);
             // 
             // tabs
             // 
@@ -245,11 +246,23 @@
             this.debugLog.Size = new System.Drawing.Size(516, 327);
             this.debugLog.TabIndex = 0;
             // 
+            // startServerButton
+            // 
+            this.startServerButton.Location = new System.Drawing.Point(14, 341);
+            this.startServerButton.Margin = new System.Windows.Forms.Padding(2);
+            this.startServerButton.Name = "startServerButton";
+            this.startServerButton.Size = new System.Drawing.Size(214, 25);
+            this.startServerButton.TabIndex = 5;
+            this.startServerButton.Text = "Enter &HTTP Server Mode";
+            this.startServerButton.UseVisualStyleBackColor = true;
+            this.startServerButton.Click += new System.EventHandler(this.startServerButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(776, 379);
+            this.Controls.Add(this.startServerButton);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.operationsBox);
             this.Controls.Add(this.interfaceBox);
@@ -287,6 +300,7 @@
         private System.Windows.Forms.TabPage debugTab;
         private System.Windows.Forms.TextBox debugLog;
         private System.Windows.Forms.Button reinitializeButton;
+        private System.Windows.Forms.Button startServerButton;
     }
 }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
@@ -17,6 +18,7 @@ namespace Flash411
     abstract class Device : IDisposable
     {
         protected IPort Port { get; private set; }
+
         protected ILogger Logger { get; private set; }
 
         public Device(IPort port, ILogger logger)

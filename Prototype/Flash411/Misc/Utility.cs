@@ -54,8 +54,8 @@ namespace Flash411
         /// </summary>
         public static byte[] ToBytes(this string hex)
         {
-            string[] parts = hex.Split(space);
-            List<byte> bytes = new List<byte>(parts.Length);
+            var parts = hex.Split(space).Select(x => x.Trim());
+            List<byte> bytes = new List<byte>(parts.Count());
             foreach(string hexByte in parts)
             {
                 if (hexByte.Length != 2)
