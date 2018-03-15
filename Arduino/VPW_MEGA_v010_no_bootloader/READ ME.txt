@@ -1,0 +1,1 @@
+Open the file named VPW_MEGA_v010_no_bootloader in the Arduino IDE, the rest of the files will be pulled into the program on thier own. 
