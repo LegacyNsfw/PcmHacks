@@ -30,7 +30,7 @@ namespace Flash411
         /// <summary>
         /// Discard anything in the input and output buffers.
         /// </summary>
-        void DiscardBuffers();
+        Task DiscardBuffers();
     }
 
     class PortConfiguration
