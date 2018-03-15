@@ -213,7 +213,12 @@ namespace Flash411
 
                 this.AddUserMessage("Unlock succeeded.");
 
-                Stream contents = await this.vehicle.ReadContents();
+                Response<Stream> readResponse = await this.vehicle.ReadContents();
+                if (readResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
+                    return;
+                }
 
                 string path = this.ShowSaveAsDialog();
                 if (path == null)
@@ -228,7 +233,7 @@ namespace Flash411
                 {
                     using (Stream output = File.OpenWrite(path))
                     {
-                        await contents.CopyToAsync(output);
+                        await readResponse.Value.CopyToAsync(output);
                     }
                 }
                 catch (IOException exception)
