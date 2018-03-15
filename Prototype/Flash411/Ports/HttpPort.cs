@@ -16,12 +16,18 @@ namespace Flash411
     class HttpPort : IPort
     {
         public const string PortName = "Http Port";
+
         private ILogger logger;
+
         private readonly Uri baseUri;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public HttpPort(ILogger logger)
         {
             this.logger = logger;
+
             // TODO: Get this from a parameter, and get the GUI to provide it.
             this.baseUri = new Uri("http://127.0.0.1:11411/");
         }
@@ -50,7 +56,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Send bytes to the mock PCM.
+        /// Send bytes to the remote PCM.
         /// </summary>
         async Task IPort.Send(byte[] buffer)
         {
@@ -61,7 +67,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Receive bytes from the mock PCM.
+        /// Receive bytes from the remote PCM.
         /// </summary>
         async Task<int> IPort.Receive(byte[] buffer, int offset, int count)
         {

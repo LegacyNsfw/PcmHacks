@@ -16,6 +16,9 @@ namespace Flash411
         private ILogger logger;
         private HttpListener listener;
 
+        /// <summary>
+        /// Creates an instance of the HttpServer class, and runs it on a background thread.
+        /// </summary>
         public static void StartWebServer(IPort port, ILogger logger)
         {
             if (instance != null)
@@ -30,20 +33,29 @@ namespace Flash411
 
         }
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public HttpServer(IPort port, ILogger logger)
         {
             this.port = port;
             this.logger = logger;
         }
 
+        /// <summary>
+        /// Seemed like a good idea at the time, but there's no UI for it...
+        /// </summary>
         public void Close()
         {
             this.listener.Close();
         }
 
+        /// <summary>
+        /// Run the HTTP server. Just handle requests as they come in.
+        /// </summary>
         public async void Run(object unused)
         {
-            // Restart the server if it crashes.
+            // This loop restarts the server if it crashes.
             while (true)
             {
                 try
@@ -56,7 +68,7 @@ namespace Flash411
                     configuration.BaudRate = 115200;
                     await this.port.OpenAsync(configuration);
 
-                    // Handle incoming connections.
+                    // This loop handles incoming connections.
                     while (true)
                     {
                         var context = await this.listener.GetContextAsync();
@@ -117,6 +129,9 @@ namespace Flash411
             }
         }
 
+        /// <summary>
+        /// Send bytes from the HTTP client out the local serial port.
+        /// </summary>
         private async Task Send(HttpListenerContext context)
         {
             var queryString = context.Request.QueryString;
@@ -140,6 +155,9 @@ namespace Flash411
             // await this.Receive(context);
         }
 
+        /// <summary>
+        /// Receive bytes from the serial port and relay them to the client.
+        /// </summary>
         private async Task Receive(HttpListenerContext context)
         {
             byte[] buffer = new byte[10 * 1000];
