@@ -147,36 +147,14 @@ namespace Flash411
                 return Response.Create(unlockResponse.Status, false);
             }
 
-            if (unlockResponse.Value.Length != 6)
+            string errorMessage;
+            Response<bool> result = this.messageParser.ParseUnlockResponse(unlockResponse, out errorMessage);
+            if (errorMessage != null)
             {
-                this.logger.AddUserMessage($"Unlock response was {unlockResponse.Value.Length} bytes long, expected 6.");
-                return Response.Create(ResponseStatus.UnexpectedResponse, false);
+                this.logger.AddUserMessage(errorMessage);
             }
 
-            byte unlockCode = unlockResponse.Value[5];
-
-            if (unlockCode == 0x34)
-            {
-                return Response.Create(ResponseStatus.Success, true);
-            }
-                        
-            switch (unlockCode)
-            {
-                case 0x36:
-                    this.logger.AddUserMessage($"The PCM didn't accept the unlock key value.");
-                    break;
-
-                case 0x37:
-                    this.logger.AddUserMessage($"The PCM didn't accept the unlock key value, and you've tried too many times.");
-                    break;
-
-                default:
-                    this.logger.AddUserMessage($"Unlock code 0x{unlockCode}. What does that mean?");
-                    break;
-            }
-
-            return Response.Create(ResponseStatus.UnexpectedResponse, false);
-
+            return result;
         }
 
         /// <summary>
