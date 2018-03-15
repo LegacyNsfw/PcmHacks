@@ -147,16 +147,44 @@ namespace Flash411
                 return Response.Create(unlockResponse.Status, false);
             }
 
-            return Response.Create(ResponseStatus.Success, true);
+            if (unlockResponse.Value.Length != 6)
+            {
+                this.logger.AddUserMessage($"Unlock response was {unlockResponse.Value.Length} bytes long, expected 6.");
+                return Response.Create(ResponseStatus.UnexpectedResponse, false);
+            }
+
+            byte unlockCode = unlockResponse.Value[5];
+
+            if (unlockCode == 0x34)
+            {
+                return Response.Create(ResponseStatus.Success, true);
+            }
+                        
+            switch (unlockCode)
+            {
+                case 0x36:
+                    this.logger.AddUserMessage($"The PCM didn't accept the unlock key value.");
+                    break;
+
+                case 0x37:
+                    this.logger.AddUserMessage($"The PCM didn't accept the unlock key value, and you've tried too many times.");
+                    break;
+
+                default:
+                    this.logger.AddUserMessage($"Unlock code 0x{unlockCode}. What does that mean?");
+                    break;
+            }
+
+            return Response.Create(ResponseStatus.UnexpectedResponse, false);
+
         }
 
         /// <summary>
         /// Read the full contents of the PCM.
         /// </summary>
-        public Task<Stream> ReadContents()
+        public Task<Response<Stream>> ReadContents()
         {
-            // TODO: actually read from the ECU.
-            return Task.FromResult((Stream)new MemoryStream(new byte[] { 0x01, 0x02, 0x03 }));
+            return Task.FromResult(new Response<Stream>(ResponseStatus.Success, (Stream)new MemoryStream(new byte[] { 0x01, 0x02, 0x03 })));
         }
 
         /// <summary>

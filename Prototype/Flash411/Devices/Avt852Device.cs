@@ -91,6 +91,7 @@ namespace Flash411
                 if (receiveLength == 0)
                 {
                     await Task.Delay(100);
+                    continue;
                 }
 
                 break;
