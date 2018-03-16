@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +33,11 @@ namespace Flash411
         /// Discard anything in the input and output buffers.
         /// </summary>
         Task DiscardBuffers();
+
+        /// <summary>
+        /// Indicates the number of bytes waiting in the receive queue.
+        /// </summary>
+        Task<int> GetReceiveQueueSize();
     }
 
     class PortConfiguration
@@ -40,5 +47,6 @@ namespace Flash411
     class SerialPortConfiguration : PortConfiguration
     {
         public int BaudRate { get; set; }
+        public Action<object, SerialDataReceivedEventArgs> DataReceived { get; set; }
     }
 }
