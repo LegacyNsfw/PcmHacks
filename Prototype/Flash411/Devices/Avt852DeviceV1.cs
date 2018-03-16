@@ -73,6 +73,9 @@ namespace Flash411
             return true;
         }
 
+        /// <summary>
+        /// This will process incoming messages for up to 500ms, looking for the given message.
+        /// </summary>
         private async Task<bool> ConfirmResponse(byte[] expected)
         {
             for (int iterations = 0; iterations < 5; iterations++)
@@ -92,6 +95,10 @@ namespace Flash411
             return false;
         }
 
+        /// <summary>
+        /// Process incoming data, using a state-machine to parse the incoming messages.
+        /// </summary>
+        /// <returns></returns>
         private async Task<Queue<AvtMessage>> ProcessIncomingData()
         {
             Queue<AvtMessage> queue = new Queue<AvtMessage>();
