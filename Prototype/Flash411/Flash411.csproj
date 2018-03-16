@@ -45,7 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Devices\Avt852Device.cs" />
+    <Compile Include="Devices\Avt852DeviceV2.cs" />
+    <Compile Include="Devices\Avt852DeviceV1.cs" />
+    <Compile Include="Devices\AvtStateMachine.cs" />
     <Compile Include="Devices\Device.cs" />
     <Compile Include="Devices\MockDevice.cs" />
     <Compile Include="Devices\ScanToolDevice.cs" />

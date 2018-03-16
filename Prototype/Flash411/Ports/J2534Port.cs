@@ -65,5 +65,10 @@ namespace Flash411
             // TODO: Add code to determine whether a J2534 device is present.
             return false;
         }
+
+        Task<int> IPort.GetReceiveQueueSize()
+        {
+            return Task.FromResult(0);
+        }
     }
 }

@@ -15,6 +15,7 @@ namespace Flash411
     {
         private string name;
         private SerialPort port;
+        private Action<object, SerialDataReceivedEventArgs> dataReceivedCallback;
 
         /// <summary>
         /// Constructor.
@@ -50,6 +51,13 @@ namespace Flash411
             this.port.Parity = Parity.None;
             this.port.StopBits = StopBits.One;
             this.port.ReadTimeout = 1000;
+
+            if (config.DataReceived != null)
+            {
+                this.dataReceivedCallback = config.DataReceived;
+                this.port.DataReceived += this.DataReceived;
+            }
+
             this.port.Open();
 
             // This line must come AFTER the call to port.Open().
@@ -107,6 +115,23 @@ namespace Flash411
             this.port.DiscardInBuffer();
             this.port.DiscardOutBuffer();
             return Task.FromResult(0);
+        }
+
+
+        /// <summary>
+        /// Serial data callback.
+        /// </summary>
+        private void DataReceived(object sender, SerialDataReceivedEventArgs args)
+        {
+            this.dataReceivedCallback(sender, args);
+        }
+
+        /// <summary>
+        /// Indicates the number of bytes waiting in the queue.
+        /// </summary>
+        Task<int> IPort.GetReceiveQueueSize()
+        {
+            return Task.FromResult(this.port.BytesToRead);
         }
     }
 }
