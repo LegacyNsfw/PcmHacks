@@ -85,5 +85,14 @@ namespace Flash411
         {
             return Task.FromResult(0);
         }
+
+        /// <summary>
+        /// Indicates the number of bytes waiting in the queue.
+        /// </summary>
+        Task<int> IPort.GetReceiveQueueSize()
+        {
+            // return Task.FromResult(0);
+            throw new NotImplementedException();
+        }
     }
 }

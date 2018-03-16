@@ -94,6 +94,10 @@ namespace Flash411
                                 context.Response.StatusCode = 404;
                             }
                         }
+                        catch (TimeoutException)
+                        {
+                            context.Response.StatusCode = 504;
+                        }
                         catch (Exception exception)
                         {
                             this.logger.AddUserMessage("HTTP 500 " + exception.ToString());

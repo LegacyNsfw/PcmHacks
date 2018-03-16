@@ -102,7 +102,8 @@ namespace Flash411
                 {
                     // I don't really expect to support all of these. They're just 
                     // placeholders until we know which ones we really will support.
-                    this.interfaceTypeList.Items.Add(new Avt852Device(selectedPort, this));
+                    this.interfaceTypeList.Items.Add(new Avt852DeviceV1(selectedPort, this));
+                    this.interfaceTypeList.Items.Add(new Avt852DeviceV2(selectedPort, this));
                     this.interfaceTypeList.Items.Add(new ScanToolDevice(selectedPort, this));
                     this.interfaceTypeList.Items.Add(new ThanielDevice(selectedPort, this));
                 }
@@ -349,6 +350,9 @@ namespace Flash411
                 this.interfaceBox.Enabled = true;
                 return;
             }
+
+            this.debugLog.Clear();
+            this.userLog.Clear();
 
             try
             {
