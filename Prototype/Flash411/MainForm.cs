@@ -351,6 +351,9 @@ namespace Flash411
                 return;
             }
 
+            this.debugLog.Clear();
+            this.userLog.Clear();
+
             try
             {
                 // TODO: this should not return a boolean, it should just throw 

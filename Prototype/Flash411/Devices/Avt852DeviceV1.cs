@@ -41,11 +41,13 @@ namespace Flash411
             configuration.BaudRate = 115200;
             await this.Port.OpenAsync(configuration);
 
-            // Drain the receive queue - make sure there's no data left over from previous commands.
+            this.Logger.AddDebugMessage("Draining input queue.");
             await this.ProcessIncomingData();
 
+            this.Logger.AddDebugMessage("Sending 'reset' message (twice).");
             await this.Port.Send(Avt852DeviceV1.AVT_RESET);
-            
+            await this.Port.Send(Avt852DeviceV1.AVT_RESET);
+
             if (await ConfirmResponse(AVT_852_IDLE))
             {
                 this.Logger.AddUserMessage("AVT device reset ok");
