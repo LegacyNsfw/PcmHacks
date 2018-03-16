@@ -21,6 +21,10 @@ namespace Flash411
 
         private readonly Uri baseUri;
 
+        private List<byte> responseBytes = new List<byte>();
+
+        private object sync = new object();
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -29,7 +33,8 @@ namespace Flash411
             this.logger = logger;
 
             // TODO: Get this from a parameter, and get the GUI to provide it.
-            this.baseUri = new Uri("http://127.0.0.1:11411/");
+            // this.baseUri = new Uri("http://127.0.0.1:11411/");
+            this.baseUri = new Uri("http://symons.net.au:11411/");
         }
 
         /// <summary>
@@ -71,30 +76,34 @@ namespace Flash411
         /// </summary>
         async Task<int> IPort.Receive(byte[] buffer, int offset, int count)
         {
-            HttpClient client = new HttpClient();
-            Uri requestUri = new Uri(baseUri, "/pcm/receive");
-            var response = await client.GetAsync(requestUri);
-            this.logger.AddDebugMessage("HttpPort.Receive StatusCode: " + response.StatusCode.ToString());
+            List<byte> lastBuffer = null;
 
-            if (response.StatusCode != HttpStatusCode.OK)
+            lock (sync)
             {
-                return 0;
+                lastBuffer = this.responseBytes;
+                this.responseBytes = new List<byte>();
             }
 
-            string body = await response.Content.ReadAsStringAsync();
-            if(!body.IsHex())
+            if (lastBuffer.Count == 0)
             {
-                this.logger.AddDebugMessage("HttpResponse body is not in hex format.");
-                return 0;
+                await Receive();
+
+                lock (sync)
+                {
+                    lastBuffer = this.responseBytes;
+                    this.responseBytes = new List<byte>();
+                }
+
+                if (lastBuffer.Count == 0)
+                {
+                    return 0;
+                }
             }
 
-            this.logger.AddDebugMessage("Response body: " + body);
-
-            byte[] responseBytes = body.ToBytes();
             int copied = 0;
-            for(int index = 0; (index < count) && (index < responseBytes.Length); index++)
+            for (int index = 0; (index < count) && (index < lastBuffer.Count); index++)
             {
-                buffer[offset + index] = responseBytes[index];
+                buffer[offset + index] = lastBuffer[index];
                 copied++;
             }
 
@@ -110,6 +119,76 @@ namespace Flash411
             Uri requestUri = new Uri(baseUri, "/pcm/receive");
             var response = await client.GetAsync(requestUri);
             this.logger.AddDebugMessage("HttpPort.DiscardBuffers StatusCode: " + response.StatusCode.ToString());
+        }
+
+        /// <summary>
+        /// Indicates the number of bytes waiting in the queue.
+        /// </summary>
+        /// <remarks>
+        /// This is hacky:
+        /// 
+        /// For now, you MUST call this before calling Receive.
+        /// Only because I'm too lazy to add support for /pcm/bytesToRead :-)
+        /// But that is the right thing to do. Maybe soon.
+        /// 
+        /// For now, the device code always checks this property first so this will suffice.
+        /// </remarks>
+        public async Task<int> GetReceiveQueueSize()
+        {
+            int result = 0;
+
+            // These locks might be pointless. Getting the count is probably thread-safe.
+            lock (sync)
+            {
+                result = this.responseBytes.Count;
+            }
+
+            if (result > 0)
+            {
+                return result;
+            }
+
+            await Receive();
+
+            lock (sync)
+            {
+                result = this.responseBytes.Count;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private async Task Receive()
+        {
+            HttpClient client = new HttpClient();
+            Uri requestUri = new Uri(baseUri, "/pcm/receive");
+            var response = await client.GetAsync(requestUri);
+            this.logger.AddDebugMessage("HttpPort.Receive StatusCode: " + response.StatusCode.ToString());
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                return;
+            }
+
+            string body = await response.Content.ReadAsStringAsync();
+            if (!body.IsHex())
+            {
+                this.logger.AddDebugMessage("HttpResponse body is not in hex format.");
+                return;
+            }
+
+            this.logger.AddDebugMessage("Response body: " + body);
+
+            byte[] buffer = body.ToBytes();
+
+            lock (sync)
+            {
+                responseBytes.AddRange(buffer);
+            }
         }
     }
 }

@@ -58,21 +58,21 @@ namespace Flash411
         {
             this.logger.AddDebugMessage("MockAvt852 received: " + buffer.ToHex());
 
-            if (Utility.CompareArrays(buffer, Avt852Device.AVT_RESET))
+            if (Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_RESET))
             {
-                responseBuffer = Avt852Device.AVT_852_IDLE;
+                responseBuffer = Avt852DeviceV1.AVT_852_IDLE;
             }
-            else if(Utility.CompareArrays(buffer, Avt852Device.AVT_REQUEST_MODEL))
+            else if(Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_REQUEST_MODEL))
             {
                 responseBuffer = new byte[] { 0x93, 0x28, 0x08, 0x52 };
             }
-            else if(Utility.CompareArrays(buffer, Avt852Device.AVT_REQUEST_FIRMWARE))
+            else if(Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_REQUEST_FIRMWARE))
             {
                 responseBuffer = new byte[] { 0x92, 0x04, 0x15 };
             }
-            else if(Utility.CompareArrays(buffer, Avt852Device.AVT_ENTER_VPW_MODE))
+            else if(Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_ENTER_VPW_MODE))
             {
-                responseBuffer = Avt852Device.AVT_VPW;
+                responseBuffer = Avt852DeviceV1.AVT_VPW;
             }
 
             this.sentSoFar = 0;
@@ -104,6 +104,15 @@ namespace Flash411
         public Task DiscardBuffers()
         {
             return Task.FromResult(0);
+        }
+
+        /// <summary>
+        /// Indicates the number of bytes waiting in the queue.
+        /// </summary>
+        Task<int> IPort.GetReceiveQueueSize()
+        {
+            // return Task.FromResult(0);
+            throw new NotImplementedException();
         }
     }
 }

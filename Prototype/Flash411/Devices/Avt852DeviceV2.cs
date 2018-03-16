@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
+using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,7 +13,7 @@ namespace Flash411
     /// This class encapsulates all code that is unique to the AVT 852 interface.
     /// </summary>
     /// 
-    class Avt852Device : Device
+    class Avt852DeviceV2 : Device
     {
         public static readonly byte[] AVT_RESET = { 0xF1, 0xA5 };
         public static readonly byte[] AVT_ENTER_VPW_MODE = { 0xE1, 0x33 };
@@ -24,13 +26,48 @@ namespace Flash411
         public static readonly byte[] AVT_TX_ACK = { 0x01, 0x60 };
         public static readonly byte[] AVT_BLOCK_TX_ACK = { 0xF3, 0x60 };
 
-        public Avt852Device(IPort port, ILogger logger) : base(port, logger)
+        public Avt852DeviceV2(IPort port, ILogger logger) : base(port, logger)
         {
         }
 
         public override string ToString()
         {
-            return "AVT 852";
+            return "AVT 852 V2";
+        }
+
+        private AvtStateMachine avtStateMachine;
+
+        private ConcurrentQueue<AvtMessage> queue = new ConcurrentQueue<AvtMessage>();
+
+        /// <summary>
+        /// Note that the .Net framework guarantees that only one event handler will execute at a time.
+        /// So, this code does not need to support concurrent invocations.
+        /// </summary>
+        private async void DataReceived(object source, SerialDataReceivedEventArgs args)
+        {
+            while(await this.Port.GetReceiveQueueSize() > 0)
+            {
+                byte[] buffer = new byte[await this.Port.GetReceiveQueueSize()];
+                int length = await this.Port.Receive(buffer, 0, buffer.Length);
+                for(int index = 0; index < length; index++)
+                {
+                    // If this is null, we're starting a new message.
+                    if(this.avtStateMachine == null)
+                    {
+                        this.avtStateMachine = new AvtStateMachine();
+                    }
+
+                    byte value = buffer[index];
+
+                    AvtMessage message = this.avtStateMachine.Push(value);
+
+                    if(message != null)
+                    {
+                        this.queue.Enqueue(message);
+                        this.avtStateMachine = null;
+                    }
+                }
+            }
         }
 
         public override async Task<bool> Initialize()
@@ -39,27 +76,45 @@ namespace Flash411
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 115200;
+            configuration.DataReceived = this.DataReceived;
+
             await this.Port.OpenAsync(configuration);
 
-            await this.Port.Send(Avt852Device.AVT_RESET);
-            byte[] reply = await ReceiveBuffer();
+            await this.Port.Send(Avt852DeviceV2.AVT_RESET);
 
-            if (Utility.CompareArrays(reply, Avt852Device.AVT_852_IDLE))
+            AvtMessage response = await this.GetResponse();
+            if (response == null)
+            {
+                this.Logger.AddUserMessage("AVT device not found or failed reset. No response.");
+                return false;
+            }
+
+            byte[] reply = response.Data;
+
+            if (Utility.CompareArrays(reply, Avt852DeviceV2.AVT_852_IDLE))
             {
                 this.Logger.AddUserMessage("AVT device reset ok");
             }
             else
             {
                 this.Logger.AddUserMessage("AVT device not found of failed reset");
-                this.Logger.AddDebugMessage("Expected " + Avt852Device.AVT_852_IDLE.ToHex());
+                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV2.AVT_852_IDLE.ToHex());
                 this.Logger.AddDebugMessage("Received " + reply);
                 return false;
             }
 
-            await this.Port.Send(Avt852Device.AVT_ENTER_VPW_MODE);
-            byte[] reply2 = await ReceiveBuffer();
+            await this.Port.Send(Avt852DeviceV2.AVT_ENTER_VPW_MODE);
 
-            if (Utility.CompareArrays(reply2, Avt852Device.AVT_VPW))
+            response = await this.GetResponse();
+            if (response == null)
+            {
+                this.Logger.AddUserMessage("No response when trying to set AVT to VPW mode.");
+                return false;
+            }
+
+            byte[] reply2 = response.Data;
+
+            if (Utility.CompareArrays(reply2, Avt852DeviceV2.AVT_VPW))
             {
                 this.Logger.AddUserMessage("AVT device to VPW mode");
 
@@ -67,7 +122,7 @@ namespace Flash411
             else
             {
                 this.Logger.AddUserMessage("Unable to set AVT device to VPW mode");
-                this.Logger.AddDebugMessage("Expected " + Avt852Device.AVT_VPW.ToHex());
+                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV2.AVT_VPW.ToHex());
                 this.Logger.AddDebugMessage("Received " + reply2);
                 return false;
             }
@@ -75,54 +130,20 @@ namespace Flash411
             return true;
         }
 
-        /// <summary>
-        /// Create a complete message from the AVT 852.
-        /// </summary>
-        /// <returns></returns>
-        private async Task<byte[]> ReceiveBuffer()
+        private async Task<AvtMessage> GetResponse()
         {
-            byte[] header = new byte[1];
-            int receiveLength = 0;
-
-            for (int iterations = 0; iterations < 5; iterations++)
+            AvtMessage response = null;
+            for (int iteration = 0; iteration < 10; iteration++)
             {
-                // Read the header byte
-                receiveLength = await this.Port.Receive(header, 0, 1);
-                if (receiveLength == 0)
+                if (this.queue.TryDequeue(out response))
                 {
-                    await Task.Delay(100);
-                    continue;
+                    return response;
                 }
 
-                break;
+                await Task.Delay(100);
             }
 
-            // Find out how many bytes are expected
-            int expected = header[0] & 0x0F;
-
-            // Loop around port.Receive until all expected bytes are recevied
-            List<byte> buffer = new List<byte>(expected);
-            for (int iterations = 0; iterations < 10; iterations++)
-            {
-                byte[] segment = new byte[expected - buffer.Count];
-                receiveLength = await this.Port.Receive(segment, 0, segment.Length);
-
-                // If no bytes came back, pause and try again
-                if (receiveLength == 0)
-                {
-                    await Task.Delay(100);
-                    continue;
-                }
-                // Add the bytes from this segment to the buffer
-                buffer.AddRange(segment.Take(receiveLength));
-
-                if (buffer.Count >= expected)
-                {
-                    break;
-                }
-            }
-
-            return header.Concat(buffer).ToArray();
+            return null;
         }
 
         /// <summary>
