@@ -35,6 +35,7 @@ namespace Flash411
 
         public override async Task<bool> Initialize()
         {
+            this.Logger.AddDebugMessage("Initialize called");
             this.Logger.AddDebugMessage("Initializing " + this.ToString());
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
@@ -44,8 +45,7 @@ namespace Flash411
             this.Logger.AddDebugMessage("Draining input queue.");
             await this.ProcessIncomingData();
 
-            this.Logger.AddDebugMessage("Sending 'reset' message (twice).");
-            await this.Port.Send(Avt852DeviceV1.AVT_RESET);
+            this.Logger.AddDebugMessage("Sending 'reset' message.");
             await this.Port.Send(Avt852DeviceV1.AVT_RESET);
 
             if (await ConfirmResponse(AVT_852_IDLE))
@@ -80,6 +80,7 @@ namespace Flash411
         /// </summary>
         private async Task<bool> ConfirmResponse(byte[] expected)
         {
+            this.Logger.AddDebugMessage("ConfirmResponse called");
             for (int iterations = 0; iterations < 5; iterations++)
             {
                 Queue<AvtMessage> queue = await this.ProcessIncomingData();
@@ -103,6 +104,7 @@ namespace Flash411
         /// <returns></returns>
         private async Task<Queue<AvtMessage>> ProcessIncomingData()
         {
+            this.Logger.AddDebugMessage("ProcessIncomingData called");
             Queue<AvtMessage> queue = new Queue<AvtMessage>();
 
             AvtStateMachine avtStateMachine = new AvtStateMachine();
@@ -139,6 +141,7 @@ namespace Flash411
         /// </summary>
         public override Task<bool> SendMessage(Message message)
         {
+            this.Logger.AddDebugMessage("Sendmessage called");
             StringBuilder builder = new StringBuilder();
             this.Logger.AddDebugMessage("Sending message " + message.GetBytes().ToHex());
             this.Port.Send(message.GetBytes());
@@ -151,6 +154,7 @@ namespace Flash411
         public override Task<Response<byte[]>> SendRequest(Message message)
         {
 
+            this.Logger.AddDebugMessage("Sendrequest called");
             StringBuilder builder = new StringBuilder();
             this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
             this.Port.Send(message.GetBytes());
