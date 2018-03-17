@@ -58,21 +58,21 @@ namespace Flash411
         {
             this.logger.AddDebugMessage("MockAvt852 received: " + buffer.ToHex());
 
-            if (Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_RESET))
+            if (Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_RESET.GetBytes()))
             {
-                responseBuffer = Avt852DeviceV1.AVT_852_IDLE;
+                responseBuffer = Avt852DeviceV1.AVT_852_IDLE.GetBytes();
             }
-            else if(Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_REQUEST_MODEL))
+            else if(Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_REQUEST_MODEL.GetBytes()))
             {
                 responseBuffer = new byte[] { 0x93, 0x28, 0x08, 0x52 };
             }
-            else if(Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_REQUEST_FIRMWARE))
+            else if(Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_REQUEST_FIRMWARE.GetBytes()))
             {
                 responseBuffer = new byte[] { 0x92, 0x04, 0x15 };
             }
-            else if(Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_ENTER_VPW_MODE))
+            else if(Utility.CompareArrays(buffer, Avt852DeviceV1.AVT_ENTER_VPW_MODE.GetBytes()))
             {
-                responseBuffer = Avt852DeviceV1.AVT_VPW;
+                responseBuffer = Avt852DeviceV1.AVT_VPW.GetBytes();
             }
 
             this.sentSoFar = 0;
