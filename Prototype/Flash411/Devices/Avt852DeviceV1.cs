@@ -98,40 +98,27 @@ namespace Flash411
         }
 
         /// <summary>
-        /// This will process incoming messages for up to 500ms, looking for the given message.
+        /// This will process incoming messages for up to 500ms looking for a message
         /// </summary>
         public async Task<Response<Message>> FindResponse(Message expected)
         {
             this.Logger.AddDebugMessage("ConfirmResponse called");
             for (int iterations = 0; iterations < 5; iterations++)
             {
-
-                byte[] buffer= await this.ReadAVTPacket();
-                if (buffer == null) return null;
-                Message message = new Message(buffer);
-                if (Utility.CompareArraysPart(message.GetBytes(), expected.GetBytes()))
-                {
-                        return Response.Create(ResponseStatus.Success, message);
-                }
+                Response<Message> response = await this.ReadAVTPacket();
+                if (response.Status == ResponseStatus.Success) 
+                    if (Utility.CompareArraysPart(response.Value.GetBytes(), expected.GetBytes()))
+                        return Response.Create(ResponseStatus.Success, (Message) response.Value);
                 await Task.Delay(100);
             }
 
             return Response.Create(ResponseStatus.Timeout, (Message) null);
         }
 
-        private async Task<bool> CheckBytesAvailable(UInt16 Timeout)
-        {
-            Stopwatch SW = new Stopwatch();
-            SW.Start();
-            while (SW.ElapsedMilliseconds < Timeout)
-            {
-                if (await Port.GetReceiveQueueSize() > 0) { return true; }
-            }
-
-            return false;
-        }
-
-        async private Task<byte[]> ReadAVTPacket()
+        /// <summary>
+        /// Read an AVT formatted packet from the interface, and return a Response/Message
+        /// </summary>
+        async private Task<Response<Message>> ReadAVTPacket()
         {
             this.Logger.AddDebugMessage("Trace: ReadAVTPacket");
             int length = 0;
@@ -162,7 +149,7 @@ namespace Flash411
                     if (rx[0] != 0x53)
                     {
                         this.Logger.AddDebugMessage("RX: VPW too long: " + rx[0].ToString("X2"));
-                        return new byte[0];
+                        return Response.Create(ResponseStatus.Error, (Message)null);
                     }
                     await this.Port.Receive(rx, 0, 2);
                     this.Logger.AddDebugMessage("RX: VPW too long and truncated to " + ((rx[0] << 8) + rx[1]).ToString("X4"));
@@ -173,6 +160,10 @@ namespace Flash411
                     this.Logger.AddDebugMessage("RX: Header " + rx[0].ToString("X2"));
                     int type = rx[0] >> 4;
                     switch (type) {
+                        case 0:
+                            length = rx[0] & 0x0F;
+                            this.Logger.AddDebugMessage("RX: AVT Type 0 (with status) length " + length);
+                            break;
                         case 9:
                             length = rx[0] & 0x0F;
                             status = false;
@@ -194,11 +185,46 @@ namespace Flash411
 
             // return the packet
             byte[] receive = new byte[length];
-            // Task.Delay(500);
             await this.Port.Receive(receive, 0, length);
             this.Logger.AddDebugMessage("Length=" + length + " RX: " + receive.ToHex());
 
-            return receive;
+            return Response.Create(ResponseStatus.Success, new Message(receive));
+        }
+
+        /// <summary>
+        /// Convert a Message to an AVT formatted transmit, and send to the interface
+        /// </summary>
+        async private Task<Response<Message>> SendAVTPacket(Message message)
+        {
+            this.Logger.AddDebugMessage("Trace: SendAVTPacket");
+
+            byte[] txb = { 0x12 };
+            int length = message.GetBytes().Length;
+
+            if (length > 0xFF)
+            {
+                await this.Port.Send(txb);
+                txb[0] = unchecked((byte)(length >> 8));
+                await this.Port.Send(txb);
+                txb[0] = unchecked((byte)(length & 0xFF));
+                await this.Port.Send(txb);
+            }
+            else if (length > 0x0F)
+            {
+                txb[0] = (byte)(0x11);
+                await this.Port.Send(txb);
+                txb[0] = unchecked((byte)(length & 0xFF));
+                await this.Port.Send(txb);
+            }
+            else
+            {
+                txb[0] = unchecked((byte)(length & 0x0F));
+                await this.Port.Send(txb);
+            }
+
+            await this.Port.Send(message.GetBytes());
+
+            return Response.Create(ResponseStatus.Success, message);
         }
 
         /// <summary>
@@ -218,19 +244,15 @@ namespace Flash411
         /// </summary>
         public override async Task<Response <Message>> SendRequest(Message message)
         {
-
             this.Logger.AddDebugMessage("Sendrequest called");
             StringBuilder builder = new StringBuilder();
             this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
-            await this.Port.Send(message.GetBytes());
+            await SendAVTPacket(message);
 
-            // This code here will need to handle AVT packet formatting
-            byte[] response = new byte[100];
-            HookAvtHere;
-            this.Port.Receive(response, 0, 2);
+            Response<Message> response = await ReadAVTPacket();
+            if (response.Status != ResponseStatus.Success) return response;
 
             this.Logger.AddDebugMessage("RX: " + message.GetBytes().ToHex());
-            this.Port.Send(message.GetBytes());
 
             return Response.Create(ResponseStatus.Success, message);
         }
