@@ -99,6 +99,8 @@ namespace Flash411
         /// </summary>
         public static bool CompareArraysPart(byte[] actual, byte[] expected)
         {
+            if (actual == null || expected == null) return false;
+
             for (int index = 0; index < expected.Length && index < actual.Length; index++)
             {
                 if (actual[index] != expected[index])
