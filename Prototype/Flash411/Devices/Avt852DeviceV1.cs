@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -80,11 +81,12 @@ namespace Flash411
             }
 
             await this.Port.Send(Avt852DeviceV1.AVT_ENTER_VPW_MODE.GetBytes());
-            Task.Delay(100);
+           // Task.Delay(100);
             m = await FindResponse(AVT_VPW);
             if (m.Status == ResponseStatus.Success)
             {
                 this.Logger.AddDebugMessage("Set VPW Mode");
+                this.Logger.AddUserMessage("Set VPW Mode");
             }
             else
             {
@@ -105,7 +107,7 @@ namespace Flash411
             for (int iterations = 0; iterations < 5; iterations++)
             {
 
-                byte[] buffer=this.ReadAVTPacket();
+                byte[] buffer= await this.ReadAVTPacket();
                 if (buffer == null) return null;
                 Message message = new Message(buffer);
                 if (Utility.CompareArraysPart(message.GetBytes(), expected.GetBytes()))
@@ -118,7 +120,19 @@ namespace Flash411
             return Response.Create(ResponseStatus.Timeout, (Message) null);
         }
 
-        private byte[] ReadAVTPacket()
+        private async Task<bool> CheckBytesAvailable(UInt16 Timeout)
+        {
+            Stopwatch SW = new Stopwatch();
+            SW.Start();
+            while (SW.ElapsedMilliseconds < Timeout)
+            {
+                if (await Port.GetReceiveQueueSize() > 0) { return true; }
+            }
+
+            return false;
+        }
+
+        async private Task<byte[]> ReadAVTPacket()
         {
             this.Logger.AddDebugMessage("Trace: ReadAVTPacket");
             int length = 0;
@@ -126,32 +140,32 @@ namespace Flash411
             byte[] rx = new byte[2]; // we dont read more than 2 bytes at a time
 
             // Get the first packet byte.
-            this.Port.Receive(rx, 0, 1);
+            await  this.Port.Receive(rx, 0, 1);
 
             // read an AVT format length
             switch (rx[0])
             {
                 case 0x11:
-                    this.Port.Receive(rx, 0, 1);
+                    await this.Port.Receive(rx, 0, 1);
                     length = rx[0];
                     this.Logger.AddDebugMessage("RX: AVT Type 11. Length  " + rx[0].ToString("X2"));
                     break;
                 case 0x12:
-                    this.Port.Receive(rx, 0, 1);
+                    await this.Port.Receive(rx, 0, 1);
                     length = rx[0] << 8;
-                    this.Port.Receive(rx, 0, 1);
+                    await this.Port.Receive(rx, 0, 1);
                     length += rx[0];
                     this.Logger.AddDebugMessage("RX: AVT Type 12. Length  " + rx[0].ToString("X2"));
                     break;
                 case 0x23:
                     this.Logger.AddDebugMessage("RX: AVT Type 23");
-                    this.Port.Receive(rx, 0, 1);
+                    await this.Port.Receive(rx, 0, 1);
                     if (rx[0] != 0x53)
                     {
                         this.Logger.AddDebugMessage("RX: VPW too long: " + rx[0].ToString("X2"));
                         return new byte[0];
                     }
-                    this.Port.Receive(rx, 0, 2);
+                    await this.Port.Receive(rx, 0, 2);
                     this.Logger.AddDebugMessage("RX: VPW too long and truncated to " + ((rx[0] << 8) + rx[1]).ToString("X4"));
                     length = 4112;
                     this.Logger.AddDebugMessage("RX: Using 4112 - if that does not match the above report as a bug");
@@ -175,14 +189,14 @@ namespace Flash411
             // if we need to get check and discard the status byte
             if (status == true)
             {
-                this.Port.Receive(rx, 0, 1);
+                await this.Port.Receive(rx, 0, 1);
                 if (rx[0] != 0) this.Logger.AddDebugMessage("RX: bad packet status: " + rx[0].ToString("X2"));
             }
 
             // return the packet
             byte[] receive = new byte[length];
-            Task.Delay(500);
-            this.Port.Receive(receive, 0, length);
+            // Task.Delay(500);
+            await this.Port.Receive(receive, 0, length);
             this.Logger.AddDebugMessage("Length=" + length + " RX: " + receive.ToHex());
 
             return receive;
