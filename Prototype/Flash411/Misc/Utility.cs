@@ -94,6 +94,22 @@ namespace Flash411
             return true;
         }
 
+        /// <summary>
+        /// Indicate whether the overlap between two arrays are identical or not.
+        /// </summary>
+        public static bool CompareArraysPart(byte[] actual, byte[] expected)
+        {
+            for (int index = 0; index < expected.Length && index < actual.Length; index++)
+            {
+                if (actual[index] != expected[index])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         // This method and its comments were copied from https://github.com/dotnet/wcf/blob/master/src/System.Private.ServiceModel/src/Internals/System/Runtime/TaskHelpers.cs
         //
         // Awaitable helper to await a maximum amount of time for a task to complete. If the task doesn't
