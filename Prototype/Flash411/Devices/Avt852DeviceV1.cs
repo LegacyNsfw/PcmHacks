@@ -46,12 +46,11 @@ namespace Flash411
             configuration.BaudRate = 115200;
             await this.Port.OpenAsync(configuration);
 
-            this.Logger.AddDebugMessage("Draining input queue.");
-            await this.ProcessIncomingData();
+            this.Logger.AddDebugMessage("Flushing serial buffers");
+            await this.Port.DiscardBuffers();
 
             this.Logger.AddDebugMessage("Sending 'reset' message.");
             await this.Port.Send(Avt852DeviceV1.AVT_RESET.GetBytes());
-
             m = await this.FindResponse(AVT_852_IDLE);
             if (m.Status == ResponseStatus.Success )
             {
@@ -64,6 +63,7 @@ namespace Flash411
                 return false;
             }
 
+            this.Logger.AddDebugMessage("Looking for Firmware message");
             m = await this.FindResponse(AVT_FIRMWARE);
             if ( m.Status == ResponseStatus.Success )
             {
@@ -74,12 +74,13 @@ namespace Flash411
             }
             else
             {
-                this.Logger.AddUserMessage("AVT device not found or failed reset");
-                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV1.AVT_852_IDLE.GetBytes());
+                this.Logger.AddUserMessage("Firmware not found or failed reset");
+                this.Logger.AddDebugMessage("Expected " + AVT_FIRMWARE.GetBytes());
                 return false;
             }
 
             await this.Port.Send(Avt852DeviceV1.AVT_ENTER_VPW_MODE.GetBytes());
+            Task.Delay(100);
             m = await FindResponse(AVT_VPW);
             if (m.Status == ResponseStatus.Success)
             {
@@ -103,45 +104,18 @@ namespace Flash411
             this.Logger.AddDebugMessage("ConfirmResponse called");
             for (int iterations = 0; iterations < 5; iterations++)
             {
-                Queue<Message> queue = await this.ProcessIncomingData();
-                foreach (Message message in queue)
-                {
-                    if (Utility.CompareArraysPart(message.GetBytes(), expected.GetBytes()))
-                    {
-                        return Response.Create(ResponseStatus.Success, message);
-                    }
-                }
 
+                byte[] buffer=this.ReadAVTPacket();
+                if (buffer == null) return null;
+                Message message = new Message(buffer);
+                if (Utility.CompareArraysPart(message.GetBytes(), expected.GetBytes()))
+                {
+                        return Response.Create(ResponseStatus.Success, message);
+                }
                 await Task.Delay(100);
             }
 
             return Response.Create(ResponseStatus.Timeout, (Message) null);
-        }
-
-        /// <summary>
-        /// Process incoming data, using a state-machine to parse the incoming messages.
-        /// </summary>
-        /// <returns></returns>
-        private async Task<Queue<Message>> ProcessIncomingData()
-        {
-            this.Logger.AddDebugMessage("ProcessIncomingData called");
-            Queue<Message> queue = new Queue<Message>();
-
-            while (await this.Port.GetReceiveQueueSize() > 0)
-            {
-                byte[] buffer = ReadAVTPacket();
-                {
-                    Message message = new Message(buffer);
-
-                    if (message != null)
-                    {
-                        this.Logger.AddDebugMessage("Received " + message.GetBytes().ToHex());
-                        queue.Enqueue(message);
-                    }
-                }
-            }
-
-            return queue;
         }
 
         private byte[] ReadAVTPacket()
@@ -192,7 +166,7 @@ namespace Flash411
                             this.Logger.AddDebugMessage("RX: AVT Type 9 (no status) length " + length);
                             break;
                         default:
-                            this.Logger.AddDebugMessage("RX: Unhandled packet type" + type + "Add support to ReadAVTPacket()");
+                            this.Logger.AddDebugMessage("RX: Unhandled packet type " + type + ". Add support to ReadAVTPacket()");
                             break;
                     }
                     break;
