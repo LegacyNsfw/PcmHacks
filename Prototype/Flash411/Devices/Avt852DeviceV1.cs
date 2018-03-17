@@ -94,6 +94,8 @@ namespace Flash411
                 return false;
             }
 
+            await AVTSetup();
+
             return true;
         }
 
@@ -164,10 +166,11 @@ namespace Flash411
                             length = rx[0] & 0x0F;
                             this.Logger.AddDebugMessage("RX: AVT Type 0 (with status) length " + length);
                             break;
-                        case 9:
+                        case 6: // avt filter
+                        case 9: // init and version
                             length = rx[0] & 0x0F;
                             status = false;
-                            this.Logger.AddDebugMessage("RX: AVT Type 9 (no status) length " + length);
+                            this.Logger.AddDebugMessage("RX: AVT Type " + type + " (no status) length " + length);
                             break;
                         default:
                             this.Logger.AddDebugMessage("RX: Unhandled packet type " + type + ". Add support to ReadAVTPacket()");
@@ -228,6 +231,46 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Configure AVT to return only packets targeted to the tool (Device ID F0), and disable transmit acks
+        /// </summary>
+        async private Task<Response<Boolean>> AVTSetup()
+        {
+            this.Logger.AddDebugMessage("AVTFilter called");
+
+            byte[] filterdest = { 0x52, 0x5B, 0xF0 };
+            byte[] filterdestok = { 0x5B, 0xF0 }; // 62 5B F0
+            byte[] disabletxack = { 0x52, 0x40, 0x00 };
+            byte[] disabletxackok = { 0x40, 0x00 }; // 62 40 00
+
+            await this.Port.Send(disabletxack);
+            Response<Message> response = await ReadAVTPacket();
+
+            if (Utility.CompareArraysPart(response.Value.GetBytes(), disabletxackok))
+            {
+                this.Logger.AddDebugMessage("AVT Acks disabled");
+            }
+            else
+            {
+                this.Logger.AddDebugMessage("Failed to disable AVT Acks");
+                return Response.Create(ResponseStatus.Error, false);
+            }
+
+            await this.Port.Send(filterdest);
+            response = await ReadAVTPacket();
+
+            if (Utility.CompareArraysPart(response.Value.GetBytes(), filterdestok))
+            {
+                this.Logger.AddDebugMessage("AVTFilter enabled");
+                return Response.Create(ResponseStatus.Success, true);
+            }
+            else
+            {
+                this.Logger.AddDebugMessage("Failed to set AVT Filter");
+                return Response.Create(ResponseStatus.Error, false);
+            }
+        }
+
+        /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>
         public override Task<bool> SendMessage(Message message)
@@ -245,7 +288,6 @@ namespace Flash411
         public override async Task<Response <Message>> SendRequest(Message message)
         {
             this.Logger.AddDebugMessage("Sendrequest called");
-            StringBuilder builder = new StringBuilder();
             this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
             await SendAVTPacket(message);
 
