@@ -100,7 +100,7 @@ namespace Flash411
         /// and this method must return the exact sequence of bytes that came from the PCM.
         /// The ELM/STN protocol gets in the way of that, so we have to translate in both directions.
         /// </remarks>
-        public async override Task<Response<byte[]>> SendRequest(Message message)
+        public async override Task<Response<Message>> SendRequest(Message message)
         {
             // The incoming byte array needs to separated into header and payload portions,
             // which are sent separately.
@@ -114,8 +114,7 @@ namespace Flash411
             if (setHeaderResponse != "OK")
             {
                 this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
-                Response<byte[]> result = new Response<byte[]>(ResponseStatus.UnexpectedResponse, new byte[0]);
-                return result;
+                return Response.Create(ResponseStatus.UnexpectedResponse, (Message) null);
             }
 
             string payload = hexRequest.Substring(9);
@@ -128,8 +127,7 @@ namespace Flash411
                 if (!hexResponse.IsHex())
                 {
                     this.Logger.AddDebugMessage("Unexpected response: " + hexResponse);
-                    Response<byte[]> result = new Response<byte[]>(ResponseStatus.UnexpectedResponse, new byte[0]);
-                    return result;
+                    return Response.Create(ResponseStatus.UnexpectedResponse, (Message)null);
                 }
 
                 // Add the header bytes that the ELM hides from us.
@@ -140,12 +138,11 @@ namespace Flash411
                 completeResponseBytes[2] = messageBytes[1];
                 deviceResponseBytes.CopyTo(completeResponseBytes, 3);
 
-                return new Response<byte[]>(ResponseStatus.Success, completeResponseBytes);
+                return Response.Create(ResponseStatus.Success, new Message(completeResponseBytes));
             }
             catch (TimeoutException)
             {
-                Response<byte[]> result = new Response<byte[]>(ResponseStatus.Timeout, new byte[0]);
-                return result;
+                return Response.Create(ResponseStatus.Timeout, (Message)null);
             }
         }
 

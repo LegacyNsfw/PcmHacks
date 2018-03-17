@@ -83,25 +83,25 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryVin()
         {
-            Response<byte[]> response1 = await this.device.SendRequest(this.messageFactory.CreateVinRequest1());
+            Response<Message> response1 = await this.device.SendRequest(this.messageFactory.CreateVinRequest1());
             if (response1.Status != ResponseStatus.Success)
             {
                 return Response.Create(response1.Status, "Unknown");
             }
 
-            Response<byte[]> response2 = await this.device.SendRequest(this.messageFactory.CreateVinRequest2());
+            Response<Message> response2 = await this.device.SendRequest(this.messageFactory.CreateVinRequest2());
             if (response1.Status != ResponseStatus.Success)
             {
                 return Response.Create(response1.Status, "Unknown");
             }
 
-            Response<byte[]> response3 = await this.device.SendRequest(this.messageFactory.CreateVinRequest3());
+            Response<Message> response3 = await this.device.SendRequest(this.messageFactory.CreateVinRequest3());
             if (response1.Status != ResponseStatus.Success)
             {
                 return Response.Create(response1.Status, "Unknown");
             }
 
-            return this.messageParser.ParseVinResponses(response1, response2, response3);
+            return this.messageParser.ParseVinResponses(response1.Value.GetBytes(), response2.Value.GetBytes(), response3.Value.GetBytes());
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace Flash411
                 return Response.Create(response.Status, (UInt32)0);
             }
 
-            return this.messageParser.ParseOperatingSystemId(response);
+            return this.messageParser.ParseOperatingSystemId(response.Value.GetBytes());
         }
 
         /// <summary>
@@ -126,13 +126,13 @@ namespace Flash411
         public async Task<Response<bool>> UnlockEcu()
         {
             Message seedRequest = this.messageFactory.CreateSeedRequest();
-            var seedResponse = await this.device.SendRequest(seedRequest);
+            Response<Message> seedResponse = await this.device.SendRequest(seedRequest);
             if (seedResponse.Status != ResponseStatus.Success)
             {
                 return Response.Create(seedResponse.Status, false);
             }
 
-            Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse);
+            Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.Value.GetBytes());
             if (seedValueResponse.Status != ResponseStatus.Success)
             {
                 return Response.Create(seedValueResponse.Status, false);
@@ -141,14 +141,14 @@ namespace Flash411
             UInt16 key = KeyAlgorithm.GetKey(seedValueResponse.Value);
 
             Message unlockRequest = this.messageFactory.CreateUnlockRequest(key);
-            var unlockResponse = await this.device.SendRequest(unlockRequest);
+            Response<Message> unlockResponse = await this.device.SendRequest(unlockRequest);
             if (unlockResponse.Status != ResponseStatus.Success)
             {
                 return Response.Create(unlockResponse.Status, false);
             }
 
             string errorMessage;
-            Response<bool> result = this.messageParser.ParseUnlockResponse(unlockResponse, out errorMessage);
+            Response<bool> result = this.messageParser.ParseUnlockResponse(unlockResponse.Value.GetBytes(), out errorMessage);
             if (errorMessage != null)
             {
                 this.logger.AddUserMessage(errorMessage);
