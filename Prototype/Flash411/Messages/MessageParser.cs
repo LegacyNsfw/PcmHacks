@@ -31,55 +31,55 @@ namespace Flash411
         /// <summary>
         /// Parse the response to an OS ID request.
         /// </summary>
-        public Response<UInt32> ParseOperatingSystemId(Response<byte[]> response)
+        public Response<UInt32> ParseOperatingSystemId(byte[] response)
         {
             int result = 0;
             ResponseStatus status;
 
             byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.OperatingSystemID };
-            if (!TryVerifyInitialBytes(response.Value, expected, out status))
+            if (!TryVerifyInitialBytes(response, expected, out status))
             {
-                return Response.Create(status, (UInt32)result);
+                return Response.Create(ResponseStatus.Error, (UInt32)result);
             }
 
-            result = response.Value[5] << 24;
-            result += response.Value[6] << 16;
-            result += response.Value[7] << 8;
-            result += response.Value[8];
+            result = response[5] << 24;
+            result += response[6] << 16;
+            result += response[7] << 8;
+            result += response[8];
 
-            return Response.Create(response.Status, (UInt32)result);
+            return Response.Create(ResponseStatus.Success, (UInt32)result);
         }
 
         /// <summary>
         /// Parse the responses to the three requests for VIN information.
         /// </summary>
-        public Response<string> ParseVinResponses(Response<byte[]> response1, Response<byte[]> response2, Response<byte[]> response3)
+        public Response<string> ParseVinResponses(byte[] response1, byte[] response2, byte[] response3)
         {
             string result = "Unknown";
             ResponseStatus status;
 
             byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Vin1 };
-            if (!TryVerifyInitialBytes(response1.Value, expected, out status))
+            if (!TryVerifyInitialBytes(response1, expected, out status))
             {
                 return Response.Create(status, result);
             }
 
             expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Vin2 };
-            if (!TryVerifyInitialBytes(response2.Value, expected, out status))
+            if (!TryVerifyInitialBytes(response2, expected, out status))
             {
                 return Response.Create(status, result);
             }
 
             expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Vin3 };
-            if (!TryVerifyInitialBytes(response3.Value, expected, out status))
+            if (!TryVerifyInitialBytes(response3, expected, out status))
             {
                 return Response.Create(status, result);
             }
 
             byte[] vinBytes = new byte[13];
-            Buffer.BlockCopy(response1.Value, 6, vinBytes, 0, 5);
-            Buffer.BlockCopy(response2.Value, 6, vinBytes, 5, 4);
-            Buffer.BlockCopy(response3.Value, 6, vinBytes, 9, 4);
+            Buffer.BlockCopy(response1, 6, vinBytes, 0, 5);
+            Buffer.BlockCopy(response2, 6, vinBytes, 5, 4);
+            Buffer.BlockCopy(response3, 6, vinBytes, 9, 4);
             string vin = System.Text.Encoding.ASCII.GetString(vinBytes);
             return Response.Create(ResponseStatus.Success, vin);
         }
@@ -87,19 +87,19 @@ namespace Flash411
         /// <summary>
         /// Parse the response to a seed request.
         /// </summary>
-        public Response<UInt16> ParseSeed(Response<byte[]> response)
+        public Response<UInt16> ParseSeed(byte[] response)
         {
             UInt16 result = 0;
             ResponseStatus status;
 
             byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x01, };
-            if (!TryVerifyInitialBytes(response.Value, expected, out status))
+            if (!TryVerifyInitialBytes(response, expected, out status))
             {
                 return Response.Create(status, result);
             }
 
             // Do we need to byte-swap this value?
-            result = BitConverter.ToUInt16(response.Value, 5);
+            result = BitConverter.ToUInt16(response, 5);
 
             return Response.Create(ResponseStatus.Success, result);
         }
@@ -133,15 +133,15 @@ namespace Flash411
         /// <summary>
         /// Determine whether we were able to unlock the PCM.
         /// </summary>
-        internal Response<bool> ParseUnlockResponse(Response<byte[]> unlockResponse, out string errorMessage)
+        internal Response<bool> ParseUnlockResponse(byte[] unlockResponse, out string errorMessage)
         {
-            if (unlockResponse.Value.Length != 6)
+            if (unlockResponse.Length != 6)
             {
-                errorMessage = $"Unlock response was {unlockResponse.Value.Length} bytes long, expected 6.";
+                errorMessage = $"Unlock response was {unlockResponse.Length} bytes long, expected 6.";
                 return Response.Create(ResponseStatus.UnexpectedResponse, false);
             }
 
-            byte unlockCode = unlockResponse.Value[5];
+            byte unlockCode = unlockResponse[5];
 
             if (unlockCode == 0x34)
             {

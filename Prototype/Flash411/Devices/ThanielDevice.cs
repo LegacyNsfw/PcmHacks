@@ -38,9 +38,9 @@ namespace Flash411
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
-        public override Task<Response<byte[]>> SendRequest(Message message)
+        public override Task<Response<Message>> SendRequest(Message message)
         {
-            return Task.FromResult(Response.Create(ResponseStatus.Success, new byte[] { }));
+            return Task.FromResult(Response.Create(ResponseStatus.Success, new Message(new byte[] { })));
         }
     }
 }

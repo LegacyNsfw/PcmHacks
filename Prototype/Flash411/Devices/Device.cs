@@ -60,6 +60,6 @@ namespace Flash411
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
-        public abstract Task<Response<byte[]>> SendRequest(Message message);
+        public abstract Task<Response<Message>> SendRequest(Message message);
     }
 }
