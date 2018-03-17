@@ -24,5 +24,10 @@ namespace Flash411
         {
             return this.message;
         }
+
+        public string GetString()
+        {
+            return string.Join(string.Empty, Array.ConvertAll(message, b => b.ToString("X2")));
+        }
     }
 }

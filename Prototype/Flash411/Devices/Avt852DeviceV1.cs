@@ -13,16 +13,18 @@ namespace Flash411
     /// 
     class Avt852DeviceV1 : Device
     {
-        public static readonly byte[] AVT_RESET = { 0xF1, 0xA5 };
-        public static readonly byte[] AVT_ENTER_VPW_MODE = { 0xE1, 0x33 };
-        public static readonly byte[] AVT_REQUEST_MODEL = { 0xF0 };
-        public static readonly byte[] AVT_REQUEST_FIRMWARE = { 0xB0 };
+        public static readonly Message AVT_RESET            = new Message(new byte[] { 0xF1, 0xA5 });
+        public static readonly Message AVT_ENTER_VPW_MODE   = new Message(new byte[] { 0xE1, 0x33 });
+        public static readonly Message AVT_REQUEST_MODEL    = new Message(new byte[] { 0xF0 });
+        public static readonly Message AVT_REQUEST_FIRMWARE = new Message(new byte[] { 0xB0 });
 
-        public static readonly byte[] AVT_VPW = { 0x91, 0x07 };
-        public static readonly byte[] AVT_852_IDLE = { 0x91, 0x27 };
-        public static readonly byte[] AVT_842_IDLE = { 0x91, 0x12 };
-        public static readonly byte[] AVT_TX_ACK = { 0x01, 0x60 };
-        public static readonly byte[] AVT_BLOCK_TX_ACK = { 0xF3, 0x60 };
+        // AVT reader strips the header
+        public static readonly Message AVT_VPW              = new Message(new byte[] { 0x07 });       // 91 01
+        public static readonly Message AVT_852_IDLE         = new Message(new byte[] { 0x27 });       // 91 27
+        public static readonly Message AVT_842_IDLE         = new Message(new byte[] { 0x12 });       // 91 12
+        public static readonly Message AVT_FIRMWARE         = new Message(new byte[] { 0x04 });       // 92 04 15 (firmware 1.5)
+        public static readonly Message AVT_TX_ACK           = new Message(new byte[] { 0x60 });       // 01 60
+        public static readonly Message AVT_BLOCK_TX_ACK     = new Message(new byte[] { 0xF3, 0x60 }); // F3 60
 
         public Avt852DeviceV1(IPort port, ILogger logger) : base(port, logger)
         {
@@ -38,6 +40,8 @@ namespace Flash411
             this.Logger.AddDebugMessage("Initialize called");
             this.Logger.AddDebugMessage("Initializing " + this.ToString());
 
+            Message m; // hold returned messages for processing
+
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 115200;
             await this.Port.OpenAsync(configuration);
@@ -46,29 +50,40 @@ namespace Flash411
             await this.ProcessIncomingData();
 
             this.Logger.AddDebugMessage("Sending 'reset' message.");
-            await this.Port.Send(Avt852DeviceV1.AVT_RESET);
+            await this.Port.Send(Avt852DeviceV1.AVT_RESET.GetBytes());
 
-            if (await ConfirmResponse(AVT_852_IDLE))
+            if (await this.FindResponse(AVT_852_IDLE) != null)
             {
                 this.Logger.AddUserMessage("AVT device reset ok");
             }
             else
             {
                 this.Logger.AddUserMessage("AVT device not found or failed reset");
-                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV1.AVT_852_IDLE.ToHex());
+                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV1.AVT_852_IDLE.GetBytes());
                 return false;
             }
 
-            await this.Port.Send(Avt852DeviceV1.AVT_ENTER_VPW_MODE);
+            if (m=FindResponse(AVT_FIRMWARE))
+            {
+                this.Logger.AddUserMessage("AVT device reset ok");
+            }
+            else
+            {
+                this.Logger.AddUserMessage("AVT device not found or failed reset");
+                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV1.AVT_852_IDLE.GetBytes());
+                return false;
+            }
 
-            if (await ConfirmResponse(AVT_VPW))
+            await this.Port.Send(Avt852DeviceV1.AVT_ENTER_VPW_MODE.GetBytes());
+
+            if (await FindResponse(AVT_VPW))
             {
                 this.Logger.AddUserMessage("AVT device to VPW mode");
             }
             else
             {
                 this.Logger.AddUserMessage("Unable to set AVT device to VPW mode");
-                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV1.AVT_VPW.ToHex());
+                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV1.AVT_VPW.GetString());
                 return false;
             }
 
@@ -78,7 +93,7 @@ namespace Flash411
         /// <summary>
         /// This will process incoming messages for up to 500ms, looking for the given message.
         /// </summary>
-        private async Task<bool> ConfirmResponse(byte[] expected)
+        public async Task<Response<Message>> FindResponse(Message expected)
         {
             this.Logger.AddDebugMessage("ConfirmResponse called");
             for (int iterations = 0; iterations < 5; iterations++)
@@ -86,16 +101,16 @@ namespace Flash411
                 Queue<Message> queue = await this.ProcessIncomingData();
                 foreach (Message message in queue)
                 {
-                    if (Utility.CompareArrays(message.GetBytes(), expected))
+                    if (Utility.CompareArraysPart(message.GetBytes(), expected.GetBytes()))
                     {
-                        return true;
+                        return message;
                     }
                 }
 
                 await Task.Delay(100);
             }
 
-            return false;
+            return null;
         }
 
         /// <summary>
