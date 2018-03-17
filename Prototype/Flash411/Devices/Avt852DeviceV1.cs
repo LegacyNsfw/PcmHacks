@@ -83,10 +83,10 @@ namespace Flash411
             this.Logger.AddDebugMessage("ConfirmResponse called");
             for (int iterations = 0; iterations < 5; iterations++)
             {
-                Queue<AvtMessage> queue = await this.ProcessIncomingData();
-                foreach (AvtMessage message in queue)
+                Queue<Message> queue = await this.ProcessIncomingData();
+                foreach (Message message in queue)
                 {
-                    if (Utility.CompareArrays(message.Data, expected))
+                    if (Utility.CompareArrays(message.GetBytes(), expected))
                     {
                         return true;
                     }
@@ -102,38 +102,89 @@ namespace Flash411
         /// Process incoming data, using a state-machine to parse the incoming messages.
         /// </summary>
         /// <returns></returns>
-        private async Task<Queue<AvtMessage>> ProcessIncomingData()
+        private async Task<Queue<Message>> ProcessIncomingData()
         {
             this.Logger.AddDebugMessage("ProcessIncomingData called");
-            Queue<AvtMessage> queue = new Queue<AvtMessage>();
+            Queue<Message> queue = new Queue<Message>();
 
-            AvtStateMachine avtStateMachine = new AvtStateMachine();
             while (await this.Port.GetReceiveQueueSize() > 0)
             {
-                byte[] buffer = new byte[await this.Port.GetReceiveQueueSize()];
-                int length = await this.Port.Receive(buffer, 0, buffer.Length);
-                for (int index = 0; index < length; index++)
+                byte[] buffer = ReadAVTPacket();
                 {
-                    // If this is null, we're starting a new message.
-                    if (avtStateMachine == null)
-                    {
-                        avtStateMachine = new AvtStateMachine();
-                    }
-
-                    byte value = buffer[index];
-
-                    AvtMessage message = avtStateMachine.Push(value);
+                    Message message = new Message(buffer);
 
                     if (message != null)
                     {
-                        this.Logger.AddDebugMessage("Received " + message.Data.ToHex());
+                        this.Logger.AddDebugMessage("Received " + message.GetBytes().ToHex());
                         queue.Enqueue(message);
-                        avtStateMachine = null;
                     }
                 }
             }
 
             return queue;
+        }
+
+        private byte[] ReadAVTPacket()
+        {
+            this.Logger.AddDebugMessage("Trace: ReadAVTPacket");
+            int length = 0;
+            bool status = true; // do we have a status byte? (we dont for some 9x init commands)
+
+            byte[] rx = new byte[2];
+
+            // Get the first packet byte.
+            this.Port.Receive(rx, 0, 1);
+
+            // read an AVT format length
+            switch (rx[0])
+            {
+                case 0x11:
+                    this.Port.Receive(rx, 0, 1);
+                    length = rx[0];
+                    break;
+                case 0x12:
+                    this.Port.Receive(rx, 0, 1);
+                    length = rx[0] << 8;
+                    this.Port.Receive(rx, 0, 1);
+                    length += rx[0];
+                    break;
+                case 0x23:
+                    this.Port.Receive(rx, 0, 1);
+                    if (rx[0] != 0x53)
+                    {
+                        this.Logger.AddDebugMessage("RX: VPW too long: " + rx[0].ToString("X2"));
+                        return new byte[0];
+                    }
+                    this.Port.Receive(rx, 0, 2);
+                    this.Logger.AddDebugMessage("RX: VPW too long and truncated to " + ((rx[0] << 8) + rx[1]).ToString("X4"));
+                    length = 4112;
+                    break;
+                default:
+                    this.Logger.AddDebugMessage("default status: " + rx[0].ToString("X2"));
+                    length = rx[0] & 0x0F;
+                    if ((rx[0] & 0xF0) == 0x90) // special case, init packet with no status
+                    {
+                        this.Logger.AddDebugMessage("Dont read status, 9X");
+                        status = false;
+                    }
+
+                    break;
+            }
+
+            // if we need to get check and discard the status byte
+            if (status == true)
+            {
+                this.Port.Receive(rx, 0, 1);
+                if (rx[0] != 0) this.Logger.AddDebugMessage("RX: bad packet status: " + rx[0].ToString("X2"));
+            }
+
+            // return the packet
+            byte[] receive = new byte[length];
+            Task.Delay(500);
+            this.Port.Receive(receive, 0, length);
+            this.Logger.AddDebugMessage("Length=" + length + " RX: " + receive.ToHex());
+
+            return rx;
         }
 
         /// <summary>
