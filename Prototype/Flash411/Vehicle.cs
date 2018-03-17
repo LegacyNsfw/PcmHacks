@@ -159,9 +159,11 @@ namespace Flash411
 
         /// <summary>
         /// Read the full contents of the PCM.
+        /// Assumes the PCM is unlocked an were ready to go
         /// </summary>
         public Task<Response<Stream>> ReadContents()
         {
+
             return Task.FromResult(new Response<Stream>(ResponseStatus.Success, (Stream)new MemoryStream(new byte[] { 0x01, 0x02, 0x03 })));
         }
 
