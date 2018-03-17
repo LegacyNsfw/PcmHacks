@@ -28,10 +28,10 @@ namespace Flash411
             this.userLog.Invoke(
                 (MethodInvoker)delegate()
                 {
-                    this.userLog.AppendText(message + Environment.NewLine);
+                    this.userLog.AppendText("[" + DateTime.Now.ToString("hh:mm:ss:ms") +  "]  " + message + Environment.NewLine);
 
                     // User messages are added to the debug log as well, so that the debug log has everything.
-                    this.debugLog.AppendText(message + Environment.NewLine);
+                    this.debugLog.AppendText("[" + DateTime.Now.ToString("hh:mm:ss:ms") + "]  " + message + Environment.NewLine);
 
                 });
         }
@@ -103,7 +103,6 @@ namespace Flash411
                     // I don't really expect to support all of these. They're just 
                     // placeholders until we know which ones we really will support.
                     this.interfaceTypeList.Items.Add(new Avt852DeviceV1(selectedPort, this));
-                    this.interfaceTypeList.Items.Add(new Avt852DeviceV2(selectedPort, this));
                     this.interfaceTypeList.Items.Add(new ScanToolDevice(selectedPort, this));
                     this.interfaceTypeList.Items.Add(new ThanielDevice(selectedPort, this));
                 }

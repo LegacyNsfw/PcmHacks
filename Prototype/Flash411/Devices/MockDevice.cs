@@ -41,7 +41,7 @@ namespace Flash411
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
-        public override Task<Response<byte[]>> SendRequest(Message message)
+        public override Task<Response<Message>> SendRequest(Message message)
         {
             StringBuilder builder = new StringBuilder();
             this.Logger.AddDebugMessage("Sending request " + message.GetBytes().ToHex());
@@ -50,7 +50,7 @@ namespace Flash411
             byte[] response = new byte[100];
             this.Port.Receive(response, 0, 100);
 
-            return Task.FromResult(Response.Create(ResponseStatus.Success, response));
+            return Task.FromResult(Response.Create(ResponseStatus.Success, new Message(response)));
         }
     }
 }
