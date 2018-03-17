@@ -294,9 +294,9 @@ namespace Flash411
             Response<Message> response = await ReadAVTPacket();
             if (response.Status != ResponseStatus.Success) return response;
 
-            this.Logger.AddDebugMessage("RX: " + message.GetBytes().ToHex());
+            this.Logger.AddDebugMessage("RX: " + response.Value.GetBytes().ToHex());
 
-            return Response.Create(ResponseStatus.Success, message);
+            return response;
         }
     }
 }
