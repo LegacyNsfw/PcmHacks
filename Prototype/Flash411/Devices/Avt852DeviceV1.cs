@@ -149,8 +149,7 @@ namespace Flash411
             this.Logger.AddDebugMessage("Trace: ReadAVTPacket");
             int length = 0;
             bool status = true; // do we have a status byte? (we dont for some 9x init commands)
-
-            byte[] rx = new byte[2];
+            byte[] rx = new byte[2]; // we dont read more than 2 bytes at a time
 
             // Get the first packet byte.
             this.Port.Receive(rx, 0, 1);
@@ -161,14 +160,17 @@ namespace Flash411
                 case 0x11:
                     this.Port.Receive(rx, 0, 1);
                     length = rx[0];
+                    this.Logger.AddDebugMessage("RX: AVT Type 11. Length  " + rx[0].ToString("X2"));
                     break;
                 case 0x12:
                     this.Port.Receive(rx, 0, 1);
                     length = rx[0] << 8;
                     this.Port.Receive(rx, 0, 1);
                     length += rx[0];
+                    this.Logger.AddDebugMessage("RX: AVT Type 12. Length  " + rx[0].ToString("X2"));
                     break;
                 case 0x23:
+                    this.Logger.AddDebugMessage("RX: AVT Type 23");
                     this.Port.Receive(rx, 0, 1);
                     if (rx[0] != 0x53)
                     {
@@ -178,16 +180,21 @@ namespace Flash411
                     this.Port.Receive(rx, 0, 2);
                     this.Logger.AddDebugMessage("RX: VPW too long and truncated to " + ((rx[0] << 8) + rx[1]).ToString("X4"));
                     length = 4112;
+                    this.Logger.AddDebugMessage("RX: Using 4112 - if that does not match the above report as a bug");
                     break;
                 default:
-                    this.Logger.AddDebugMessage("default status: " + rx[0].ToString("X2"));
-                    length = rx[0] & 0x0F;
-                    if ((rx[0] & 0xF0) == 0x90) // special case, init packet with no status
-                    {
-                        this.Logger.AddDebugMessage("Dont read status, 9X");
-                        status = false;
+                    this.Logger.AddDebugMessage("RX: Header " + rx[0].ToString("X2"));
+                    int type = rx[0] >> 4;
+                    switch (type) {
+                        case 9:
+                            length = rx[0] & 0x0F;
+                            status = false;
+                            this.Logger.AddDebugMessage("RX: AVT Type 9 (no status) length " + length);
+                            break;
+                        default:
+                            this.Logger.AddDebugMessage("RX: Unhandled packet type" + type + "Add support to ReadAVTPacket()");
+                            break;
                     }
-
                     break;
             }
 
@@ -204,7 +211,7 @@ namespace Flash411
             this.Port.Receive(receive, 0, length);
             this.Logger.AddDebugMessage("Length=" + length + " RX: " + receive.ToHex());
 
-            return rx;
+            return receive;
         }
 
         /// <summary>
