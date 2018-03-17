@@ -59,7 +59,7 @@ namespace Flash411
             else
             {
                 this.Logger.AddUserMessage("AVT device not found or failed reset");
-                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV1.AVT_852_IDLE.GetBytes());
+                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV1.AVT_852_IDLE.GetString());
                 return false;
             }
 
