@@ -182,6 +182,7 @@ namespace Flash411
             // if we need to get check and discard the status byte
             if (status == true)
             {
+                length--;
                 await this.Port.Receive(rx, 0, 1);
                 if (rx[0] != 0) this.Logger.AddDebugMessage("RX: bad packet status: " + rx[0].ToString("X2"));
             }
