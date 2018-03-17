@@ -40,7 +40,7 @@ namespace Flash411
             this.Logger.AddDebugMessage("Initialize called");
             this.Logger.AddDebugMessage("Initializing " + this.ToString());
 
-            Message m; // hold returned messages for processing
+            Response<Message> m; // hold returned messages for processing
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 115200;
@@ -52,7 +52,8 @@ namespace Flash411
             this.Logger.AddDebugMessage("Sending 'reset' message.");
             await this.Port.Send(Avt852DeviceV1.AVT_RESET.GetBytes());
 
-            if (await this.FindResponse(AVT_852_IDLE) != null)
+            m = await this.FindResponse(AVT_852_IDLE);
+            if (m.Status == ResponseStatus.Success )
             {
                 this.Logger.AddUserMessage("AVT device reset ok");
             }
@@ -63,9 +64,13 @@ namespace Flash411
                 return false;
             }
 
-            if (m=FindResponse(AVT_FIRMWARE))
+            m = await this.FindResponse(AVT_FIRMWARE);
+            if ( m.Status == ResponseStatus.Success )
             {
-                this.Logger.AddUserMessage("AVT device reset ok");
+                byte firmware = m.Value.GetBytes()[1];
+                int major = firmware >> 4;
+                int minor = firmware & 0x0F;
+                this.Logger.AddUserMessage("AVT Firmware " + major + "." + minor);
             }
             else
             {
@@ -75,10 +80,10 @@ namespace Flash411
             }
 
             await this.Port.Send(Avt852DeviceV1.AVT_ENTER_VPW_MODE.GetBytes());
-
-            if (await FindResponse(AVT_VPW))
+            m = await FindResponse(AVT_VPW);
+            if (m.Status == ResponseStatus.Success)
             {
-                this.Logger.AddUserMessage("AVT device to VPW mode");
+                this.Logger.AddDebugMessage("Set VPW Mode");
             }
             else
             {
@@ -103,14 +108,14 @@ namespace Flash411
                 {
                     if (Utility.CompareArraysPart(message.GetBytes(), expected.GetBytes()))
                     {
-                        return message;
+                        return Response.Create(ResponseStatus.Success, message);
                     }
                 }
 
                 await Task.Delay(100);
             }
 
-            return null;
+            return Response.Create(ResponseStatus.Timeout, (Message) null);
         }
 
         /// <summary>
