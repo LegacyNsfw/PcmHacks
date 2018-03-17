@@ -81,7 +81,6 @@ namespace Flash411
             }
 
             await this.Port.Send(Avt852DeviceV1.AVT_ENTER_VPW_MODE.GetBytes());
-           // Task.Delay(100);
             m = await FindResponse(AVT_VPW);
             if (m.Status == ResponseStatus.Success)
             {
@@ -140,7 +139,7 @@ namespace Flash411
             byte[] rx = new byte[2]; // we dont read more than 2 bytes at a time
 
             // Get the first packet byte.
-            await  this.Port.Receive(rx, 0, 1);
+            await this.Port.Receive(rx, 0, 1);
 
             // read an AVT format length
             switch (rx[0])
@@ -217,22 +216,23 @@ namespace Flash411
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
-        public override Task<Response<byte[]>> SendRequest(Message message)
+        public override async Task<Response <Message>> SendRequest(Message message)
         {
 
             this.Logger.AddDebugMessage("Sendrequest called");
             StringBuilder builder = new StringBuilder();
             this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
-            this.Port.Send(message.GetBytes());
+            await this.Port.Send(message.GetBytes());
 
             // This code here will need to handle AVT packet formatting
             byte[] response = new byte[100];
+            HookAvtHere;
             this.Port.Receive(response, 0, 2);
 
             this.Logger.AddDebugMessage("RX: " + message.GetBytes().ToHex());
             this.Port.Send(message.GetBytes());
 
-            return Task.FromResult(Response.Create(ResponseStatus.Success, response));
+            return Response.Create(ResponseStatus.Success, message);
         }
     }
 }
