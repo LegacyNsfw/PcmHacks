@@ -28,10 +28,10 @@ namespace Flash411
             this.userLog.Invoke(
                 (MethodInvoker)delegate()
                 {
-                    this.userLog.AppendText(message + Environment.NewLine);
+                    this.userLog.AppendText("[" + DateTime.Now.ToString("hh:mm:ss:ms") +  "]  " + message + Environment.NewLine);
 
                     // User messages are added to the debug log as well, so that the debug log has everything.
-                    this.debugLog.AppendText(message + Environment.NewLine);
+                    this.debugLog.AppendText("[" + DateTime.Now.ToString("hh:mm:ss:ms") + "]  " + message + Environment.NewLine);
 
                 });
         }
