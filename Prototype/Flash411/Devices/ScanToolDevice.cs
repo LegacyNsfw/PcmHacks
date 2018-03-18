@@ -42,25 +42,30 @@ namespace Flash411
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 115200;
+            configuration.Timeout = 1000;
+
             await this.Port.OpenAsync(configuration);
             await this.Port.DiscardBuffers();
 
             try
             {
                 // Reset
-                // this.Logger.AddDebugMessage(await this.SendRequest("AT Z"));
+                this.Logger.AddDebugMessage(await this.SendRequest("AT Z"));
 
                 // Turn off echo.
                 this.Logger.AddDebugMessage(await this.SendRequest("AT E0"));
 
                 // TODO: Turn off whitespace.
-                // this.Logger.AddDebugMessage(await this.SendRequest("AT S0"));
+                this.Logger.AddDebugMessage(await this.SendRequest("AT S0"));
 
                 string elmId = await this.SendRequest("AT I");
                 this.Logger.AddUserMessage("Device supports " + elmId);
 
                 string stId = await this.SendRequest("ST I");
                 this.Logger.AddUserMessage("Device supports " + stId);
+
+                string allproId = await this.SendRequest("AT #1");
+                this.Logger.AddUserMessage("All Pro: " + allproId);
 
                 string voltage = await this.SendRequest("AT RV");
                 this.Logger.AddUserMessage("Voltage: " + voltage);
@@ -158,80 +163,103 @@ namespace Flash411
             
             if (string.Equals(actualResponse, expectedResponse))
             {
-                this.Logger.AddDebugMessage("Good." + Environment.NewLine);
+                this.Logger.AddDebugMessage(actualResponse + "=" + expectedResponse);
                 return true;
             }
 
-            this.Logger.AddDebugMessage("Bad. Expected " + expectedResponse);
+            this.Logger.AddDebugMessage("Bad. " + actualResponse + " does not equal " + expectedResponse);
             return false;
         }
 
         /// <summary>
-        /// Send a request, wait for a response.
+        /// Reads and filteres a line from the device, returns it as a string
+        /// </summary>
+        async private Task<Response<string>> ReadELMLine()
+        {
+            // 4112 is max packet size on the AVT, use it here too. *3 because of the ASCII encoding and spaces, add 8 for additional header bytes?
+            // plus 2 so we can read a CR or LF and if we're still reading by the last byte it's an error
+            int max = 4112 * 3 + 8 + 1;
+            byte[] buffer = new byte[max];
+
+            // collect bytes until we hit the end of the buffer or see a CR or LF
+            int i = 0;
+            byte[] b = new byte[1]; // FIXME: If I dont copy to this buffer, and instead use buffer[i] inline in the next loop, the test for '>' does not work in the while clause.
+            do
+            {
+                await this.Port.Receive(b, 0, 1);
+                //this.Logger.AddDebugMessage("Byte: " + b[0].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(b));
+                buffer[i] = b[0];
+                i++;
+            } while ((i < max) && (b[0] != '>')); // continue until the next prompt
+
+            //this.Logger.AddDebugMessage("Found terminator '>'");
+
+            // count the wanted bytes
+            int wanted = 0;
+            int j;
+            for (j=0; j<i; j++)
+            {
+                if (buffer[j] >= 32 && buffer[j] <= 126 && buffer[j] != '>') wanted++; // printable characters only, and not '>'
+            }
+
+            //this.Logger.AddDebugMessage(wanted + " bytes to keep from " + i);
+
+            // build a message of the correct length
+            // i is the length of the data in the original buffer
+            // j is pointer to the offset in the filtered buffer
+            // k is the pointer in to the original buffer
+            int k;
+            byte[] filtered = new byte[wanted]; // create a new filtered buffer of the correct size
+            for (k=0, j=0; k<i; k++) // start both buffers from 0, always increment the original buffer 
+            {
+                if (buffer[k] >= 32 && buffer[k] <= 126 && buffer[k] != '>') // do we want THIS byte?
+                {
+                    b[0] = buffer[k];
+                    //this.Logger.AddDebugMessage("Filtered Byte: " + buffer[k].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(b));
+                    filtered[j++] = buffer[k];  // save it, and increment the pointer in the filtered buffer
+                }
+            }
+
+            //this.Logger.AddDebugMessage("built filtered string kept " + j + " bytes filtered is " + filtered.Length + " long");
+
+            //this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
+            string line = System.Text.Encoding.ASCII.GetString(filtered);
+
+            this.Logger.AddDebugMessage("Read \"" + line + "\"");                          
+
+            if (i == max) return Response.Create(ResponseStatus.Truncated, line);
+
+            return Response.Create(ResponseStatus.Success, line);
+        }
+
+        /// <summary>
+        /// Collects a line with ReadELMLine() and converts it to a Message
+        /// </summary>
+        async private Task<Response<Message>> ReadELMPacket()
+        {
+            this.Logger.AddDebugMessage("Trace: ReadELMPacket");
+
+            Response<string> response = await ReadELMLine();
+            byte[] message = response.Value.ToBytes();
+
+            return Response.Create(ResponseStatus.Success, new Message(message));
+        }
+
+        /// <summary>
+        /// Send a request in string form, wait for a response (for init)
         /// </summary>
         /// <remarks>
         /// The API for this method (sending a string, returning a string) matches
-        /// the way that we need to communicate with ELM and STN devices.
+        /// the way that we need to communicate with ELM and STN devices for setup
         /// </remarks>
         private async Task<string> SendRequest(string request)
         {
             this.Logger.AddDebugMessage("Sending " + request);
             await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
 
-            // I hate this, but it improves reliability...
-            await Task.Delay(250);
+            Response<string> response = await ReadELMLine();
 
-            List<byte> responseBytes = new List<byte>(100);
-            int pauseCount = 0;
-
-            // This 'for' loop just sets an upper limit on the number of times we'll retry,
-            // to ensure that we won't just loop indefinitely if something goes wrong.
-            //
-            // In practice, the loop should always end when the "\r\r>" marker is received.
-            for(int iterations = 0; iterations < 1000; iterations++)
-            {
-                byte[] buffer = new byte[100];
-                int length = await this.Port.Receive(buffer, 0, buffer.Length);
-
-                if (length == 0) 
-                {
-                    // When no data is received, pause and try again - but only a couple times.
-                    if (pauseCount <= 2)
-                    {
-                        pauseCount++;
-                        await Task.Delay(100);
-                        continue;
-                    }
-                    else
-                    {
-                        // No data, and we tried waiting for more, so we give up.
-                        break;
-                    }
-                }
-
-                // Since we received some data, we'll allow pausing for more data in future iterations.
-                pauseCount = 0;
-
-                // Add the latest bytes to the list.
-                responseBytes.AddRange(buffer.Take(length));
-
-                // Look for the end-of-response bytes.
-                if (responseBytes.Count > 2)
-                {
-                    if ((responseBytes[length - 3] == '\r') &&
-                        (responseBytes[length - 2] == '\r') &&
-                        (responseBytes[length - 1] == '>'))
-                    {
-                        // Hopefully the loop will always exit here.
-                        responseBytes.RemoveRange(responseBytes.Count - 3, 3);
-                        break;
-                    }
-                }
-            }
-            
-            string response = Encoding.ASCII.GetString(responseBytes.ToArray(), 0, responseBytes.Count);
-            this.Logger.AddDebugMessage("Received " + response);
-            return response;
+            return response.Value;
         }
     }
 }
