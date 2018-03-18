@@ -54,23 +54,10 @@ namespace Flash411
         /// </summary>
         public static byte[] ToBytes(this string hex)
         {
-            var parts = hex.Split(space).Select(x => x.Trim());
-            List<byte> bytes = new List<byte>(parts.Count());
-            foreach(string hexByte in parts)
-            {
-                if (hexByte.Length != 2)
-                {
-                    return bytes.ToArray();
-                }
-
-                int high = GetHex(hexByte[0]);
-                int low = GetHex(hexByte[1]);
-                int value = (high << 4) + low;
-
-                bytes.Add((byte)value);
-            }
-
-            return bytes.ToArray();
+            return Enumerable.Range(0, hex.Length)
+                                .Where(x => x % 2 == 0)
+                                .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                                .ToArray();
         }
 
         /// <summary>
