@@ -50,29 +50,25 @@ namespace Flash411
             try
             {
                 // Reset
-                this.Logger.AddDebugMessage(await this.SendRequest("AT Z"));
+                this.Logger.AddDebugMessage(await this.SendRequest("AT Z"));  // reset
+                this.Logger.AddDebugMessage(await this.SendRequest("AT E0")); // disable echo
+                this.Logger.AddDebugMessage(await this.SendRequest("AT S0")); // no spaces on responses
 
-                // Turn off echo.
-                this.Logger.AddDebugMessage(await this.SendRequest("AT E0"));
-
-                // TODO: Turn off whitespace.
-                this.Logger.AddDebugMessage(await this.SendRequest("AT S0"));
-
-                string elmId = await this.SendRequest("AT I");
+                string elmId = await this.SendRequest("AT I");                // Identify (ELM)
                 this.Logger.AddUserMessage("Device supports " + elmId);
 
-                string stId = await this.SendRequest("ST I");
+                string stId = await this.SendRequest("ST I");                 // Identify (ScanTool.net)
                 this.Logger.AddUserMessage("Device supports " + stId);
 
-                string allproId = await this.SendRequest("AT #1");
+                string allproId = await this.SendRequest("AT #1");            // Identify (AllPro)
                 this.Logger.AddUserMessage("All Pro: " + allproId);
 
-                string voltage = await this.SendRequest("AT RV");
+                string voltage = await this.SendRequest("AT RV");             // Get Voltage
                 this.Logger.AddUserMessage("Voltage: " + voltage);
 
-                if (!await this.SendAndVerify("AT AL", "OK") ||
-                    !await this.SendAndVerify("AT SP2", "OK") ||
-                    !await this.SendAndVerify("AT DP", "SAE J1850 VPW"))
+                if (!await this.SendAndVerify("AT AL", "OK") ||               // Allow Long packets
+                    !await this.SendAndVerify("AT SP2", "OK") ||              // Set Protocol 2 (VPW)
+                    !await this.SendAndVerify("AT DP", "SAE J1850 VPW"))      // Get Protocol (Verify VPW)
                 {
                     return false;
                 }
@@ -127,6 +123,7 @@ namespace Flash411
             {
                 string hexResponse = await this.SendRequest(payload);
 
+                this.Logger.AddDebugMessage("hexResponse: " + hexResponse);
                 // Make sure we can parse the response.
                 if (!hexResponse.IsHex())
                 {
@@ -136,11 +133,14 @@ namespace Flash411
 
                 // Add the header bytes that the ELM hides from us.
                 byte[] deviceResponseBytes = hexResponse.ToBytes();
+                this.Logger.AddDebugMessage("deviceResponseBytes: " + deviceResponseBytes.ToHex());
                 byte[] completeResponseBytes = new byte[deviceResponseBytes.Length + 3];
                 completeResponseBytes[0] = messageBytes[0];
                 completeResponseBytes[1] = messageBytes[2];
                 completeResponseBytes[2] = messageBytes[1];
                 deviceResponseBytes.CopyTo(completeResponseBytes, 3);
+
+                this.Logger.AddDebugMessage("Recieved: " + completeResponseBytes.ToHex());
 
                 return Response.Create(ResponseStatus.Success, new Message(completeResponseBytes));
             }
