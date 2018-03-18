@@ -43,7 +43,6 @@ namespace Flash411
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 115200;
             await this.Port.OpenAsync(configuration);
-
             await this.Port.DiscardBuffers();
 
             try

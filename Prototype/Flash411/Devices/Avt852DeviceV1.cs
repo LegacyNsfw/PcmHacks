@@ -154,15 +154,15 @@ namespace Flash411
                         return Response.Create(ResponseStatus.Error, (Message)null);
                     }
                     await this.Port.Receive(rx, 0, 2);
-                    this.Logger.AddDebugMessage("RX: VPW too long and truncated to " + ((rx[0] << 8) + rx[1]).ToString("X4"));
-                    length = 4112;
-                    this.Logger.AddDebugMessage("RX: Using 4112 - if that does not match the above report as a bug");
+                    int trunclen = ((rx[0] << 8) + rx[1]);
+                    this.Logger.AddDebugMessage("RX: VPW too long and truncated to " + trunclen.ToString("X4"));
+                    length = trunclen;
                     break;
                 default:
                     this.Logger.AddDebugMessage("RX: Header " + rx[0].ToString("X2"));
                     int type = rx[0] >> 4;
                     switch (type) {
-                        case 0:
+                        case 0: // standard < 16 byte data packet
                             length = rx[0] & 0x0F;
                             this.Logger.AddDebugMessage("RX: AVT Type 0 (with status) length " + length);
                             break;
