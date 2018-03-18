@@ -47,6 +47,7 @@ namespace Flash411
     class SerialPortConfiguration : PortConfiguration
     {
         public int BaudRate { get; set; }
+        public int Timeout { get; set; }
         public Action<object, SerialDataReceivedEventArgs> DataReceived { get; set; }
     }
 }

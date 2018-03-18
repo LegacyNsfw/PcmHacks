@@ -50,7 +50,8 @@ namespace Flash411
             this.port.DataBits = 8;
             this.port.Parity = Parity.None;
             this.port.StopBits = StopBits.One;
-            this.port.ReadTimeout = 1000;
+            if (config.Timeout == 0) config.Timeout = 1000; // default to 1 second but allow override.
+            this.port.ReadTimeout = config.Timeout;
 
             if (config.DataReceived != null)
             {
@@ -97,7 +98,7 @@ namespace Flash411
         async Task<int> IPort.Receive(byte[] buffer, int offset, int count)
         {
             var readTask = this.port.BaseStream.ReadAsync(buffer, offset, count);
-            if (await readTask.AwaitWithTimeout(TimeSpan.FromMilliseconds(500)))
+            if (await readTask.AwaitWithTimeout(TimeSpan.FromMilliseconds(this.port.ReadTimeout)))
             {
                 return readTask.Result;
             }
