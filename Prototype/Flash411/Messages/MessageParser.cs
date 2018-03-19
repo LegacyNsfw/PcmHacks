@@ -132,8 +132,8 @@ namespace Flash411
                 return Response.Create(status, result);
             }
 
-            byte[] BCCBytes = new byte[8];
-            Buffer.BlockCopy(response, 5, BCCBytes, 0, 8);
+            byte[] BCCBytes = new byte[4];
+            Buffer.BlockCopy(response, 5, BCCBytes, 0, 4);
 
             byte[] printableBytes = Utility.GetPrintable(BCCBytes);
             string BCC  = System.Text.Encoding.ASCII.GetString(printableBytes);
