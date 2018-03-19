@@ -1,4 +1,4 @@
-﻿    using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -82,6 +82,77 @@ namespace Flash411
             Buffer.BlockCopy(response3, 6, vinBytes, 9, 4);
             string vin = System.Text.Encoding.ASCII.GetString(vinBytes);
             return Response.Create(ResponseStatus.Success, vin);
+        }
+        
+        /// <summary>
+        /// Parse the responses to the three requests for Serial Number information.
+        /// </summary>
+        public Response<string> ParseSerialResponses(byte[] response1, byte[] response2, byte[] response3)
+        {
+            string result = "Unknown";
+            ResponseStatus status;
+
+            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Serial1 };
+            if (!TryVerifyInitialBytes(response1, expected, out status))
+            {
+                return Response.Create(status, result);
+            }
+
+            expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Serial2 };
+            if (!TryVerifyInitialBytes(response2, expected, out status))
+            {
+                return Response.Create(status, result);
+            }
+
+            expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Serial3 };
+            if (!TryVerifyInitialBytes(response3, expected, out status))
+            {
+                return Response.Create(status, result);
+            }
+
+            byte[] serialBytes = new byte[11];
+            Buffer.BlockCopy(response1, 6, serialBytes, 0, 3);
+            Buffer.BlockCopy(response2, 5, serialBytes, 3, 4);
+            Buffer.BlockCopy(response3, 5, serialBytes, 7, 4);
+
+            string serial = Utility.GetPrintable(serialBytes).ToString();
+
+            return Response.Create(ResponseStatus.Success, serial);
+        }
+
+        public Response<string> ParseBCCresponse(byte[] response)
+        {
+            string result = "Unknown";
+            ResponseStatus status;
+
+            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.BCC };
+            if (!TryVerifyInitialBytes(response, expected, out status))
+            {
+                return Response.Create(status, result);
+            }
+
+            byte[] BCCBytes = new byte[8];
+            Buffer.BlockCopy(response, 5, BCCBytes, 5, 8);
+
+            string BCC = Utility.GetPrintable(BCCBytes).ToString();
+
+            return Response.Create(ResponseStatus.Success, BCC);
+        }
+
+        public Response<string> ParseMECresponse(byte[] response)
+        {
+            string result = "Unknown";
+            ResponseStatus status;
+
+            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.MEC };
+            if (!TryVerifyInitialBytes(response, expected, out status))
+            {
+                return Response.Create(status, result);
+            }
+
+            string MEC = response[5].ToString();
+            
+            return Response.Create(ResponseStatus.Success, MEC);
         }
 
         /// <summary>

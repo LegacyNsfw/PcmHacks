@@ -105,6 +105,61 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Query the PCM's Serial Number.
+        /// </summary>
+        public async Task<Response<string>> QuerySerial()
+        {
+            Response<Message> response1 = await this.device.SendRequest(this.messageFactory.CreateSerialRequest1());
+            if (response1.Status != ResponseStatus.Success)
+            {
+                return Response.Create(response1.Status, "Unknown");
+            }
+
+            Response<Message> response2 = await this.device.SendRequest(this.messageFactory.CreateSerialRequest2());
+            if (response1.Status != ResponseStatus.Success)
+            {
+                return Response.Create(response1.Status, "Unknown");
+            }
+
+            Response<Message> response3 = await this.device.SendRequest(this.messageFactory.CreateSerialRequest3());
+            if (response1.Status != ResponseStatus.Success)
+            {
+                return Response.Create(response1.Status, "Unknown");
+            }
+
+            return this.messageParser.ParseSerialResponses(response1.Value.GetBytes(), response2.Value.GetBytes(), response3.Value.GetBytes());
+        }
+
+        /// <summary>
+        /// Query the PCM's Broad Cast Code.
+        /// </summary>
+        public async Task<Response<string>> QueryBCC()
+        {
+            Response<Message> response = await this.device.SendRequest(this.messageFactory.CreateBCCRequest());
+            if (response.Status != ResponseStatus.Success)
+            {
+                return Response.Create(response.Status, "Unknown");
+            }
+
+            return this.messageParser.ParseBCCresponse(response.Value.GetBytes());
+        }
+
+        /// <summary>
+        /// Query the PCM's Manufacturer Enable Counter (MEC)
+        /// </summary>
+        public async Task<Response<string>> QueryMEC()
+        {
+            Response<Message> response = await this.device.SendRequest(this.messageFactory.CreateMECRequest());
+            if (response.Status != ResponseStatus.Success)
+            {
+                return Response.Create(response.Status, "Unknown");
+            }
+
+            return this.messageParser.ParseMECresponse(response.Value.GetBytes());
+        }
+
+
+        /// <summary>
         /// Query the PCM's operating system ID.
         /// </summary>
         /// <returns></returns>
