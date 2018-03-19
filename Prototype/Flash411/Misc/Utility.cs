@@ -99,6 +99,15 @@ namespace Flash411
             return true;
         }
 
+        /// <summary>
+        /// This removes non-ascii from a byte array
+        /// </summary>
+        public static byte[] GetPrintable(byte[] input)
+        {
+            var cleanBuffer = input.Where((b) => (b <= 0x7E) & (b >= 0x30)).ToArray();
+            return cleanBuffer;
+        }
+
         // This method and its comments were copied from https://github.com/dotnet/wcf/blob/master/src/System.Private.ServiceModel/src/Internals/System/Runtime/TaskHelpers.cs
         //
         // Awaitable helper to await a maximum amount of time for a task to complete. If the task doesn't
