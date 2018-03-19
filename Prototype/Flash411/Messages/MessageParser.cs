@@ -115,7 +115,8 @@ namespace Flash411
             Buffer.BlockCopy(response2, 5, serialBytes, 3, 4);
             Buffer.BlockCopy(response3, 5, serialBytes, 7, 4);
 
-            string serial = Utility.GetPrintable(serialBytes).ToString();
+            byte[] printableBytes = Utility.GetPrintable(serialBytes);
+            string serial = System.Text.Encoding.ASCII.GetString(printableBytes);
 
             return Response.Create(ResponseStatus.Success, serial);
         }
@@ -132,10 +133,11 @@ namespace Flash411
             }
 
             byte[] BCCBytes = new byte[8];
-            Buffer.BlockCopy(response, 5, BCCBytes, 5, 8);
+            Buffer.BlockCopy(response, 5, BCCBytes, 0, 8);
 
-            string BCC = Utility.GetPrintable(BCCBytes).ToString();
-
+            byte[] printableBytes = Utility.GetPrintable(BCCBytes);
+            string BCC  = System.Text.Encoding.ASCII.GetString(printableBytes);
+            
             return Response.Create(ResponseStatus.Success, BCC);
         }
 
