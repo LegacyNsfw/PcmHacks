@@ -13,11 +13,6 @@ namespace Flash411
     class ScanToolDevice : Device
     {
         /// <summary>
-        /// Every response from an ELM device ends with this.
-        /// </summary>
-        private const string Prompt = "\r\r>";
-
-        /// <summary>
         /// Constructor.
         /// </summary>
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
@@ -30,7 +25,7 @@ namespace Flash411
         /// </summary>
         public override string ToString()
         {
-            return "ScanTool OBDLink MX or SX";
+            return "OBDLink or AllPro";
         }
 
         /// <summary>
@@ -54,14 +49,13 @@ namespace Flash411
                 this.Logger.AddDebugMessage(await this.SendRequest("AT E0")); // disable echo
                 this.Logger.AddDebugMessage(await this.SendRequest("AT S0")); // no spaces on responses
 
-                string elmId = await this.SendRequest("AT I");                // Identify (ELM)
-                this.Logger.AddUserMessage("Device supports " + elmId);
-
-                string stId = await this.SendRequest("ST I");                 // Identify (ScanTool.net)
-                this.Logger.AddUserMessage("Device supports " + stId);
-
-                string allproId = await this.SendRequest("AT #1");            // Identify (AllPro)
-                this.Logger.AddUserMessage("All Pro: " + allproId);
+                // Device Identification
+                string elmID = await this.SendRequest("AT I");                // Identify (ELM)
+                string stID  = await this.SendRequest("ST I");                // Identify (ScanTool.net)
+                string apID  = await this.SendRequest("AT #1");               // Identify (AllPro)
+                if (elmID != "?") this.Logger.AddUserMessage("Elm ID: " + elmID);
+                if (stID  != "?") this.Logger.AddUserMessage("ScanTool ID: " + stID);
+                if (apID  != "?") this.Logger.AddUserMessage("All Pro ID: " + apID);
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage
                 this.Logger.AddUserMessage("Voltage: " + voltage);
@@ -174,6 +168,9 @@ namespace Flash411
         /// <summary>
         /// Reads and filteres a line from the device, returns it as a string
         /// </summary>
+        /// <remarks>
+        /// Strips Non Printable, >, and Line Feeds. Converts Carriage Return to Space. Strips leading and trailing whitespace.
+        /// </remarks>
         async private Task<Response<string>> ReadELMLine()
         {
             // 4112 is max packet size on the AVT, use it here too. *3 because of the ASCII encoding and spaces, add 8 for additional header bytes?
@@ -194,11 +191,12 @@ namespace Flash411
 
             //this.Logger.AddDebugMessage("Found terminator '>'");
 
-            // count the wanted bytes
+            // count the wanted bytes and replace CR with space
             int wanted = 0;
             int j;
             for (j=0; j<i; j++)
             {
+                if (buffer[j] == 13) buffer[j] = 32; // CR -> Space
                 if (buffer[j] >= 32 && buffer[j] <= 126 && buffer[j] != '>') wanted++; // printable characters only, and not '>'
             }
 
@@ -222,8 +220,8 @@ namespace Flash411
 
             //this.Logger.AddDebugMessage("built filtered string kept " + j + " bytes filtered is " + filtered.Length + " long");
 
-            //this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
-            string line = System.Text.Encoding.ASCII.GetString(filtered);
+            this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
+            string line = System.Text.Encoding.ASCII.GetString(filtered).Trim(); // strip leading and trailing whitespace, too
 
             this.Logger.AddDebugMessage("Read \"" + line + "\"");                          
 
