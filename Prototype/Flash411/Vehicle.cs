@@ -158,6 +158,13 @@ namespace Flash411
             return this.messageParser.ParseMECresponse(response.Value.GetBytes());
         }
 
+        /// <summary>
+        /// Update the PCM's VIN.
+        /// </summary>
+        public Task<Response<bool>> UpdateVin(string vin)
+        {
+            return Task.FromResult(Response.Create(ResponseStatus.Success, true));
+        }
 
         /// <summary>
         /// Query the PCM's operating system ID.

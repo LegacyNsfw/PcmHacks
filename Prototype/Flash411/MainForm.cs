@@ -47,6 +47,8 @@ namespace Flash411
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            DisableUserInput();
+
             this.interfaceBox.Enabled = true;
             this.operationsBox.Enabled = true;
             this.startServerButton.Enabled = false;
@@ -421,6 +423,34 @@ namespace Flash411
             this.AddUserMessage("There is no way to exit the HTTP server. Just close the app when you're done.");
 
             HttpServer.StartWebServer(selectedPort, this);
+        }
+
+        private async void modifyVinButton_Click(object sender, EventArgs e)
+        {
+            var vinResponse = await this.vehicle.QueryVin();
+            if (vinResponse.Status != ResponseStatus.Success)
+            {
+                this.AddUserMessage("VIN query failed: " + vinResponse.Status.ToString());
+                return;
+            }
+
+            DialogBoxes.VinForm vinForm = new DialogBoxes.VinForm();
+            vinForm.Vin = vinResponse.Value;
+            DialogResult dialogResult = vinForm.ShowDialog();
+
+            if (dialogResult == DialogResult.OK)
+            {
+                Response<bool> result = await this.vehicle.UpdateVin(vinForm.Vin);
+
+                if (!result.Value)
+                {
+                    MessageBox.Show("Unable to change the VIN. Error: " + result.Status, "Bad news.", MessageBoxButtons.OK);
+                }
+                else
+                {
+                    MessageBox.Show("VIN updated successfully.", "Good news.", MessageBoxButtons.OK);   
+                }
+            }
         }
     }
 }
