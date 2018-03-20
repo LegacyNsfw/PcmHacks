@@ -76,10 +76,10 @@ namespace Flash411
                 return Response.Create(status, result);
             }
 
-            byte[] vinBytes = new byte[13];
+            byte[] vinBytes = new byte[17];
             Buffer.BlockCopy(response1, 6, vinBytes, 0, 5);
-            Buffer.BlockCopy(response2, 6, vinBytes, 5, 4);
-            Buffer.BlockCopy(response3, 6, vinBytes, 9, 4);
+            Buffer.BlockCopy(response2, 5, vinBytes, 5, 6);
+            Buffer.BlockCopy(response3, 5, vinBytes, 11, 6);
             string vin = System.Text.Encoding.ASCII.GetString(vinBytes);
             return Response.Create(ResponseStatus.Success, vin);
         }
@@ -110,10 +110,10 @@ namespace Flash411
                 return Response.Create(status, result);
             }
 
-            byte[] serialBytes = new byte[11];
-            Buffer.BlockCopy(response1, 6, serialBytes, 0, 3);
-            Buffer.BlockCopy(response2, 5, serialBytes, 3, 4);
-            Buffer.BlockCopy(response3, 5, serialBytes, 7, 4);
+            byte[] serialBytes = new byte[12];
+            Buffer.BlockCopy(response1, 5, serialBytes, 0, 4);
+            Buffer.BlockCopy(response2, 5, serialBytes, 4, 4);
+            Buffer.BlockCopy(response3, 5, serialBytes, 8, 4);
 
             byte[] printableBytes = Utility.GetPrintable(serialBytes);
             string serial = System.Text.Encoding.ASCII.GetString(printableBytes);

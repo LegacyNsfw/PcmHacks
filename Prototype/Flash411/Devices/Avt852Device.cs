@@ -12,7 +12,7 @@ namespace Flash411
     /// This class encapsulates all code that is unique to the AVT 852 interface.
     /// </summary>
     /// 
-    class Avt852DeviceV1 : Device
+    class AvtDevice : Device
     {
         public static readonly Message AVT_RESET            = new Message(new byte[] { 0xF1, 0xA5 });
         public static readonly Message AVT_ENTER_VPW_MODE   = new Message(new byte[] { 0xE1, 0x33 });
@@ -27,13 +27,13 @@ namespace Flash411
         public static readonly Message AVT_TX_ACK           = new Message(new byte[] { 0x60 });       // 01 60
         public static readonly Message AVT_BLOCK_TX_ACK     = new Message(new byte[] { 0xF3, 0x60 }); // F3 60
 
-        public Avt852DeviceV1(IPort port, ILogger logger) : base(port, logger)
+        public AvtDevice(IPort port, ILogger logger) : base(port, logger)
         {
         }
 
         public override string ToString()
         {
-            return "AVT 852 V1";
+            return "AVT 852";
         }
 
         public override async Task<bool> Initialize()
@@ -51,7 +51,7 @@ namespace Flash411
             await this.Port.DiscardBuffers();
 
             this.Logger.AddDebugMessage("Sending 'reset' message.");
-            await this.Port.Send(Avt852DeviceV1.AVT_RESET.GetBytes());
+            await this.Port.Send(AvtDevice.AVT_RESET.GetBytes());
             m = await this.FindResponse(AVT_852_IDLE);
             if (m.Status == ResponseStatus.Success )
             {
@@ -60,7 +60,7 @@ namespace Flash411
             else
             {
                 this.Logger.AddUserMessage("AVT device not found or failed reset");
-                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV1.AVT_852_IDLE.GetString());
+                this.Logger.AddDebugMessage("Expected " + AvtDevice.AVT_852_IDLE.GetString());
                 return false;
             }
 
@@ -80,7 +80,7 @@ namespace Flash411
                 return false;
             }
 
-            await this.Port.Send(Avt852DeviceV1.AVT_ENTER_VPW_MODE.GetBytes());
+            await this.Port.Send(AvtDevice.AVT_ENTER_VPW_MODE.GetBytes());
             m = await FindResponse(AVT_VPW);
             if (m.Status == ResponseStatus.Success)
             {
@@ -90,7 +90,7 @@ namespace Flash411
             else
             {
                 this.Logger.AddUserMessage("Unable to set AVT device to VPW mode");
-                this.Logger.AddDebugMessage("Expected " + Avt852DeviceV1.AVT_VPW.GetString());
+                this.Logger.AddDebugMessage("Expected " + AvtDevice.AVT_VPW.GetString());
                 return false;
             }
 
