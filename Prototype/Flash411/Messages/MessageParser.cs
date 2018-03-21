@@ -162,16 +162,24 @@ namespace Flash411
         /// </summary>
         public Response<UInt16> ParseSeed(byte[] response)
         {
-            UInt16 result = 0;
             ResponseStatus status;
+            UInt16 result = 0;
 
-            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x01, };
-            if (!TryVerifyInitialBytes(response, expected, out status))
+            byte[] wait = { 0x6C, 0x70, 0x10, 0x67, 0x01, 0x37 }; // TODO: Verify if this is Wait or Unlocked
+            byte[] seed = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x01, };
+
+            if (TryVerifyInitialBytes(response, wait, out status))
             {
-                return Response.Create(status, result);
+                status = ResponseStatus.Success;
+                return Response.Create(ResponseStatus.UnexpectedResponse, result); // TODO: Not the right Response for unlocked - revisit this.
             }
 
-            // Do we need to byte-swap this value?
+            if (!TryVerifyInitialBytes(response, seed, out status))
+            {
+                return Response.Create(ResponseStatus.Error, result);
+            }
+
+            // Converting to Unsigned Int 16 bits reverses the endianess
             result = BitConverter.ToUInt16(response, 5);
 
             return Response.Create(ResponseStatus.Success, result);

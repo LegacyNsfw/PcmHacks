@@ -443,9 +443,10 @@ namespace Flash411
                 Response<bool> unlocked = await this.vehicle.UnlockEcu();
                 if (unlocked.Value)
                 {
-                    Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin);
+                    Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
                     if (vinmodified.Value)
                     {
+                        this.AddUserMessage("VIN successfully updated to " + vinForm.Vin);
                         MessageBox.Show("VIN updated to " + vinForm.Vin + " successfully.", "Good news.", MessageBoxButtons.OK);
                     }
                     else
