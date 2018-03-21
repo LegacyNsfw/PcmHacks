@@ -440,16 +440,25 @@ namespace Flash411
 
             if (dialogResult == DialogResult.OK)
             {
-                Response<bool> result = await this.vehicle.UpdateVin(vinForm.Vin);
-
-                if (!result.Value)
+                Response<bool> unlocked = await this.vehicle.UnlockEcu();
+                if (unlocked.Value)
                 {
-                    MessageBox.Show("Unable to change the VIN. Error: " + result.Status, "Bad news.", MessageBoxButtons.OK);
+                    Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
+                    if (vinmodified.Value)
+                    {
+                        this.AddUserMessage("VIN successfully updated to " + vinForm.Vin);
+                        MessageBox.Show("VIN updated to " + vinForm.Vin + " successfully.", "Good news.", MessageBoxButtons.OK);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Unable to change the VIN to " + vinForm.Vin + ". Error: " + vinmodified.Status, "Bad news.", MessageBoxButtons.OK);
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("VIN updated successfully.", "Good news.", MessageBoxButtons.OK);   
+
                 }
+                
             }
         }
     }
