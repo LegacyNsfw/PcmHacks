@@ -159,11 +159,32 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Update the PCM's VIN.
+        /// Update the PCM's VIN
         /// </summary>
-        public Task<Response<bool>> UpdateVin(string vin)
+        /// <remarks>
+        /// Requires that the PCM is already unlocked
+        /// </remarks>
+        public async Task<Response<bool>> UpdateVin(string vin)
         {
-            return Task.FromResult(Response.Create(ResponseStatus.Success, true));
+            if (vin.Length != 17) // should never happenl, but....
+            {
+                this.logger.AddUserMessage("VIN " + vin + " is not 17 characters long!");
+                return Response.Create(ResponseStatus.Error, false);
+            }
+
+            byte[] bvin = vin.ToBytes();
+            byte[] vin1 = new byte[] { 0x00, bvin[0], bvin[1], bvin[2], bvin[3], bvin[4] };
+            byte[] vin2 = new byte[] { bvin[5], bvin[6], bvin[7], bvin[8], bvin[9], bvin[10] };
+            byte[] vin3 = new byte[] { bvin[11], bvin[12], bvin[13], bvin[14], bvin[15], bvin[16] };
+
+            Response<bool> block1 = await WriteBlock6(1, vin1);
+            if (block1.Status != ResponseStatus.Success) return Response.Create(ResponseStatus.Error, true);
+            Response<bool> block2 = await WriteBlock6(2, vin2);
+            if (block2.Status != ResponseStatus.Success) return Response.Create(ResponseStatus.Error, true);
+            Response<bool> block3 = await WriteBlock6(3, vin3);
+            if (block3.Status != ResponseStatus.Success) return Response.Create(ResponseStatus.Error, true);
+
+            return Response.Create(ResponseStatus.Success, true);
         }
 
         /// <summary>
@@ -215,8 +236,39 @@ namespace Flash411
             {
                 this.logger.AddUserMessage(errorMessage);
             }
+            else
+            {
+                this.logger.AddUserMessage("PCM Unlocked");
+            }
 
             return result;
+        }
+
+        /// <summary>
+        /// Writes a block of data to the PCM
+        /// Requires an unlocked PCM
+        /// </summary>
+        public async Task<Response<bool>> WriteBlock6(byte block, byte[] data)
+        {
+            Message tx = new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3B, block, data[0], data[1], data[2], data[3], data[4], data[5] });
+            Message ok = new Message(new byte[] { 0x6C, 0xF0, 0x10, 0x7B, block });
+
+            Response<Message> rx = await this.device.SendRequest(tx);
+
+            if (rx.Status != ResponseStatus.Success)
+            {
+                logger.AddUserMessage("Failed to write block " + block + ", communications failure");
+                return Response.Create(ResponseStatus.Error, false);
+            }
+                
+            if (Utility.CompareArrays(rx.Value.GetBytes(), ok.GetBytes()))
+            {
+                logger.AddUserMessage("Failed to write block " + block + ", PCM rejected attempt");
+                return Response.Create(ResponseStatus.Error, false);
+            }
+
+            logger.AddDebugMessage("Successful write to block " + block);
+            return Response.Create(ResponseStatus.Success, true);
         }
 
         /// <summary>

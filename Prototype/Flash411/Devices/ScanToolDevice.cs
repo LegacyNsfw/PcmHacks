@@ -157,11 +157,11 @@ namespace Flash411
             
             if (string.Equals(actualResponse, expectedResponse))
             {
-                this.Logger.AddDebugMessage(actualResponse + "=" + expectedResponse);
+                //this.Logger.AddDebugMessage(actualResponse + "=" + expectedResponse);
                 return true;
             }
 
-            this.Logger.AddDebugMessage("Bad. " + actualResponse + " does not equal " + expectedResponse);
+            this.Logger.AddDebugMessage("Did not recieve expected response. " + actualResponse + " does not equal " + expectedResponse);
             return false;
         }
 
@@ -220,7 +220,7 @@ namespace Flash411
 
             //this.Logger.AddDebugMessage("built filtered string kept " + j + " bytes filtered is " + filtered.Length + " long");
 
-            this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
+            //this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
             string line = System.Text.Encoding.ASCII.GetString(filtered).Trim(); // strip leading and trailing whitespace, too
 
             this.Logger.AddDebugMessage("Read \"" + line + "\"");                          

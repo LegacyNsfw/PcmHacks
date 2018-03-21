@@ -225,19 +225,18 @@ namespace Flash411
             switch (unlockCode)
             {
                 case 0x36:
-                    errorMessage = $"The PCM didn't accept the unlock key value.";
+                    errorMessage = $"The PCM didn't accept the unlock key value";
+                    return Response.Create(ResponseStatus.Error, false);
                     break;
 
                 case 0x37:
-                    errorMessage = $"The PCM didn't accept the unlock key value, and you've tried too many times.";
-                    break;
+                    errorMessage = $"This PCM is enforcing timeout lock";
+                    return Response.Create(ResponseStatus.Timeout, false);
 
                 default:
-                    errorMessage = $"Unlock code 0x{unlockCode}. What does that mean?";
-                    break;
+                    errorMessage = $"Unknown unlock code 0x{unlockCode}";
+                    return Response.Create(ResponseStatus.UnexpectedResponse, false);
             }
-
-            return Response.Create(ResponseStatus.UnexpectedResponse, false);
         }
     }
 }
