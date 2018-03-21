@@ -34,11 +34,11 @@
             this.label1 = new System.Windows.Forms.Label();
             this.interfacePortList = new System.Windows.Forms.ComboBox();
             this.operationsBox = new System.Windows.Forms.GroupBox();
+            this.reinitializeButton = new System.Windows.Forms.Button();
             this.writeFullContentsButton = new System.Windows.Forms.Button();
             this.readFullContentsButton = new System.Windows.Forms.Button();
             this.modifyVinButton = new System.Windows.Forms.Button();
             this.readPropertiesButton = new System.Windows.Forms.Button();
-            this.reinitializeButton = new System.Windows.Forms.Button();
             this.tabs = new System.Windows.Forms.TabControl();
             this.resultsTab = new System.Windows.Forms.TabPage();
             this.userLog = new System.Windows.Forms.TextBox();
@@ -70,9 +70,8 @@
             // interfaceTypeList
             // 
             this.interfaceTypeList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.interfaceTypeList.Enabled = false;
             this.interfaceTypeList.FormattingEnabled = true;
-            this.interfaceTypeList.Location = new System.Drawing.Point(4, 84);
+            this.interfaceTypeList.Location = new System.Drawing.Point(7, 36);
             this.interfaceTypeList.Margin = new System.Windows.Forms.Padding(2);
             this.interfaceTypeList.Name = "interfaceTypeList";
             this.interfaceTypeList.Size = new System.Drawing.Size(216, 21);
@@ -82,7 +81,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(4, 67);
+            this.label2.Location = new System.Drawing.Point(7, 19);
             this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(31, 13);
@@ -92,7 +91,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(4, 19);
+            this.label1.Location = new System.Drawing.Point(6, 63);
             this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(26, 13);
@@ -102,8 +101,9 @@
             // interfacePortList
             // 
             this.interfacePortList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.interfacePortList.Enabled = false;
             this.interfacePortList.FormattingEnabled = true;
-            this.interfacePortList.Location = new System.Drawing.Point(5, 35);
+            this.interfacePortList.Location = new System.Drawing.Point(7, 79);
             this.interfacePortList.Margin = new System.Windows.Forms.Padding(2);
             this.interfacePortList.Name = "interfacePortList";
             this.interfacePortList.Size = new System.Drawing.Size(216, 21);
@@ -125,6 +125,17 @@
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
+            // 
+            // reinitializeButton
+            // 
+            this.reinitializeButton.Location = new System.Drawing.Point(5, 137);
+            this.reinitializeButton.Margin = new System.Windows.Forms.Padding(2);
+            this.reinitializeButton.Name = "reinitializeButton";
+            this.reinitializeButton.Size = new System.Drawing.Size(214, 25);
+            this.reinitializeButton.TabIndex = 4;
+            this.reinitializeButton.Text = "Re-&Initialize Device";
+            this.reinitializeButton.UseVisualStyleBackColor = true;
+            this.reinitializeButton.Click += new System.EventHandler(this.reinitializeButton_Click);
             // 
             // writeFullContentsButton
             // 
@@ -168,17 +179,6 @@
             this.readPropertiesButton.Text = "Read &Properties";
             this.readPropertiesButton.UseVisualStyleBackColor = true;
             this.readPropertiesButton.Click += new System.EventHandler(this.readPropertiesButton_Click);
-            // 
-            // reinitializeButton
-            // 
-            this.reinitializeButton.Location = new System.Drawing.Point(5, 137);
-            this.reinitializeButton.Margin = new System.Windows.Forms.Padding(2);
-            this.reinitializeButton.Name = "reinitializeButton";
-            this.reinitializeButton.Size = new System.Drawing.Size(214, 25);
-            this.reinitializeButton.TabIndex = 4;
-            this.reinitializeButton.Text = "Re-&Initialize Device";
-            this.reinitializeButton.UseVisualStyleBackColor = true;
-            this.reinitializeButton.Click += new System.EventHandler(this.reinitializeButton_Click);
             // 
             // tabs
             // 

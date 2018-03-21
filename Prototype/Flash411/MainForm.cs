@@ -1,4 +1,6 @@
-﻿using System;
+﻿using J2534;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -17,6 +19,7 @@ namespace Flash411
     {
         //private Interface currentInterface;
         private Vehicle vehicle;
+        List<J2534Device> InstalledDLLs;
 
         public MainForm()
         {
@@ -50,89 +53,115 @@ namespace Flash411
             this.interfaceBox.Enabled = true;
             this.operationsBox.Enabled = true;
             this.startServerButton.Enabled = false;
-            
-            this.FillPortList();
+            FillInterfaceList();
         }
 
+        private void FillInterfaceList()
+        {
+            this.interfaceTypeList.Items.Add(new J2534DeviceV1(null, this));
+            this.interfaceTypeList.Items.Add(new MockDevice(null, this));
+            this.interfaceTypeList.Items.Add(new Avt852DeviceV1(null, this));
+            this.interfaceTypeList.Items.Add(new ScanToolDevice(null, this));
+            this.interfaceTypeList.Items.Add(new ThanielDevice(null, this));
+        }
+
+       
         private void FillPortList()
         {
             this.interfacePortList.Items.Clear();
-            this.interfacePortList.Items.Add("Select...");
-            this.interfacePortList.SelectedIndex = 0;
+           // this.interfacePortList.SelectedIndex = 0;
 
             this.interfacePortList.Items.Add(new MockPort(this));
             this.interfacePortList.Items.Add(new MockAvt852(this));
             this.interfacePortList.Items.Add(new HttpPort(this));
-
-            if (J2534Port.IsPresent())
-            {
-                this.interfacePortList.Items.Add(new J2534Port());
-            }
 
             foreach (string name in System.IO.Ports.SerialPort.GetPortNames())
             {
                 this.interfacePortList.Items.Add(new StandardPort(name));
             }
         }
+        private void FillJ2534List()
+        {
+            this.interfacePortList.Items.Clear();
+            //this.interfacePortList.SelectedIndex = 0;
+
+            if (FindInstalledJ2534DLLs() == true)
+            {
+                foreach (J2534Device J in InstalledDLLs)
+                {
+                    this.interfacePortList.Items.Add(J.Name);
+                }
+            }
+
+        }
 
         private void interfacePortList_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
-                this.interfaceTypeList.Items.Clear();
-
-                IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
-
-                // It doesn't count if the user selected the prompt.
-                if (selectedPort == null)
+                if (interfaceTypeList.SelectedIndex >= 0)
                 {
-                    return;
+                    if (interfaceTypeList.SelectedIndex == 0) //J2534
+                    {
+                        this.interfaceTypeList.Items[0] = (new J2534DeviceV1(InstalledDLLs[interfacePortList.SelectedIndex], this));
+                    }
+                    else //everythig else!
+                    {
+                        IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
+
+                        // It doesn't count if the user selected the prompt.
+                        if (selectedPort == null)return;
+                         
+                        //  this.startServerButton.Enabled = true;
+
+                        // I don't really expect to support all of these. They're just 
+                        // placeholders until we know which ones we really will support.
+                        this.interfaceTypeList.Items[1] = (new MockDevice(selectedPort, this));
+                        this.interfaceTypeList.Items[2] = (new Avt852DeviceV1(selectedPort, this));
+                        this.interfaceTypeList.Items[3] = (new ScanToolDevice(selectedPort, this));
+                        this.interfaceTypeList.Items[4] = (new ThanielDevice(selectedPort, this));
+                    }
                 }
-
-                this.startServerButton.Enabled = true;
-
-                this.interfaceTypeList.Items.Add("Select...");
-
-                if (selectedPort is MockPort)
-                {
-                    this.interfaceTypeList.Items.Add(new MockDevice(selectedPort, this));
-                    this.interfaceTypeList.SelectedIndex = 0;
-                }
-                else
-                {
-                    // I don't really expect to support all of these. They're just 
-                    // placeholders until we know which ones we really will support.
-                    this.interfaceTypeList.Items.Add(new Avt852DeviceV1(selectedPort, this));
-                    this.interfaceTypeList.Items.Add(new ScanToolDevice(selectedPort, this));
-                    this.interfaceTypeList.Items.Add(new ThanielDevice(selectedPort, this));
-                }
-
-                this.interfaceTypeList.Enabled = true;
             }
             catch (Exception exception)
             {
                 this.AddDebugMessage("Error in interfacePortList_SelectedIndexChanged: " + exception.ToString());
+                return;
             }
             finally
             {
                 // Enabling and disabling controls causes the focus to be stolen.
-                this.interfacePortList.Focus();
+               // this.interfacePortList.Focus();
+                this.reinitializeButton_Click(sender, e);
             }
         }
 
         private void interfaceTypeList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            this.startServerButton.Enabled = false;
+            if (interfaceTypeList.SelectedIndex >= 0) { interfacePortList.Enabled = true; }
+            else { interfacePortList.Enabled = false; }
 
-            try
+            if (interfaceTypeList.SelectedIndex == 0) //J2534 device
             {
-                this.reinitializeButton_Click(sender, e);
+                this.FillJ2534List();
             }
-            finally
+            else //anythign else which will be serial prots
             {
-                // Enabling and disabling controls causes the focus to be stolen.
-                this.interfaceTypeList.Focus();
+                this.FillPortList(); //refresh ports
             }
+            //refresh installed ports pending on sleected 
+
+            //this.startServerButton.Enabled = false;
+
+            //try
+            //{
+            //    this.reinitializeButton_Click(sender, e);
+            //}
+            //finally
+            //{
+            //    // Enabling and disabling controls causes the focus to be stolen.
+            //    this.interfaceTypeList.Focus();
+            //}
         }
 
         private void DisableUserInput()
@@ -398,5 +427,69 @@ namespace Flash411
 
             HttpServer.StartWebServer(selectedPort, this);
         }
+
+
+
+
+        /// <summary>
+        /// Find all installed J2534 DLLs
+        /// </summary>
+        private const string PASSTHRU_REGISTRY_PATH = "Software\\PassThruSupport.04.04";
+        private const string PASSTHRU_REGISTRY_PATH_6432 = "Software\\Wow6432Node\\PassThruSupport.04.04";
+        public bool FindInstalledJ2534DLLs()
+        {
+            try
+            {
+
+               InstalledDLLs = new List<J2534Device>();
+                RegistryKey myKey = Registry.LocalMachine.OpenSubKey(PASSTHRU_REGISTRY_PATH, false);
+                if ((myKey == null))
+                {
+                    myKey = Registry.LocalMachine.OpenSubKey(PASSTHRU_REGISTRY_PATH_6432, false);
+                    if ((myKey == null))
+                    {
+                        return false;
+                    }
+
+                }
+
+                string[] devices = myKey.GetSubKeyNames();
+                foreach (string device in devices)
+                {
+                    J2534Device tempDevice = new J2534Device();
+                    RegistryKey deviceKey = myKey.OpenSubKey(device);
+                    if ((deviceKey == null))
+                    {
+                        continue; //Skip device... its empty
+                    }
+
+                    tempDevice.Vendor = (string)deviceKey.GetValue("Vendor", "");
+                    tempDevice.Name = (string)deviceKey.GetValue("Name", "");
+                    tempDevice.ConfigApplication = (string)deviceKey.GetValue("ConfigApplication", "");
+                    tempDevice.FunctionLibrary = (string)deviceKey.GetValue("FunctionLibrary", "");
+                    tempDevice.CAN = (int)(deviceKey.GetValue("CAN", 0));
+                    tempDevice.ISO14230 = (int)(deviceKey.GetValue("ISO14230", 0));
+                    tempDevice.ISO15765 = (int)(deviceKey.GetValue("ISO15765", 0));
+                    tempDevice.ISO9141 = (int)(deviceKey.GetValue("ISO9141", 0));
+                    tempDevice.J1850PWM = (int)(deviceKey.GetValue("J1850PWM", 0));
+                    tempDevice.J1850VPW = (int)(deviceKey.GetValue("J1850VPW", 0));
+                    tempDevice.SCI_A_ENGINE = (int)(deviceKey.GetValue("SCI_A_ENGINE", 0));
+                    tempDevice.SCI_A_TRANS = (int)(deviceKey.GetValue("SCI_A_TRANS", 0));
+                    tempDevice.SCI_B_ENGINE = (int)(deviceKey.GetValue("SCI_B_ENGINE", 0));
+                    tempDevice.SCI_B_TRANS = (int)(deviceKey.GetValue("SCI_B_TRANS", 0));
+                    InstalledDLLs.Add(tempDevice);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                this.AddDebugMessage("Error occured while finding installed J2534 devices");
+                //do something with errors here for now return false
+                return false;
+            }
+
+        }
+
+
     }
 }
