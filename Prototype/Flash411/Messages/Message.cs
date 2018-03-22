@@ -19,6 +19,7 @@ namespace Flash411
             this.message = message;
         }
 
+ 
         public Message(byte[] message, ulong Timestamp, ulong Error)
         {
             this.message = message;
@@ -40,6 +41,7 @@ namespace Flash411
         }
 
 
+ 
         [DebuggerStepThrough]
         public byte[] GetBytes()
         {

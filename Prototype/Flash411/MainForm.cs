@@ -1,3 +1,4 @@
+  
 ﻿using J2534;
 using Microsoft.Win32;
 using System;
@@ -233,118 +234,7 @@ namespace Flash411
             }
         }
 
-        private async void readFullContentsButton_Click(object sender, EventArgs e)
-        {
-            this.DisableUserInput();
-
-            try
-            {
-                if (this.vehicle == null)
-                {
-                    // This shouldn't be possible - it would mean the buttons 
-                    // were enabled when they shouldn't be.
-                    return;
-                }
-
-                Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
-                if (unlockResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("Unlock was not successful.");
-                    return;
-                }
-
-                this.AddUserMessage("Unlock succeeded.");
-
-                Response<Stream> readResponse = await this.vehicle.ReadContents();
-                if (readResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
-                    return;
-                }
-
-                string path = this.ShowSaveAsDialog();
-                if (path == null)
-                {
-                    this.AddUserMessage("Save canceled.");
-                    return;
-                }
-
-                this.AddUserMessage("Saving to " + path);
-
-                try
-                {
-                    using (Stream output = File.OpenWrite(path))
-                    {
-                        await readResponse.Value.CopyToAsync(output);
-                    }
-                }
-                catch (IOException exception)
-                {
-                    this.AddUserMessage(exception.Message);
-                }                
-            }
-            finally
-            {
-                this.EnableUserInput();
-            }
-        }
-
-        private string ShowSaveAsDialog()
-        {
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.DefaultExt = ".bin";
-            dialog.Filter = "Binary Files(*.bin) | *.bin | All Files(*.*) | *.*";
-            dialog.FilterIndex = 0;
-            dialog.OverwritePrompt = true;
-            dialog.ValidateNames = true;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                return dialog.FileName;
-            }
-
-            return null;
-        }
-
-        private async void writeFullContentsButton_Click(object sender, EventArgs e)
-        {
-            if (this.vehicle == null)
-            {
-                // This shouldn't be possible - it would mean the buttons 
-                // were enabled when they shouldn't be.
-                return;
-            }
-
-            Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
-            if (unlockResponse.Status != ResponseStatus.Success)
-            {
-                this.AddUserMessage("Unlock was not successful.");
-                return;
-            }
-
-            this.AddUserMessage("Unlock succeeded.");
-
-            string path = this.ShowOpenDialog();
-            if (path == null)
-            {
-                return;
-            }
-
-            this.AddUserMessage("Pretending to update PCM with content from " + path);
-
-            try
-            {
-                using (Stream stream = File.OpenRead(path))
-                {
-                    await this.vehicle.WriteContents(stream);
-                }
-            }
-            catch(IOException exception)
-            {
-                this.AddUserMessage(exception.ToString());
-            }
-        }
-
+        
         private string ShowOpenDialog()
         {
             OpenFileDialog dialog = new OpenFileDialog();
@@ -429,6 +319,156 @@ namespace Flash411
         }
 
 
+        private async void readFullContentsButton_Click(object sender, EventArgs e)
+        {
+            this.DisableUserInput();
+
+            try
+            {
+                if (this.vehicle == null)
+                {
+                    // This shouldn't be possible - it would mean the buttons 
+                    // were enabled when they shouldn't be.
+                    return;
+                }
+
+                Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
+                if (unlockResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Unlock was not successful.");
+                    return;
+                }
+
+                this.AddUserMessage("Unlock succeeded.");
+
+                Response<Stream> readResponse = await this.vehicle.ReadContents();
+                if (readResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
+                    return;
+                }
+
+                string path = this.ShowSaveAsDialog();
+                if (path == null)
+                {
+                    this.AddUserMessage("Save canceled.");
+                    return;
+                }
+
+                this.AddUserMessage("Saving to " + path);
+
+                try
+                {
+                    using (Stream output = File.OpenWrite(path))
+                    {
+                        await readResponse.Value.CopyToAsync(output);
+                    }
+                }
+                catch (IOException exception)
+                {
+                    this.AddUserMessage(exception.Message);
+                }
+            }
+            finally
+            {
+                this.EnableUserInput();
+            }
+        }
+
+        private string ShowSaveAsDialog()
+        {
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.DefaultExt = ".bin";
+            dialog.Filter = "Binary Files(*.bin) | *.bin | All Files(*.*) | *.*";
+            dialog.FilterIndex = 0;
+            dialog.OverwritePrompt = true;
+            dialog.ValidateNames = true;
+            DialogResult result = dialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                return dialog.FileName;
+            }
+
+            return null;
+        }
+
+        private async void writeFullContentsButton_Click(object sender, EventArgs e)
+        {
+            if (this.vehicle == null)
+            {
+                // This shouldn't be possible - it would mean the buttons 
+                // were enabled when they shouldn't be.
+                return;
+            }
+
+            Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
+            if (unlockResponse.Status != ResponseStatus.Success)
+            {
+                this.AddUserMessage("Unlock was not successful.");
+                return;
+            }
+
+            this.AddUserMessage("Unlock succeeded.");
+
+            string path = this.ShowOpenDialog();
+            if (path == null)
+            {
+                return;
+            }
+
+            this.AddUserMessage("Pretending to update PCM with content from " + path);
+
+            try
+            {
+                using (Stream stream = File.OpenRead(path))
+                {
+                    await this.vehicle.WriteContents(stream);
+                }
+            }
+            catch (IOException exception)
+            {
+                this.AddUserMessage(exception.ToString());
+            }
+        }
+
+   
+
+        private async void modifyVinButton_Click(object sender, EventArgs e)
+        {
+            var vinResponse = await this.vehicle.QueryVin();
+            if (vinResponse.Status != ResponseStatus.Success)
+            {
+                this.AddUserMessage("VIN query failed: " + vinResponse.Status.ToString());
+                return;
+            }
+
+            DialogBoxes.VinForm vinForm = new DialogBoxes.VinForm();
+            vinForm.Vin = vinResponse.Value;
+            DialogResult dialogResult = vinForm.ShowDialog();
+
+            if (dialogResult == DialogResult.OK)
+            {
+                Response<bool> unlocked = await this.vehicle.UnlockEcu();
+                if (unlocked.Value)
+                {
+                    Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
+                    if (vinmodified.Value)
+                    {
+                        this.AddUserMessage("VIN successfully updated to " + vinForm.Vin);
+                        MessageBox.Show("VIN updated to " + vinForm.Vin + " successfully.", "Good news.", MessageBoxButtons.OK);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Unable to change the VIN to " + vinForm.Vin + ". Error: " + vinmodified.Status, "Bad news.", MessageBoxButtons.OK);
+                    }
+                }
+                else
+                {
+
+                }
+
+            }
+        }
 
 
         /// <summary>
@@ -490,42 +530,14 @@ namespace Flash411
 
         }
 
-
+        
     }
 }
-        private async void modifyVinButton_Click(object sender, EventArgs e)
-        {
-            var vinResponse = await this.vehicle.QueryVin();
-            if (vinResponse.Status != ResponseStatus.Success)
-            {
-                this.AddUserMessage("VIN query failed: " + vinResponse.Status.ToString());
-                return;
-            }
+ 
 
-            DialogBoxes.VinForm vinForm = new DialogBoxes.VinForm();
-            vinForm.Vin = vinResponse.Value;
-            DialogResult dialogResult = vinForm.ShowDialog();
+       
 
-            if (dialogResult == DialogResult.OK)
-            {
-                Response<bool> unlocked = await this.vehicle.UnlockEcu();
-                if (unlocked.Value)
-                {
-                    Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
-                    if (vinmodified.Value)
-                    {
-                        this.AddUserMessage("VIN successfully updated to " + vinForm.Vin);
-                        MessageBox.Show("VIN updated to " + vinForm.Vin + " successfully.", "Good news.", MessageBoxButtons.OK);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Unable to change the VIN to " + vinForm.Vin + ". Error: " + vinmodified.Status, "Bad news.", MessageBoxButtons.OK);
-                    }
-                }
-                else
-                {
+     
 
-                }
-                
-            }
-        }
+       
+ 

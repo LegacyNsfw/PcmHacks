@@ -13,14 +13,6 @@ namespace Flash411
     class ScanToolDevice : Device
     {
         /// <summary>
-<<<<<<< HEAD
-        /// Every response from an ELM device ends with this.
-        /// </summary>
-        private const string Prompt = "\r\r>";
-
-        /// <summary>
-=======
->>>>>>> antus/vinchange
         /// Constructor.
         /// </summary>
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
@@ -33,11 +25,7 @@ namespace Flash411
         /// </summary>
         public override string ToString()
         {
-<<<<<<< HEAD
-            return "ScanTool OBDLink MX or SX";
-=======
             return "OBDLink or AllPro";
->>>>>>> antus/vinchange
         }
 
         /// <summary>
@@ -49,50 +37,25 @@ namespace Flash411
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 115200;
-<<<<<<< HEAD
-=======
             configuration.Timeout = 1000;
 
->>>>>>> antus/vinchange
             await this.Port.OpenAsync(configuration);
             await this.Port.DiscardBuffers();
 
             try
             {
                 // Reset
-<<<<<<< HEAD
-                // this.Logger.AddDebugMessage(await this.SendRequest("AT Z"));
-
-                // Turn off echo.
-                this.Logger.AddDebugMessage(await this.SendRequest("AT E0"));
-
-                // TODO: Turn off whitespace.
-                // this.Logger.AddDebugMessage(await this.SendRequest("AT S0"));
-
-                string elmId = await this.SendRequest("AT I");
-                this.Logger.AddUserMessage("Device supports " + elmId);
-
-                string stId = await this.SendRequest("ST I");
-                this.Logger.AddUserMessage("Device supports " + stId);
-
-                string voltage = await this.SendRequest("AT RV");
-                this.Logger.AddUserMessage("Voltage: " + voltage);
-
-                if (!await this.SendAndVerify("AT AL", "OK") ||
-                    !await this.SendAndVerify("AT SP2", "OK") ||
-                    !await this.SendAndVerify("AT DP", "SAE J1850 VPW"))
-=======
                 this.Logger.AddDebugMessage(await this.SendRequest("AT Z"));  // reset
                 this.Logger.AddDebugMessage(await this.SendRequest("AT E0")); // disable echo
                 this.Logger.AddDebugMessage(await this.SendRequest("AT S0")); // no spaces on responses
 
                 // Device Identification
                 string elmID = await this.SendRequest("AT I");                // Identify (ELM)
-                string stID  = await this.SendRequest("ST I");                // Identify (ScanTool.net)
-                string apID  = await this.SendRequest("AT #1");               // Identify (AllPro)
+                string stID = await this.SendRequest("ST I");                // Identify (ScanTool.net)
+                string apID = await this.SendRequest("AT #1");               // Identify (AllPro)
                 if (elmID != "?") this.Logger.AddUserMessage("Elm ID: " + elmID);
-                if (stID  != "?") this.Logger.AddUserMessage("ScanTool ID: " + stID);
-                if (apID  != "?") this.Logger.AddUserMessage("All Pro ID: " + apID);
+                if (stID != "?") this.Logger.AddUserMessage("ScanTool ID: " + stID);
+                if (apID != "?") this.Logger.AddUserMessage("All Pro ID: " + apID);
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage
                 this.Logger.AddUserMessage("Voltage: " + voltage);
@@ -100,7 +63,6 @@ namespace Flash411
                 if (!await this.SendAndVerify("AT AL", "OK") ||               // Allow Long packets
                     !await this.SendAndVerify("AT SP2", "OK") ||              // Set Protocol 2 (VPW)
                     !await this.SendAndVerify("AT DP", "SAE J1850 VPW"))      // Get Protocol (Verify VPW)
->>>>>>> antus/vinchange
                 {
                     return false;
                 }
@@ -146,7 +108,7 @@ namespace Flash411
             if (setHeaderResponse != "OK")
             {
                 this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
-                return Response.Create(ResponseStatus.UnexpectedResponse, (Message) null);
+                return Response.Create(ResponseStatus.UnexpectedResponse, (Message)null);
             }
 
             string payload = hexRequest.Substring(9);
@@ -155,10 +117,7 @@ namespace Flash411
             {
                 string hexResponse = await this.SendRequest(payload);
 
-<<<<<<< HEAD
-=======
                 this.Logger.AddDebugMessage("hexResponse: " + hexResponse);
->>>>>>> antus/vinchange
                 // Make sure we can parse the response.
                 if (!hexResponse.IsHex())
                 {
@@ -168,21 +127,15 @@ namespace Flash411
 
                 // Add the header bytes that the ELM hides from us.
                 byte[] deviceResponseBytes = hexResponse.ToBytes();
-<<<<<<< HEAD
-=======
                 this.Logger.AddDebugMessage("deviceResponseBytes: " + deviceResponseBytes.ToHex());
->>>>>>> antus/vinchange
                 byte[] completeResponseBytes = new byte[deviceResponseBytes.Length + 3];
                 completeResponseBytes[0] = messageBytes[0];
                 completeResponseBytes[1] = messageBytes[2];
                 completeResponseBytes[2] = messageBytes[1];
                 deviceResponseBytes.CopyTo(completeResponseBytes, 3);
 
-<<<<<<< HEAD
-=======
                 this.Logger.AddDebugMessage("Recieved: " + completeResponseBytes.ToHex());
 
->>>>>>> antus/vinchange
                 return Response.Create(ResponseStatus.Success, new Message(completeResponseBytes));
             }
             catch (TimeoutException)
@@ -201,93 +154,18 @@ namespace Flash411
         private async Task<bool> SendAndVerify(string message, string expectedResponse)
         {
             string actualResponse = await this.SendRequest(message);
-            
+
             if (string.Equals(actualResponse, expectedResponse))
             {
-<<<<<<< HEAD
-                this.Logger.AddDebugMessage("Good." + Environment.NewLine);
-                return true;
-            }
-
-            this.Logger.AddDebugMessage("Bad. Expected " + expectedResponse);
-=======
                 //this.Logger.AddDebugMessage(actualResponse + "=" + expectedResponse);
                 return true;
             }
 
             this.Logger.AddDebugMessage("Did not recieve expected response. " + actualResponse + " does not equal " + expectedResponse);
->>>>>>> antus/vinchange
             return false;
         }
 
         /// <summary>
-<<<<<<< HEAD
-        /// Send a request, wait for a response.
-        /// </summary>
-        /// <remarks>
-        /// The API for this method (sending a string, returning a string) matches
-        /// the way that we need to communicate with ELM and STN devices.
-        /// </remarks>
-        private async Task<string> SendRequest(string request)
-        {
-            this.Logger.AddDebugMessage("Sending " + request);
-            await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
-
-            // I hate this, but it improves reliability...
-            await Task.Delay(250);
-
-            List<byte> responseBytes = new List<byte>(100);
-            int pauseCount = 0;
-
-            // This 'for' loop just sets an upper limit on the number of times we'll retry,
-            // to ensure that we won't just loop indefinitely if something goes wrong.
-            //
-            // In practice, the loop should always end when the "\r\r>" marker is received.
-            for(int iterations = 0; iterations < 1000; iterations++)
-            {
-                byte[] buffer = new byte[100];
-                int length = await this.Port.Receive(buffer, 0, buffer.Length);
-
-                if (length == 0) 
-                {
-                    // When no data is received, pause and try again - but only a couple times.
-                    if (pauseCount <= 2)
-                    {
-                        pauseCount++;
-                        await Task.Delay(100);
-                        continue;
-                    }
-                    else
-                    {
-                        // No data, and we tried waiting for more, so we give up.
-                        break;
-                    }
-                }
-
-                // Since we received some data, we'll allow pausing for more data in future iterations.
-                pauseCount = 0;
-
-                // Add the latest bytes to the list.
-                responseBytes.AddRange(buffer.Take(length));
-
-                // Look for the end-of-response bytes.
-                if (responseBytes.Count > 2)
-                {
-                    if ((responseBytes[length - 3] == '\r') &&
-                        (responseBytes[length - 2] == '\r') &&
-                        (responseBytes[length - 1] == '>'))
-                    {
-                        // Hopefully the loop will always exit here.
-                        responseBytes.RemoveRange(responseBytes.Count - 3, 3);
-                        break;
-                    }
-                }
-            }
-            
-            string response = Encoding.ASCII.GetString(responseBytes.ToArray(), 0, responseBytes.Count);
-            this.Logger.AddDebugMessage("Received " + response);
-            return response;
-=======
         /// Reads and filteres a line from the device, returns it as a string
         /// </summary>
         /// <remarks>
@@ -316,7 +194,7 @@ namespace Flash411
             // count the wanted bytes and replace CR with space
             int wanted = 0;
             int j;
-            for (j=0; j<i; j++)
+            for (j = 0; j < i; j++)
             {
                 if (buffer[j] == 13) buffer[j] = 32; // CR -> Space
                 if (buffer[j] >= 32 && buffer[j] <= 126 && buffer[j] != '>') wanted++; // printable characters only, and not '>'
@@ -330,7 +208,7 @@ namespace Flash411
             // k is the pointer in to the original buffer
             int k;
             byte[] filtered = new byte[wanted]; // create a new filtered buffer of the correct size
-            for (k=0, j=0; k<i; k++) // start both buffers from 0, always increment the original buffer 
+            for (k = 0, j = 0; k < i; k++) // start both buffers from 0, always increment the original buffer 
             {
                 if (buffer[k] >= 32 && buffer[k] <= 126 && buffer[k] != '>') // do we want THIS byte?
                 {
@@ -345,7 +223,7 @@ namespace Flash411
             //this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
             string line = System.Text.Encoding.ASCII.GetString(filtered).Trim(); // strip leading and trailing whitespace, too
 
-            this.Logger.AddDebugMessage("Read \"" + line + "\"");                          
+            this.Logger.AddDebugMessage("Read \"" + line + "\"");
 
             if (i == max) return Response.Create(ResponseStatus.Truncated, line);
 
@@ -380,7 +258,6 @@ namespace Flash411
             Response<string> response = await ReadELMLine();
 
             return response.Value;
->>>>>>> antus/vinchange
         }
     }
 }
