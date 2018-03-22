@@ -26,6 +26,10 @@ namespace Flash411
             this.Port = port;
             this.Logger = logger;
         }
+        public Device( ILogger logger)
+        {
+            this.Logger = logger;
+        }
 
         ~Device()
         {
