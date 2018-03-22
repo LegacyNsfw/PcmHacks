@@ -74,6 +74,12 @@
     <Compile Include="Devices\ScanToolDevice.cs" />
     <Compile Include="Devices\SerialDevice.cs" />
     <Compile Include="Devices\ThanielDevice.cs" />
+    <Compile Include="DialogBoxes\DevicePicker.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DialogBoxes\DevicePicker.Designer.cs">
+      <DependentUpon>DevicePicker.cs</DependentUpon>
+    </Compile>
     <Compile Include="DialogBoxes\VinForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -105,6 +111,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Ports\StandardPort.cs" />
     <Compile Include="Vehicle.cs" />
+    <EmbeddedResource Include="DialogBoxes\DevicePicker.resx">
+      <DependentUpon>DevicePicker.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DialogBoxes\VinForm.resx">
       <DependentUpon>VinForm.cs</DependentUpon>
     </EmbeddedResource>
