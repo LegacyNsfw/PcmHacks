@@ -58,7 +58,7 @@ namespace Flash411
 
         private void FillPortList()
         {
-            this.interfacePortList.Items.Clear();
+/*            this.interfacePortList.Items.Clear();
             this.interfacePortList.Items.Add("Select...");
             this.interfacePortList.SelectedIndex = 0;
 
@@ -74,10 +74,10 @@ namespace Flash411
             foreach (string name in System.IO.Ports.SerialPort.GetPortNames())
             {
                 this.interfacePortList.Items.Add(new StandardPort(name));
-            }
+            } */
         }
 
-        private void interfacePortList_SelectedIndexChanged(object sender, EventArgs e)
+ /*       private void interfacePortList_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
@@ -121,6 +121,7 @@ namespace Flash411
                 this.interfacePortList.Focus();
             }
         }
+        */
 
         private void interfaceTypeList_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -133,7 +134,7 @@ namespace Flash411
             finally
             {
                 // Enabling and disabling controls causes the focus to be stolen.
-                this.interfaceTypeList.Focus();
+ //               this.interfaceTypeList.Focus();
             }
         }
 
@@ -367,7 +368,7 @@ namespace Flash411
                 this.vehicle = null;
             }
             
-            Device device = this.interfaceTypeList.SelectedItem as Device;
+            //Device device = this.interfaceTypeList.SelectedItem as Device;
 
             if (device == null)
             {
@@ -411,7 +412,7 @@ namespace Flash411
             this.DisableUserInput();
             this.startServerButton.Enabled = false;
 
-            IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
+//            IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
 
             // It doesn't count if the user selected the prompt.
             if (selectedPort == null)
@@ -460,6 +461,11 @@ namespace Flash411
                 }
                 
             }
+        }
+
+        private void selectButton_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

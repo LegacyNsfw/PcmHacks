@@ -14,6 +14,8 @@ namespace Flash411
     /// 
     class AvtDevice : Device
     {
+        public const string DeviceType = "AVT 842 or 852";
+
         public static readonly Message AVT_RESET            = new Message(new byte[] { 0xF1, 0xA5 });
         public static readonly Message AVT_ENTER_VPW_MODE   = new Message(new byte[] { 0xE1, 0x33 });
         public static readonly Message AVT_REQUEST_MODEL    = new Message(new byte[] { 0xF0 });
@@ -33,7 +35,7 @@ namespace Flash411
 
         public override string ToString()
         {
-            return "AVT 852";
+            return DeviceType;
         }
 
         public override async Task<bool> Initialize()
