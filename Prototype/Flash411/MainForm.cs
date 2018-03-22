@@ -16,6 +16,7 @@ namespace Flash411
     public partial class MainForm : Form, ILogger
     {
         //private Interface currentInterface;
+        private Device device;
         private Vehicle vehicle;
 
         public MainForm()
@@ -45,15 +46,26 @@ namespace Flash411
                 });
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private async void MainForm_Load(object sender, EventArgs e)
         {
             DisableUserInput();
 
             this.interfaceBox.Enabled = true;
             this.operationsBox.Enabled = true;
             this.startServerButton.Enabled = false;
-            
-            this.FillPortList();
+
+            //this.FillPortList();
+
+            this.device = await DeviceFactory.CreateDeviceFromConfigurationSettings(this);
+            if (this.device != null)
+            {
+                this.deviceDescription.Text = this.device.ToString();
+            }
+            else
+            {
+                this.deviceDescription.Text = "None selected.";
+            }
+
         }
 
         private void FillPortList()
@@ -409,10 +421,11 @@ namespace Flash411
 
         private void startServerButton_Click(object sender, EventArgs e)
         {
+            /*
             this.DisableUserInput();
             this.startServerButton.Enabled = false;
 
-//            IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
+            IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
 
             // It doesn't count if the user selected the prompt.
             if (selectedPort == null)
@@ -424,6 +437,7 @@ namespace Flash411
             this.AddUserMessage("There is no way to exit the HTTP server. Just close the app when you're done.");
 
             HttpServer.StartWebServer(selectedPort, this);
+            */
         }
 
         private async void modifyVinButton_Click(object sender, EventArgs e)
@@ -465,7 +479,16 @@ namespace Flash411
 
         private void selectButton_Click(object sender, EventArgs e)
         {
+            DevicePicker devicePicker = new DevicePicker(this);
+            DialogResult result = devicePicker.ShowDialog();
+            switch(result)
+            {
+                case DialogResult.OK:
+                    break;
 
+                case DialogResult.Cancel:
+                    break;
+            }
         }
     }
 }

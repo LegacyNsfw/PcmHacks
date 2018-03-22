@@ -10,7 +10,7 @@ namespace Flash411
     /// This interface allows other classes to send user-friendly status messages and
     /// developer-oriented debug messages to the UI.
     /// </summary>
-    interface ILogger
+    public interface ILogger
     {
         /// <summary>
         /// Add a message to the 'results' pane of the UI.

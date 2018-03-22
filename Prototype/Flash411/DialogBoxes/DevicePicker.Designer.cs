@@ -1,4 +1,4 @@
-﻿namespace Flash411.DialogBoxes
+﻿namespace Flash411
 {
     partial class DevicePicker
     {
@@ -29,16 +29,16 @@
         private void InitializeComponent()
         {
             this.categories = new System.Windows.Forms.GroupBox();
-            this.serialRadioButton = new System.Windows.Forms.RadioButton();
             this.j2534DeviceButton = new System.Windows.Forms.RadioButton();
+            this.serialRadioButton = new System.Windows.Forms.RadioButton();
             this.serialOptionsGroupBox = new System.Windows.Forms.GroupBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.serialDeviceList = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.comboBox2 = new System.Windows.Forms.ComboBox();
+            this.serialPortList = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.j2534DeviceList = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.comboBox3 = new System.Windows.Forms.ComboBox();
             this.autoDetectButton = new System.Windows.Forms.Button();
             this.okButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
@@ -60,17 +60,6 @@
             this.categories.TabStop = false;
             this.categories.Text = "Device &Category";
             // 
-            // serialRadioButton
-            // 
-            this.serialRadioButton.AutoSize = true;
-            this.serialRadioButton.Location = new System.Drawing.Point(7, 20);
-            this.serialRadioButton.Name = "serialRadioButton";
-            this.serialRadioButton.Size = new System.Drawing.Size(110, 17);
-            this.serialRadioButton.TabIndex = 0;
-            this.serialRadioButton.TabStop = true;
-            this.serialRadioButton.Text = "&Serial Port Device";
-            this.serialRadioButton.UseVisualStyleBackColor = true;
-            // 
             // j2534DeviceButton
             // 
             this.j2534DeviceButton.AutoSize = true;
@@ -82,13 +71,24 @@
             this.j2534DeviceButton.Text = "&J2534 Device";
             this.j2534DeviceButton.UseVisualStyleBackColor = true;
             // 
+            // serialRadioButton
+            // 
+            this.serialRadioButton.AutoSize = true;
+            this.serialRadioButton.Location = new System.Drawing.Point(7, 20);
+            this.serialRadioButton.Name = "serialRadioButton";
+            this.serialRadioButton.Size = new System.Drawing.Size(110, 17);
+            this.serialRadioButton.TabIndex = 0;
+            this.serialRadioButton.TabStop = true;
+            this.serialRadioButton.Text = "&Serial Port Device";
+            this.serialRadioButton.UseVisualStyleBackColor = true;
+            // 
             // serialOptionsGroupBox
             // 
             this.serialOptionsGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.serialOptionsGroupBox.Controls.Add(this.comboBox2);
+            this.serialOptionsGroupBox.Controls.Add(this.serialDeviceList);
             this.serialOptionsGroupBox.Controls.Add(this.label2);
-            this.serialOptionsGroupBox.Controls.Add(this.comboBox1);
+            this.serialOptionsGroupBox.Controls.Add(this.serialPortList);
             this.serialOptionsGroupBox.Controls.Add(this.label1);
             this.serialOptionsGroupBox.Location = new System.Drawing.Point(13, 68);
             this.serialOptionsGroupBox.Name = "serialOptionsGroupBox";
@@ -97,22 +97,16 @@
             this.serialOptionsGroupBox.TabStop = false;
             this.serialOptionsGroupBox.Text = "Serial Device Options";
             // 
-            // label1
+            // serialDeviceList
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(7, 20);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(55, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Serial &Port";
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(10, 36);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(130, 21);
-            this.comboBox1.TabIndex = 1;
+            this.serialDeviceList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.serialDeviceList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.serialDeviceList.FormattingEnabled = true;
+            this.serialDeviceList.Location = new System.Drawing.Point(10, 82);
+            this.serialDeviceList.Name = "serialDeviceList";
+            this.serialDeviceList.Size = new System.Drawing.Size(271, 21);
+            this.serialDeviceList.TabIndex = 3;
             // 
             // label2
             // 
@@ -123,21 +117,29 @@
             this.label2.TabIndex = 2;
             this.label2.Text = "&Device Type";
             // 
-            // comboBox2
+            // serialPortList
             // 
-            this.comboBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboBox2.FormattingEnabled = true;
-            this.comboBox2.Location = new System.Drawing.Point(10, 82);
-            this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(271, 21);
-            this.comboBox2.TabIndex = 3;
+            this.serialPortList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.serialPortList.FormattingEnabled = true;
+            this.serialPortList.Location = new System.Drawing.Point(10, 36);
+            this.serialPortList.Name = "serialPortList";
+            this.serialPortList.Size = new System.Drawing.Size(130, 21);
+            this.serialPortList.TabIndex = 1;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(7, 20);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(55, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Serial &Port";
             // 
             // groupBox1
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox1.Controls.Add(this.comboBox3);
+            this.groupBox1.Controls.Add(this.j2534DeviceList);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Location = new System.Drawing.Point(12, 197);
             this.groupBox1.Name = "groupBox1";
@@ -145,6 +147,17 @@
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "J2534 Device Options";
+            // 
+            // j2534DeviceList
+            // 
+            this.j2534DeviceList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.j2534DeviceList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.j2534DeviceList.FormattingEnabled = true;
+            this.j2534DeviceList.Location = new System.Drawing.Point(7, 37);
+            this.j2534DeviceList.Name = "j2534DeviceList";
+            this.j2534DeviceList.Size = new System.Drawing.Size(275, 21);
+            this.j2534DeviceList.TabIndex = 1;
             // 
             // label3
             // 
@@ -155,16 +168,6 @@
             this.label3.TabIndex = 0;
             this.label3.Text = "&Device Type";
             // 
-            // comboBox3
-            // 
-            this.comboBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboBox3.FormattingEnabled = true;
-            this.comboBox3.Location = new System.Drawing.Point(7, 37);
-            this.comboBox3.Name = "comboBox3";
-            this.comboBox3.Size = new System.Drawing.Size(275, 21);
-            this.comboBox3.TabIndex = 1;
-            // 
             // autoDetectButton
             // 
             this.autoDetectButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -174,6 +177,7 @@
             this.autoDetectButton.TabIndex = 3;
             this.autoDetectButton.Text = "&Auto Detect";
             this.autoDetectButton.UseVisualStyleBackColor = true;
+            this.autoDetectButton.Click += new System.EventHandler(this.autoDetectButton_Click);
             // 
             // okButton
             // 
@@ -184,6 +188,7 @@
             this.okButton.TabIndex = 4;
             this.okButton.Text = "&OK";
             this.okButton.UseVisualStyleBackColor = true;
+            this.okButton.Click += new System.EventHandler(this.okButton_Click);
             // 
             // cancelButton
             // 
@@ -194,6 +199,7 @@
             this.cancelButton.TabIndex = 5;
             this.cancelButton.Text = "&Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
+            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
             // 
             // DevicePicker
             // 
@@ -208,6 +214,7 @@
             this.Controls.Add(this.categories);
             this.Name = "DevicePicker";
             this.Text = "Select Device";
+            this.Load += new System.EventHandler(this.DevicePicker_Load);
             this.categories.ResumeLayout(false);
             this.categories.PerformLayout();
             this.serialOptionsGroupBox.ResumeLayout(false);
@@ -224,12 +231,12 @@
         private System.Windows.Forms.RadioButton j2534DeviceButton;
         private System.Windows.Forms.RadioButton serialRadioButton;
         private System.Windows.Forms.GroupBox serialOptionsGroupBox;
-        private System.Windows.Forms.ComboBox comboBox2;
+        private System.Windows.Forms.ComboBox serialDeviceList;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.ComboBox serialPortList;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.ComboBox comboBox3;
+        private System.Windows.Forms.ComboBox j2534DeviceList;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button autoDetectButton;
         private System.Windows.Forms.Button okButton;
