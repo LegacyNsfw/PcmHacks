@@ -493,3 +493,39 @@ namespace Flash411
 
     }
 }
+        private async void modifyVinButton_Click(object sender, EventArgs e)
+        {
+            var vinResponse = await this.vehicle.QueryVin();
+            if (vinResponse.Status != ResponseStatus.Success)
+            {
+                this.AddUserMessage("VIN query failed: " + vinResponse.Status.ToString());
+                return;
+            }
+
+            DialogBoxes.VinForm vinForm = new DialogBoxes.VinForm();
+            vinForm.Vin = vinResponse.Value;
+            DialogResult dialogResult = vinForm.ShowDialog();
+
+            if (dialogResult == DialogResult.OK)
+            {
+                Response<bool> unlocked = await this.vehicle.UnlockEcu();
+                if (unlocked.Value)
+                {
+                    Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
+                    if (vinmodified.Value)
+                    {
+                        this.AddUserMessage("VIN successfully updated to " + vinForm.Vin);
+                        MessageBox.Show("VIN updated to " + vinForm.Vin + " successfully.", "Good news.", MessageBoxButtons.OK);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Unable to change the VIN to " + vinForm.Vin + ". Error: " + vinmodified.Status, "Bad news.", MessageBoxButtons.OK);
+                    }
+                }
+                else
+                {
+
+                }
+                
+            }
+        }

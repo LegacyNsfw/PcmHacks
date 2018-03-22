@@ -33,8 +33,12 @@ namespace Flash411
             this.logger = logger;
 
             // TODO: Get this from a parameter, and get the GUI to provide it.
+<<<<<<< HEAD
             // this.baseUri = new Uri("http://127.0.0.1:11411/");
             this.baseUri = new Uri("http://symons.net.au:11411/");
+=======
+            this.baseUri = new Uri("http://127.0.0.1:11411/");
+>>>>>>> antus/vinchange
         }
 
         /// <summary>

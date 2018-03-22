@@ -11,6 +11,24 @@
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+<<<<<<< HEAD
+=======
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+>>>>>>> antus/vinchange
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,10 +50,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <Reference Include="J2534, Version=1.0.1.37629, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>.\J2534.dll</HintPath>
     </Reference>
+=======
+>>>>>>> antus/vinchange
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -49,12 +70,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <Compile Include="Devices\J2534DeviceV1.cs" />
     <Compile Include="Devices\Avt852DeviceV1.cs" />
+=======
+    <Compile Include="Devices\Avt852Device.cs" />
+>>>>>>> antus/vinchange
     <Compile Include="Devices\Device.cs" />
     <Compile Include="Devices\MockDevice.cs" />
     <Compile Include="Devices\ScanToolDevice.cs" />
     <Compile Include="Devices\ThanielDevice.cs" />
+<<<<<<< HEAD
+=======
+    <Compile Include="DialogBoxes\VinForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DialogBoxes\VinForm.Designer.cs">
+      <DependentUpon>VinForm.cs</DependentUpon>
+    </Compile>
+>>>>>>> antus/vinchange
     <Compile Include="Messages\BlockId.cs" />
     <Compile Include="Messages\Message.cs" />
     <Compile Include="Messages\MessageFactory.cs" />
@@ -67,6 +101,10 @@
     <Compile Include="Misc\Utility.cs" />
     <Compile Include="Ports\HttpPort.cs" />
     <Compile Include="Ports\IPort.cs" />
+<<<<<<< HEAD
+=======
+    <Compile Include="Ports\J2534Port.cs" />
+>>>>>>> antus/vinchange
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -79,6 +117,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Ports\StandardPort.cs" />
     <Compile Include="Vehicle.cs" />
+<<<<<<< HEAD
+=======
+    <EmbeddedResource Include="DialogBoxes\VinForm.resx">
+      <DependentUpon>VinForm.cs</DependentUpon>
+    </EmbeddedResource>
+>>>>>>> antus/vinchange
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -105,7 +149,20 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <Content Include="J2534.dll" />
+=======
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+>>>>>>> antus/vinchange
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

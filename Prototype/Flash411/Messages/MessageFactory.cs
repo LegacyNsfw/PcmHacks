@@ -63,6 +63,46 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Create a request to read the first segment of the PCM's Serial Number.
+        /// </summary>
+        public Message CreateSerialRequest1()
+        {
+            return CreateReadRequest(BlockId.Serial1);
+        }
+
+        /// <summary>
+        /// Create a request to read the second segment of the PCM's Serial Number.
+        /// </summary>
+        public Message CreateSerialRequest2()
+        {
+            return CreateReadRequest(BlockId.Serial2);
+        }
+
+        /// <summary>
+        /// Create a request to read the thid segment of the PCM's Serial Number.
+        /// </summary>
+        public Message CreateSerialRequest3()
+        {
+            return CreateReadRequest(BlockId.Serial3);
+        }
+
+        /// <summary>
+        /// Create a request to read the Broad Cast Code (BCC).
+        /// </summary>
+        public Message CreateBCCRequest()
+        {
+            return CreateReadRequest(BlockId.BCC);
+        }
+
+        /// <summary>
+        /// Create a request to read the Broad Cast Code (MEC).
+        /// </summary>
+        public Message CreateMECRequest()
+        {
+            return CreateReadRequest(BlockId.MEC);
+        }
+
+        /// <summary>
         /// Create a request to retrieve a 'seed' value from the PCM.
         /// </summary>
         public Message CreateSeedRequest()
