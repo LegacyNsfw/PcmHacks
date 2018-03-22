@@ -1,4 +1,7 @@
-﻿using System;
+  
+﻿using J2534;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -17,6 +20,7 @@ namespace Flash411
     {
         //private Interface currentInterface;
         private Vehicle vehicle;
+        List<J2534Device> InstalledDLLs;
 
         public MainForm()
         {
@@ -47,94 +51,118 @@ namespace Flash411
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            DisableUserInput();
-
             this.interfaceBox.Enabled = true;
             this.operationsBox.Enabled = true;
             this.startServerButton.Enabled = false;
-            
-            this.FillPortList();
+            FillInterfaceList();
         }
 
+        private void FillInterfaceList()
+        {
+            this.interfaceTypeList.Items.Add(new J2534DeviceV1(null, this));
+            this.interfaceTypeList.Items.Add(new MockDevice(null, this));
+            this.interfaceTypeList.Items.Add(new AvtDevice(null, this));
+            this.interfaceTypeList.Items.Add(new ScanToolDevice(null, this));
+            this.interfaceTypeList.Items.Add(new ThanielDevice(null, this));
+        }
+
+       
         private void FillPortList()
         {
             this.interfacePortList.Items.Clear();
-            this.interfacePortList.Items.Add("Select...");
-            this.interfacePortList.SelectedIndex = 0;
+           // this.interfacePortList.SelectedIndex = 0;
 
             this.interfacePortList.Items.Add(new MockPort(this));
             this.interfacePortList.Items.Add(new MockAvt852(this));
             this.interfacePortList.Items.Add(new HttpPort(this));
-
-            if (J2534Port.IsPresent())
-            {
-                this.interfacePortList.Items.Add(new J2534Port());
-            }
 
             foreach (string name in System.IO.Ports.SerialPort.GetPortNames())
             {
                 this.interfacePortList.Items.Add(new StandardPort(name));
             }
         }
+        private void FillJ2534List()
+        {
+            this.interfacePortList.Items.Clear();
+            //this.interfacePortList.SelectedIndex = 0;
+
+            if (FindInstalledJ2534DLLs() == true)
+            {
+                foreach (J2534Device J in InstalledDLLs)
+                {
+                    this.interfacePortList.Items.Add(J.Name);
+                }
+            }
+
+        }
 
         private void interfacePortList_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
-                this.interfaceTypeList.Items.Clear();
-
-                IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
-
-                // It doesn't count if the user selected the prompt.
-                if (selectedPort == null)
+                if (interfaceTypeList.SelectedIndex >= 0)
                 {
-                    return;
+                    if (interfaceTypeList.SelectedIndex == 0) //J2534
+                    {
+                        this.interfaceTypeList.Items[0] = (new J2534DeviceV1(InstalledDLLs[interfacePortList.SelectedIndex], this));
+                    }
+                    else //everythig else!
+                    {
+                        IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
+
+                        // It doesn't count if the user selected the prompt.
+                        if (selectedPort == null)return;
+                         
+                        //  this.startServerButton.Enabled = true;
+
+                        // I don't really expect to support all of these. They're just 
+                        // placeholders until we know which ones we really will support.
+                        this.interfaceTypeList.Items[1] = (new MockDevice(selectedPort, this));
+                        this.interfaceTypeList.Items[2] = (new AvtDevice(selectedPort, this));
+                        this.interfaceTypeList.Items[3] = (new ScanToolDevice(selectedPort, this));
+                        this.interfaceTypeList.Items[4] = (new ThanielDevice(selectedPort, this));
+                    }
                 }
-
-                this.startServerButton.Enabled = true;
-
-                this.interfaceTypeList.Items.Add("Select...");
-
-                if (selectedPort is MockPort)
-                {
-                    this.interfaceTypeList.Items.Add(new MockDevice(selectedPort, this));
-                    this.interfaceTypeList.SelectedIndex = 0;
-                }
-                else
-                {
-                    // I don't really expect to support all of these. They're just 
-                    // placeholders until we know which ones we really will support.
-                    this.interfaceTypeList.Items.Add(new AvtDevice(selectedPort, this));
-                    this.interfaceTypeList.Items.Add(new ScanToolDevice(selectedPort, this));
-                    this.interfaceTypeList.Items.Add(new ThanielDevice(selectedPort, this));
-                }
-
-                this.interfaceTypeList.Enabled = true;
             }
             catch (Exception exception)
             {
                 this.AddDebugMessage("Error in interfacePortList_SelectedIndexChanged: " + exception.ToString());
+                return;
             }
             finally
             {
                 // Enabling and disabling controls causes the focus to be stolen.
-                this.interfacePortList.Focus();
+               // this.interfacePortList.Focus();
+                this.reinitializeButton_Click(sender, e);
             }
         }
 
         private void interfaceTypeList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            this.startServerButton.Enabled = false;
+            if (interfaceTypeList.SelectedIndex >= 0) { interfacePortList.Enabled = true; }
+            else { interfacePortList.Enabled = false; }
 
-            try
+            if (interfaceTypeList.SelectedIndex == 0) //J2534 device
             {
-                this.reinitializeButton_Click(sender, e);
+                this.FillJ2534List();
             }
-            finally
+            else //anythign else which will be serial prots
             {
-                // Enabling and disabling controls causes the focus to be stolen.
-                this.interfaceTypeList.Focus();
+                this.FillPortList(); //refresh ports
             }
+            //refresh installed ports pending on sleected 
+
+            //this.startServerButton.Enabled = false;
+
+            //try
+            //{
+            //    this.reinitializeButton_Click(sender, e);
+            //}
+            //finally
+            //{
+            //    // Enabling and disabling controls causes the focus to be stolen.
+            //    this.interfaceTypeList.Focus();
+            //}
         }
 
         private void DisableUserInput()
@@ -194,30 +222,6 @@ namespace Flash411
                 }
 
                 this.AddUserMessage("OS: " + osResponse.Value.ToString());
-
-                var serialResponse = await this.vehicle.QuerySerial();
-                if (serialResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("Serial Number query failed: " + serialResponse.Status.ToString());
-                }
-
-                this.AddUserMessage("Serial Number: " + serialResponse.Value.ToString());
-
-                var bccResponse = await this.vehicle.QueryBCC();
-                if (serialResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("BCC query failed: " + bccResponse.Status.ToString());
-                }
-
-                this.AddUserMessage("Broad Case Code: " + bccResponse.Value.ToString());
-
-                var mecResponse = await this.vehicle.QueryMEC();
-                if (serialResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("MEC query failed: " + mecResponse.Status.ToString());
-                }
-
-                this.AddUserMessage("MEC: " + mecResponse.Value.ToString());
             }
             catch(Exception exception)
             {
@@ -230,118 +234,7 @@ namespace Flash411
             }
         }
 
-        private async void readFullContentsButton_Click(object sender, EventArgs e)
-        {
-            this.DisableUserInput();
-
-            try
-            {
-                if (this.vehicle == null)
-                {
-                    // This shouldn't be possible - it would mean the buttons 
-                    // were enabled when they shouldn't be.
-                    return;
-                }
-
-                Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
-                if (unlockResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("Unlock was not successful.");
-                    return;
-                }
-
-                this.AddUserMessage("Unlock succeeded.");
-
-                Response<Stream> readResponse = await this.vehicle.ReadContents();
-                if (readResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
-                    return;
-                }
-
-                string path = this.ShowSaveAsDialog();
-                if (path == null)
-                {
-                    this.AddUserMessage("Save canceled.");
-                    return;
-                }
-
-                this.AddUserMessage("Saving to " + path);
-
-                try
-                {
-                    using (Stream output = File.OpenWrite(path))
-                    {
-                        await readResponse.Value.CopyToAsync(output);
-                    }
-                }
-                catch (IOException exception)
-                {
-                    this.AddUserMessage(exception.Message);
-                }                
-            }
-            finally
-            {
-                this.EnableUserInput();
-            }
-        }
-
-        private string ShowSaveAsDialog()
-        {
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.DefaultExt = ".bin";
-            dialog.Filter = "Binary Files(*.bin) | *.bin | All Files(*.*) | *.*";
-            dialog.FilterIndex = 0;
-            dialog.OverwritePrompt = true;
-            dialog.ValidateNames = true;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                return dialog.FileName;
-            }
-
-            return null;
-        }
-
-        private async void writeFullContentsButton_Click(object sender, EventArgs e)
-        {
-            if (this.vehicle == null)
-            {
-                // This shouldn't be possible - it would mean the buttons 
-                // were enabled when they shouldn't be.
-                return;
-            }
-
-            Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
-            if (unlockResponse.Status != ResponseStatus.Success)
-            {
-                this.AddUserMessage("Unlock was not successful.");
-                return;
-            }
-
-            this.AddUserMessage("Unlock succeeded.");
-
-            string path = this.ShowOpenDialog();
-            if (path == null)
-            {
-                return;
-            }
-
-            this.AddUserMessage("Pretending to update PCM with content from " + path);
-
-            try
-            {
-                using (Stream stream = File.OpenRead(path))
-                {
-                    await this.vehicle.WriteContents(stream);
-                }
-            }
-            catch(IOException exception)
-            {
-                this.AddUserMessage(exception.ToString());
-            }
-        }
-
+        
         private string ShowOpenDialog()
         {
             OpenFileDialog dialog = new OpenFileDialog();
@@ -425,6 +318,121 @@ namespace Flash411
             HttpServer.StartWebServer(selectedPort, this);
         }
 
+
+        private async void readFullContentsButton_Click(object sender, EventArgs e)
+        {
+            this.DisableUserInput();
+
+            try
+            {
+                if (this.vehicle == null)
+                {
+                    // This shouldn't be possible - it would mean the buttons 
+                    // were enabled when they shouldn't be.
+                    return;
+                }
+
+                Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
+                if (unlockResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Unlock was not successful.");
+                    return;
+                }
+
+                this.AddUserMessage("Unlock succeeded.");
+
+                Response<Stream> readResponse = await this.vehicle.ReadContents();
+                if (readResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
+                    return;
+                }
+
+                string path = this.ShowSaveAsDialog();
+                if (path == null)
+                {
+                    this.AddUserMessage("Save canceled.");
+                    return;
+                }
+
+                this.AddUserMessage("Saving to " + path);
+
+                try
+                {
+                    using (Stream output = File.OpenWrite(path))
+                    {
+                        await readResponse.Value.CopyToAsync(output);
+                    }
+                }
+                catch (IOException exception)
+                {
+                    this.AddUserMessage(exception.Message);
+                }
+            }
+            finally
+            {
+                this.EnableUserInput();
+            }
+        }
+
+        private string ShowSaveAsDialog()
+        {
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.DefaultExt = ".bin";
+            dialog.Filter = "Binary Files(*.bin) | *.bin | All Files(*.*) | *.*";
+            dialog.FilterIndex = 0;
+            dialog.OverwritePrompt = true;
+            dialog.ValidateNames = true;
+            DialogResult result = dialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                return dialog.FileName;
+            }
+
+            return null;
+        }
+
+        private async void writeFullContentsButton_Click(object sender, EventArgs e)
+        {
+            if (this.vehicle == null)
+            {
+                // This shouldn't be possible - it would mean the buttons 
+                // were enabled when they shouldn't be.
+                return;
+            }
+
+            Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
+            if (unlockResponse.Status != ResponseStatus.Success)
+            {
+                this.AddUserMessage("Unlock was not successful.");
+                return;
+            }
+
+            this.AddUserMessage("Unlock succeeded.");
+
+            string path = this.ShowOpenDialog();
+            if (path == null)
+            {
+                return;
+            }
+
+            this.AddUserMessage("Pretending to update PCM with content from " + path);
+
+            try
+            {
+                using (Stream stream = File.OpenRead(path))
+                {
+                    await this.vehicle.WriteContents(stream);
+                }
+            }
+            catch (IOException exception)
+            {
+                this.AddUserMessage(exception.ToString());
+            }
+        }
+
+   
+
         private async void modifyVinButton_Click(object sender, EventArgs e)
         {
             var vinResponse = await this.vehicle.QueryVin();
@@ -458,8 +466,78 @@ namespace Flash411
                 {
 
                 }
-                
+
             }
         }
+
+
+        /// <summary>
+        /// Find all installed J2534 DLLs
+        /// </summary>
+        private const string PASSTHRU_REGISTRY_PATH = "Software\\PassThruSupport.04.04";
+        private const string PASSTHRU_REGISTRY_PATH_6432 = "Software\\Wow6432Node\\PassThruSupport.04.04";
+        public bool FindInstalledJ2534DLLs()
+        {
+            try
+            {
+
+               InstalledDLLs = new List<J2534Device>();
+                RegistryKey myKey = Registry.LocalMachine.OpenSubKey(PASSTHRU_REGISTRY_PATH, false);
+                if ((myKey == null))
+                {
+                    myKey = Registry.LocalMachine.OpenSubKey(PASSTHRU_REGISTRY_PATH_6432, false);
+                    if ((myKey == null))
+                    {
+                        return false;
+                    }
+
+                }
+
+                string[] devices = myKey.GetSubKeyNames();
+                foreach (string device in devices)
+                {
+                    J2534Device tempDevice = new J2534Device();
+                    RegistryKey deviceKey = myKey.OpenSubKey(device);
+                    if ((deviceKey == null))
+                    {
+                        continue; //Skip device... its empty
+                    }
+
+                    tempDevice.Vendor = (string)deviceKey.GetValue("Vendor", "");
+                    tempDevice.Name = (string)deviceKey.GetValue("Name", "");
+                    tempDevice.ConfigApplication = (string)deviceKey.GetValue("ConfigApplication", "");
+                    tempDevice.FunctionLibrary = (string)deviceKey.GetValue("FunctionLibrary", "");
+                    tempDevice.CAN = (int)(deviceKey.GetValue("CAN", 0));
+                    tempDevice.ISO14230 = (int)(deviceKey.GetValue("ISO14230", 0));
+                    tempDevice.ISO15765 = (int)(deviceKey.GetValue("ISO15765", 0));
+                    tempDevice.ISO9141 = (int)(deviceKey.GetValue("ISO9141", 0));
+                    tempDevice.J1850PWM = (int)(deviceKey.GetValue("J1850PWM", 0));
+                    tempDevice.J1850VPW = (int)(deviceKey.GetValue("J1850VPW", 0));
+                    tempDevice.SCI_A_ENGINE = (int)(deviceKey.GetValue("SCI_A_ENGINE", 0));
+                    tempDevice.SCI_A_TRANS = (int)(deviceKey.GetValue("SCI_A_TRANS", 0));
+                    tempDevice.SCI_B_ENGINE = (int)(deviceKey.GetValue("SCI_B_ENGINE", 0));
+                    tempDevice.SCI_B_TRANS = (int)(deviceKey.GetValue("SCI_B_TRANS", 0));
+                    InstalledDLLs.Add(tempDevice);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                this.AddDebugMessage("Error occured while finding installed J2534 devices");
+                //do something with errors here for now return false
+                return false;
+            }
+
+        }
+
+        
     }
 }
+ 
+
+       
+
+     
+
+       
+ 

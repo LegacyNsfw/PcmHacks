@@ -51,11 +51,11 @@ namespace Flash411
 
                 // Device Identification
                 string elmID = await this.SendRequest("AT I");                // Identify (ELM)
-                string stID  = await this.SendRequest("ST I");                // Identify (ScanTool.net)
-                string apID  = await this.SendRequest("AT #1");               // Identify (AllPro)
+                string stID = await this.SendRequest("ST I");                // Identify (ScanTool.net)
+                string apID = await this.SendRequest("AT #1");               // Identify (AllPro)
                 if (elmID != "?") this.Logger.AddUserMessage("Elm ID: " + elmID);
-                if (stID  != "?") this.Logger.AddUserMessage("ScanTool ID: " + stID);
-                if (apID  != "?") this.Logger.AddUserMessage("All Pro ID: " + apID);
+                if (stID != "?") this.Logger.AddUserMessage("ScanTool ID: " + stID);
+                if (apID != "?") this.Logger.AddUserMessage("All Pro ID: " + apID);
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage
                 this.Logger.AddUserMessage("Voltage: " + voltage);
@@ -108,7 +108,7 @@ namespace Flash411
             if (setHeaderResponse != "OK")
             {
                 this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
-                return Response.Create(ResponseStatus.UnexpectedResponse, (Message) null);
+                return Response.Create(ResponseStatus.UnexpectedResponse, (Message)null);
             }
 
             string payload = hexRequest.Substring(9);
@@ -154,7 +154,7 @@ namespace Flash411
         private async Task<bool> SendAndVerify(string message, string expectedResponse)
         {
             string actualResponse = await this.SendRequest(message);
-            
+
             if (string.Equals(actualResponse, expectedResponse))
             {
                 //this.Logger.AddDebugMessage(actualResponse + "=" + expectedResponse);
@@ -194,7 +194,7 @@ namespace Flash411
             // count the wanted bytes and replace CR with space
             int wanted = 0;
             int j;
-            for (j=0; j<i; j++)
+            for (j = 0; j < i; j++)
             {
                 if (buffer[j] == 13) buffer[j] = 32; // CR -> Space
                 if (buffer[j] >= 32 && buffer[j] <= 126 && buffer[j] != '>') wanted++; // printable characters only, and not '>'
@@ -208,7 +208,7 @@ namespace Flash411
             // k is the pointer in to the original buffer
             int k;
             byte[] filtered = new byte[wanted]; // create a new filtered buffer of the correct size
-            for (k=0, j=0; k<i; k++) // start both buffers from 0, always increment the original buffer 
+            for (k = 0, j = 0; k < i; k++) // start both buffers from 0, always increment the original buffer 
             {
                 if (buffer[k] >= 32 && buffer[k] <= 126 && buffer[k] != '>') // do we want THIS byte?
                 {
@@ -223,7 +223,7 @@ namespace Flash411
             //this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
             string line = System.Text.Encoding.ASCII.GetString(filtered).Trim(); // strip leading and trailing whitespace, too
 
-            this.Logger.AddDebugMessage("Read \"" + line + "\"");                          
+            this.Logger.AddDebugMessage("Read \"" + line + "\"");
 
             if (i == max) return Response.Create(ResponseStatus.Truncated, line);
 
