@@ -34,8 +34,8 @@ namespace Flash411
         public
         new List<ulong> PeriodicMsgs;
         new List<ulong> Filters;
-        private int DeviceID;
-        private int ChannelID;
+        private uint DeviceID;
+        private uint ChannelID;
         private ProtocolID Protocol;
         public bool IsProtocolOpen;
         public bool IsJ2534Open;
@@ -195,7 +195,7 @@ namespace Flash411
             while (OBDError == J2534Err.STATUS_NOERROR || sw.ElapsedMilliseconds > (long)ReadTimeout)
             {
                 NumMessages = 1;
-                OBDError = J2534Port.Functions.PassThruReadMsgs(ChannelID, rxMsgs, ref NumMessages, ReadTimeout);
+                OBDError = J2534Port.Functions.PassThruReadMsgs((int)ChannelID, rxMsgs, ref NumMessages, ReadTimeout);
                 if (OBDError != J2534Err.STATUS_NOERROR) { return Response.Create(ResponseStatus.Error, new Message(null, 0, (ulong)OBDError)); }
                 sw.Stop();
                PassMess = rxMsgs.AsMsgList(1).Last();
@@ -207,7 +207,7 @@ namespace Flash411
                     break;//leave while loop
                 }
             }
-
+            Marshal.FreeHGlobal(rxMsgs);
             if (OBDError != J2534Err.STATUS_NOERROR || sw.ElapsedMilliseconds > (long)ReadTimeout) return Response.Create(ResponseStatus.Error, new Message(null, 0, (ulong)OBDError));
 
             return Response.Create(ResponseStatus.Success, new Message(PassMess.GetBytes(), PassMess.Timestamp, (ulong)OBDError));
@@ -226,7 +226,11 @@ namespace Flash411
             TempMsg.SetBytes(message.GetBytes());
 
             int NumMsgs = 1;
-            OBDError = J2534Port.Functions.PassThruWriteMsgs(ChannelID, TempMsg.ToIntPtr(), ref NumMsgs, WriteTimeout);
+
+            IntPtr MsgPtr = TempMsg.ToIntPtr();
+
+            OBDError = J2534Port.Functions.PassThruWriteMsgs((int)ChannelID, MsgPtr, ref NumMsgs, WriteTimeout);
+            Marshal.FreeHGlobal(MsgPtr);
             if (OBDError != J2534Err.STATUS_NOERROR)
             {
                 //Debug messages here...check why failed..
@@ -361,7 +365,7 @@ namespace Flash411
         /// </summary>
         async private Task<Response<J2534Err>>  ConnectToProtocol(ProtocolID ReqProtocol, BaudRate Speed, ConnectFlag ConnectFlags)
         {
-            OBDError = J2534Port.Functions.PassThruConnect(DeviceID, ReqProtocol, ConnectFlags, Speed, ref ChannelID);
+            OBDError = J2534Port.Functions.PassThruConnect(DeviceID, ReqProtocol,  ConnectFlags,  Speed, ref ChannelID);
             if (OBDError != J2534Err.STATUS_NOERROR) return Response.Create(ResponseStatus.Error, OBDError);
             Protocol = ReqProtocol;
             IsProtocolOpen = true;
@@ -376,7 +380,7 @@ namespace Flash411
         {
             double Volts = 0;
             int VoltsAsInt = 0;
-            OBDError = J2534Port.Functions.ReadBatteryVoltage(DeviceID, ref VoltsAsInt);
+            OBDError = J2534Port.Functions.ReadBatteryVoltage((int)DeviceID, ref VoltsAsInt);
             if (OBDError != J2534Err.STATUS_NOERROR)
             {
                 return Response.Create(ResponseStatus.Error, Volts);
@@ -412,7 +416,11 @@ namespace Flash411
             FlowPtr = IntPtr.Zero;
 
             int tempfilter = 0;
-            OBDError = J2534Port.Functions.PassThruStartMsgFilter(ChannelID, Filtertype, MaskPtr, PatternPtr, FlowPtr, ref tempfilter);
+            OBDError = J2534Port.Functions.PassThruStartMsgFilter((int)ChannelID, Filtertype, MaskPtr, PatternPtr, FlowPtr, ref tempfilter);
+
+            Marshal.FreeHGlobal(MaskPtr);
+            Marshal.FreeHGlobal(PatternPtr);
+            Marshal.FreeHGlobal(FlowPtr);
             if (OBDError != J2534Err.STATUS_NOERROR) return Response.Create(ResponseStatus.Error, OBDError);
             Filters.Add((ulong)tempfilter);
             return Response.Create(ResponseStatus.Success, OBDError);
