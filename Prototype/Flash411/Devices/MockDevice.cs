@@ -10,7 +10,7 @@ namespace Flash411
     /// <summary>
     /// This class provides a way to test most of the app without any interface hardware.
     /// </summary>
-    class MockDevice : Device
+    class MockDevice : SerialDevice
     {
         public const string DeviceType = "Mock Serial Device";
 
@@ -19,7 +19,7 @@ namespace Flash411
 
         }
 
-        public override string ToString()
+        public override string GetDeviceType()
         {
             return DeviceType;
         }

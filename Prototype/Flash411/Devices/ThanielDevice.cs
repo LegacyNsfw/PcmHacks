@@ -10,7 +10,7 @@ namespace Flash411
     /// <summary>
     /// This class encapsulates all code that is unique to the Arduino-based interface that Thaniel has created.
     /// </summary>
-    class ThanielDevice : Device
+    class ThanielDevice : SerialDevice
     {
         public const string DeviceType = "Thaniel";
 
@@ -19,7 +19,7 @@ namespace Flash411
 
         }
 
-        public override string ToString()
+        public override string GetDeviceType()
         {
             return DeviceType;
         }

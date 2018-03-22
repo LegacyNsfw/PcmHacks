@@ -49,11 +49,24 @@ namespace Flash411
                 });
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private async void MainForm_Load(object sender, EventArgs e)
         {
             this.interfaceBox.Enabled = true;
             this.operationsBox.Enabled = true;
             this.startServerButton.Enabled = false;
+
+            //this.FillPortList();
+
+            this.device = await DeviceFactory.CreateDeviceFromConfigurationSettings(this);
+            if (this.device != null)
+            {
+                this.deviceDescription.Text = this.device.ToString();
+            }
+            else
+            {
+                this.deviceDescription.Text = "None selected.";
+            }
+
         }
 
         private void DisableUserInput()
@@ -420,6 +433,9 @@ namespace Flash411
                 return false;
             }
 
+                case DialogResult.Cancel:
+                    break;
+            }
         }
 
         
