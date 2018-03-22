@@ -61,7 +61,7 @@ namespace Flash411
         {
             this.interfaceTypeList.Items.Add(new J2534DeviceV1(null, this));
             this.interfaceTypeList.Items.Add(new MockDevice(null, this));
-            this.interfaceTypeList.Items.Add(new Avt852DeviceV1(null, this));
+            this.interfaceTypeList.Items.Add(new AvtDevice(null, this));
             this.interfaceTypeList.Items.Add(new ScanToolDevice(null, this));
             this.interfaceTypeList.Items.Add(new ThanielDevice(null, this));
         }
@@ -118,7 +118,7 @@ namespace Flash411
                         // I don't really expect to support all of these. They're just 
                         // placeholders until we know which ones we really will support.
                         this.interfaceTypeList.Items[1] = (new MockDevice(selectedPort, this));
-                        this.interfaceTypeList.Items[2] = (new Avt852DeviceV1(selectedPort, this));
+                        this.interfaceTypeList.Items[2] = (new AvtDevice(selectedPort, this));
                         this.interfaceTypeList.Items[3] = (new ScanToolDevice(selectedPort, this));
                         this.interfaceTypeList.Items[4] = (new ThanielDevice(selectedPort, this));
                     }

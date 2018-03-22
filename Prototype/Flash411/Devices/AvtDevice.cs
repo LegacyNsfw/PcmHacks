@@ -33,7 +33,7 @@ namespace Flash411
 
         public override string ToString()
         {
-            return "AVT 852";
+            return "AVT (842/852)";
         }
 
         public override async Task<bool> Initialize()

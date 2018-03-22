@@ -221,8 +221,6 @@ namespace Flash411
                 return Response.Create(seedResponse.Status, false);
             }
 
-            if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
-
             Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.Value.GetBytes());
             if (seedValueResponse.Status != ResponseStatus.Success)
             {
