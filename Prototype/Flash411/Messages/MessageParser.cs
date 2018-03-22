@@ -165,13 +165,13 @@ namespace Flash411
             ResponseStatus status;
             UInt16 result = 0;
 
-            byte[] wait = { 0x6C, 0x70, 0x10, 0x67, 0x01, 0x37 }; // TODO: Verify if this is Wait or Unlocked
+            byte[] unlocked = { 0x6C, 0x70, 0x10, 0x67, 0x01, 0x37 };
             byte[] seed = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x01, };
 
-            if (TryVerifyInitialBytes(response, wait, out status))
+            if (TryVerifyInitialBytes(response, unlocked, out status))
             {
                 status = ResponseStatus.Success;
-                return Response.Create(ResponseStatus.UnexpectedResponse, result); // TODO: Not the right Response for unlocked - revisit this.
+                return Response.Create(ResponseStatus.Success, result);
             }
 
             if (!TryVerifyInitialBytes(response, seed, out status))
