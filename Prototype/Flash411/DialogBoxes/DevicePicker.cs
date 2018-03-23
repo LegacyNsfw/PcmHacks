@@ -164,7 +164,7 @@ namespace Flash411
             }
             else if (this.DeviceCategory == Configuration.Constants.DeviceCategoryJ2534)
             {
-                device = await DeviceFactory.CreateJ2534Device(this.J2534DeviceType, this.logger);
+                device = DeviceFactory.CreateJ2534Device(this.J2534DeviceType, this.logger);
             }
             else
             {

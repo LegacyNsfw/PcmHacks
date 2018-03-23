@@ -343,7 +343,7 @@ namespace Flash411
                 this.vehicle = null;
             }
 
-            Device device = await DeviceFactory.CreateDeviceFromConfigurationSettings(this);
+            Device device = DeviceFactory.CreateDeviceFromConfigurationSettings(this);
             if (device == null)
             {
                 this.deviceDescription.Text = "None selected.";

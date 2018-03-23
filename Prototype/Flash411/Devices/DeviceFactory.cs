@@ -11,7 +11,7 @@ namespace Flash411
         /// <summary>
         /// This might not really need to be async. If the J2534 stuff doesn't need it, then this doesn't need it either.
         /// </summary>
-        public static async Task<Device> CreateDeviceFromConfigurationSettings(ILogger logger)
+        public static Device CreateDeviceFromConfigurationSettings(ILogger logger)
         {
             switch(Configuration.DeviceCategory)
             {
@@ -19,7 +19,7 @@ namespace Flash411
                     return CreateSerialDevice(Configuration.SerialPort, Configuration.SerialPortDeviceType, logger);
 
                 case Configuration.Constants.DeviceCategoryJ2534:
-                    return await CreateJ2534Device(Configuration.J2534DeviceType, logger);
+                    return CreateJ2534Device(Configuration.J2534DeviceType, logger);
 
                 default:
                     return null;
@@ -82,9 +82,17 @@ namespace Flash411
             }
         }
 
-        public static Task<Device> CreateJ2534Device(string deviceType, ILogger logger)
+        public static Device CreateJ2534Device(string deviceType, ILogger logger)
         {
-            return Task.FromResult((Device)null);
+            foreach(var device in J2534DeviceFinder.InstalledDLLs)
+            {
+                if (device.Name == deviceType)
+                {
+                    return new J2534DeviceV1(device, logger);
+                }
+            }
+
+            return null;
         }
     }
 }
