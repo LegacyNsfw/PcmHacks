@@ -13,6 +13,11 @@ namespace Flash411
 
         }
 
+        public override void Dispose()
+        {
+            this.Port.Dispose();
+        }
+
         public void UpdateAppConfiguration()
         {
             Configuration.DeviceCategory = Configuration.Constants.DeviceCategorySerial;

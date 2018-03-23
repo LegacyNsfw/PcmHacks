@@ -173,6 +173,8 @@ namespace Flash411
             {
                 this.status.Text = "Unable to initalize " + device.ToString();
             }
+
+            device.Dispose();
         }
     }
 }

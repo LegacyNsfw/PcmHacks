@@ -18,7 +18,6 @@ namespace Flash411
 {
     public partial class MainForm : Form, ILogger
     {
-        private Device device;
         private Vehicle vehicle;
 
         public MainForm()
@@ -54,8 +53,7 @@ namespace Flash411
             this.operationsBox.Enabled = true;
             this.startServerButton.Enabled = false;
 
-            await this.CreateCurrentDevice();
-            await this.InitializeCurrentDevice();
+            await this.ResetDevice();
         }
 
         private void DisableUserInput()
@@ -127,72 +125,9 @@ namespace Flash411
             }
         }
 
-        private async Task CreateCurrentDevice()
-        {
-            if (this.vehicle != null)
-            {
-                this.vehicle.Dispose();
-                this.vehicle = null;
-
-                // Disposing the vehicle will dispose the device.
-                // TODO: fix this bad pattern.
-                this.device = null;
-            }
-
-            this.device = await DeviceFactory.CreateDeviceFromConfigurationSettings(this);
-            if (this.device != null)
-            {
-                this.deviceDescription.Text = this.device.ToString();
-            }
-            else
-            {
-                this.deviceDescription.Text = "None selected.";
-            }
-        }
-
         private async void reinitializeButton_Click(object sender, EventArgs e)
         {
             await this.InitializeCurrentDevice();
-        }
-
-        private async Task InitializeCurrentDevice()
-        { 
-            this.DisableUserInput();
-
-            if (this.device == null)
-            {
-                this.interfaceBox.Enabled = true;
-                return;
-            }
-
-            this.debugLog.Clear();
-            this.userLog.Clear();
-
-            try
-            {
-                // TODO: this should not return a boolean, it should just throw 
-                // an exception if it is not able to initialize the device.
-                bool initialized = await device.Initialize();
-                if (!initialized)
-                {
-                    this.AddUserMessage("Unable to initialize " + device.ToString());
-                    this.interfaceBox.Enabled = true;
-                    this.reinitializeButton.Enabled = true;
-                    return;
-                }
-            }
-            catch (Exception exception)
-            {
-                this.AddUserMessage("Unable to initialize " + device.ToString());
-                this.AddDebugMessage(exception.ToString());
-                this.interfaceBox.Enabled = true;
-                this.reinitializeButton.Enabled = true;
-                return;
-            }
-
-            this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), this);
-
-            this.EnableUserInput();
         }
         
         private void startServerButton_Click(object sender, EventArgs e)
@@ -390,15 +325,69 @@ namespace Flash411
                 Configuration.SerialPort = picker.SerialPort;
                 Configuration.SerialPortDeviceType = picker.SerialPortDeviceType;
 
-                await this.CreateCurrentDevice();
-                if (this.device == null)
-                {
-                    return;
-                }
-
-                await this.InitializeCurrentDevice();
+                await this.ResetDevice();
             }
-        }      
+        }    
+        
+        private async Task ResetDevice()
+        {
+            if (this.vehicle != null)
+            {
+                this.vehicle.Dispose();
+                this.vehicle = null;
+            }
+
+            Device device = await DeviceFactory.CreateDeviceFromConfigurationSettings(this);
+            if (device == null)
+            {
+                this.deviceDescription.Text = "None selected.";
+                return;
+            }
+
+            this.deviceDescription.Text = device.ToString();
+
+            this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), this);
+            await this.InitializeCurrentDevice();
+        }
+
+        private async Task<bool> InitializeCurrentDevice()
+        {
+            this.DisableUserInput();
+
+            if (this.vehicle == null)
+            {
+                this.interfaceBox.Enabled = true;
+                return false;
+            }
+
+            this.debugLog.Clear();
+            this.userLog.Clear();
+
+            try
+            {
+                // TODO: this should not return a boolean, it should just throw 
+                // an exception if it is not able to initialize the device.
+                bool initialized = await this.vehicle.ResetConnection();
+                if (!initialized)
+                {
+                    this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
+                    this.interfaceBox.Enabled = true;
+                    this.reinitializeButton.Enabled = true;
+                    return false;
+                }
+            }
+            catch (Exception exception)
+            {
+                this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
+                this.AddDebugMessage(exception.ToString());
+                this.interfaceBox.Enabled = true;
+                this.reinitializeButton.Enabled = true;
+                return false;
+            }
+
+            this.EnableUserInput();
+            return true;
+        }
     }
 }
  
