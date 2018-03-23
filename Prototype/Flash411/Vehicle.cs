@@ -35,6 +35,14 @@ namespace Flash411
         /// </summary>
         private ILogger logger;
 
+        public string DeviceDescription
+        {
+            get
+            {
+                return this.device.ToString();
+            }
+        }
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -76,6 +84,14 @@ namespace Flash411
                 this.device.Dispose();
                 this.device = null;
             }
+        }
+
+        /// <summary>
+        /// Re-initialize the device.
+        /// </summary>
+        public async Task<bool> ResetConnection()
+        {
+            return await this.device.Initialize();
         }
 
         /// <summary>

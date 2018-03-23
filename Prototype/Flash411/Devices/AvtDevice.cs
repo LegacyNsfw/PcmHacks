@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,8 +12,10 @@ namespace Flash411
     /// This class encapsulates all code that is unique to the AVT 852 interface.
     /// </summary>
     /// 
-    class AvtDevice : Device
+    class AvtDevice : SerialDevice
     {
+        public const string DeviceType = "AVT (842/852)";
+
         public static readonly Message AVT_RESET            = new Message(new byte[] { 0xF1, 0xA5 });
         public static readonly Message AVT_ENTER_VPW_MODE   = new Message(new byte[] { 0xE1, 0x33 });
         public static readonly Message AVT_REQUEST_MODEL    = new Message(new byte[] { 0xF0 });
@@ -31,9 +33,9 @@ namespace Flash411
         {
         }
 
-        public override string ToString()
+        public override string GetDeviceType()
         {
-            return "AVT (842/852)";
+            return DeviceType;
         }
 
         public override async Task<bool> Initialize()

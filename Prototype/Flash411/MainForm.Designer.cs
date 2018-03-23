@@ -29,10 +29,8 @@
         private void InitializeComponent()
         {
             this.interfaceBox = new System.Windows.Forms.GroupBox();
-            this.interfaceTypeList = new System.Windows.Forms.ComboBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.interfacePortList = new System.Windows.Forms.ComboBox();
+            this.selectButton = new System.Windows.Forms.Button();
+            this.deviceDescription = new System.Windows.Forms.Label();
             this.operationsBox = new System.Windows.Forms.GroupBox();
             this.reinitializeButton = new System.Windows.Forms.Button();
             this.writeFullContentsButton = new System.Windows.Forms.Button();
@@ -54,61 +52,35 @@
             // 
             // interfaceBox
             // 
-            this.interfaceBox.Controls.Add(this.interfaceTypeList);
-            this.interfaceBox.Controls.Add(this.label2);
-            this.interfaceBox.Controls.Add(this.label1);
-            this.interfaceBox.Controls.Add(this.interfacePortList);
+            this.interfaceBox.Controls.Add(this.selectButton);
+            this.interfaceBox.Controls.Add(this.deviceDescription);
             this.interfaceBox.Location = new System.Drawing.Point(9, 10);
             this.interfaceBox.Margin = new System.Windows.Forms.Padding(2);
             this.interfaceBox.Name = "interfaceBox";
             this.interfaceBox.Padding = new System.Windows.Forms.Padding(2);
-            this.interfaceBox.Size = new System.Drawing.Size(224, 96);
+            this.interfaceBox.Size = new System.Drawing.Size(224, 99);
             this.interfaceBox.TabIndex = 0;
             this.interfaceBox.TabStop = false;
-            this.interfaceBox.Text = "Interface";
+            this.interfaceBox.Text = "Device";
             // 
-            // interfaceTypeList
+            // selectButton
             // 
-            this.interfaceTypeList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.interfaceTypeList.FormattingEnabled = true;
-            this.interfaceTypeList.Location = new System.Drawing.Point(5, 29);
-            this.interfaceTypeList.Margin = new System.Windows.Forms.Padding(2);
-            this.interfaceTypeList.Name = "interfaceTypeList";
-            this.interfaceTypeList.Size = new System.Drawing.Size(216, 21);
-            this.interfaceTypeList.TabIndex = 3;
-            this.interfaceTypeList.SelectedIndexChanged += new System.EventHandler(this.interfaceTypeList_SelectedIndexChanged);
+            this.selectButton.Location = new System.Drawing.Point(5, 68);
+            this.selectButton.Name = "selectButton";
+            this.selectButton.Size = new System.Drawing.Size(214, 23);
+            this.selectButton.TabIndex = 2;
+            this.selectButton.Text = "&Select Device";
+            this.selectButton.UseVisualStyleBackColor = true;
+            this.selectButton.Click += new System.EventHandler(this.selectButton_Click);
             // 
-            // label2
+            // deviceDescription
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(5, 15);
-            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(31, 13);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "&Type";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(4, 51);
-            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(26, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "&Port";
-            // 
-            // interfacePortList
-            // 
-            this.interfacePortList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.interfacePortList.Enabled = false;
-            this.interfacePortList.FormattingEnabled = true;
-            this.interfacePortList.Location = new System.Drawing.Point(5, 64);
-            this.interfacePortList.Margin = new System.Windows.Forms.Padding(2);
-            this.interfacePortList.Name = "interfacePortList";
-            this.interfacePortList.Size = new System.Drawing.Size(216, 21);
-            this.interfacePortList.TabIndex = 1;
-            this.interfacePortList.SelectedIndexChanged += new System.EventHandler(this.interfacePortList_SelectedIndexChanged);
+            this.deviceDescription.Location = new System.Drawing.Point(5, 30);
+            this.deviceDescription.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.deviceDescription.Name = "deviceDescription";
+            this.deviceDescription.Size = new System.Drawing.Size(214, 13);
+            this.deviceDescription.TabIndex = 1;
+            this.deviceDescription.Text = "Device name will be displayed here";
             // 
             // operationsBox
             // 
@@ -117,11 +89,13 @@
             this.operationsBox.Controls.Add(this.readFullContentsButton);
             this.operationsBox.Controls.Add(this.modifyVinButton);
             this.operationsBox.Controls.Add(this.readPropertiesButton);
-            this.operationsBox.Location = new System.Drawing.Point(9, 110);
+
+            this.operationsBox.Location = new System.Drawing.Point(9, 132);
             this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
             this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
-            this.operationsBox.Size = new System.Drawing.Size(221, 172);
+            this.operationsBox.Size = new System.Drawing.Size(224, 174);
+
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
@@ -139,7 +113,8 @@
             // 
             // writeFullContentsButton
             // 
-            this.writeFullContentsButton.Location = new System.Drawing.Point(5, 107);
+
+            this.writeFullContentsButton.Location = new System.Drawing.Point(5, 108);
             this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
             this.writeFullContentsButton.Name = "writeFullContentsButton";
             this.writeFullContentsButton.Size = new System.Drawing.Size(214, 25);
@@ -192,7 +167,8 @@
             this.tabs.Margin = new System.Windows.Forms.Padding(2);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(386, 320);
+
+            this.tabs.Size = new System.Drawing.Size(530, 360);
             this.tabs.TabIndex = 2;
             // 
             // resultsTab
@@ -202,7 +178,9 @@
             this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
             this.resultsTab.Name = "resultsTab";
             this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
-            this.resultsTab.Size = new System.Drawing.Size(378, 294);
+
+            this.resultsTab.Size = new System.Drawing.Size(522, 334);
+
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
@@ -218,7 +196,9 @@
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.userLog.Size = new System.Drawing.Size(372, 287);
+
+            this.userLog.Size = new System.Drawing.Size(516, 327);
+
             this.userLog.TabIndex = 0;
             // 
             // debugTab
@@ -228,7 +208,9 @@
             this.debugTab.Margin = new System.Windows.Forms.Padding(2);
             this.debugTab.Name = "debugTab";
             this.debugTab.Padding = new System.Windows.Forms.Padding(2);
-            this.debugTab.Size = new System.Drawing.Size(378, 294);
+
+            this.debugTab.Size = new System.Drawing.Size(522, 334);
+
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -244,15 +226,18 @@
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.debugLog.Size = new System.Drawing.Size(372, 287);
+
+            this.debugLog.Size = new System.Drawing.Size(516, 327);
+
             this.debugLog.TabIndex = 0;
             // 
             // startServerButton
             // 
-            this.startServerButton.Location = new System.Drawing.Point(38, 304);
+
+            this.startServerButton.Location = new System.Drawing.Point(14, 341);
             this.startServerButton.Margin = new System.Windows.Forms.Padding(2);
             this.startServerButton.Name = "startServerButton";
-            this.startServerButton.Size = new System.Drawing.Size(160, 20);
+            this.startServerButton.Size = new System.Drawing.Size(214, 25);
             this.startServerButton.TabIndex = 5;
             this.startServerButton.Text = "Enter &HTTP Server Mode";
             this.startServerButton.UseVisualStyleBackColor = true;
@@ -262,7 +247,9 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(624, 341);
+
+            this.ClientSize = new System.Drawing.Size(776, 379);
+
             this.Controls.Add(this.startServerButton);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.operationsBox);
@@ -272,7 +259,6 @@
             this.Text = "Prototype";
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.interfaceBox.ResumeLayout(false);
-            this.interfaceBox.PerformLayout();
             this.operationsBox.ResumeLayout(false);
             this.tabs.ResumeLayout(false);
             this.resultsTab.ResumeLayout(false);
@@ -286,10 +272,6 @@
         #endregion
 
         private System.Windows.Forms.GroupBox interfaceBox;
-        private System.Windows.Forms.ComboBox interfaceTypeList;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.ComboBox interfacePortList;
         private System.Windows.Forms.GroupBox operationsBox;
         private System.Windows.Forms.Button writeFullContentsButton;
         private System.Windows.Forms.Button readFullContentsButton;
@@ -302,6 +284,8 @@
         private System.Windows.Forms.TextBox debugLog;
         private System.Windows.Forms.Button reinitializeButton;
         private System.Windows.Forms.Button startServerButton;
+        private System.Windows.Forms.Button selectButton;
+        private System.Windows.Forms.Label deviceDescription;
     }
 }
 

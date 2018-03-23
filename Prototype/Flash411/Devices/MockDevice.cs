@@ -10,16 +10,18 @@ namespace Flash411
     /// <summary>
     /// This class provides a way to test most of the app without any interface hardware.
     /// </summary>
-    class MockDevice : Device
+    class MockDevice : SerialDevice
     {
+        public const string DeviceType = "Mock Serial Device";
+
         public MockDevice(IPort port, ILogger logger) : base(port, logger)
         {
 
         }
 
-        public override string ToString()
+        public override string GetDeviceType()
         {
-            return "Mock Interface";
+            return DeviceType;
         }
 
         public override Task<bool> Initialize()

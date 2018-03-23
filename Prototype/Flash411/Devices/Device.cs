@@ -36,7 +36,7 @@ namespace Flash411
             this.Dispose(false);
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             this.Dispose(true);
         }

@@ -10,8 +10,10 @@ namespace Flash411
     /// <summary>
     /// This class encapsulates all code that is unique to the ScanTool MX interface.
     /// </summary>
-    class ScanToolDevice : Device
+    class ScanToolDevice : SerialDevice
     {
+        public const string DeviceType = "ObdLink or AllPro";
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -23,9 +25,9 @@ namespace Flash411
         /// <summary>
         /// This string is what will appear in the drop-down list in the UI.
         /// </summary>
-        public override string ToString()
+        public override string GetDeviceType()
         {
-            return "OBDLink or AllPro";
+            return DeviceType;
         }
 
         /// <summary>

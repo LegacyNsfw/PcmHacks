@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -235,7 +235,6 @@ namespace Flash411
                 case 0x36:
                     errorMessage = $"The PCM didn't accept the unlock key value";
                     return Response.Create(ResponseStatus.Error, false);
-                    break;
 
                 case 0x37:
                     errorMessage = $"This PCM is enforcing timeout lock";
