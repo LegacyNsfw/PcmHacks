@@ -51,6 +51,22 @@ namespace Flash411
                 this.serialRadioButton.Checked = true;
                 this.status.Text = "You don't seem to have any serial ports or J2534 devices.";
             }
+
+            SetDefault(this.serialPortList, Configuration.SerialPort);
+            SetDefault(this.serialDeviceList, Configuration.SerialPortDeviceType);
+            SetDefault(this.j2534DeviceList, Configuration.J2534DeviceType);
+        }
+
+        private static void SetDefault(ComboBox list, string value)
+        {
+            foreach(object item in list.Items)
+            {
+                if (item.ToString() == value)
+                {
+                    list.SelectedItem = item;
+                    return;
+                }
+            }
         }
 
         private void FillPortList()

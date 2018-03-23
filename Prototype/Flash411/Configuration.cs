@@ -28,12 +28,12 @@ namespace Flash411
         {
             get
             {
-                return ConfigurationManager.AppSettings[Constants.DeviceCategorySetting];
+                return Read(Constants.DeviceCategorySetting);
             }
 
             set
             {
-                ConfigurationManager.AppSettings[Constants.DeviceCategorySetting] = value;
+                Write(Constants.DeviceCategorySetting, value);
             }
         }
 
@@ -41,12 +41,12 @@ namespace Flash411
         {
             get
             {
-                return ConfigurationManager.AppSettings[Constants.SerialPortSetting];
+                return Read(Constants.SerialPortSetting);
             }
 
             set
             {
-                ConfigurationManager.AppSettings[Constants.SerialPortSetting] = value;
+                Write(Constants.SerialPortSetting, value);
             }
         }
 
@@ -54,12 +54,12 @@ namespace Flash411
         {
             get
             {
-                return ConfigurationManager.AppSettings[Constants.SerialPortDeviceTypeSetting];
+                return Read(Constants.SerialPortDeviceTypeSetting);
             }
 
             set
             {
-                ConfigurationManager.AppSettings[Constants.SerialPortDeviceTypeSetting] = value;
+                Write(Constants.SerialPortDeviceTypeSetting, value);
             }
         }
 
@@ -67,13 +67,27 @@ namespace Flash411
         {
             get
             {
-                return ConfigurationManager.AppSettings[Constants.J2534DeviceTypeSetting];
+                return Read(Constants.J2534DeviceTypeSetting);
             }
 
             set
             {
-                ConfigurationManager.AppSettings[Constants.J2534DeviceTypeSetting] = value;
+                Write(Constants.J2534DeviceTypeSetting, value);
             }
+        }
+
+        public static string Read(string key)
+        {
+            var configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            return configuration.AppSettings.Settings[key].Value;
+        }
+
+        public static void Write(string key, string value)
+        {
+            var configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            configuration.AppSettings.Settings.Remove(key);
+            configuration.AppSettings.Settings.Add(key, value);
+            configuration.Save();
         }
     }
 }

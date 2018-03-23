@@ -316,6 +316,12 @@ namespace Flash411
 
         private async void selectButton_Click(object sender, EventArgs e)
         {
+            if (this.vehicle != null)
+            {
+                this.vehicle.Dispose();
+                this.vehicle = null;
+            }
+
             DevicePicker picker = new DevicePicker(this);
             DialogResult result = picker.ShowDialog();
             if(result == DialogResult.OK)
@@ -324,9 +330,9 @@ namespace Flash411
                 Configuration.J2534DeviceType = picker.J2534DeviceType;
                 Configuration.SerialPort = picker.SerialPort;
                 Configuration.SerialPortDeviceType = picker.SerialPortDeviceType;
-
-                await this.ResetDevice();
             }
+
+            await this.ResetDevice();
         }    
         
         private async Task ResetDevice()
