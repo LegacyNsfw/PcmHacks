@@ -12,6 +12,8 @@ namespace Flash411
     /// </summary>
     class ScanToolDevice : Device
     {
+        public const string DeviceType = "ObdLink SX, ObdLink MX, or AllPro";
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -25,7 +27,7 @@ namespace Flash411
         /// </summary>
         public override string ToString()
         {
-            return "OBDLink or AllPro";
+            return DeviceType;
         }
 
         /// <summary>

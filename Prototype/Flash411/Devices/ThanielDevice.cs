@@ -12,6 +12,8 @@ namespace Flash411
     /// </summary>
     class ThanielDevice : Device
     {
+        public const string DeviceType = "Thaniel";
+
         public ThanielDevice(IPort port, ILogger logger) : base (port, logger)
         {
 
@@ -19,7 +21,7 @@ namespace Flash411
 
         public override string ToString()
         {
-            return "Thaniel 1.0";
+            return DeviceType;
         }
 
         public override Task<bool> Initialize()

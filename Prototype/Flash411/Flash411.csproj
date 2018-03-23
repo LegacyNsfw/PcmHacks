@@ -52,6 +52,7 @@
       <HintPath>.\J2534.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -64,11 +65,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Devices\J2534DeviceV1.cs" />
+    <Compile Include="Configuration.cs" />
     <Compile Include="Devices\AvtDevice.cs" />
     <Compile Include="Devices\Device.cs" />
+    <Compile Include="Devices\DeviceFactory.cs" />
+    <Compile Include="Devices\J2534DeviceV1.cs" />
     <Compile Include="Devices\MockDevice.cs" />
     <Compile Include="Devices\ScanToolDevice.cs" />
+    <Compile Include="Devices\SerialDevice.cs" />
     <Compile Include="Devices\ThanielDevice.cs" />
     <Compile Include="DialogBoxes\VinForm.cs">
       <SubType>Form</SubType>
@@ -142,5 +146,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -18,7 +18,7 @@ namespace Flash411
 {
     public partial class MainForm : Form, ILogger
     {
-        //private Interface currentInterface;
+        private Device device;
         private Vehicle vehicle;
         List<J2534Device> InstalledDLLs;
 
@@ -54,115 +54,6 @@ namespace Flash411
             this.interfaceBox.Enabled = true;
             this.operationsBox.Enabled = true;
             this.startServerButton.Enabled = false;
-            FillInterfaceList();
-        }
-
-        private void FillInterfaceList()
-        {
-            this.interfaceTypeList.Items.Add(new J2534DeviceV1(null, this));
-            this.interfaceTypeList.Items.Add(new MockDevice(null, this));
-            this.interfaceTypeList.Items.Add(new AvtDevice(null, this));
-            this.interfaceTypeList.Items.Add(new ScanToolDevice(null, this));
-            this.interfaceTypeList.Items.Add(new ThanielDevice(null, this));
-        }
-
-       
-        private void FillPortList()
-        {
-            this.interfacePortList.Items.Clear();
-           // this.interfacePortList.SelectedIndex = 0;
-
-            this.interfacePortList.Items.Add(new MockPort(this));
-            this.interfacePortList.Items.Add(new MockAvt852(this));
-            this.interfacePortList.Items.Add(new HttpPort(this));
-
-            foreach (string name in System.IO.Ports.SerialPort.GetPortNames())
-            {
-                this.interfacePortList.Items.Add(new StandardPort(name));
-            }
-        }
-        private void FillJ2534List()
-        {
-            this.interfacePortList.Items.Clear();
-            //this.interfacePortList.SelectedIndex = 0;
-
-            if (FindInstalledJ2534DLLs() == true)
-            {
-                foreach (J2534Device J in InstalledDLLs)
-                {
-                    this.interfacePortList.Items.Add(J.Name);
-                }
-            }
-
-        }
-
-        private void interfacePortList_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            try
-            {
-                if (interfaceTypeList.SelectedIndex >= 0)
-                {
-                    if (interfaceTypeList.SelectedIndex == 0) //J2534
-                    {
-                        this.interfaceTypeList.Items[0] = (new J2534DeviceV1(InstalledDLLs[interfacePortList.SelectedIndex], this));
-                    }
-                    else //everythig else!
-                    {
-                        IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
-
-                        // It doesn't count if the user selected the prompt.
-                        if (selectedPort == null)return;
-                         
-                        //  this.startServerButton.Enabled = true;
-
-                        // I don't really expect to support all of these. They're just 
-                        // placeholders until we know which ones we really will support.
-                        this.interfaceTypeList.Items[1] = (new MockDevice(selectedPort, this));
-                        this.interfaceTypeList.Items[2] = (new AvtDevice(selectedPort, this));
-                        this.interfaceTypeList.Items[3] = (new ScanToolDevice(selectedPort, this));
-                        this.interfaceTypeList.Items[4] = (new ThanielDevice(selectedPort, this));
-                    }
-                }
-            }
-            catch (Exception exception)
-            {
-                this.AddDebugMessage("Error in interfacePortList_SelectedIndexChanged: " + exception.ToString());
-                return;
-            }
-            finally
-            {
-                // Enabling and disabling controls causes the focus to be stolen.
-               // this.interfacePortList.Focus();
-                this.reinitializeButton_Click(sender, e);
-            }
-        }
-
-        private void interfaceTypeList_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (interfaceTypeList.SelectedIndex >= 0) { interfacePortList.Enabled = true; }
-            else { interfacePortList.Enabled = false; }
-
-            if (interfaceTypeList.SelectedIndex == 0) //J2534 device
-            {
-                this.FillJ2534List();
-            }
-            else //anythign else which will be serial prots
-            {
-                this.FillPortList(); //refresh ports
-            }
-            //refresh installed ports pending on sleected 
-
-            //this.startServerButton.Enabled = false;
-
-            //try
-            //{
-            //    this.reinitializeButton_Click(sender, e);
-            //}
-            //finally
-            //{
-            //    // Enabling and disabling controls causes the focus to be stolen.
-            //    this.interfaceTypeList.Focus();
-            //}
         }
 
         private void DisableUserInput()
@@ -234,22 +125,6 @@ namespace Flash411
             }
         }
 
-        
-        private string ShowOpenDialog()
-        {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.DefaultExt = ".bin";
-            dialog.Filter = "Binary Files(*.bin) | *.bin | All Files(*.*) | *.*";
-            dialog.FilterIndex = 0;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                return dialog.FileName;
-            }
-
-            return null;
-        }
-
         private async void reinitializeButton_Click(object sender, EventArgs e)
         {
             this.DisableUserInput();
@@ -259,8 +134,6 @@ namespace Flash411
                 this.vehicle.Dispose();
                 this.vehicle = null;
             }
-            
-            Device device = this.interfaceTypeList.SelectedItem as Device;
 
             if (device == null)
             {
@@ -301,21 +174,21 @@ namespace Flash411
 
         private void startServerButton_Click(object sender, EventArgs e)
         {
-            this.DisableUserInput();
-            this.startServerButton.Enabled = false;
+            /*
+                    this.DisableUserInput();
+                    this.startServerButton.Enabled = false;
 
-            IPort selectedPort = this.interfacePortList.SelectedItem as IPort;
+                    // It doesn't count if the user selected the prompt.
+                    if (selectedPort == null)
+                    {
+                        this.AddUserMessage("You must select an actual port before starting the server.");
+                        return;
+                    }
 
-            // It doesn't count if the user selected the prompt.
-            if (selectedPort == null)
-            {
-                this.AddUserMessage("You must select an actual port before starting the server.");
-                return;
-            }
+                    this.AddUserMessage("There is no way to exit the HTTP server. Just close the app when you're done.");
 
-            this.AddUserMessage("There is no way to exit the HTTP server. Just close the app when you're done.");
-
-            HttpServer.StartWebServer(selectedPort, this);
+                    HttpServer.StartWebServer(selectedPort, this);
+            */
         }
 
 
@@ -431,7 +304,20 @@ namespace Flash411
             }
         }
 
-   
+        private string ShowOpenDialog()
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.DefaultExt = ".bin";
+            dialog.Filter = "Binary Files(*.bin) | *.bin | All Files(*.*) | *.*";
+            dialog.FilterIndex = 0;
+            DialogResult result = dialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                return dialog.FileName;
+            }
+
+            return null;
+        }
 
         private async void modifyVinButton_Click(object sender, EventArgs e)
         {
@@ -468,6 +354,11 @@ namespace Flash411
                 }
 
             }
+        }
+
+        private void selectButton_Click(object sender, EventArgs e)
+        {
+
         }
 
 
@@ -521,9 +412,10 @@ namespace Flash411
                 }
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 this.AddDebugMessage("Error occured while finding installed J2534 devices");
+                this.AddDebugMessage(exception.ToString());
                 //do something with errors here for now return false
                 return false;
             }

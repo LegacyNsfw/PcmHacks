@@ -12,6 +12,8 @@ namespace Flash411
     /// </summary>
     class MockDevice : Device
     {
+        public const string DeviceType = "Mock Serial Device";
+
         public MockDevice(IPort port, ILogger logger) : base(port, logger)
         {
 
@@ -19,7 +21,7 @@ namespace Flash411
 
         public override string ToString()
         {
-            return "Mock Interface";
+            return DeviceType;
         }
 
         public override Task<bool> Initialize()
