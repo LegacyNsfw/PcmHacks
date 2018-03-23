@@ -432,13 +432,7 @@ namespace Flash411
                 //do something with errors here for now return false
                 return false;
             }
-
-                case DialogResult.Cancel:
-                    break;
-            }
-        }
-
-        
+        }        
     }
 }
  
