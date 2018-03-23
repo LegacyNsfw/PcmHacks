@@ -12,7 +12,7 @@ namespace Flash411
     /// </summary>
     class ScanToolDevice : SerialDevice
     {
-        public const string DeviceType = "ObdLink SX, ObdLink MX, or AllPro";
+        public const string DeviceType = "ObdLink or AllPro";
 
         /// <summary>
         /// Constructor.
