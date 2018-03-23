@@ -258,7 +258,7 @@ namespace Flash411
         public override async Task<Response<Message>> SendRequest(Message message)
         {
             this.Logger.AddDebugMessage("Send request called");
-            this.Logger.AddUserMessage("TX: " + message.GetBytes().ToHex());
+            this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
             Response<J2534Err> MyError = await SendNetworkMessage(message,TxFlag.NONE);
             if (MyError.Status != ResponseStatus.Success)
             {

@@ -221,13 +221,21 @@ namespace Flash411
                 return Response.Create(seedResponse.Status, false);
             }
 
+            //if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
+
             Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.Value.GetBytes());
             if (seedValueResponse.Status != ResponseStatus.Success)
             {
                 return Response.Create(seedValueResponse.Status, false);
             }
 
-            UInt16 key = KeyAlgorithm.GetKey(seedValueResponse.Value);
+            if (seedValueResponse.Value == 0x0000)
+            {
+                this.logger.AddUserMessage("PCM Unlock not required");
+                return Response.Create(seedValueResponse.Status, true);
+            }
+
+            UInt16 key = KeyAlgorithm.GetKey(1, seedValueResponse.Value);
 
             Message unlockRequest = this.messageFactory.CreateUnlockRequest(key);
             Response<Message> unlockResponse = await this.device.SendRequest(unlockRequest);
