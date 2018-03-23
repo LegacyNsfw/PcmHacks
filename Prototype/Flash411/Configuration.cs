@@ -79,7 +79,13 @@ namespace Flash411
         public static string Read(string key)
         {
             var configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            return configuration.AppSettings.Settings[key].Value;
+            var setting = configuration.AppSettings.Settings[key];
+            if (setting == null)
+            {
+                return string.Empty;
+            }
+
+            return setting.Value;
         }
 
         public static void Write(string key, string value)
