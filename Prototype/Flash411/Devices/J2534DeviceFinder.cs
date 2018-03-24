@@ -10,26 +10,25 @@ namespace Flash411
 {
     class J2534DeviceFinder
     {
-        public static List<J2534Device> InstalledDLLs;
+        private const string PASSTHRU_REGISTRY_PATH = "Software\\PassThruSupport.04.04";
+        private const string PASSTHRU_REGISTRY_PATH_6432 = "Software\\Wow6432Node\\PassThruSupport.04.04";
 
         /// <summary>
         /// Find all installed J2534 DLLs
         /// </summary>
-        private const string PASSTHRU_REGISTRY_PATH = "Software\\PassThruSupport.04.04";
-        private const string PASSTHRU_REGISTRY_PATH_6432 = "Software\\Wow6432Node\\PassThruSupport.04.04";
-        public static bool FindInstalledJ2534DLLs(ILogger logger)
+        public static List<J2534Device> FindInstalledJ2534DLLs(ILogger logger)
         {
+            List<J2534Device> installedDLLs = new List<J2534Device>();
+
             try
             {
-
-                InstalledDLLs = new List<J2534Device>();
                 RegistryKey myKey = Registry.LocalMachine.OpenSubKey(PASSTHRU_REGISTRY_PATH, false);
                 if ((myKey == null))
                 {
                     myKey = Registry.LocalMachine.OpenSubKey(PASSTHRU_REGISTRY_PATH_6432, false);
                     if ((myKey == null))
                     {
-                        return false;
+                        return installedDLLs;
                     }
 
                 }
@@ -58,15 +57,15 @@ namespace Flash411
                     tempDevice.SCI_A_TRANS = (int)(deviceKey.GetValue("SCI_A_TRANS", 0));
                     tempDevice.SCI_B_ENGINE = (int)(deviceKey.GetValue("SCI_B_ENGINE", 0));
                     tempDevice.SCI_B_TRANS = (int)(deviceKey.GetValue("SCI_B_TRANS", 0));
-                    InstalledDLLs.Add(tempDevice);
+                    installedDLLs.Add(tempDevice);
                 }
-                return true;
+                return installedDLLs;
             }
             catch (Exception exception)
             {
                 logger.AddDebugMessage("Error occured while finding installed J2534 devices");
                 logger.AddDebugMessage(exception.ToString());
-                return false;
+                return installedDLLs;
             }
         }
     }

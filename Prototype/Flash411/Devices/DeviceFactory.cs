@@ -84,7 +84,7 @@ namespace Flash411
 
         public static Device CreateJ2534Device(string deviceType, ILogger logger)
         {
-            foreach(var device in J2534DeviceFinder.InstalledDLLs)
+            foreach(var device in J2534DeviceFinder.FindInstalledJ2534DLLs(logger))
             {
                 if (device.Name == deviceType)
                 {
