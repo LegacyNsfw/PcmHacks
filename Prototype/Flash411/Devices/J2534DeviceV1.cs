@@ -28,18 +28,13 @@ namespace Flash411
         /// variety of properties used to id channels, fitlers and status
         /// </summary>
         private new J2534_Struct J2534Port;
-        public string Firmware;
-        public string DLL;
-        public string API;
         public
-        new List<ulong> PeriodicMsgs;
         new List<ulong> Filters;
         private uint DeviceID;
         private uint ChannelID;
         private ProtocolID Protocol;
         public bool IsProtocolOpen;
         public bool IsJ2534Open;
-        new public List<J2534Device> InstalledDLLs;
         private const string PortName = "J2534";
         public string ToolName = "";
 
@@ -74,8 +69,18 @@ namespace Flash411
             return "J2534 Device V1";
         }
 
-        public override async Task<bool> Initialize()
+        // This needs to return Task<bool> for consistency with the Device base class.
+        // However it doesn't do anything asynchronous, so to make the code more readable
+        // it just wraps a private method that does the real work and returns a bool.
+        public override Task<bool> Initialize()
         {
+            return Task.FromResult(this.InitializeInternal());
+        }
+
+        // This returns 'bool' for the sake of readability. That bool needs to be
+        // wrapped in a Task object for the public Initialize method.
+        private bool InitializeInternal()
+        { 
             Filters = new List<ulong>();
 
             this.Logger.AddDebugMessage("Initialize called");
@@ -88,12 +93,11 @@ namespace Flash411
             //Check J2534 API
             //this.Logger.AddDebugMessage(J2534Port.Functions.ToString());
 
-
             //Check not already loaded
             if (IsLoaded == true)
             {
                 this.Logger.AddDebugMessage("DLL already loaded, unloading before proceeding");
-                m2 = await CloseLibrary();
+                m2 = CloseLibrary();
                 if (m2.Status != ResponseStatus.Success)
                 {
                     this.Logger.AddDebugMessage("Error closing loaded DLL");
@@ -103,7 +107,7 @@ namespace Flash411
             }
 
             //Connect to requested DLL
-            m2 = await LoadLibrary(J2534Port.LoadedDevice);
+            m2 = LoadLibrary(J2534Port.LoadedDevice);
             if (m2.Status != ResponseStatus.Success)
             {
                 this.Logger.AddDebugMessage("Error occured loading J2534 DLL");
@@ -113,7 +117,7 @@ namespace Flash411
 
 
             //connect to scantool
-            m = await ConnectTool();
+            m = ConnectTool();
             if (m.Status != ResponseStatus.Success)
             {
                 this.Logger.AddDebugMessage("Error occured connecting to scantool");
@@ -129,7 +133,7 @@ namespace Flash411
 
 
             //read voltage
-            volts = await ReadVoltage();
+            volts = ReadVoltage();
             if (volts.Status != ResponseStatus.Success)
             {
                 this.Logger.AddDebugMessage("Error occured reading voltage");
@@ -140,7 +144,7 @@ namespace Flash411
 
 
             //Set Protocol
-            m = await ConnectToProtocol(ProtocolID.J1850VPW, BaudRate.J1850VPW_10400, ConnectFlag.NONE);
+            m = ConnectToProtocol(ProtocolID.J1850VPW, BaudRate.J1850VPW_10400, ConnectFlag.NONE);
             if (m.Status != ResponseStatus.Success)
             {
                 this.Logger.AddDebugMessage("Failed to set protocol, J2534 error code: 0x" + m.Value.ToString("X2"));
@@ -151,7 +155,7 @@ namespace Flash411
 
 
             //Set filter
-            m = await SetFilter(0xFFFFFF, 0x6CF010, 0, TxFlag.NONE, FilterType.PASS_FILTER);
+            m = SetFilter(0xFFFFFF, 0x6CF010, 0, TxFlag.NONE, FilterType.PASS_FILTER);
             if (m.Status != ResponseStatus.Success)
             {
                 this.Logger.AddDebugMessage("Failed to set filter, J2534 error code: 0x" + m.Value.ToString("X2"));
@@ -169,15 +173,15 @@ namespace Flash411
         /// <summary>
         /// This will process incoming messages for up to 500ms looking for a message
         /// </summary>
-        public async Task<Response<Message>> FindResponse(Message expected)
+        public Task<Response<Message>> FindResponse(Message expected)
         {
-            return null;
+            return Task.FromResult(new Response<Message>(ResponseStatus.Error, null));
         }
 
         /// <summary>
         /// Read an network packet from the interface, and return a Response/Message
         /// </summary>
-        async private Task<Response<Message>> ReadNetworkMessage()
+        private Response<Message> ReadNetworkMessage()
         {
             PassThruMsg PassMess = new PassThruMsg();
             Message TempMessage = new Message(null);
@@ -216,7 +220,7 @@ namespace Flash411
         /// <summary>
         /// Convert a Message to an J2534 formatted transmit, and send to the interface
         /// </summary>
-        async private Task<Response<J2534Err>> SendNetworkMessage(Message message, TxFlag Flags)
+        private Response<J2534Err> SendNetworkMessage(Message message, TxFlag Flags)
         {
             this.Logger.AddDebugMessage("Trace: Send Network Packet");
 
@@ -238,7 +242,6 @@ namespace Flash411
             }
             return Response.Create(ResponseStatus.Success, OBDError);
         }
-
        
         /// <summary>
         /// Send a message, do not expect a response.
@@ -255,34 +258,32 @@ namespace Flash411
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
-        public override async Task<Response<Message>> SendRequest(Message message)
+        public override Task<Response<Message>> SendRequest(Message message)
         {
             this.Logger.AddDebugMessage("Send request called");
             this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
-            Response<J2534Err> MyError = await SendNetworkMessage(message,TxFlag.NONE);
+            Response<J2534Err> MyError = SendNetworkMessage(message,TxFlag.NONE);
             if (MyError.Status != ResponseStatus.Success)
             {
                 //error here!!
-                return Response.Create(MyError.Status, new Message(null));
+                return Task.FromResult(Response.Create(MyError.Status, new Message(null)));
             }
 
-            Response<Message> response = await ReadNetworkMessage();
-            if (response.Status != ResponseStatus.Success) return response;
+            Response<Message> response = ReadNetworkMessage();
+            if (response.Status != ResponseStatus.Success)
+            {
+                return Task.FromResult(response);
+            }
 
             this.Logger.AddDebugMessage("RX: " + response.Value.GetBytes().ToHex());
 
-            return response;
+            return Task.FromResult(response);
         }
-
-
-
-
-
-
+        
         /// <summary>
         /// load in dll
         /// </summary>
-        async private Task<Response<bool>> LoadLibrary(J2534Device TempDevice)
+        private Response<bool> LoadLibrary(J2534Device TempDevice)
         {
             ToolName = TempDevice.Name;
             J2534Port.LoadedDevice = TempDevice;
@@ -299,7 +300,7 @@ namespace Flash411
         /// <summary>
         /// unload dll
         /// </summary>
-        async private Task<Response<bool>> CloseLibrary()
+        private Response<bool> CloseLibrary()
         {
             if (J2534Port.Functions.FreeLibrary())
             {
@@ -315,7 +316,7 @@ namespace Flash411
         /// <summary>
         /// Connects to physical scantool
         /// </summary>
-        async private Task<Response<J2534Err>> ConnectTool()
+        private Response<J2534Err> ConnectTool()
         {
             DeviceID = 0;
             ChannelID = 0;
@@ -331,15 +332,13 @@ namespace Flash411
             {
                 IsJ2534Open = true;
                 return Response.Create(ResponseStatus.Success, OBDError);
-            } 
-     
-            
+            }
         }
 
         /// <summary>
         /// Disconnects from physical scantool
         /// </summary>
-        async private Task<Response<J2534Err>> DisconnectTool()
+        private Response<J2534Err> DisconnectTool()
         {
             OBDError = J2534Port.Functions.PassThruClose(DeviceID);
             if (OBDError != J2534Err.STATUS_NOERROR)
@@ -363,7 +362,7 @@ namespace Flash411
         /// connect to selected protocol
         /// Must provide protocol, speed, connection flags, recommended optional is pins
         /// </summary>
-        async private Task<Response<J2534Err>>  ConnectToProtocol(ProtocolID ReqProtocol, BaudRate Speed, ConnectFlag ConnectFlags)
+        private Response<J2534Err> ConnectToProtocol(ProtocolID ReqProtocol, BaudRate Speed, ConnectFlag ConnectFlags)
         {
             OBDError = J2534Port.Functions.PassThruConnect(DeviceID, ReqProtocol,  ConnectFlags,  Speed, ref ChannelID);
             if (OBDError != J2534Err.STATUS_NOERROR) return Response.Create(ResponseStatus.Error, OBDError);
@@ -371,12 +370,11 @@ namespace Flash411
             IsProtocolOpen = true;
             return Response.Create(ResponseStatus.Success, OBDError);
         }
-
         
         /// <summary>
         /// Read battery voltage
         /// </summary>
-        async public Task<Response<double>> ReadVoltage()
+        public Response<double> ReadVoltage()
         {
             double Volts = 0;
             int VoltsAsInt = 0;
@@ -390,18 +388,15 @@ namespace Flash411
                 Volts = VoltsAsInt / 1000.0;
                 return Response.Create(ResponseStatus.Success, Volts);
             }
-           
         }
-
 
         /// <summary>
         /// Set filter
         /// </summary>
-        async private Task<Response<J2534Err>> SetFilter(UInt32 Mask,UInt32 Pattern,UInt32 FlowControl,TxFlag txflag,FilterType Filtertype)
+        private Response<J2534Err> SetFilter(UInt32 Mask,UInt32 Pattern,UInt32 FlowControl,TxFlag txflag,FilterType Filtertype)
         {
             PassThruMsg maskMsg;
             PassThruMsg patternMsg;
-            PassThruMsg flowControlMsg;
 
             IntPtr MaskPtr;
             IntPtr PatternPtr;
@@ -425,11 +420,7 @@ namespace Flash411
             Filters.Add((ulong)tempfilter);
             return Response.Create(ResponseStatus.Success, OBDError);
         }
-
-
-
-
-
+        
         /// <summary>
         /// Find all installed J2534 DLLs
         /// </summary>
