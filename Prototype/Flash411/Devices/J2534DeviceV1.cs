@@ -27,9 +27,9 @@ namespace Flash411
         /// <summary>
         /// variety of properties used to id channels, fitlers and status
         /// </summary>
-        private new J2534_Struct J2534Port;
+        private J2534_Struct J2534Port;
         public
-        new List<ulong> Filters;
+        List<ulong> Filters;
         private uint DeviceID;
         private uint ChannelID;
         private ProtocolID Protocol;
