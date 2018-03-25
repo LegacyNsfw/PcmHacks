@@ -11,10 +11,10 @@ namespace Flash411
         public const byte Vin1               = 0x01; // 5 bytes of VIN
         public const byte Vin2               = 0x02; // 6 bytes of VIN
         public const byte Vin3               = 0x03; // 6 bytes of VIN
-        public const byte Serial1            = 0x04; // 4 bytes of Serial
-        public const byte Serial2            = 0x05; // 4 bytes of Serial
-        public const byte Serial3            = 0x06; // 4 bytes of Serial
-        public const byte HardwareID         = 0x07; // Hardware ID
+        public const byte HardwareID         = 0x04; // Hardware ID
+        public const byte Serial1            = 0x05; // 4 bytes of Serial
+        public const byte Serial2            = 0x06; // 4 bytes of Serial
+        public const byte Serial3            = 0x07; // 4 bytes of Serial
         public const byte CalibrationID      = 0x08; // Calibration ID
         public const byte OperatingSystemID  = 0x0A; // Operating System ID aka OSID
         public const byte EngineCalID        = 0x0B; // Engine Segment Calibration ID

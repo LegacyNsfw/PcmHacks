@@ -87,7 +87,7 @@ namespace Flash411
         /// <summary>
         /// Parse the responses to the three requests for Serial Number information.
         /// </summary>
-        public Response<string> ParseSerialResponses(byte[] response1, byte[] response2, byte[] response3)
+        public Response<string> ParseSerialResponses(Message response1, Message response2, Message response3)
         {
             string result = "Unknown";
             ResponseStatus status;
@@ -111,9 +111,9 @@ namespace Flash411
             }
 
             byte[] serialBytes = new byte[12];
-            Buffer.BlockCopy(response1, 5, serialBytes, 0, 4);
-            Buffer.BlockCopy(response2, 5, serialBytes, 4, 4);
-            Buffer.BlockCopy(response3, 5, serialBytes, 8, 4);
+            Buffer.BlockCopy(response1.GetBytes(), 5, serialBytes, 0, 4);
+            Buffer.BlockCopy(response2.GetBytes(), 5, serialBytes, 4, 4);
+            Buffer.BlockCopy(response3.GetBytes(), 5, serialBytes, 8, 4);
 
             byte[] printableBytes = Utility.GetPrintable(serialBytes);
             string serial = System.Text.Encoding.ASCII.GetString(printableBytes);
@@ -183,6 +183,14 @@ namespace Flash411
             result = BitConverter.ToUInt16(response, 5);
 
             return Response.Create(ResponseStatus.Success, result);
+        }
+
+        /// <summary>
+        /// Confirm that the first portion of the 'actual' array of bytes matches the 'expected' array of bytes.
+        /// </summary>
+        private bool TryVerifyInitialBytes(Message actual, byte[] expected, out ResponseStatus status)
+        {
+            return TryVerifyInitialBytes(actual.GetBytes(), expected, out status);
         }
 
         /// <summary>
