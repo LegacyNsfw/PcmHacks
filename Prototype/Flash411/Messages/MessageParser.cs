@@ -31,12 +31,12 @@ namespace Flash411
         /// <summary>
         /// Parse the response to an OS ID request.
         /// </summary>
-        public Response<UInt32> ParseOperatingSystemId(byte[] response)
+        public Response<UInt32> ParseBlockUInt32(byte[] response)
         {
             int result = 0;
             ResponseStatus status;
 
-            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.OperatingSystemID };
+            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C };
             if (!TryVerifyInitialBytes(response, expected, out status))
             {
                 return Response.Create(ResponseStatus.Error, (UInt32)result);

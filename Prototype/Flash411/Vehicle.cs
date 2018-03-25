@@ -221,7 +221,45 @@ namespace Flash411
                 return Response.Create(response.Status, (UInt32)0);
             }
 
-            return this.messageParser.ParseOperatingSystemId(response.Value.GetBytes());
+            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
+        }
+
+        /// <summary>
+        /// Query the PCM's Hardware ID.
+        /// </summary>
+        /// <remarks>
+        /// Note that this is a software variable and my not match the hardware at all of the software runs.
+        /// </remarks>
+        /// <returns></returns>
+        public async Task<Response<UInt32>> QueryHardwareId()
+        {
+            Message request = this.messageFactory.CreateHardwareIdReadRequest();
+            var response = await this.device.SendRequest(request);
+            if (response.Status != ResponseStatus.Success)
+            {
+                return Response.Create(response.Status, (UInt32)0);
+            }
+
+            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
+        }
+
+        /// <summary>
+        /// Query the PCM's Hardware ID.
+        /// </summary>
+        /// <remarks>
+        /// Note that this is a software variable and my not match the hardware at all of the software runs.
+        /// </remarks>
+        /// <returns></returns>
+        public async Task<Response<UInt32>> QueryCalibrationId()
+        {
+            Message request = this.messageFactory.CreateCalibrationIdReadRequest();
+            var response = await this.device.SendRequest(request);
+            if (response.Status != ResponseStatus.Success)
+            {
+                return Response.Create(response.Status, (UInt32)0);
+            }
+
+            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
         }
 
         /// <summary>
