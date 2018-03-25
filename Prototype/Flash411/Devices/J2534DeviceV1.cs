@@ -27,9 +27,8 @@ namespace Flash411
         /// <summary>
         /// variety of properties used to id channels, fitlers and status
         /// </summary>
-        private new J2534_Struct J2534Port;
-        public
-        new List<ulong> Filters;
+        private J2534_Struct J2534Port;
+        public List<ulong> Filters;
         private uint DeviceID;
         private uint ChannelID;
         private ProtocolID Protocol;
@@ -60,8 +59,12 @@ namespace Flash411
           
             J2534Port = new J2534_Struct();
             J2534Port.Functions = new J2534Extended();
-            J2534Port.LoadedDevice = new J2534Device();
             J2534Port.LoadedDevice = jport;
+        }
+
+        public override void Dispose()
+        {
+            DisconnectTool();
         }
 
         public override string ToString()
