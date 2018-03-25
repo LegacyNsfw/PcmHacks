@@ -96,14 +96,13 @@ namespace Flash411
             try
             {
                 this.DisableUserInput();
-                
+
                 var vinResponse = await this.vehicle.QueryVin();
                 if (vinResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("VIN query failed: " + vinResponse.Status.ToString());
                     return;
                 }
-
                 this.AddUserMessage("VIN: " + vinResponse.Value);
 
                 var osResponse = await this.vehicle.QueryOperatingSystemId();
@@ -111,8 +110,45 @@ namespace Flash411
                 {
                     this.AddUserMessage("OS ID query failed: " + osResponse.Status.ToString());
                 }
+                this.AddUserMessage("OS ID: " + osResponse.Value.ToString());
 
-                this.AddUserMessage("OS: " + osResponse.Value.ToString());
+                var calResponse = await this.vehicle.QueryCalibrationId();
+                if (calResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Calibration ID query failed: " + calResponse.Status.ToString());
+                }
+                this.AddUserMessage("Calibration ID: " + osResponse.Value.ToString());
+
+                /* This 'Hardware ID' seems to be the Calibration ID, even though its stored in a different block.
+                 * Its currently unknown who first called it a Hardware ID, or why.
+                 * lets hold off displaying it until we know what it is.*/
+                var hardwareResponse = await this.vehicle.QueryHardwareId();
+                if (hardwareResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Hardware ID query failed: " + osResponse.Status.ToString());
+                }
+                //this.AddUserMessage("Hardware ID: " + osResponse.Value.ToString() + "(Can mismatch the the actual hardware)");*/
+
+                var serialResponse = await this.vehicle.QuerySerial();
+                if (serialResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Serial Number query failed: " + serialResponse.Status.ToString());
+                }
+                this.AddUserMessage("Serial Number: " + serialResponse.Value.ToString());
+
+                var bccResponse = await this.vehicle.QueryBCC();
+                if (serialResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("BCC query failed: " + bccResponse.Status.ToString());
+                }
+                this.AddUserMessage("Broad Case Code: " + bccResponse.Value.ToString());
+
+                var mecResponse = await this.vehicle.QueryMEC();
+                if (serialResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("MEC query failed: " + mecResponse.Status.ToString());
+                }
+                this.AddUserMessage("MEC: " + mecResponse.Value.ToString());
             }
             catch(Exception exception)
             {
