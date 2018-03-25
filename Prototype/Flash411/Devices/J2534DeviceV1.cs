@@ -62,8 +62,9 @@ namespace Flash411
             J2534Port.LoadedDevice = jport;
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose();
             DisconnectTool();
         }
 
