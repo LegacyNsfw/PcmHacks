@@ -96,7 +96,7 @@ namespace Flash411
             try
             {
                 this.DisableUserInput();
-                
+
                 var vinResponse = await this.vehicle.QueryVin();
                 if (vinResponse.Status != ResponseStatus.Success)
                 {
@@ -113,6 +113,30 @@ namespace Flash411
                 }
 
                 this.AddUserMessage("OS: " + osResponse.Value.ToString());
+
+                var serialResponse = await this.vehicle.QuerySerial();
+                if (serialResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Serial Number query failed: " + serialResponse.Status.ToString());
+                }
+
+                this.AddUserMessage("Serial Number: " + serialResponse.Value.ToString());
+
+                var bccResponse = await this.vehicle.QueryBCC();
+                if (serialResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("BCC query failed: " + bccResponse.Status.ToString());
+                }
+
+                this.AddUserMessage("Broad Case Code: " + bccResponse.Value.ToString());
+
+                var mecResponse = await this.vehicle.QueryMEC();
+                if (serialResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("MEC query failed: " + mecResponse.Status.ToString());
+                }
+
+                this.AddUserMessage("MEC: " + mecResponse.Value.ToString());
             }
             catch(Exception exception)
             {
