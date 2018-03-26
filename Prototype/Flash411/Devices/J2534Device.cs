@@ -14,7 +14,7 @@ namespace Flash411
     /// <summary>
     /// This class encapsulates all code that is unique to the AVT 852 interface.
     /// </summary>
-    /// 
+    ///
     class J2534Device : Device
     {
         /// <summary>
@@ -52,10 +52,9 @@ namespace Flash411
             public J2534Extended Functions;
             public J2534.J2534Device LoadedDevice;
         }
-     
+
         public J2534Device(J2534.J2534Device jport, ILogger logger) : base(logger)
         {
-          
             J2534Port = new J2534_Struct();
             J2534Port.Functions = new J2534Extended();
             J2534Port.LoadedDevice = jport;
@@ -82,7 +81,7 @@ namespace Flash411
         // This returns 'bool' for the sake of readability. That bool needs to be
         // wrapped in a Task object for the public Initialize method.
         private bool InitializeInternal()
-        { 
+        {
             Filters = new List<ulong>();
 
             //this.Logger.AddDebugMessage("Initialize called");
@@ -233,7 +232,7 @@ namespace Flash411
             }
             return Response.Create(ResponseStatus.Success, OBDError);
         }
-       
+
         /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>
@@ -270,7 +269,7 @@ namespace Flash411
 
             return Task.FromResult(response);
         }
-        
+
         /// <summary>
         /// load in dll
         /// </summary>
@@ -317,7 +316,7 @@ namespace Flash411
             {
                 IsJ2534Open = false;
                 return Response.Create(ResponseStatus.Error, OBDError);
-            }            
+            }
             else
             {
                 IsJ2534Open = true;
@@ -360,7 +359,7 @@ namespace Flash411
             IsProtocolOpen = true;
             return Response.Create(ResponseStatus.Success, OBDError);
         }
-        
+
         /// <summary>
         /// Read battery voltage
         /// </summary>
