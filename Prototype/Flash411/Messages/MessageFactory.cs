@@ -39,6 +39,24 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Create a request to read the PCM's Calibration ID.
+        /// </summary>
+        /// <returns></returns>
+        public Message CreateCalibrationIdReadRequest()
+        {
+            return CreateReadRequest(BlockId.CalibrationID);
+        }
+
+        /// <summary>
+        /// Create a request to read the PCM's Hardware ID.
+        /// </summary>
+        /// <returns></returns>
+        public Message CreateHardwareIdReadRequest()
+        {
+            return CreateReadRequest(BlockId.HardwareID);
+        }
+
+        /// <summary>
         /// Create a request to read the first segment of the PCM's VIN.
         /// </summary>
         public Message CreateVinRequest1()
