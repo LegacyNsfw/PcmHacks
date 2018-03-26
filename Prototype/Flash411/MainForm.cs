@@ -138,7 +138,7 @@ namespace Flash411
                 {
                     this.AddUserMessage("BCC query failed: " + bccResponse.Status.ToString());
                 }
-                this.AddUserMessage("Broad Case Code: " + bccResponse.Value.ToString());
+                this.AddUserMessage("Broad Cast Code: " + bccResponse.Value.ToString());
 
                 var mecResponse = await this.vehicle.QueryMEC();
                 if (mecResponse.Status != ResponseStatus.Success)
