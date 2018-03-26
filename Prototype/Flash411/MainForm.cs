@@ -27,13 +27,14 @@ namespace Flash411
         
         public void AddUserMessage(string message)
         {
+            string timestamp = DateTime.Now.ToString("hh:mm:ss:ms");
             this.userLog.Invoke(
                 (MethodInvoker)delegate()
                 {
-                    this.userLog.AppendText("[" + DateTime.Now.ToString("hh:mm:ss:ms") +  "]  " + message + Environment.NewLine);
+                    this.userLog.AppendText("[" + timestamp +  "]  " + message + Environment.NewLine);
 
                     // User messages are added to the debug log as well, so that the debug log has everything.
-                    this.debugLog.AppendText("[" + DateTime.Now.ToString("hh:mm:ss:ms") + "]  " + message + Environment.NewLine);
+                    this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
 
                 });
         }
@@ -124,7 +125,8 @@ namespace Flash411
                 {
                     this.AddUserMessage("Hardware ID query failed: " + hardwareResponse.Status.ToString());
                 }
-                this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString() + " (Can mismatch the actual hardware)");
+
+                this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString() + " (May not match the actual hardware)");
 
                 var serialResponse = await this.vehicle.QuerySerial();
                 if (serialResponse.Status != ResponseStatus.Success)
