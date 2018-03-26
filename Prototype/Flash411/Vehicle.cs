@@ -132,18 +132,18 @@ namespace Flash411
             }
 
             Response<Message> response2 = await this.device.SendRequest(this.messageFactory.CreateSerialRequest2());
-            if (response1.Status != ResponseStatus.Success)
+            if (response2.Status != ResponseStatus.Success)
             {
-                return Response.Create(response1.Status, "Unknown");
+                return Response.Create(response2.Status, "Unknown");
             }
 
             Response<Message> response3 = await this.device.SendRequest(this.messageFactory.CreateSerialRequest3());
-            if (response1.Status != ResponseStatus.Success)
+            if (response3.Status != ResponseStatus.Success)
             {
-                return Response.Create(response1.Status, "Unknown");
+                return Response.Create(response3.Status, "Unknown");
             }
 
-            return this.messageParser.ParseSerialResponses(response1.Value.GetBytes(), response2.Value.GetBytes(), response3.Value.GetBytes());
+            return this.messageParser.ParseSerialResponses(response1.Value, response2.Value, response3.Value);
         }
 
         /// <summary>
@@ -191,18 +191,18 @@ namespace Flash411
             this.logger.AddUserMessage("Changing VIN to " + vin);
 
             byte[] bvin = Encoding.ASCII.GetBytes(vin);
-            byte[] vin1 = new byte[] { 0x00, bvin[0], bvin[1], bvin[2], bvin[3], bvin[4] };
-            byte[] vin2 = new byte[] { bvin[5], bvin[6], bvin[7], bvin[8], bvin[9], bvin[10] };
-            byte[] vin3 = new byte[] { bvin[11], bvin[12], bvin[13], bvin[14], bvin[15], bvin[16] };
+            byte[] vin1 = new byte[6] { 0x00, bvin[0], bvin[1], bvin[2], bvin[3], bvin[4] };
+            byte[] vin2 = new byte[6] { bvin[5], bvin[6], bvin[7], bvin[8], bvin[9], bvin[10] };
+            byte[] vin3 = new byte[6] { bvin[11], bvin[12], bvin[13], bvin[14], bvin[15], bvin[16] };
 
             this.logger.AddUserMessage("Block 1");
-            Response<bool> block1 = await WriteBlock6(BlockId.Vin1, vin1);
+            Response<bool> block1 = await WriteBlock(BlockId.Vin1, vin1);
             if (block1.Status != ResponseStatus.Success) return Response.Create(ResponseStatus.Error, false);
             this.logger.AddUserMessage("Block 2");
-            Response<bool> block2 = await WriteBlock6(BlockId.Vin2, vin2);
+            Response<bool> block2 = await WriteBlock(BlockId.Vin2, vin2);
             if (block2.Status != ResponseStatus.Success) return Response.Create(ResponseStatus.Error, false);
             this.logger.AddUserMessage("Block 3");
-            Response<bool> block3 = await WriteBlock6(BlockId.Vin3, vin3);
+            Response<bool> block3 = await WriteBlock(BlockId.Vin3, vin3);
             if (block3.Status != ResponseStatus.Success) return Response.Create(ResponseStatus.Error, false);
 
             return Response.Create(ResponseStatus.Success, true);
@@ -221,7 +221,45 @@ namespace Flash411
                 return Response.Create(response.Status, (UInt32)0);
             }
 
-            return this.messageParser.ParseOperatingSystemId(response.Value.GetBytes());
+            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
+        }
+
+        /// <summary>
+        /// Query the PCM's Hardware ID.
+        /// </summary>
+        /// <remarks>
+        /// Note that this is a software variable and my not match the hardware at all of the software runs.
+        /// </remarks>
+        /// <returns></returns>
+        public async Task<Response<UInt32>> QueryHardwareId()
+        {
+            Message request = this.messageFactory.CreateHardwareIdReadRequest();
+            var response = await this.device.SendRequest(request);
+            if (response.Status != ResponseStatus.Success)
+            {
+                return Response.Create(response.Status, (UInt32)0);
+            }
+
+            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
+        }
+
+        /// <summary>
+        /// Query the PCM's Hardware ID.
+        /// </summary>
+        /// <remarks>
+        /// Note that this is a software variable and my not match the hardware at all of the software runs.
+        /// </remarks>
+        /// <returns></returns>
+        public async Task<Response<UInt32>> QueryCalibrationId()
+        {
+            Message request = this.messageFactory.CreateCalibrationIdReadRequest();
+            var response = await this.device.SendRequest(request);
+            if (response.Status != ResponseStatus.Success)
+            {
+                return Response.Create(response.Status, (UInt32)0);
+            }
+
+            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
         }
 
         /// <summary>
@@ -278,10 +316,21 @@ namespace Flash411
         /// Writes a block of data to the PCM
         /// Requires an unlocked PCM
         /// </summary>
-        public async Task<Response<bool>> WriteBlock6(byte block, byte[] data)
+        public async Task<Response<bool>> WriteBlock(byte block, byte[] data)
         {
-            Message tx = new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3B, block, data[0], data[1], data[2], data[3], data[4], data[5] });
+
+            Message tx;
             Message ok = new Message(new byte[] { 0x6C, 0xF0, 0x10, 0x7B, block });
+
+            switch (data.Length)
+            {
+                case 6:
+                    tx = new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3B, block, data[0], data[1], data[2], data[3], data[4], data[5] });
+                    break;
+                default:
+                    logger.AddDebugMessage("Cant write block size " + data.Length);
+                    return Response.Create(ResponseStatus.Error, false);
+            }
 
             Response<Message> rx = await this.device.SendRequest(tx);
 
@@ -290,7 +339,7 @@ namespace Flash411
                 logger.AddUserMessage("Failed to write block " + block + ", communications failure");
                 return Response.Create(ResponseStatus.Error, false);
             }
-                
+
             if (!Utility.CompareArrays(rx.Value.GetBytes(), ok.GetBytes()))
             {
                 logger.AddUserMessage("Failed to write block " + block + ", PCM rejected attempt");
