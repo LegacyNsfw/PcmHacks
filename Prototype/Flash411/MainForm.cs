@@ -124,7 +124,7 @@ namespace Flash411
                 {
                     this.AddUserMessage("Hardware ID query failed: " + hardwareResponse.Status.ToString());
                 }
-                this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString() + " (Can mismatch the the actual hardware)");
+                this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString() + " (Can mismatch the actual hardware)");
 
                 var serialResponse = await this.vehicle.QuerySerial();
                 if (serialResponse.Status != ResponseStatus.Success)
