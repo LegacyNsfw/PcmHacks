@@ -88,7 +88,7 @@ namespace Flash411
             {
                 if (device.Name == deviceType)
                 {
-                    return new J2534DeviceV1(device, logger);
+                    return new J2534Device(device, logger);
                 }
             }
 

@@ -70,7 +70,7 @@
     <Compile Include="Devices\Device.cs" />
     <Compile Include="Devices\DeviceFactory.cs" />
     <Compile Include="Devices\J2534DeviceFinder.cs" />
-    <Compile Include="Devices\J2534DeviceV1.cs" />
+    <Compile Include="Devices\J2534Device.cs" />
     <Compile Include="Devices\MockDevice.cs" />
     <Compile Include="Devices\ScanToolDevice.cs" />
     <Compile Include="Devices\SerialDevice.cs" />

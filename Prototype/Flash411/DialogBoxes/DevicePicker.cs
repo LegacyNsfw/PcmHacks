@@ -96,7 +96,7 @@ namespace Flash411
 
         private void FillJ2534DeviceList()
         {
-            foreach(J2534Device device in J2534DeviceFinder.FindInstalledJ2534DLLs(this.logger))
+            foreach(J2534.J2534Device device in J2534DeviceFinder.FindInstalledJ2534DLLs(this.logger))
             {
                 this.j2534DeviceList.Items.Add(device);
             }

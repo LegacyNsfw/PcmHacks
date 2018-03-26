@@ -16,9 +16,9 @@ namespace Flash411
         /// <summary>
         /// Find all installed J2534 DLLs
         /// </summary>
-        public static List<J2534Device> FindInstalledJ2534DLLs(ILogger logger)
+        public static List<J2534.J2534Device> FindInstalledJ2534DLLs(ILogger logger)
         {
-            List<J2534Device> installedDLLs = new List<J2534Device>();
+            List<J2534.J2534Device> installedDLLs = new List<J2534.J2534Device>();
 
             try
             {
@@ -36,7 +36,7 @@ namespace Flash411
                 string[] devices = myKey.GetSubKeyNames();
                 foreach (string device in devices)
                 {
-                    J2534Device tempDevice = new J2534Device();
+                    J2534.J2534Device tempDevice = new J2534.J2534Device();
                     RegistryKey deviceKey = myKey.OpenSubKey(device);
                     if ((deviceKey == null))
                     {
