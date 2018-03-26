@@ -117,17 +117,14 @@ namespace Flash411
                 {
                     this.AddUserMessage("Calibration ID query failed: " + calResponse.Status.ToString());
                 }
-                this.AddUserMessage("Calibration ID: " + osResponse.Value.ToString());
+                this.AddUserMessage("Calibration ID: " + calResponse.Value.ToString());
 
-                /* This 'Hardware ID' seems to be the Calibration ID, even though its stored in a different block.
-                 * Its currently unknown who first called it a Hardware ID, or why.
-                 * lets hold off displaying it until we know what it is.*/
                 var hardwareResponse = await this.vehicle.QueryHardwareId();
                 if (hardwareResponse.Status != ResponseStatus.Success)
                 {
-                    this.AddUserMessage("Hardware ID query failed: " + osResponse.Status.ToString());
+                    this.AddUserMessage("Hardware ID query failed: " + hardwareResponse.Status.ToString());
                 }
-                //this.AddUserMessage("Hardware ID: " + osResponse.Value.ToString() + "(Can mismatch the the actual hardware)");*/
+                this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString() + " (Can mismatch the the actual hardware)");
 
                 var serialResponse = await this.vehicle.QuerySerial();
                 if (serialResponse.Status != ResponseStatus.Success)
@@ -137,14 +134,14 @@ namespace Flash411
                 this.AddUserMessage("Serial Number: " + serialResponse.Value.ToString());
 
                 var bccResponse = await this.vehicle.QueryBCC();
-                if (serialResponse.Status != ResponseStatus.Success)
+                if (bccResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("BCC query failed: " + bccResponse.Status.ToString());
                 }
                 this.AddUserMessage("Broad Case Code: " + bccResponse.Value.ToString());
 
                 var mecResponse = await this.vehicle.QueryMEC();
-                if (serialResponse.Status != ResponseStatus.Success)
+                if (mecResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("MEC query failed: " + mecResponse.Status.ToString());
                 }
