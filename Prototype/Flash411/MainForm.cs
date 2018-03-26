@@ -24,14 +24,15 @@ namespace Flash411
         {
             InitializeComponent();
         }
-        
+
         public void AddUserMessage(string message)
         {
-            string timestamp = DateTime.Now.ToString("hh:mm:ss:ms");
+            string timestamp = DateTime.Now.ToString("hh:mm:ss:fff");
+
             this.userLog.Invoke(
-                (MethodInvoker)delegate()
+                (MethodInvoker)delegate ()
                 {
-                    this.userLog.AppendText("[" + timestamp +  "]  " + message + Environment.NewLine);
+                    this.userLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
 
                     // User messages are added to the debug log as well, so that the debug log has everything.
                     this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
@@ -41,10 +42,12 @@ namespace Flash411
 
         public void AddDebugMessage(string message)
         {
+            string timestamp = DateTime.Now.ToString("hh:mm:ss:fff");
+
             this.debugLog.Invoke(
                 (MethodInvoker)delegate ()
                 {
-                    this.debugLog.AppendText(message + Environment.NewLine);
+                    this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
                 });
         }
 
