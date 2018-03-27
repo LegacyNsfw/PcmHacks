@@ -261,7 +261,7 @@ namespace Flash411
 
             if (Utility.CompareArraysPart(response.Value.GetBytes(), filterdestok))
             {
-                this.Logger.AddDebugMessage("AVTFilter enabled");
+                this.Logger.AddDebugMessage("AVT Filter enabled");
                 return Response.Create(ResponseStatus.Success, true);
             }
             else
