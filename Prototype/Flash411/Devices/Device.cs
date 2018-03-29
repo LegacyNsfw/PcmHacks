@@ -22,12 +22,24 @@ namespace Flash411
 
         protected ILogger Logger { get; private set; }
 
+        public int MaxSendSize { get; protected set; }
+
+        public int MaxReceiveSize { get; protected set; }
+
+        public bool Supports4X { get; protected set; }
+
         public Device(IPort port, ILogger logger)
         {
             this.Port = port;
             this.Logger = logger;
+
+            // These default values can be overwritten in derived classes.
+            this.MaxSendSize = 100;
+            this.MaxReceiveSize = 100;
+            this.Supports4X = false;
         }
-        public Device( ILogger logger)
+
+        public Device(ILogger logger)
         {
             this.Logger = logger;
         }
