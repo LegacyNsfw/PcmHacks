@@ -31,9 +31,9 @@ namespace Flash411
 
         public AvtDevice(IPort port, ILogger logger) : base(port, logger)
         {
-            this.MaxSendSize = 1000;
-            this.MaxReceiveSize = 1000;
-            this.Supports4X = true;
+            this.MaxSendSize = 4112;    // From the device manual 4096+16 (does not include 3 length bytes)
+            this.MaxReceiveSize = 4112; // From the device manual 4096+16 (does not include 3 length bytes)
+            this.Supports4X = true;     // TODO: Need to add code to support the switch to 4x
         }
 
         public override string GetDeviceType()

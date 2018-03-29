@@ -39,8 +39,6 @@ namespace Flash411
             get { return this.Error; }
             set { this.Error = value; }
         }
-
-
  
         [DebuggerStepThrough]
         public byte[] GetBytes()

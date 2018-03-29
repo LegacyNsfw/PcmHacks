@@ -19,9 +19,9 @@ namespace Flash411
         /// </summary>
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
-            this.MaxSendSize = 1000;
-            this.MaxReceiveSize = 1000;
-            this.Supports4X = false;
+            this.MaxSendSize = 1000;    // Accuracy?
+            this.MaxReceiveSize = 1000; // Accuracy?
+            this.Supports4X = false;    // :(
         }
 
         /// <summary>
@@ -55,8 +55,8 @@ namespace Flash411
 
                 // Device Identification
                 string elmID = await this.SendRequest("AT I");                // Identify (ELM)
-                string stID = await this.SendRequest("ST I");                // Identify (ScanTool.net)
-                string apID = await this.SendRequest("AT #1");               // Identify (AllPro)
+                string stID = await this.SendRequest("ST I");                 // Identify (ScanTool.net)
+                string apID = await this.SendRequest("AT #1");                // Identify (AllPro)
                 if (elmID != "?") this.Logger.AddUserMessage("Elm ID: " + elmID);
                 if (stID != "?") this.Logger.AddUserMessage("ScanTool ID: " + stID);
                 if (apID != "?") this.Logger.AddUserMessage("All Pro ID: " + apID);
@@ -86,7 +86,7 @@ namespace Flash411
         /// </summary>
         public override Task<bool> SendMessage(Message message)
         {
-            // Not yet implemented.
+            // Not yet implemented. TODO: Refactor SendRequest() to move common code here when we need it.
             return Task.FromResult(true);
         }
 
@@ -177,10 +177,7 @@ namespace Flash411
         /// </remarks>
         async private Task<Response<string>> ReadELMLine()
         {
-            // 4112 is max packet size on the AVT, use it here too. *3 because of the ASCII encoding and spaces, add 8 for additional header bytes?
-            // plus 2 so we can read a CR or LF and if we're still reading by the last byte it's an error
-            int max = 4112 * 3 + 8 + 1;
-            byte[] buffer = new byte[max];
+            byte[] buffer = new byte[MaxSendSize];
 
             // collect bytes until we hit the end of the buffer or see a CR or LF
             int i = 0;
@@ -191,7 +188,7 @@ namespace Flash411
                 //this.Logger.AddDebugMessage("Byte: " + b[0].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(b));
                 buffer[i] = b[0];
                 i++;
-            } while ((i < max) && (b[0] != '>')); // continue until the next prompt
+            } while ((i < MaxSendSize) && (b[0] != '>')); // continue until the next prompt
 
             //this.Logger.AddDebugMessage("Found terminator '>'");
 
@@ -223,13 +220,12 @@ namespace Flash411
             }
 
             //this.Logger.AddDebugMessage("built filtered string kept " + j + " bytes filtered is " + filtered.Length + " long");
-
             //this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
             string line = System.Text.Encoding.ASCII.GetString(filtered).Trim(); // strip leading and trailing whitespace, too
 
             this.Logger.AddDebugMessage("Read \"" + line + "\"");
 
-            if (i == max) return Response.Create(ResponseStatus.Truncated, line);
+            if (i == MaxSendSize) return Response.Create(ResponseStatus.Truncated, line);
 
             return Response.Create(ResponseStatus.Success, line);
         }

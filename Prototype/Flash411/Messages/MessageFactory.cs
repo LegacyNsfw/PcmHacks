@@ -139,5 +139,26 @@ namespace Flash411
             byte[] bytes = new byte[] { 0x6C, 0x10, 0xF0, 0x27, 0x02, keyHigh, keyLow };
             return new Message(bytes);
         }
+
+        /// <summary>
+        /// Append a 16 bit sum to the end of a block
+        /// </summary>
+        public Message AddBlockChecksum(Message block)
+        {
+            byte[] withoutsum = block.GetBytes();
+            byte[] withsum = new byte [withoutsum.Length+2];
+            UInt16 sum = 0;
+
+            Buffer.BlockCopy(withoutsum, 0, withsum, 0, withoutsum.Length);
+            for (int i = 4; i < withoutsum.Length; i++) // skip prio, dest, src, mode
+            {
+                sum += withsum[i];
+            }
+
+            withsum[withoutsum.Length + 1] = unchecked((byte)(sum >> 8));
+            withsum[withoutsum.Length + 2] = unchecked((byte)(sum & 0xFF));
+
+            return new Message(withsum);
+        }
     }
 }

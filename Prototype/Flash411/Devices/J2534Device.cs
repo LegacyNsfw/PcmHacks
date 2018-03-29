@@ -58,6 +58,10 @@ namespace Flash411
             J2534Port = new J2534_Struct();
             J2534Port.Functions = new J2534Extended();
             J2534Port.LoadedDevice = jport;
+
+            this.MaxSendSize = 2048;    // unverified
+            this.MaxReceiveSize = 2048; // unverified
+            this.Supports4X = true;     // TODO: add code to support the switch to 4x
         }
 
         protected override void Dispose(bool disposing)
