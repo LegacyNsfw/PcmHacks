@@ -31,6 +31,9 @@ namespace Flash411
 
         public AvtDevice(IPort port, ILogger logger) : base(port, logger)
         {
+            this.MaxSendSize = 1000;
+            this.MaxReceiveSize = 1000;
+            this.Supports4X = true;
         }
 
         public override string GetDeviceType()

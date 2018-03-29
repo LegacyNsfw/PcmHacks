@@ -19,7 +19,9 @@ namespace Flash411
         /// </summary>
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
-
+            this.MaxSendSize = 1000;
+            this.MaxReceiveSize = 1000;
+            this.Supports4X = false;
         }
 
         /// <summary>
