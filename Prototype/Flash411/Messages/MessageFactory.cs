@@ -24,8 +24,8 @@ namespace Flash411
         /// Create a request to read the given block of PCM memory.
         /// </summary>
         public Message CreateReadRequest(byte block)
-        {
-            byte[] bytes = new byte[] { 0x6C, 0x10, 0xF0, 0x3C, block };
+       {
+            byte[] bytes = new byte[] { 0x6C, DeviceId.Pcm, DeviceId.Tool, 0x3C, block };
             return new Message(bytes);
         }
 
@@ -125,7 +125,7 @@ namespace Flash411
         /// </summary>
         public Message CreateSeedRequest()
         {
-            byte[] bytes = new byte[] { 0x6C, 0x10, 0xF0, 0x27, 0x01 };
+            byte[] bytes = new byte[] { 0x6C, DeviceId.Pcm, DeviceId.Tool, 0x27, 0x01 };
             return new Message(bytes);
         }
 
@@ -136,7 +136,7 @@ namespace Flash411
         {
             byte keyHigh = (byte)((key & 0xFF00) >> 8);
             byte keyLow = (byte)(key & 0xFF);
-            byte[] bytes = new byte[] { 0x6C, 0x10, 0xF0, 0x27, 0x02, keyHigh, keyLow };
+            byte[] bytes = new byte[] { 0x6C, DeviceId.Pcm, DeviceId.Tool, 0x27, 0x02, keyHigh, keyLow };
             return new Message(bytes);
         }
 

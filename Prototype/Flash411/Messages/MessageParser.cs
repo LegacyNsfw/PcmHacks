@@ -36,7 +36,7 @@ namespace Flash411
             int result = 0;
             ResponseStatus status;
 
-            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C };
+            byte[] expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C };
             if (!TryVerifyInitialBytes(response, expected, out status))
             {
                 return Response.Create(ResponseStatus.Error, (UInt32)result);
@@ -58,19 +58,19 @@ namespace Flash411
             string result = "Unknown";
             ResponseStatus status;
 
-            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Vin1 };
+            byte[] expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C, BlockId.Vin1 };
             if (!TryVerifyInitialBytes(response1, expected, out status))
             {
                 return Response.Create(status, result);
             }
 
-            expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Vin2 };
+            expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C, BlockId.Vin2 };
             if (!TryVerifyInitialBytes(response2, expected, out status))
             {
                 return Response.Create(status, result);
             }
 
-            expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Vin3 };
+           expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C, BlockId.Vin3 };
             if (!TryVerifyInitialBytes(response3, expected, out status))
             {
                 return Response.Create(status, result);
@@ -92,19 +92,19 @@ namespace Flash411
             string result = "Unknown";
             ResponseStatus status;
 
-            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Serial1 };
+            byte[] expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C, BlockId.Serial1 };
             if (!TryVerifyInitialBytes(response1, expected, out status))
             {
                 return Response.Create(status, result);
             }
 
-            expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Serial2 };
+            expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C, BlockId.Serial2 };
             if (!TryVerifyInitialBytes(response2, expected, out status))
             {
                 return Response.Create(status, result);
             }
 
-            expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.Serial3 };
+            expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C, BlockId.Serial3 };
             if (!TryVerifyInitialBytes(response3, expected, out status))
             {
                 return Response.Create(status, result);
@@ -126,7 +126,7 @@ namespace Flash411
             string result = "Unknown";
             ResponseStatus status;
 
-            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.BCC };
+            byte[] expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C, BlockId.BCC };
             if (!TryVerifyInitialBytes(response, expected, out status))
             {
                 return Response.Create(status, result);
@@ -146,7 +146,7 @@ namespace Flash411
             string result = "Unknown";
             ResponseStatus status;
 
-            byte[] expected = new byte[] { 0x6C, 0xF0, 0x10, 0x7C, BlockId.MEC };
+            byte[] expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C, BlockId.MEC };
             if (!TryVerifyInitialBytes(response, expected, out status))
             {
                 return Response.Create(status, result);
@@ -166,7 +166,7 @@ namespace Flash411
             UInt16 result = 0;
 
             byte[] unlocked = { 0x6C, 0x70, 0x10, 0x67, 0x01, 0x37 };
-            byte[] seed = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x01, };
+            byte[] seed = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x67, 0x01, };
 
             if (TryVerifyInitialBytes(response, unlocked, out status))
             {
