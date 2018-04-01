@@ -1,7 +1,7 @@
 ###############################################################################
-# Set default behavior to automatically normalize line endings.
+# Tell git to stop f***ing with line endings.
 ###############################################################################
-* text=auto
+* -text
 
 ###############################################################################
 # Set default behavior for command prompt diff.
