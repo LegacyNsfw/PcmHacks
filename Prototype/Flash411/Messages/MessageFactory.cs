@@ -24,7 +24,7 @@ namespace Flash411
         /// Create a request to read the given block of PCM memory.
         /// </summary>
         public Message CreateReadRequest(byte block)
-       {
+        { 
             byte[] bytes = new byte[] { 0x6C, DeviceId.Pcm, DeviceId.Tool, 0x3C, block };
             return new Message(bytes);
         }
