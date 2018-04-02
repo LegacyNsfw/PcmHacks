@@ -141,24 +141,49 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Append a 16 bit sum to the end of a block
+        /// Create a block message from the supplied arguments
         /// </summary>
-        public Message AddBlockChecksum(Message block)
+        public Message CreateBlockMessage(byte[] payload, int offset, int length, int address, bool execute)
         {
-            byte[] withoutsum = block.GetBytes();
-            byte[] withsum = new byte [withoutsum.Length+2];
+            byte mode=0x36; // Upload to PCM
+            byte submode = 0x00; // Flags
+            if (execute) {
+                submode = (byte)(1 << 7); // execute bit
+            }
+            byte size1 = unchecked((byte)(length >> 8));
+            byte size2 = unchecked((byte)(length & 0xFF));
+            byte addr1 = unchecked((byte)(address >> 16));
+            byte addr2 = unchecked((byte)(address >> 8));
+            byte addr3 = unchecked((byte)(address & 0xFF));
+
+            byte[] buffer = new byte[10 + length + 2];
+            byte[] header = { 0x6D, DeviceId.Pcm, DeviceId.Tool, mode, submode, size1, size2, addr1, addr2, addr3 };
+
+            Buffer.BlockCopy(buffer, 0, header, 0, header.Length);
+            Buffer.BlockCopy(buffer, header.Length, payload, offset, length);
+
+            return new Message(AddBlockChecksum(buffer));
+        }
+
+        /// <summary>
+        /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array
+        /// </summary>
+        /// <remarks>
+        /// Overwrites the last 2 bytes at the end of the array with the sum
+        /// </remarks>
+        public byte[] AddBlockChecksum(byte[] block)
+        {
             UInt16 sum = 0;
 
-            Buffer.BlockCopy(withoutsum, 0, withsum, 0, withoutsum.Length);
-            for (int i = 4; i < withoutsum.Length; i++) // skip prio, dest, src, mode
+            for (int i = 4; i < block.Length-2; i++) // skip prio, dest, src, mode
             {
-                sum += withsum[i];
+                sum += block[i];
             }
 
-            withsum[withoutsum.Length + 1] = unchecked((byte)(sum >> 8));
-            withsum[withoutsum.Length + 2] = unchecked((byte)(sum & 0xFF));
+            block[block.Length - 2] = unchecked((byte)(sum >> 8));
+            block[block.Length - 1] = unchecked((byte)(sum & 0xFF));
 
-            return new Message(withsum);
+            return block;
         }
     }
 }
