@@ -21,5 +21,10 @@ namespace Flash411
         /// OBD2 Device ID for the
         /// </summary>
         public const byte Tool = 0xF0;
+
+        /// <summary>
+        /// OBD2 Device ID for a broadcast message
+        /// </summary>
+        public const byte Broadcast = 0xFE;
     }
 }
