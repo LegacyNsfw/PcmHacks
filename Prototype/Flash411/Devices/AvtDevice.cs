@@ -20,6 +20,8 @@ namespace Flash411
         public static readonly Message AVT_ENTER_VPW_MODE   = new Message(new byte[] { 0xE1, 0x33 });
         public static readonly Message AVT_REQUEST_MODEL    = new Message(new byte[] { 0xF0 });
         public static readonly Message AVT_REQUEST_FIRMWARE = new Message(new byte[] { 0xB0 });
+        public static readonly Message AVT_1X_SPEED         = new Message(new byte[] { 0xC1, 0x00 });
+        public static readonly Message AVT_4X_SPEED         = new Message(new byte[] { 0xC1, 0x01 });
 
         // AVT reader strips the header
         public static readonly Message AVT_VPW              = new Message(new byte[] { 0x07 });       // 91 01
@@ -301,6 +303,28 @@ namespace Flash411
             this.Logger.AddDebugMessage("RX: " + response.Value.GetBytes().ToHex());
 
             return response;
+        }
+
+        /// <summary>
+        /// Set the interface to low (false) or high (true) speed
+        /// </summary>
+        /// <remarks>
+        /// The caller must also tell the PCM to switch speeds
+        /// </remarks>
+        public override async Task<bool> SetVPW4x(bool highspeed)
+        {
+            if (!highspeed)
+            {
+                this.Logger.AddDebugMessage("AVT setting VPW 1X");
+                await this.Port.Send(AvtDevice.AVT_1X_SPEED.GetBytes());
+            }
+            else
+            {
+                this.Logger.AddDebugMessage("AVT setting VPW 4X");
+                await this.Port.Send(AvtDevice.AVT_4X_SPEED.GetBytes());
+            }
+
+            return true;
         }
     }
 }

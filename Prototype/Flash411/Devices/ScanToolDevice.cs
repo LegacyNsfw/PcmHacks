@@ -59,7 +59,11 @@ namespace Flash411
                 string apID = await this.SendRequest("AT #1");                // Identify (AllPro)
                 if (elmID != "?") this.Logger.AddUserMessage("Elm ID: " + elmID);
                 if (stID != "?") this.Logger.AddUserMessage("ScanTool ID: " + stID);
-                if (apID != "?") this.Logger.AddUserMessage("All Pro ID: " + apID);
+                if (apID != "?")
+                {
+                    this.Logger.AddUserMessage("All Pro ID: " + apID);
+                    this.Supports4X = true;
+                }
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage
                 this.Logger.AddUserMessage("Voltage: " + voltage);
@@ -258,6 +262,33 @@ namespace Flash411
             Response<string> response = await ReadELMLine();
 
             return response.Value;
+        }
+
+        /// <summary>
+        /// Set the interface to low (false) or high (true) speed
+        /// </summary>
+        /// <remarks>
+        /// The caller must also tell the PCM to switch speeds
+        /// </remarks>
+        public override async Task<bool> SetVPW4x(bool highspeed)
+        {
+            if (!highspeed)
+            {
+                this.Logger.AddDebugMessage("AllPro setting VPW 1X");
+                if (!await this.SendAndVerify("AT V0", "OK"))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                this.Logger.AddDebugMessage("AllPro setting VPW 4X");
+                if (!await this.SendAndVerify("AT V1", "OK"))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }
