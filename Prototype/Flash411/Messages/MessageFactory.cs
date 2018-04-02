@@ -208,8 +208,52 @@ namespace Flash411
         /// </summary>
         public Message CreateBeginHighSpeed()
         {
-            return new Message(new byte[] { 0x6C, 0xFE, DeviceId.Tool, 0xA1 });
+            return new Message(new byte[] { 0x6C, DeviceId.Broadcast, DeviceId.Tool, 0xA1 });
         }
 
+        /// <summary>
+        /// Create a broadcast message announcing there is a test device connected to the vehicle
+        /// </summary>
+        public Message CreateTestDevicePresent()
+        {
+            byte[] bytes = new byte[] { 0x6C, DeviceId.Broadcast, DeviceId.Tool, 0x3F };
+            return new Message(bytes);
+        }
+
+        /// <summary>
+        /// Create a broadcast message telling the PCM to clear DTCs
+        /// </summary>
+        public Message CreateClearDTCs()
+        {
+            byte[] bytes = new byte[] { 0x68, 0x6A, DeviceId.Tool, 0x04 };
+            return new Message(bytes);
+        }
+
+        /// <summary>
+        /// A successfull response seen after the Clear DTCs message
+        /// </summary>
+        public Message CreateClearDTCsOK()
+        {
+            byte[] bytes = new byte[] { 0x48, 0x6B, DeviceId.Pcm, 0x44 };
+            return new Message(bytes);
+        }
+
+        /// <summary>
+        /// Create a broadcast message telling all devices to disable normal message transmission (disable chatter)
+        /// </summary>
+        public Message CreateDisableNormalMessageTransmition()
+        {
+            byte[] bytes = new byte[] { 0x6C, DeviceId.Broadcast, DeviceId.Tool, 0x28, 0x00 };
+            return new Message(bytes);
+        }
+
+        /// <summary>
+        /// Create a broadcast message telling all devices to disable normal message transmission (disable chatter)
+        /// </summary>
+        public Message CreateDisableNormalMessageTransmitionOK()
+        {
+            byte[] bytes = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x68, 0x00 };
+            return new Message(bytes);
+        }
     }
 }
