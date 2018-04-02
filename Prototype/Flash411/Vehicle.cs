@@ -275,8 +275,6 @@ namespace Flash411
                 return Response.Create(seedResponse.Status, false);
             }
 
-            //if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
-
             Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.Value.GetBytes());
             if (seedValueResponse.Status != ResponseStatus.Success)
             {
@@ -320,12 +318,12 @@ namespace Flash411
         {
 
             Message tx;
-            Message ok = new Message(new byte[] { 0x6C, 0xF0, 0x10, 0x7B, block });
+            Message ok = new Message(new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7B, block });
 
             switch (data.Length)
             {
                 case 6:
-                    tx = new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3B, block, data[0], data[1], data[2], data[3], data[4], data[5] });
+                    tx = new Message(new byte[] { 0x6C, DeviceId.Pcm, DeviceId.Tool, 0x3B, block, data[0], data[1], data[2], data[3], data[4], data[5] });
                     break;
                 default:
                     logger.AddDebugMessage("Cant write block size " + data.Length);
@@ -366,5 +364,32 @@ namespace Flash411
         {
             return Task.FromResult(true);
         }
+
+        /// <summary>
+        /// Load the executable payload on the PCM from the supplied address, and execute it.
+        /// </summary>
+        public Task<bool> PCMExecute(byte[] payload, int address)
+        {
+            logger.AddDebugMessage("Going to load a " + payload.Length + " byte payload to 0x" + address.ToString("6X"));
+            // Loop through the payload building and sending packets, highest first, execute on last
+            for (int bytesremain = payload.Length; bytesremain > 0; bytesremain -= device.MaxSendSize)
+            {
+                bool exec = false;
+                int length = device.MaxSendSize-12; //Headers use 10 bytes, sum uses 2 bytes
+                int offset = bytesremain - length;
+
+                if (offset<=0) // Is this the last packet?
+                {
+                    offset = 0;
+                    length = bytesremain;
+                    exec = true;
+                }
+                Message block = messageFactory.CreateBlockMessage(payload, offset, length, address + offset, exec);
+            }
+
+            return Task.FromResult(true);
+        }
+
+
     }
 }
