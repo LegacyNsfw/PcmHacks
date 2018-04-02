@@ -390,6 +390,36 @@ namespace Flash411
             return Task.FromResult(true);
         }
 
+        /// <summary>
+        /// Does everything required to switch to VPW 4x transmission
+        /// </summary>
+        public async Task<bool> SetVPW4x(bool highspeed)
+        {
+            Message HighSpeedCheck = messageFactory.CreateHighSpeedCheck();
+            Message HighSpeedOK = messageFactory.CreateHighSpeedOKResponse();
+            Message BeginHighSpeed = messageFactory.CreateBeginHighSpeed();
 
+            if (!device.Supports4X)
+            {
+                logger.AddUserMessage("This interface does not support VPW 4x");
+                return false;
+            }
+
+            // PCM Pre-flight checks
+            Response<Message> rx = await this.device.SendRequest(HighSpeedCheck);
+            if (rx.Status != ResponseStatus.Success || !Utility.CompareArraysPart(rx.Value.GetBytes(), HighSpeedOK.GetBytes()))
+            {
+                logger.AddUserMessage("PCM is not allowing a switch to VPW 4x");
+                return false;
+            }
+
+            // Request the PCM to change
+            rx = await this.device.SendRequest(BeginHighSpeed);
+
+            // Request the device to change
+            await device.SetVPW4x(true);
+
+            return true;
+        }
     }
 }

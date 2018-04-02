@@ -121,7 +121,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Create a request to retrieve a 'seed' value from the PCM.
+        /// Create a request to retrieve a 'seed' value from the PCM
         /// </summary>
         public Message CreateSeedRequest()
         {
@@ -130,7 +130,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Create a request to send a 'key' value to the PCM.
+        /// Create a request to send a 'key' value to the PCM
         /// </summary>
         public Message CreateUnlockRequest(UInt16 key)
         {
@@ -141,7 +141,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Create a block message from the supplied arguments
+        /// Create a block message from the supplied arguments.
         /// </summary>
         public Message CreateBlockMessage(byte[] payload, int offset, int length, int address, bool execute)
         {
@@ -185,5 +185,31 @@ namespace Flash411
 
             return block;
         }
+
+        /// <summary>
+        /// Create a request for the PCM to test VPW speed switch to 4x is OK
+        /// </summary>
+        public Message CreateHighSpeedCheck()
+        {
+            return new Message(new byte[] { 0x6C, 0xFE, DeviceId.Tool, 0xA0 });
+        }
+
+        /// <summary>
+        /// PCM Response if a switch to VPW 4x is OK
+        /// </summary>
+        public Message CreateHighSpeedOKResponse()
+        {
+            return new Message(new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0xE0 });
+        }
+
+
+        /// <summary>
+        /// Create a request for the PCM to switch to VPW 4x
+        /// </summary>
+        public Message CreateBeginHighSpeed()
+        {
+            return new Message(new byte[] { 0x6C, 0xFE, DeviceId.Tool, 0xA1 });
+        }
+
     }
 }
