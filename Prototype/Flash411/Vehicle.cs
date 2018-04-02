@@ -391,7 +391,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Does everything required to switch to VPW 4x transmission
+        /// Does everything required to switch to VPW 4x
         /// </summary>
         public async Task<bool> SetVPW4x(bool highspeed)
         {
@@ -413,8 +413,12 @@ namespace Flash411
                 return false;
             }
 
-            // Request the PCM to change
-            rx = await this.device.SendRequest(BeginHighSpeed);
+            // Request all devices on the bus to change speed to VPW 4x
+            if (!await this.device.SendMessage(BeginHighSpeed))
+            {
+                logger.AddUserMessage("Could not transmit request to switch to VPW 4X");
+                return false;
+            }
 
             // Request the device to change
             await device.SetVPW4x(true);
