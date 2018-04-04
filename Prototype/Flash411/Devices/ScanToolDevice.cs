@@ -273,7 +273,8 @@ namespace Flash411
         /// </remarks>
         public override async Task<bool> SetVPW4x(bool highspeed)
         {
-            if (!highspeed)
+            
+            if (highspeed != true)
             {
                 this.Logger.AddDebugMessage("AllPro setting VPW 1X");
                 if (!await this.SendAndVerify("AT V0", "OK"))

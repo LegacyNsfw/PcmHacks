@@ -145,22 +145,32 @@ namespace Flash411
         /// </summary>
         public Message CreateBlockMessage(byte[] payload, int offset, int length, int address, bool execute)
         {
-            byte mode=0x36; // Upload to PCM
-            byte submode = 0x00; // Flags
-            if (execute) {
-                submode = (byte)(1 << 7); // execute bit
-            }
+            //if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
+
+            byte[] buffer = new byte[10 + length + 2];
+            byte[] header = new byte[10];
+            byte submode = 0;
+
+            if (execute == true) submode = (byte)(1 << 7); // execute bit
             byte size1 = unchecked((byte)(length >> 8));
             byte size2 = unchecked((byte)(length & 0xFF));
             byte addr1 = unchecked((byte)(address >> 16));
             byte addr2 = unchecked((byte)(address >> 8));
             byte addr3 = unchecked((byte)(address & 0xFF));
 
-            byte[] buffer = new byte[10 + length + 2];
-            byte[] header = { 0x6D, DeviceId.Pcm, DeviceId.Tool, mode, submode, size1, size2, addr1, addr2, addr3 };
+            header[0] = 0x6D;
+            header[1] = DeviceId.Pcm;
+            header[2] = DeviceId.Tool;
+            header[3] = 0x36;
+            header[4] = submode;
+            header[5] = size1;
+            header[6] = size2;
+            header[7] = addr1;
+            header[8] = addr2;
+            header[9] = addr3;
 
-            Buffer.BlockCopy(buffer, 0, header, 0, header.Length);
-            Buffer.BlockCopy(buffer, header.Length, payload, offset, length);
+            Buffer.BlockCopy(header, 0, buffer, 0, header.Length);
+            Buffer.BlockCopy(payload, offset, buffer, header.Length, length);
 
             return new Message(AddBlockChecksum(buffer));
         }
@@ -199,7 +209,7 @@ namespace Flash411
         /// </summary>
         public Message CreateHighSpeedOKResponse()
         {
-            return new Message(new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0xE0 });
+            return new Message(new byte[] { 0x6C, DeviceId.Tool, DeviceId.Broadcast, 0xE0 });
         }
 
 
