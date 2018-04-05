@@ -265,5 +265,32 @@ namespace Flash411
             byte[] bytes = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x68, 0x00 };
             return new Message(bytes);
         }
+
+        /// <summary>
+        /// Create a request to uploade size bytes to the given address
+        /// </summary>
+        /// <remarks>
+        /// Note that mode 0x34 is only a request. The actual payload is sent as a mode 0x36.
+        /// </remarks>
+        public Message CreateUploadRequest(int size, int address)
+        {
+            byte[] requestupload = { 0x6C, DeviceId.Pcm, DeviceId.Tool, 0x34, 0x00, 0x11, 0x11, 0x22, 0x22, 0x22 };
+            requestupload[6] = unchecked((byte)(size >> 8));
+            requestupload[6] = unchecked((byte)(size & 0xFF));
+            requestupload[5] = unchecked((byte)(address >> 16));
+            requestupload[6] = unchecked((byte)(address >> 8));
+            requestupload[6] = unchecked((byte)(address & 0xFF));
+            
+            return new Message(requestupload);
+        }
+
+        /// <summary>
+        /// This is the successessfull response signalling an upload is allowed
+        /// </summary>
+        public Message CreateUploadRequestOK()
+        {
+            byte[] requestaccepted = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x74, 0x00 };
+            return new Message(requestaccepted);
+        }
     }
 }
