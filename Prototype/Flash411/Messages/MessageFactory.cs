@@ -25,7 +25,7 @@ namespace Flash411
         /// </summary>
         public Message CreateReadRequest(byte block)
         { 
-            byte[] bytes = new byte[] { 0x6C, DeviceId.Pcm, DeviceId.Tool, 0x3C, block };
+            byte[] bytes = new byte[] { Priority.Normal, DeviceId.Pcm, DeviceId.Tool, Mode.ReadBlock, block };
             return new Message(bytes);
         }
 
@@ -125,54 +125,53 @@ namespace Flash411
         /// </summary>
         public Message CreateSeedRequest()
         {
-            byte[] bytes = new byte[] { 0x6C, DeviceId.Pcm, DeviceId.Tool, 0x27, 0x01 };
+            byte[] bytes = new byte[] { Priority.Normal, DeviceId.Pcm, DeviceId.Tool, Mode.Seed, SubMode.GetSeed };
             return new Message(bytes);
         }
 
         /// <summary>
         /// Create a request to send a 'key' value to the PCM
         /// </summary>
-        public Message CreateUnlockRequest(UInt16 key)
+        public Message CreateUnlockRequest(UInt16 Key)
         {
-            byte keyHigh = (byte)((key & 0xFF00) >> 8);
-            byte keyLow = (byte)(key & 0xFF);
-            byte[] bytes = new byte[] { 0x6C, DeviceId.Pcm, DeviceId.Tool, 0x27, 0x02, keyHigh, keyLow };
-            return new Message(bytes);
+            byte KeyHigh = (byte)((Key & 0xFF00) >> 8);
+            byte KeyLow = (byte)(Key & 0xFF);
+            byte[] Bytes = new byte[] { Priority.Normal, DeviceId.Pcm, DeviceId.Tool, Mode.Seed, SubMode.SendKey, KeyHigh, KeyLow };
+            return new Message(Bytes);
         }
 
         /// <summary>
         /// Create a block message from the supplied arguments.
         /// </summary>
-        public Message CreateBlockMessage(byte[] payload, int offset, int length, int address, bool execute)
+        public Message CreateBlockMessage(byte[] Payload, int Offset, int Length, int Address, bool Execute)
         {
-            //if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
+            byte[] Buffer = new byte[10 + Length + 2];
+            byte[] Header = new byte[10];
 
-            byte[] buffer = new byte[10 + length + 2];
-            byte[] header = new byte[10];
-            byte submode = 0;
+            byte Exec = SubMode.NoExecute;
+            if (Execute == true) Exec = SubMode.Execute;
 
-            if (execute == true) submode = (byte)(1 << 7); // execute bit
-            byte size1 = unchecked((byte)(length >> 8));
-            byte size2 = unchecked((byte)(length & 0xFF));
-            byte addr1 = unchecked((byte)(address >> 16));
-            byte addr2 = unchecked((byte)(address >> 8));
-            byte addr3 = unchecked((byte)(address & 0xFF));
+            byte Size1 = unchecked((byte)(Length >> 8));
+            byte Size2 = unchecked((byte)(Length & 0xFF));
+            byte Addr1 = unchecked((byte)(Address >> 16));
+            byte Addr2 = unchecked((byte)(Address >> 8));
+            byte Addr3 = unchecked((byte)(Address & 0xFF));
 
-            header[0] = 0x6D;
-            header[1] = DeviceId.Pcm;
-            header[2] = DeviceId.Tool;
-            header[3] = 0x36;
-            header[4] = submode;
-            header[5] = size1;
-            header[6] = size2;
-            header[7] = addr1;
-            header[8] = addr2;
-            header[9] = addr3;
+            Header[0] = Priority.Block;
+            Header[1] = DeviceId.Pcm;
+            Header[2] = DeviceId.Tool;
+            Header[3] = Mode.PCMUpload;
+            Header[4] = Exec;
+            Header[5] = Size1;
+            Header[6] = Size2;
+            Header[7] = Addr1;
+            Header[8] = Addr2;
+            Header[9] = Addr3;
 
-            Buffer.BlockCopy(header, 0, buffer, 0, header.Length);
-            Buffer.BlockCopy(payload, offset, buffer, header.Length, length);
+            System.Buffer.BlockCopy(Header, 0, Buffer, 0, Header.Length);
+            System.Buffer.BlockCopy(Payload, Offset, Buffer, Header.Length, Length);
 
-            return new Message(AddBlockChecksum(buffer));
+            return new Message(AddBlockChecksum(Buffer));
         }
 
         /// <summary>
@@ -201,7 +200,7 @@ namespace Flash411
         /// </summary>
         public Message CreateHighSpeedCheck()
         {
-            return new Message(new byte[] { 0x6C, 0xFE, DeviceId.Tool, 0xA0 });
+            return new Message(new byte[] { Priority.Normal, DeviceId.Broadcast, DeviceId.Tool, 0xA0 });
         }
 
         /// <summary>
@@ -209,7 +208,7 @@ namespace Flash411
         /// </summary>
         public Message CreateHighSpeedOKResponse()
         {
-            return new Message(new byte[] { 0x6C, DeviceId.Tool, DeviceId.Broadcast, 0xE0 });
+            return new Message(new byte[] { Priority.Normal, DeviceId.Tool, DeviceId.Broadcast, 0xE0 });
         }
 
 
@@ -218,7 +217,7 @@ namespace Flash411
         /// </summary>
         public Message CreateBeginHighSpeed()
         {
-            return new Message(new byte[] { 0x6C, DeviceId.Broadcast, DeviceId.Tool, 0xA1 });
+            return new Message(new byte[] { Priority.Normal, DeviceId.Broadcast, DeviceId.Tool, 0xA1 });
         }
 
         /// <summary>
@@ -226,7 +225,7 @@ namespace Flash411
         /// </summary>
         public Message CreateTestDevicePresent()
         {
-            byte[] bytes = new byte[] { 0x6C, DeviceId.Broadcast, DeviceId.Tool, 0x3F };
+            byte[] bytes = new byte[] { Priority.Normal, DeviceId.Broadcast, DeviceId.Tool, 0x3F };
             return new Message(bytes);
         }
 
@@ -253,8 +252,8 @@ namespace Flash411
         /// </summary>
         public Message CreateDisableNormalMessageTransmition()
         {
-            byte[] bytes = new byte[] { 0x6C, DeviceId.Broadcast, DeviceId.Tool, 0x28, 0x00 };
-            return new Message(bytes);
+            byte[] Bytes = new byte[] { Priority.Normal, DeviceId.Broadcast, DeviceId.Tool, Mode.SilenceBus, SubMode.Null };
+            return new Message(Bytes);
         }
 
         /// <summary>
@@ -262,7 +261,7 @@ namespace Flash411
         /// </summary>
         public Message CreateDisableNormalMessageTransmitionOK()
         {
-            byte[] bytes = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x68, 0x00 };
+            byte[] bytes = new byte[] { Priority.Normal, DeviceId.Tool, DeviceId.Pcm, Mode.SilenceBus + Mode.Response , SubMode.Null };
             return new Message(bytes);
         }
 
@@ -272,14 +271,14 @@ namespace Flash411
         /// <remarks>
         /// Note that mode 0x34 is only a request. The actual payload is sent as a mode 0x36.
         /// </remarks>
-        public Message CreateUploadRequest(int size, int address)
+        public Message CreateUploadRequest(int Size, int Address)
         {
-            byte[] requestupload = { 0x6C, DeviceId.Pcm, DeviceId.Tool, 0x34, 0x00, 0x11, 0x11, 0x22, 0x22, 0x22 };
-            requestupload[6] = unchecked((byte)(size >> 8));
-            requestupload[6] = unchecked((byte)(size & 0xFF));
-            requestupload[5] = unchecked((byte)(address >> 16));
-            requestupload[6] = unchecked((byte)(address >> 8));
-            requestupload[6] = unchecked((byte)(address & 0xFF));
+            byte[] requestupload = { Priority.Normal, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, SubMode.Null, 0x11, 0x11, 0x22, 0x22, 0x22 };
+            requestupload[6] = unchecked((byte)(Size >> 8));
+            requestupload[6] = unchecked((byte)(Size & 0xFF));
+            requestupload[5] = unchecked((byte)(Address >> 16));
+            requestupload[6] = unchecked((byte)(Address >> 8));
+            requestupload[6] = unchecked((byte)(Address & 0xFF));
             
             return new Message(requestupload);
         }
@@ -289,8 +288,8 @@ namespace Flash411
         /// </summary>
         public Message CreateUploadRequestOK()
         {
-            byte[] requestaccepted = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x74, 0x00 };
-            return new Message(requestaccepted);
+            byte[] RequestAccepted = { Priority.Normal, DeviceId.Tool, DeviceId.Pcm, Mode.PCMUpload + Mode.Response, SubMode.UploadOK };
+            return new Message(RequestAccepted);
         }
     }
 }
