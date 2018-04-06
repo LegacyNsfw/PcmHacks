@@ -82,7 +82,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Indicate whether the overlap between two arrays are identical or not.
+        /// Indicate whether the overlap between two byte arrays are identical or not.
         /// </summary>
         public static bool CompareArraysPart(byte[] actual, byte[] expected)
         {

@@ -61,7 +61,7 @@ namespace Flash411
 
             this.MaxSendSize = 2048;    // unverified
             this.MaxReceiveSize = 2048; // unverified
-            this.Supports4X = true;     // TODO: add code to support the switch to 4x
+            this.Supports4X = false;    // TODO: add code to support the switch to 4x and update this flag
         }
 
         protected override void Dispose(bool disposing)
@@ -411,6 +411,27 @@ namespace Flash411
             if (OBDError != J2534Err.STATUS_NOERROR) return Response.Create(ResponseStatus.Error, OBDError);
             Filters.Add((ulong)tempfilter);
             return Response.Create(ResponseStatus.Success, OBDError);
+        }
+
+        /// <summary>
+        /// Set the interface to low (false) or high (true) speed
+        /// </summary>
+        /// <remarks>
+        /// The caller must also tell the PCM to switch speeds
+        /// </remarks>
+        public override async Task<bool> SetVPW4x(bool highspeed)
+        {
+            if (!highspeed)
+            {
+                this.Logger.AddDebugMessage("Not Implemented: J2534 setting VPW 1X");
+            }
+            else
+            {
+                this.Logger.AddDebugMessage("Not Implemented: J2534 setting VPW 4X");
+                return false;
+            }
+
+            return true;
         }
     }
 }

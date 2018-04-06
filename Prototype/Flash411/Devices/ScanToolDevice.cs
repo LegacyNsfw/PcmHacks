@@ -19,9 +19,9 @@ namespace Flash411
         /// </summary>
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
-            this.MaxSendSize = 1000;    // Accuracy?
-            this.MaxReceiveSize = 1000; // Accuracy?
-            this.Supports4X = false;    // :(
+            this.MaxSendSize = 64;    // Accuracy?
+            this.MaxReceiveSize = 512; // Accuracy?
+            this.Supports4X = false;       // :(
         }
 
         /// <summary>
@@ -59,7 +59,11 @@ namespace Flash411
                 string apID = await this.SendRequest("AT #1");                // Identify (AllPro)
                 if (elmID != "?") this.Logger.AddUserMessage("Elm ID: " + elmID);
                 if (stID != "?") this.Logger.AddUserMessage("ScanTool ID: " + stID);
-                if (apID != "?") this.Logger.AddUserMessage("All Pro ID: " + apID);
+                if (apID != "?")
+                {
+                    this.Logger.AddUserMessage("All Pro ID: " + apID);
+                    this.Supports4X = true;
+                }
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage
                 this.Logger.AddUserMessage("Voltage: " + voltage);
@@ -121,7 +125,7 @@ namespace Flash411
             {
                 string hexResponse = await this.SendRequest(payload);
 
-                this.Logger.AddDebugMessage("hexResponse: " + hexResponse);
+                //this.Logger.AddDebugMessage("hexResponse: " + hexResponse);
                 // Make sure we can parse the response.
                 if (!hexResponse.IsHex())
                 {
@@ -131,14 +135,14 @@ namespace Flash411
 
                 // Add the header bytes that the ELM hides from us.
                 byte[] deviceResponseBytes = hexResponse.ToBytes();
-                this.Logger.AddDebugMessage("deviceResponseBytes: " + deviceResponseBytes.ToHex());
+                //this.Logger.AddDebugMessage("deviceResponseBytes: " + deviceResponseBytes.ToHex());
                 byte[] completeResponseBytes = new byte[deviceResponseBytes.Length + 3];
                 completeResponseBytes[0] = messageBytes[0];
                 completeResponseBytes[1] = messageBytes[2];
                 completeResponseBytes[2] = messageBytes[1];
                 deviceResponseBytes.CopyTo(completeResponseBytes, 3);
 
-                this.Logger.AddDebugMessage("Recieved: " + completeResponseBytes.ToHex());
+                this.Logger.AddDebugMessage("RX: " + completeResponseBytes.ToHex());
 
                 return Response.Create(ResponseStatus.Success, new Message(completeResponseBytes));
             }
@@ -177,7 +181,8 @@ namespace Flash411
         /// </remarks>
         async private Task<Response<string>> ReadELMLine()
         {
-            byte[] buffer = new byte[MaxSendSize];
+            int buffersize = (MaxReceiveSize * 3) + 7; // payload with spaces (3 bytes per character) plus the longest possible prompt
+            byte[] buffer = new byte[buffersize];
 
             // collect bytes until we hit the end of the buffer or see a CR or LF
             int i = 0;
@@ -188,7 +193,7 @@ namespace Flash411
                 //this.Logger.AddDebugMessage("Byte: " + b[0].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(b));
                 buffer[i] = b[0];
                 i++;
-            } while ((i < MaxSendSize) && (b[0] != '>')); // continue until the next prompt
+            } while ((i < buffersize) && (b[0] != '>')); // continue until the next prompt
 
             //this.Logger.AddDebugMessage("Found terminator '>'");
 
@@ -223,9 +228,9 @@ namespace Flash411
             //this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
             string line = System.Text.Encoding.ASCII.GetString(filtered).Trim(); // strip leading and trailing whitespace, too
 
-            this.Logger.AddDebugMessage("Read \"" + line + "\"");
+            //this.Logger.AddDebugMessage("Read \"" + line + "\"");
 
-            if (i == MaxSendSize) return Response.Create(ResponseStatus.Truncated, line);
+            if (i == buffersize) return Response.Create(ResponseStatus.Truncated, line);
 
             return Response.Create(ResponseStatus.Success, line);
         }
@@ -235,7 +240,7 @@ namespace Flash411
         /// </summary>
         async private Task<Response<Message>> ReadELMPacket()
         {
-            this.Logger.AddDebugMessage("Trace: ReadELMPacket");
+            //this.Logger.AddDebugMessage("Trace: ReadELMPacket");
 
             Response<string> response = await ReadELMLine();
             byte[] message = response.Value.ToBytes();
@@ -252,12 +257,40 @@ namespace Flash411
         /// </remarks>
         private async Task<string> SendRequest(string request)
         {
-            this.Logger.AddDebugMessage("Sending " + request);
+            this.Logger.AddDebugMessage("TX: " + request);
             await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
 
             Response<string> response = await ReadELMLine();
 
             return response.Value;
+        }
+
+        /// <summary>
+        /// Set the interface to low (false) or high (true) speed
+        /// </summary>
+        /// <remarks>
+        /// The caller must also tell the PCM to switch speeds
+        /// </remarks>
+        public override async Task<bool> SetVPW4x(bool highspeed)
+        {
+            
+            if (highspeed != true)
+            {
+                this.Logger.AddDebugMessage("AllPro setting VPW 1X");
+                if (!await this.SendAndVerify("AT V0", "OK"))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                this.Logger.AddDebugMessage("AllPro setting VPW 4X");
+                if (!await this.SendAndVerify("AT V1", "OK"))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

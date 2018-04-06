@@ -44,5 +44,25 @@ namespace Flash411
         {
             return Task.FromResult(Response.Create(ResponseStatus.Success, new Message(new byte[] { })));
         }
+
+        /// <summary>
+        /// Set the interface to low (false) or high (true) speed
+        /// </summary>
+        /// <remarks>
+        /// The caller must also tell the PCM to switch speeds
+        /// </remarks>
+        public override async Task<bool> SetVPW4x(bool highspeed)
+        {
+            if (!highspeed)
+            {
+                this.Logger.AddDebugMessage("Not Implemented: Thaniel setting VPW 1X");
+            }
+            else
+            {
+                this.Logger.AddDebugMessage("Not Implemented: Thaniel setting VPW 4X");
+            }
+
+            return false;
+        }
     }
 }
