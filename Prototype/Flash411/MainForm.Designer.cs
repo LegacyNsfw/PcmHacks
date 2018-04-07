@@ -43,6 +43,12 @@
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
             this.startServerButton = new System.Windows.Forms.Button();
+            this.label1 = new System.Windows.Forms.Label();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.label2 = new System.Windows.Forms.Label();
+            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
+            this.linkLabel3 = new System.Windows.Forms.LinkLabel();
+            this.label3 = new System.Windows.Forms.Label();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -89,13 +95,11 @@
             this.operationsBox.Controls.Add(this.readFullContentsButton);
             this.operationsBox.Controls.Add(this.modifyVinButton);
             this.operationsBox.Controls.Add(this.readPropertiesButton);
-
             this.operationsBox.Location = new System.Drawing.Point(9, 132);
             this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
             this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
             this.operationsBox.Size = new System.Drawing.Size(224, 174);
-
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
@@ -113,7 +117,6 @@
             // 
             // writeFullContentsButton
             // 
-
             this.writeFullContentsButton.Location = new System.Drawing.Point(5, 108);
             this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
             this.writeFullContentsButton.Name = "writeFullContentsButton";
@@ -167,8 +170,7 @@
             this.tabs.Margin = new System.Windows.Forms.Padding(2);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-
-            this.tabs.Size = new System.Drawing.Size(530, 360);
+            this.tabs.Size = new System.Drawing.Size(530, 363);
             this.tabs.TabIndex = 2;
             // 
             // resultsTab
@@ -178,9 +180,7 @@
             this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
             this.resultsTab.Name = "resultsTab";
             this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
-
-            this.resultsTab.Size = new System.Drawing.Size(522, 334);
-
+            this.resultsTab.Size = new System.Drawing.Size(522, 337);
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
@@ -196,9 +196,7 @@
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-
-            this.userLog.Size = new System.Drawing.Size(516, 327);
-
+            this.userLog.Size = new System.Drawing.Size(516, 328);
             this.userLog.TabIndex = 0;
             // 
             // debugTab
@@ -208,9 +206,7 @@
             this.debugTab.Margin = new System.Windows.Forms.Padding(2);
             this.debugTab.Name = "debugTab";
             this.debugTab.Padding = new System.Windows.Forms.Padding(2);
-
             this.debugTab.Size = new System.Drawing.Size(522, 334);
-
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -226,14 +222,11 @@
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-
             this.debugLog.Size = new System.Drawing.Size(516, 327);
-
             this.debugLog.TabIndex = 0;
             // 
             // startServerButton
             // 
-
             this.startServerButton.Location = new System.Drawing.Point(14, 341);
             this.startServerButton.Margin = new System.Windows.Forms.Padding(2);
             this.startServerButton.Name = "startServerButton";
@@ -243,20 +236,79 @@
             this.startServerButton.UseVisualStyleBackColor = true;
             this.startServerButton.Click += new System.EventHandler(this.startServerButton_Click);
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(6, 382);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(166, 13);
+            this.label1.TabIndex = 6;
+            this.label1.Text = "Released under GPLv3 license at";
+            // 
+            // linkLabel1
+            // 
+            this.linkLabel1.AutoSize = true;
+            this.linkLabel1.Location = new System.Drawing.Point(169, 382);
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.Size = new System.Drawing.Size(216, 13);
+            this.linkLabel1.TabIndex = 7;
+            this.linkLabel1.TabStop = true;
+            this.linkLabel1.Text = "https://github.com/LegacyNsfw/PcmHacks";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(382, 382);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(62, 13);
+            this.label2.TabIndex = 8;
+            this.label2.Text = "By antus @";
+            // 
+            // linkLabel2
+            // 
+            this.linkLabel2.AutoSize = true;
+            this.linkLabel2.Location = new System.Drawing.Point(416, 382);
+            this.linkLabel2.Name = "linkLabel2";
+            this.linkLabel2.Size = new System.Drawing.Size(0, 13);
+            this.linkLabel2.TabIndex = 9;
+            // 
+            // linkLabel3
+            // 
+            this.linkLabel3.AutoSize = true;
+            this.linkLabel3.Location = new System.Drawing.Point(444, 382);
+            this.linkLabel3.Name = "linkLabel3";
+            this.linkLabel3.Size = new System.Drawing.Size(83, 13);
+            this.linkLabel3.TabIndex = 10;
+            this.linkLabel3.TabStop = true;
+            this.linkLabel3.Text = "pcmhacking.net";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(523, 382);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(237, 13);
+            this.label3.TabIndex = 11;
+            this.label3.Text = "and NSFW. J2534 support by Envyous Customs.";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-
-            this.ClientSize = new System.Drawing.Size(776, 379);
-
+            this.ClientSize = new System.Drawing.Size(776, 399);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.linkLabel3);
+            this.Controls.Add(this.linkLabel2);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.linkLabel1);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.startServerButton);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.operationsBox);
             this.Controls.Add(this.interfaceBox);
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "MainForm";
-            this.Text = "Prototype";
+            this.Text = "PCM Hammer for GM \'0411";
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.interfaceBox.ResumeLayout(false);
             this.operationsBox.ResumeLayout(false);
@@ -266,6 +318,7 @@
             this.debugTab.ResumeLayout(false);
             this.debugTab.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -286,6 +339,12 @@
         private System.Windows.Forms.Button startServerButton;
         private System.Windows.Forms.Button selectButton;
         private System.Windows.Forms.Label deviceDescription;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.LinkLabel linkLabel1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.LinkLabel linkLabel2;
+        private System.Windows.Forms.LinkLabel linkLabel3;
+        private System.Windows.Forms.Label label3;
     }
 }
 
