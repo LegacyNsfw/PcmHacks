@@ -360,16 +360,29 @@ namespace Flash411
 
         public async Task<Response<byte[]>> LoadKernelFromFile(string path)
         {
-            long size;
             byte[] file = { 0x00 }; // dummy value
 
             if (path == "") return Response.Create(ResponseStatus.Error, file);
 
+            string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string exeDirectory = Path.GetDirectoryName(exePath);
+            path = Path.Combine(exeDirectory, path);
+
             try
             {
-                size = new System.IO.FileInfo(path).Length;
-                file = new byte[size];
-                file = File.ReadAllBytes(path);
+                using (Stream fileStream = File.OpenRead(path))
+                {
+                    file = new byte[fileStream.Length];
+
+                    // In theory we might need a loop here. In practice, I don't think that will be necessary.
+                    int bytesRead = await fileStream.ReadAsync(file, 0, (int)fileStream.Length);
+
+                    if(bytesRead != fileStream.Length)
+                    {
+                        return Response.Create(ResponseStatus.Truncated, file);
+                    }
+                }
+                
                 logger.AddDebugMessage("Loaded " + path);
             }
             catch (ArgumentException)
@@ -407,15 +420,12 @@ namespace Flash411
         /// </summary>
         public async Task<bool> ReadContents()
         {
-            // switch to 4x
-            if (!await VehicleSetVPW4x(true))
-            {
-                return false;
-            }
+            // switch to 4x, if possible. But continue either way.
+            await VehicleSetVPW4x(true);
 
             // execute read kernel
 
-            Response<byte[]> response = await LoadKernelFromFile("c:\\kernel.bin");
+            Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
             if (response.Status != ResponseStatus.Success) return false;
 
             if (!await PCMExecute(response.Value, 0xFF9150)) return false;

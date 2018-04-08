@@ -88,10 +88,24 @@ namespace Flash411
         /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>
-        public override Task<bool> SendMessage(Message message)
+        public override async Task<bool> SendMessage(Message message)
         {
-            // Not yet implemented. TODO: Refactor SendRequest() to move common code here when we need it.
-            return Task.FromResult(true);
+            byte[] messageBytes = message.GetBytes();
+            string header;
+            string payload;
+            this.ParseMessage(messageBytes, out header, out payload);
+
+            Response<bool> setHeaderResponse = await this.SetHeader(header);
+            if(setHeaderResponse.Status != ResponseStatus.Success)
+            {
+                return false;
+            }
+
+            string deviceResponse = await this.SendRequest(payload);
+            this.Logger.AddDebugMessage("SendMessage produced " + deviceResponse);
+
+            // TODO: Parse deviceResponse, determine whether we actually succeeded or failed.
+            return true;
         }
 
         /// <summary>
@@ -104,22 +118,16 @@ namespace Flash411
         /// </remarks>
         public async override Task<Response<Message>> SendRequest(Message message)
         {
-            // The incoming byte array needs to separated into header and payload portions,
-            // which are sent separately.
-            //
-            // This may not be necessary after converting to the STN extensions to the ELM protocol. We'll see.
             byte[] messageBytes = message.GetBytes();
-            string hexRequest = messageBytes.ToHex();
-            string header = hexRequest.Substring(0, 9);
+            string header;
+            string payload;
+            this.ParseMessage(messageBytes, out header, out payload);
 
-            string setHeaderResponse = await this.SendRequest("AT SH " + header);
-            if (setHeaderResponse != "OK")
+            Response<bool> setHeaderResponse = await this.SetHeader(header);
+            if (setHeaderResponse.Status != ResponseStatus.Success)
             {
-                this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
-                return Response.Create(ResponseStatus.UnexpectedResponse, (Message)null);
+                return Response.Create(setHeaderResponse.Status, (Message)null);
             }
-
-            string payload = hexRequest.Substring(9);
 
             try
             {
@@ -150,6 +158,50 @@ namespace Flash411
             {
                 return Response.Create(ResponseStatus.Timeout, (Message)null);
             }
+        }
+
+        /// <summary>
+        /// Separate the message into header and payload.
+        /// </summary>
+        private void ParseMessage(byte[] messageBytes, out string header, out string payload)
+        {
+            // The incoming byte array needs to separated into header and payload portions,
+            // which are sent separately.
+            string hexRequest = messageBytes.ToHex();
+            header = hexRequest.Substring(0, 9);
+            payload = hexRequest.Substring(9);
+        }
+
+        /// <summary>
+        /// Set the header that the Elm device will use for the next message.
+        /// </summary>
+        public async Task<Response<bool>> SetHeader(string header)
+        {
+            string setHeaderResponse = await this.SendRequest("AT SH " + header);
+            if (setHeaderResponse != "OK")
+            {
+                this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
+                return Response.Create(ResponseStatus.UnexpectedResponse, false);
+            }
+
+            return Response.Create(ResponseStatus.Success, true);
+        }
+
+        /// <summary>
+        /// Send a request in string form, wait for a response (for init)
+        /// </summary>
+        /// <remarks>
+        /// The API for this method (sending a string, returning a string) matches
+        /// the way that we need to communicate with ELM and STN devices for setup
+        /// </remarks>
+        private async Task<string> SendRequest(string request)
+        {
+            this.Logger.AddDebugMessage("TX: " + request);
+            await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
+
+            Response<string> response = await ReadELMLine();
+
+            return response.Value;
         }
 
         /// <summary>
@@ -246,23 +298,6 @@ namespace Flash411
             byte[] message = response.Value.ToBytes();
 
             return Response.Create(ResponseStatus.Success, new Message(message));
-        }
-
-        /// <summary>
-        /// Send a request in string form, wait for a response (for init)
-        /// </summary>
-        /// <remarks>
-        /// The API for this method (sending a string, returning a string) matches
-        /// the way that we need to communicate with ELM and STN devices for setup
-        /// </remarks>
-        private async Task<string> SendRequest(string request)
-        {
-            this.Logger.AddDebugMessage("TX: " + request);
-            await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
-
-            Response<string> response = await ReadELMLine();
-
-            return response.Value;
         }
 
         /// <summary>
