@@ -308,22 +308,20 @@ namespace Flash411
         /// </remarks>
         public override async Task<bool> SetVPW4x(bool highspeed)
         {
-            
+
             if (highspeed != true)
             {
                 this.Logger.AddDebugMessage("AllPro setting VPW 1X");
-                if (!await this.SendAndVerify("AT V0", "OK"))
-                {
-                    return false;
-                }
+                if (!await this.SendAndVerify("AT V0", "OK")) return false;
+                if (!await this.SendAndVerify("AT SP2", "OK")) return false;
+                if (!await this.SendAndVerify("AT DP", "SAE J1850 VPW")) return false;
             }
             else
             {
                 this.Logger.AddDebugMessage("AllPro setting VPW 4X");
-                if (!await this.SendAndVerify("AT V1", "OK"))
-                {
-                    return false;
-                }
+                if (!await this.SendAndVerify("AT V1", "OK")) return false;
+                if (!await this.SendAndVerify("AT SP2", "OK")) return false;
+                if (!await this.SendAndVerify("AT DP", "SAE J1850 VPW 4X")) return false;
             }
             return true;
         }

@@ -428,8 +428,13 @@ namespace Flash411
             Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
             if (response.Status != ResponseStatus.Success) return false;
 
-            if (!await PCMExecute(response.Value, 0xFF9150)) return false;
+            if (!await PCMExecute(response.Value, 0xFF9150))
+            {
+                logger.AddUserMessage("Failed to upload kernel uploaded to PCM");
+                return false;
+            }
 
+            logger.AddUserMessage("kernel uploaded to PCM succesfully");
             // read bin block by block
             // return stream
             return true;
@@ -468,9 +473,20 @@ namespace Flash411
                 //if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
                 //logger.AddDebugMessage("Calling CreateBlockMessage with payload size " + payload.Length + ", length " + length + " loadaddress " + loadaddress.ToString("X6") +  " exec " + exec);
                 Message request = messageFactory.CreateUploadRequest(length, loadaddress);
-                await device.SendRequest(request);
+                Response<Message> response = await SendRequest(request, 5);
+                if (response.Status != ResponseStatus.Success)
+                {
+                    logger.AddDebugMessage("Could not upload kernel to PCM (request), aborting");
+                    return false;
+                }
+
                 Message block = messageFactory.CreateBlockMessage(payload, offset, length, loadaddress, exec);
-                await device.SendRequest(block);
+                response = await SendRequest(block, 5);
+                if (response.Status != ResponseStatus.Success)
+                {
+                    logger.AddDebugMessage("Could not upload kernel to PCM (payload), aborting");
+                    return false;
+                }
             }
 
             return true;
@@ -515,6 +531,24 @@ namespace Flash411
             await device.SetVPW4x(true);
 
             return true;
+        }
+
+        /// <summary>
+        /// Sends the provides message retries times, with a small delay on fail. 
+        /// </summary>
+        /// <remarks>
+        /// Returns a succsefull Response on the first successful attempt, or the failed Response if we run out of tries.
+        /// </remarks>
+        async Task<Response<Message>> SendRequest(Message message, int retries)
+        {
+            Response<Message> response;
+            for (int i = retries; i>0; i--)
+            {
+                response = await device.SendRequest(message);
+                if (response.Status == ResponseStatus.Success) return response;
+                await Task.Delay(10); // incase were going too fast, we might want to change this logic
+            }
+            return Response.Create(ResponseStatus.Error, (Message)null); // this should be response from the loop but the compiler thinks the response variable isnt in scope here????
         }
     }
 }
