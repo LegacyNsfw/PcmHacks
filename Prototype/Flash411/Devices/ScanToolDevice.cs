@@ -19,9 +19,9 @@ namespace Flash411
         /// </summary>
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
-            this.MaxSendSize = 64;    // Accuracy?
-            this.MaxReceiveSize = 512; // Accuracy?
-            this.Supports4X = false;       // :(
+            this.MaxSendSize = 128;    // Accuracy?
+            this.MaxReceiveSize = 128; // Accuracy?
+            this.Supports4X = false;
         }
 
         /// <summary>
@@ -70,7 +70,10 @@ namespace Flash411
 
                 if (!await this.SendAndVerify("AT AL", "OK") ||               // Allow Long packets
                     !await this.SendAndVerify("AT SP2", "OK") ||              // Set Protocol 2 (VPW)
-                    !await this.SendAndVerify("AT DP", "SAE J1850 VPW"))      // Get Protocol (Verify VPW)
+                    !await this.SendAndVerify("AT DP", "SAE J1850 VPW") ||    // Get Protocol (Verify VPW)
+                    !await this.SendAndVerify("AT AR", "OK") ||
+                    !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK")
+                    )
                 {
                     return false;
                 }
@@ -217,7 +220,7 @@ namespace Flash411
 
             if (string.Equals(actualResponse, expectedResponse))
             {
-                //this.Logger.AddDebugMessage(actualResponse + "=" + expectedResponse);
+                this.Logger.AddDebugMessage(actualResponse);
                 return true;
             }
 
@@ -312,16 +315,12 @@ namespace Flash411
             if (highspeed != true)
             {
                 this.Logger.AddDebugMessage("AllPro setting VPW 1X");
-                if (!await this.SendAndVerify("AT V0", "OK")) return false;
-                if (!await this.SendAndVerify("AT SP2", "OK")) return false;
-                if (!await this.SendAndVerify("AT DP", "SAE J1850 VPW")) return false;
+                if (!await this.SendAndVerify("AT VPW1", "OK")) return false;
             }
             else
             {
                 this.Logger.AddDebugMessage("AllPro setting VPW 4X");
-                if (!await this.SendAndVerify("AT V1", "OK")) return false;
-                if (!await this.SendAndVerify("AT SP2", "OK")) return false;
-                if (!await this.SendAndVerify("AT DP", "SAE J1850 VPW 4X")) return false;
+                if (!await this.SendAndVerify("AT VPW4", "OK")) return false;
             }
             return true;
         }

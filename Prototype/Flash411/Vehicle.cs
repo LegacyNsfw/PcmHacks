@@ -421,10 +421,10 @@ namespace Flash411
         public async Task<bool> ReadContents()
         {
             // switch to 4x, if possible. But continue either way.
+            // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
             await VehicleSetVPW4x(true);
 
             // execute read kernel
-
             Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
             if (response.Status != ResponseStatus.Success) return false;
 
@@ -469,7 +469,6 @@ namespace Flash411
                 }
                 int loadaddress = address + offset;
 
-                //TODO: Wrap these requests with error checking and retry X times on failure.
                 //if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
                 //logger.AddDebugMessage("Calling CreateBlockMessage with payload size " + payload.Length + ", length " + length + " loadaddress " + loadaddress.ToString("X6") +  " exec " + exec);
                 Message request = messageFactory.CreateUploadRequest(length, loadaddress);
@@ -500,8 +499,6 @@ namespace Flash411
             Message HighSpeedCheck = messageFactory.CreateHighSpeedCheck();
             Message HighSpeedOK = messageFactory.CreateHighSpeedOKResponse();
             Message BeginHighSpeed = messageFactory.CreateBeginHighSpeed();
-
-            //if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
 
             if (!device.Supports4X)
             {
