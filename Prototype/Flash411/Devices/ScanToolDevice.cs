@@ -62,6 +62,7 @@ namespace Flash411
                 if (apID != "?")
                 {
                     this.Logger.AddUserMessage("All Pro ID: " + apID);
+                    this.Logger.AddDebugMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
                     this.Supports4X = true;
                 }
 
@@ -71,8 +72,8 @@ namespace Flash411
                 if (!await this.SendAndVerify("AT AL", "OK") ||               // Allow Long packets
                     !await this.SendAndVerify("AT SP2", "OK") ||              // Set Protocol 2 (VPW)
                     !await this.SendAndVerify("AT DP", "SAE J1850 VPW") ||    // Get Protocol (Verify VPW)
-                    !await this.SendAndVerify("AT AR", "OK") ||
-                    !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK")
+                    !await this.SendAndVerify("AT AR", "OK") ||               // Turn Auto Receive on (default should be on anyway)
+                    !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK") //|| // Set receive filter to this tool ID
                     )
                 {
                     return false;
