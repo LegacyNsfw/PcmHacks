@@ -509,6 +509,8 @@ namespace Flash411
 
             // PCM Pre-flight checks
             Response<Message> rx = await this.device.SendRequest(HighSpeedCheck);
+            // We've seen the OK from a source of FE and 10, but we dont really care. 
+            // Overwrite the response source with FE so even if it did come back from a different device the next check will pass.
             if (rx.Status != ResponseStatus.Success || !Utility.CompareArraysPart(rx.Value.GetBytes(), HighSpeedOK.GetBytes()))
             {
                 logger.AddUserMessage("PCM is not allowing a switch to VPW 4x");

@@ -13,14 +13,15 @@ namespace Flash411
     class ScanToolDevice : SerialDevice
     {
         public const string DeviceType = "ObdLink or AllPro";
+        string setheader = "unset";
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
-            this.MaxSendSize = 128;    // Accuracy?
-            this.MaxReceiveSize = 128; // Accuracy?
+            this.MaxSendSize = 150;    // Accuracy?
+            this.MaxReceiveSize = 150; // Accuracy?
             this.Supports4X = false;
         }
 
@@ -73,7 +74,8 @@ namespace Flash411
                     !await this.SendAndVerify("AT SP2", "OK") ||              // Set Protocol 2 (VPW)
                     !await this.SendAndVerify("AT DP", "SAE J1850 VPW") ||    // Get Protocol (Verify VPW)
                     !await this.SendAndVerify("AT AR", "OK") ||               // Turn Auto Receive on (default should be on anyway)
-                    !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK") //|| // Set receive filter to this tool ID
+                    !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK") || // Set receive filter to this tool ID
+                    !await this.SendAndVerify("AT H1", "OK")                  // Send headers
                     )
                 {
                     return false;
@@ -144,19 +146,10 @@ namespace Flash411
                     this.Logger.AddDebugMessage("Unexpected response: " + hexResponse);
                     return Response.Create(ResponseStatus.UnexpectedResponse, (Message)null);
                 }
-
-                // Add the header bytes that the ELM hides from us.
                 byte[] deviceResponseBytes = hexResponse.ToBytes();
-                //this.Logger.AddDebugMessage("deviceResponseBytes: " + deviceResponseBytes.ToHex());
-                byte[] completeResponseBytes = new byte[deviceResponseBytes.Length + 3];
-                completeResponseBytes[0] = messageBytes[0];
-                completeResponseBytes[1] = messageBytes[2];
-                completeResponseBytes[2] = messageBytes[1];
-                deviceResponseBytes.CopyTo(completeResponseBytes, 3);
-
-                this.Logger.AddDebugMessage("RX: " + completeResponseBytes.ToHex());
-
-                return Response.Create(ResponseStatus.Success, new Message(completeResponseBytes));
+                Array.Resize(ref deviceResponseBytes, deviceResponseBytes.Length - 1); // remove checksum byte
+                this.Logger.AddDebugMessage("RX: " + deviceResponseBytes.ToHex());
+                return Response.Create(ResponseStatus.Success, new Message(deviceResponseBytes));
             }
             catch (TimeoutException)
             {
@@ -179,15 +172,21 @@ namespace Flash411
         /// <summary>
         /// Set the header that the Elm device will use for the next message.
         /// </summary>
+        /// <remark>
+        /// This is a no-op if the header has not changed since the last request, and just returns success
+        /// </remark>
         public async Task<Response<bool>> SetHeader(string header)
         {
-            string setHeaderResponse = await this.SendRequest("AT SH " + header);
-            if (setHeaderResponse != "OK")
+            if (header != this.setheader)
             {
-                this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
-                return Response.Create(ResponseStatus.UnexpectedResponse, false);
+                string setHeaderResponse = await this.SendRequest("AT SH " + header);
+                if (setHeaderResponse != "OK")
+                {
+                    this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
+                    return Response.Create(ResponseStatus.UnexpectedResponse, false);
+                }
+                this.setheader = header;
             }
-
             return Response.Create(ResponseStatus.Success, true);
         }
 

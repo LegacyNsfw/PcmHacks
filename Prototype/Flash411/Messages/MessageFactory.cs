@@ -208,7 +208,7 @@ namespace Flash411
         /// </summary>
         public Message CreateHighSpeedOKResponse()
         {
-            return new Message(new byte[] { Priority.Type2, DeviceId.Tool, DeviceId.Broadcast, Mode.HighSpeedPrepare + Mode.Response });
+            return new Message(new byte[] { Priority.Type2, DeviceId.Tool, DeviceId.Pcm, Mode.HighSpeedPrepare + Mode.Response });
         }
 
 
