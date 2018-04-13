@@ -165,8 +165,8 @@ namespace Flash411
             ResponseStatus status;
             UInt16 result = 0;
 
-            byte[] unlocked = { 0x6C, 0x70, 0x10, 0x67, 0x01, 0x37 };
-            byte[] seed = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x67, 0x01, };
+            byte[] unlocked = { Priority.Type2, 0x70, DeviceId.Pcm, 0x67, 0x01, 0x37 };
+            byte[] seed = new byte[] { Priority.Type2, DeviceId.Tool, DeviceId.Pcm, 0x67, 0x01, };
 
             if (TryVerifyInitialBytes(response, unlocked, out status))
             {

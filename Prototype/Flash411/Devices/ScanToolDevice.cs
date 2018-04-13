@@ -13,15 +13,16 @@ namespace Flash411
     class ScanToolDevice : SerialDevice
     {
         public const string DeviceType = "ObdLink or AllPro";
+        string setheader = "unset";
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
-            this.MaxSendSize = 64;    // Accuracy?
-            this.MaxReceiveSize = 512; // Accuracy?
-            this.Supports4X = false;       // :(
+            this.MaxSendSize = 150;    // Accuracy?
+            this.MaxReceiveSize = 150; // Accuracy?
+            this.Supports4X = false;
         }
 
         /// <summary>
@@ -62,6 +63,7 @@ namespace Flash411
                 if (apID != "?")
                 {
                     this.Logger.AddUserMessage("All Pro ID: " + apID);
+                    this.Logger.AddDebugMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
                     this.Supports4X = true;
                 }
 
@@ -70,7 +72,11 @@ namespace Flash411
 
                 if (!await this.SendAndVerify("AT AL", "OK") ||               // Allow Long packets
                     !await this.SendAndVerify("AT SP2", "OK") ||              // Set Protocol 2 (VPW)
-                    !await this.SendAndVerify("AT DP", "SAE J1850 VPW"))      // Get Protocol (Verify VPW)
+                    !await this.SendAndVerify("AT DP", "SAE J1850 VPW") ||    // Get Protocol (Verify VPW)
+                    !await this.SendAndVerify("AT AR", "OK") ||               // Turn Auto Receive on (default should be on anyway)
+                    !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK") || // Set receive filter to this tool ID
+                    !await this.SendAndVerify("AT H1", "OK")                  // Send headers
+                    )
                 {
                     return false;
                 }
@@ -88,10 +94,24 @@ namespace Flash411
         /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>
-        public override Task<bool> SendMessage(Message message)
+        public override async Task<bool> SendMessage(Message message)
         {
-            // Not yet implemented. TODO: Refactor SendRequest() to move common code here when we need it.
-            return Task.FromResult(true);
+            byte[] messageBytes = message.GetBytes();
+            string header;
+            string payload;
+            this.ParseMessage(messageBytes, out header, out payload);
+
+            Response<bool> setHeaderResponse = await this.SetHeader(header);
+            if(setHeaderResponse.Status != ResponseStatus.Success)
+            {
+                return false;
+            }
+
+            string deviceResponse = await this.SendRequest(payload);
+            this.Logger.AddDebugMessage("SendMessage produced " + deviceResponse);
+
+            // TODO: Parse deviceResponse, determine whether we actually succeeded or failed.
+            return true;
         }
 
         /// <summary>
@@ -104,22 +124,16 @@ namespace Flash411
         /// </remarks>
         public async override Task<Response<Message>> SendRequest(Message message)
         {
-            // The incoming byte array needs to separated into header and payload portions,
-            // which are sent separately.
-            //
-            // This may not be necessary after converting to the STN extensions to the ELM protocol. We'll see.
             byte[] messageBytes = message.GetBytes();
-            string hexRequest = messageBytes.ToHex();
-            string header = hexRequest.Substring(0, 9);
+            string header;
+            string payload;
+            this.ParseMessage(messageBytes, out header, out payload);
 
-            string setHeaderResponse = await this.SendRequest("AT SH " + header);
-            if (setHeaderResponse != "OK")
+            Response<bool> setHeaderResponse = await this.SetHeader(header);
+            if (setHeaderResponse.Status != ResponseStatus.Success)
             {
-                this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
-                return Response.Create(ResponseStatus.UnexpectedResponse, (Message)null);
+                return Response.Create(setHeaderResponse.Status, (Message)null);
             }
-
-            string payload = hexRequest.Substring(9);
 
             try
             {
@@ -132,24 +146,65 @@ namespace Flash411
                     this.Logger.AddDebugMessage("Unexpected response: " + hexResponse);
                     return Response.Create(ResponseStatus.UnexpectedResponse, (Message)null);
                 }
-
-                // Add the header bytes that the ELM hides from us.
                 byte[] deviceResponseBytes = hexResponse.ToBytes();
-                //this.Logger.AddDebugMessage("deviceResponseBytes: " + deviceResponseBytes.ToHex());
-                byte[] completeResponseBytes = new byte[deviceResponseBytes.Length + 3];
-                completeResponseBytes[0] = messageBytes[0];
-                completeResponseBytes[1] = messageBytes[2];
-                completeResponseBytes[2] = messageBytes[1];
-                deviceResponseBytes.CopyTo(completeResponseBytes, 3);
-
-                this.Logger.AddDebugMessage("RX: " + completeResponseBytes.ToHex());
-
-                return Response.Create(ResponseStatus.Success, new Message(completeResponseBytes));
+                Array.Resize(ref deviceResponseBytes, deviceResponseBytes.Length - 1); // remove checksum byte
+                this.Logger.AddDebugMessage("RX: " + deviceResponseBytes.ToHex());
+                return Response.Create(ResponseStatus.Success, new Message(deviceResponseBytes));
             }
             catch (TimeoutException)
             {
                 return Response.Create(ResponseStatus.Timeout, (Message)null);
             }
+        }
+
+        /// <summary>
+        /// Separate the message into header and payload.
+        /// </summary>
+        private void ParseMessage(byte[] messageBytes, out string header, out string payload)
+        {
+            // The incoming byte array needs to separated into header and payload portions,
+            // which are sent separately.
+            string hexRequest = messageBytes.ToHex();
+            header = hexRequest.Substring(0, 9);
+            payload = hexRequest.Substring(9);
+        }
+
+        /// <summary>
+        /// Set the header that the Elm device will use for the next message.
+        /// </summary>
+        /// <remark>
+        /// This is a no-op if the header has not changed since the last request, and just returns success
+        /// </remark>
+        public async Task<Response<bool>> SetHeader(string header)
+        {
+            if (header != this.setheader)
+            {
+                string setHeaderResponse = await this.SendRequest("AT SH " + header);
+                if (setHeaderResponse != "OK")
+                {
+                    this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
+                    return Response.Create(ResponseStatus.UnexpectedResponse, false);
+                }
+                this.setheader = header;
+            }
+            return Response.Create(ResponseStatus.Success, true);
+        }
+
+        /// <summary>
+        /// Send a request in string form, wait for a response (for init)
+        /// </summary>
+        /// <remarks>
+        /// The API for this method (sending a string, returning a string) matches
+        /// the way that we need to communicate with ELM and STN devices for setup
+        /// </remarks>
+        private async Task<string> SendRequest(string request)
+        {
+            this.Logger.AddDebugMessage("TX: " + request);
+            await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
+
+            Response<string> response = await ReadELMLine();
+
+            return response.Value;
         }
 
         /// <summary>
@@ -165,7 +220,7 @@ namespace Flash411
 
             if (string.Equals(actualResponse, expectedResponse))
             {
-                //this.Logger.AddDebugMessage(actualResponse + "=" + expectedResponse);
+                this.Logger.AddDebugMessage(actualResponse);
                 return true;
             }
 
@@ -249,23 +304,6 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Send a request in string form, wait for a response (for init)
-        /// </summary>
-        /// <remarks>
-        /// The API for this method (sending a string, returning a string) matches
-        /// the way that we need to communicate with ELM and STN devices for setup
-        /// </remarks>
-        private async Task<string> SendRequest(string request)
-        {
-            this.Logger.AddDebugMessage("TX: " + request);
-            await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
-
-            Response<string> response = await ReadELMLine();
-
-            return response.Value;
-        }
-
-        /// <summary>
         /// Set the interface to low (false) or high (true) speed
         /// </summary>
         /// <remarks>
@@ -273,22 +311,16 @@ namespace Flash411
         /// </remarks>
         public override async Task<bool> SetVPW4x(bool highspeed)
         {
-            
+
             if (highspeed != true)
             {
                 this.Logger.AddDebugMessage("AllPro setting VPW 1X");
-                if (!await this.SendAndVerify("AT V0", "OK"))
-                {
-                    return false;
-                }
+                if (!await this.SendAndVerify("AT VPW1", "OK")) return false;
             }
             else
             {
                 this.Logger.AddDebugMessage("AllPro setting VPW 4X");
-                if (!await this.SendAndVerify("AT V1", "OK"))
-                {
-                    return false;
-                }
+                if (!await this.SendAndVerify("AT VPW4", "OK")) return false;
             }
             return true;
         }

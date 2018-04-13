@@ -88,7 +88,7 @@
       <DependentUpon>VinForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Messages\BlockId.cs" />
-    <Compile Include="Messages\DeviceId.cs" />
+    <Compile Include="Messages\VPW.cs" />
     <Compile Include="Messages\Message.cs" />
     <Compile Include="Messages\MessageFactory.cs" />
     <Compile Include="Messages\MessageParser.cs" />
