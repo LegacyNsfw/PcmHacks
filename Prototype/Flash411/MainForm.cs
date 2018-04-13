@@ -240,6 +240,10 @@ namespace Flash411
                     this.AddUserMessage(exception.Message);
                 }*/
             }
+            catch(Exception exception)
+            {
+                this.AddUserMessage("Read failed: " + exception.ToString());
+            }
             finally
             {
                 this.EnableUserInput();
@@ -319,38 +323,45 @@ namespace Flash411
 
         private async void modifyVinButton_Click(object sender, EventArgs e)
         {
-            var vinResponse = await this.vehicle.QueryVin();
-            if (vinResponse.Status != ResponseStatus.Success)
+            try
             {
-                this.AddUserMessage("VIN query failed: " + vinResponse.Status.ToString());
-                return;
-            }
-
-            DialogBoxes.VinForm vinForm = new DialogBoxes.VinForm();
-            vinForm.Vin = vinResponse.Value;
-            DialogResult dialogResult = vinForm.ShowDialog();
-
-            if (dialogResult == DialogResult.OK)
-            {
-                Response<bool> unlocked = await this.vehicle.UnlockEcu();
-                if (unlocked.Value)
+                var vinResponse = await this.vehicle.QueryVin();
+                if (vinResponse.Status != ResponseStatus.Success)
                 {
-                    Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
-                    if (vinmodified.Value)
+                    this.AddUserMessage("VIN query failed: " + vinResponse.Status.ToString());
+                    return;
+                }
+
+                DialogBoxes.VinForm vinForm = new DialogBoxes.VinForm();
+                vinForm.Vin = vinResponse.Value;
+                DialogResult dialogResult = vinForm.ShowDialog();
+
+                if (dialogResult == DialogResult.OK)
+                {
+                    Response<bool> unlocked = await this.vehicle.UnlockEcu();
+                    if (unlocked.Value)
                     {
-                        this.AddUserMessage("VIN successfully updated to " + vinForm.Vin);
-                        MessageBox.Show("VIN updated to " + vinForm.Vin + " successfully.", "Good news.", MessageBoxButtons.OK);
+                        Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
+                        if (vinmodified.Value)
+                        {
+                            this.AddUserMessage("VIN successfully updated to " + vinForm.Vin);
+                            MessageBox.Show("VIN updated to " + vinForm.Vin + " successfully.", "Good news.", MessageBoxButtons.OK);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Unable to change the VIN to " + vinForm.Vin + ". Error: " + vinmodified.Status, "Bad news.", MessageBoxButtons.OK);
+                        }
                     }
                     else
                     {
-                        MessageBox.Show("Unable to change the VIN to " + vinForm.Vin + ". Error: " + vinmodified.Status, "Bad news.", MessageBoxButtons.OK);
+
                     }
-                }
-                else
-                {
 
                 }
-
+            }
+            catch (Exception exception)
+            {
+                this.AddUserMessage("VIN change failed: " + exception.ToString());
             }
         }
 
