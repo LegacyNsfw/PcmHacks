@@ -531,7 +531,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Sends the provides message retries times, with a small delay on fail. 
+        /// Sends the provided message retries times, with a small delay on fail. 
         /// </summary>
         /// <remarks>
         /// Returns a succsefull Response on the first successful attempt, or the failed Response if we run out of tries.

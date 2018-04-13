@@ -52,8 +52,6 @@ namespace Flash411
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 115200;
             await this.Port.OpenAsync(configuration);
-
-            //this.Logger.AddDebugMessage("Flushing serial buffers");
             await this.Port.DiscardBuffers();
 
             this.Logger.AddDebugMessage("Sending 'reset' message.");
@@ -127,10 +125,12 @@ namespace Flash411
         /// </summary>
         async private Task<Response<Message>> ReadAVTPacket()
         {
+
             //this.Logger.AddDebugMessage("Trace: ReadAVTPacket");
             int length = 0;
             bool status = true; // do we have a status byte? (we dont for some 9x init commands)
             byte[] rx = new byte[2]; // we dont read more than 2 bytes at a time
+            int error = 0;
 
             // Get the first packet byte.
             await this.Port.Receive(rx, 0, 1);
@@ -141,17 +141,14 @@ namespace Flash411
                 case 0x11:
                     await this.Port.Receive(rx, 0, 1);
                     length = rx[0];
-                    //this.Logger.AddDebugMessage("RX: AVT Type 11. Length  " + rx[0].ToString("X2"));
                     break;
                 case 0x12:
                     await this.Port.Receive(rx, 0, 1);
                     length = rx[0] << 8;
                     await this.Port.Receive(rx, 0, 1);
                     length += rx[0];
-                    //this.Logger.AddDebugMessage("RX: AVT Type 12. Length  " + rx[0].ToString("X2"));
                     break;
                 case 0x23:
-                    //this.Logger.AddDebugMessage("RX: AVT Type 23");
                     await this.Port.Receive(rx, 0, 1);
                     if (rx[0] != 0x53)
                     {
@@ -169,13 +166,18 @@ namespace Flash411
                     switch (type) {
                         case 0: // standard < 16 byte data packet
                             length = rx[0] & 0x0F;
-                            //this.Logger.AddDebugMessage("RX: AVT Type 0 (with status) length " + length);
+                            break;
+                        case 3: // Invalid Command
+                            length = rx[0] & 0x0F;
+                            byte[] r = new byte[length];
+                            await this.Port.Receive(r, 0, 1);
+                            this.Logger.AddDebugMessage("RX: Invalid command. Packet that began with  " + r.ToHex() + " was rejected by the AVT");
+                            return Response.Create(ResponseStatus.Error, new Message(r));
                             break;
                         case 6: // avt filter
                         case 9: // init and version
                             length = rx[0] & 0x0F;
                             status = false;
-                            //this.Logger.AddDebugMessage("RX: AVT Type " + type + " (no status) length " + length);
                             break;
                         default:
                             this.Logger.AddDebugMessage("RX: Unhandled packet type " + type + ". Add support to ReadAVTPacket()");
@@ -190,6 +192,11 @@ namespace Flash411
                 length--;
                 await this.Port.Receive(rx, 0, 1);
                 if (rx[0] != 0) this.Logger.AddDebugMessage("RX: bad packet status: " + rx[0].ToString("X2"));
+            }
+
+            if (length <= 0) {
+                this.Logger.AddDebugMessage("Not reading " + length + " byte packet");
+                return Response.Create(ResponseStatus.Error, (Message)null);
             }
 
             // return the packet
@@ -231,8 +238,9 @@ namespace Flash411
                 await this.Port.Send(txb);
             }
 
+            //this.Logger.AddDebugMessage("send: " + message.GetBytes().ToHex());
             await this.Port.Send(message.GetBytes());
-
+            
             return Response.Create(ResponseStatus.Success, message);
         }
 
@@ -243,15 +251,15 @@ namespace Flash411
         {
             //this.Logger.AddDebugMessage("AVTSetup called");
 
-            byte[] filterdest = { 0x52, 0x5B, 0xF0 };
-            byte[] filterdestok = { 0x5B, 0xF0 }; // 62 5B F0
+            byte[] filterdest = { 0x52, 0x5B, DeviceId.Tool };
+            byte[] filterdestok = { 0x5B, DeviceId.Tool}; // 62 5B F0
             byte[] disabletxack = { 0x52, 0x40, 0x00 };
             byte[] disabletxackok = { 0x40, 0x00 }; // 62 40 00
 
             await this.Port.Send(disabletxack);
             Response<Message> response = await ReadAVTPacket();
 
-            if (Utility.CompareArraysPart(response.Value.GetBytes(), disabletxackok))
+            if (response.Status == ResponseStatus.Success & Utility.CompareArraysPart(response.Value.GetBytes(), disabletxackok))
             {
                 this.Logger.AddDebugMessage("AVT Acks disabled");
             }
@@ -264,7 +272,7 @@ namespace Flash411
             await this.Port.Send(filterdest);
             response = await ReadAVTPacket();
 
-            if (Utility.CompareArraysPart(response.Value.GetBytes(), filterdestok))
+            if (response.Status == ResponseStatus.Success && Utility.CompareArraysPart(response.Value.GetBytes(), filterdestok))
             {
                 this.Logger.AddDebugMessage("AVT Filter enabled");
                 return Response.Create(ResponseStatus.Success, true);
@@ -279,13 +287,11 @@ namespace Flash411
         /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>
-        public override Task<bool> SendMessage(Message message)
+        public override async Task<bool> SendMessage(Message message)
         {
-            //this.Logger.AddDebugMessage("Sendmessage called");
-            StringBuilder builder = new StringBuilder();
             this.Logger.AddDebugMessage("Sending message " + message.GetBytes().ToHex());
-            this.Port.Send(message.GetBytes());
-            return Task.FromResult(true);
+            await this.Port.Send(message.GetBytes());
+            return true;
         }
 
         /// <summary>
