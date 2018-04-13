@@ -419,7 +419,7 @@ namespace Flash411
         /// <remarks>
         /// The caller must also tell the PCM to switch speeds
         /// </remarks>
-        public override async Task<bool> SetVPW4x(bool highspeed)
+        public override Task<bool> SetVPW4x(bool highspeed)
         {
             if (!highspeed)
             {
@@ -428,10 +428,9 @@ namespace Flash411
             else
             {
                 this.Logger.AddDebugMessage("Not Implemented: J2534 setting VPW 4X");
-                return false;
             }
 
-            return true;
+            return Task.FromResult(true);
         }
     }
 }
