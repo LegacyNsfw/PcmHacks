@@ -24,7 +24,7 @@ namespace Flash411
         public static readonly Message AVT_4X_SPEED         = new Message(new byte[] { 0xC1, 0x01 });
 
         // AVT reader strips the header
-        public static readonly Message AVT_VPW              = new Message(new byte[] { 0x07 });       // 91 01
+        public static readonly Message AVT_VPW              = new Message(new byte[] { 0x07 });       // 91 07
         public static readonly Message AVT_852_IDLE         = new Message(new byte[] { 0x27 });       // 91 27
         public static readonly Message AVT_842_IDLE         = new Message(new byte[] { 0x12 });       // 91 12
         public static readonly Message AVT_FIRMWARE         = new Message(new byte[] { 0x04 });       // 92 04 15 (firmware 1.5)
@@ -130,10 +130,17 @@ namespace Flash411
             int length = 0;
             bool status = true; // do we have a status byte? (we dont for some 9x init commands)
             byte[] rx = new byte[2]; // we dont read more than 2 bytes at a time
-            int error = 0;
 
             // Get the first packet byte.
-            await this.Port.Receive(rx, 0, 1);
+            try
+            {
+                await this.Port.Receive(rx, 0, 1);
+            }
+            catch (Exception exception) // timeout exception - log no data, return error.
+            {
+                this.Logger.AddDebugMessage("No Data");
+                return Response.Create(ResponseStatus.Timeout, (Message)null);
+            }
 
             // read an AVT format length
             switch (rx[0])
@@ -148,18 +155,6 @@ namespace Flash411
                     await this.Port.Receive(rx, 0, 1);
                     length += rx[0];
                     break;
-                case 0x23:
-                    await this.Port.Receive(rx, 0, 1);
-                    if (rx[0] != 0x53)
-                    {
-                        this.Logger.AddDebugMessage("RX: VPW too long: " + rx[0].ToString("X2"));
-                        return Response.Create(ResponseStatus.Error, (Message)null);
-                    }
-                    await this.Port.Receive(rx, 0, 2);
-                    int trunclen = ((rx[0] << 8) + rx[1]);
-                    //this.Logger.AddDebugMessage("RX: VPW too long and truncated to " + trunclen.ToString("X4"));
-                    length = trunclen;
-                    break;
                 default:
                     //this.Logger.AddDebugMessage("RX: Header " + rx[0].ToString("X2"));
                     int type = rx[0] >> 4;
@@ -167,13 +162,16 @@ namespace Flash411
                         case 0: // standard < 16 byte data packet
                             length = rx[0] & 0x0F;
                             break;
+                        case 2:
+                            length = rx[0] & 0x0F;
+                            status = false;
+                            break;
                         case 3: // Invalid Command
                             length = rx[0] & 0x0F;
                             byte[] r = new byte[length];
                             await this.Port.Receive(r, 0, 1);
                             this.Logger.AddDebugMessage("RX: Invalid command. Packet that began with  " + r.ToHex() + " was rejected by the AVT");
                             return Response.Create(ResponseStatus.Error, new Message(r));
-                            break;
                         case 6: // avt filter
                         case 9: // init and version
                             length = rx[0] & 0x0F;
@@ -319,15 +317,23 @@ namespace Flash411
         /// </remarks>
         public override async Task<bool> SetVPW4x(bool highspeed)
         {
+
             if (!highspeed)
             {
                 this.Logger.AddDebugMessage("AVT setting VPW 1X");
                 await this.Port.Send(AvtDevice.AVT_1X_SPEED.GetBytes());
+                await Task.Delay(100);
+                byte[] rx = new byte[2];
+                await this.Port.Receive(rx, 0, 2); // C1 00
             }
             else
             {
+                byte[] rx = new byte[4];
+                await Task.Delay(100);
+                await this.Port.Receive(rx, 0, 4); // 23 83 00 20 AVT generated response from generic PCM switch high speed command in Vehicle.cs
                 this.Logger.AddDebugMessage("AVT setting VPW 4X");
                 await this.Port.Send(AvtDevice.AVT_4X_SPEED.GetBytes());
+                await this.Port.Receive(rx, 0, 2); // C1 01
             }
 
             return true;
