@@ -216,8 +216,6 @@ namespace Flash411
                     return;
                 }
 
-                this.AddUserMessage("Unlock succeeded.");
-
                 await this.vehicle.ReadContents();
 
                 /*Response<Stream> readResponse = await this.vehicle.ReadContents();
