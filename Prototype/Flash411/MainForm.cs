@@ -53,11 +53,19 @@ namespace Flash411
 
         private async void MainForm_Load(object sender, EventArgs e)
         {
-            this.interfaceBox.Enabled = true;
-            this.operationsBox.Enabled = true;
-            this.startServerButton.Enabled = false;
+            try
+            {
+                this.interfaceBox.Enabled = true;
+                this.operationsBox.Enabled = true;
+                this.startServerButton.Enabled = false;
 
-            await this.ResetDevice();
+                await this.ResetDevice();
+            }
+            catch (Exception exception)
+            {
+                this.AddUserMessage(exception.Message);
+                this.AddDebugMessage(exception.ToString());
+            }
         }
 
         private void DisableUserInput()

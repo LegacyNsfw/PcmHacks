@@ -92,5 +92,13 @@ namespace Flash411
             this.Status = status;
             this.Value = value;
         }
+
+        /// <summary>
+        /// This is the string that appears when you hover the mouse over something in the debugger.
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format("{0} {1}", this.Status, this.Value?.ToString());
+        }
     }
 }
