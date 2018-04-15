@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411.Misc
+namespace Flash411
 {
     class PcmInfo
     {
-        public int OSID { get; private set; }
+        public uint OSID { get; private set; }
 
         public string Description { get; private set; }
 
@@ -22,7 +22,7 @@ namespace Flash411.Misc
 
         public int KeyAlgorithm { get; private set; }
 
-        public PcmInfo(int osid)
+        public PcmInfo(uint osid)
         {
             this.OSID = osid;
 

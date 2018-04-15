@@ -265,7 +265,7 @@ namespace Flash411
         /// <summary>
         /// Unlock the PCM by requesting a 'seed' and then sending the corresponding 'key' value.
         /// </summary>
-        public async Task<Response<bool>> UnlockEcu()
+        public async Task<Response<bool>> UnlockEcu(int keyAlgorithm)
         {
             Message seedRequest = this.messageFactory.CreateSeedRequest();
             Response<Message> seedResponse = await this.device.SendRequest(seedRequest);
@@ -287,7 +287,7 @@ namespace Flash411
                 return Response.Create(seedValueResponse.Status, true);
             }
 
-            UInt16 key = KeyAlgorithm.GetKey(1, seedValueResponse.Value);
+            UInt16 key = KeyAlgorithm.GetKey(keyAlgorithm, seedValueResponse.Value);
 
             Message unlockRequest = this.messageFactory.CreateUnlockRequest(key);
             Response<Message> unlockResponse = await this.device.SendRequest(unlockRequest);
@@ -418,7 +418,7 @@ namespace Flash411
         /// Read the full contents of the PCM.
         /// Assumes the PCM is unlocked an were ready to go
         /// </summary>
-        public async Task<bool> ReadContents()
+        public async Task<bool> ReadContents(PcmInfo info)
         {
             // switch to 4x, if possible. But continue either way.
             // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
