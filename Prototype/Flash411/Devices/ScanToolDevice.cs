@@ -64,8 +64,20 @@ namespace Flash411
                 string elmID = await this.SendRequest("AT I");                // Identify (ELM)
                 string stID = await this.SendRequest("ST I");                 // Identify (ScanTool.net)
                 string apID = await this.SendRequest("AT #1");                // Identify (AllPro)
-                if (elmID != "?") this.Logger.AddUserMessage("Elm ID: " + elmID);
-                if (stID != "?") this.Logger.AddUserMessage("ScanTool ID: " + stID);
+                if (elmID != "?")
+                {
+                    this.Logger.AddUserMessage("Elm ID: " + elmID);
+                    if (elmID.Contains("ELM327 v1.5"))
+                    {
+                        this.Logger.AddUserMessage("WARNING: This OBD2 interface is not supported. Expect failures if you attempt to use it.");
+                    }
+                }
+
+                if (stID != "?")
+                {
+                    this.Logger.AddUserMessage("ScanTool ID: " + stID);
+                }
+
                 if (apID != "?")
                 {
                     this.Logger.AddUserMessage("All Pro ID: " + apID);
