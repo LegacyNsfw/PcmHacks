@@ -69,7 +69,10 @@ namespace Flash411
                     this.Logger.AddUserMessage("Elm ID: " + elmID);
                     if (elmID.Contains("ELM327 v1.5"))
                     {
-                        this.Logger.AddUserMessage("WARNING: This OBD2 interface is not supported. Expect failures if you attempt to use it.");
+                        // TODO: Add a URL to a web page with a list of supported devices.
+                        // No such web page exists yet, but I'm sure we'll create one some day...
+                        this.Logger.AddUserMessage("ERROR: This OBD2 interface is not supported.");
+                        return false;
                     }
                 }
 
