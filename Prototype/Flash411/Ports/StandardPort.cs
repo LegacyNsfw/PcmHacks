@@ -90,6 +90,9 @@ namespace Flash411
         async Task IPort.Send(byte[] buffer)
         {
             await this.port.BaseStream.WriteAsync(buffer, 0, buffer.Length);
+
+            // This flush is probably not strictly necessary, but just in case...
+            await this.port.BaseStream.FlushAsync();
         }
 
         /// <summary>

@@ -40,6 +40,12 @@ namespace Flash411
         {
             this.Logger.AddDebugMessage("Initializing " + this.ToString());
 
+            // We're going to reset the interface device, which means that it's going
+            // to forgot what header the app previously told it to use. That in turn
+            // that the app needs to forget what header the interface was told to use.
+            // That will cause the app to send another set-header command later on.
+            this.setheader = "header not yet set";
+            
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 115200;
             configuration.Timeout = 1000;

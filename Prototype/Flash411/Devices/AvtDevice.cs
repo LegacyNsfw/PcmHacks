@@ -136,7 +136,7 @@ namespace Flash411
             {
                 await this.Port.Receive(rx, 0, 1);
             }
-            catch (Exception exception) // timeout exception - log no data, return error.
+            catch (Exception) // timeout exception - log no data, return error.
             {
                 this.Logger.AddDebugMessage("No Data");
                 return Response.Create(ResponseStatus.Timeout, (Message)null);
