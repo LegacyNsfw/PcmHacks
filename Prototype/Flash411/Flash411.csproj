@@ -101,7 +101,6 @@
     <Compile Include="Misc\Utility.cs" />
     <Compile Include="Ports\HttpPort.cs" />
     <Compile Include="Ports\IPort.cs" />
-    <Compile Include="Ports\J2534Port.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
