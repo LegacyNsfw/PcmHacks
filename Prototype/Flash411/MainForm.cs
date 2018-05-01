@@ -209,14 +209,25 @@ namespace Flash411
                     return;
                 }
 
-                Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
+                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                if (osidResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+                    return;
+                }
+
+                PcmInfo info = new PcmInfo(osidResponse.Value);
+
+                Response<bool> unlockResponse = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
                 if (unlockResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("Unlock was not successful.");
                     return;
                 }
 
-                await this.vehicle.ReadContents();
+                this.AddUserMessage("Unlock succeeded.");
+
+                await this.vehicle.ReadContents(info);
 
                 /*Response<Stream> readResponse = await this.vehicle.ReadContents();
                 if (readResponse.Status != ResponseStatus.Success)
@@ -282,7 +293,16 @@ namespace Flash411
                 return;
             }
 
-            Response<bool> unlockResponse = await this.vehicle.UnlockEcu();
+            Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+            if (osidResponse.Status != ResponseStatus.Success)
+            {
+                this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+                return;
+            }
+
+            PcmInfo info = new PcmInfo(osidResponse.Value);
+
+            Response<bool> unlockResponse = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
             if (unlockResponse.Status != ResponseStatus.Success)
             {
                 this.AddUserMessage("Unlock was not successful.");
@@ -331,6 +351,15 @@ namespace Flash411
         {
             try
             {
+                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                if (osidResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+                    return;
+                }
+
+                PcmInfo info = new PcmInfo(osidResponse.Value);
+
                 var vinResponse = await this.vehicle.QueryVin();
                 if (vinResponse.Status != ResponseStatus.Success)
                 {
@@ -344,7 +373,7 @@ namespace Flash411
 
                 if (dialogResult == DialogResult.OK)
                 {
-                    Response<bool> unlocked = await this.vehicle.UnlockEcu();
+                    Response<bool> unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
                     if (unlocked.Value)
                     {
                         Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
