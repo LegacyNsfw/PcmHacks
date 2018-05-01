@@ -40,6 +40,12 @@ namespace Flash411
         {
             this.Logger.AddDebugMessage("Initializing " + this.ToString());
 
+            // We're going to reset the interface device, which means that it's going
+            // to forgot what header the app previously told it to use. That in turn
+            // that the app needs to forget what header the interface was told to use.
+            // That will cause the app to send another set-header command later on.
+            this.setheader = "header not yet set";
+            
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 115200;
             configuration.Timeout = 1000;
@@ -58,8 +64,23 @@ namespace Flash411
                 string elmID = await this.SendRequest("AT I");                // Identify (ELM)
                 string stID = await this.SendRequest("ST I");                 // Identify (ScanTool.net)
                 string apID = await this.SendRequest("AT #1");                // Identify (AllPro)
-                if (elmID != "?") this.Logger.AddUserMessage("Elm ID: " + elmID);
-                if (stID != "?") this.Logger.AddUserMessage("ScanTool ID: " + stID);
+                if (elmID != "?")
+                {
+                    this.Logger.AddUserMessage("Elm ID: " + elmID);
+                    if (elmID.Contains("ELM327 v1.5"))
+                    {
+                        // TODO: Add a URL to a web page with a list of supported devices.
+                        // No such web page exists yet, but I'm sure we'll create one some day...
+                        this.Logger.AddUserMessage("ERROR: This OBD2 interface is not supported.");
+                        return false;
+                    }
+                }
+
+                if (stID != "?")
+                {
+                    this.Logger.AddUserMessage("ScanTool ID: " + stID);
+                }
+
                 if (apID != "?")
                 {
                     this.Logger.AddUserMessage("All Pro ID: " + apID);

@@ -518,11 +518,7 @@ namespace Flash411
 
             logger.AddUserMessage("Asking PCM to swtich to VPW 4x");
             // Request all devices on the bus to change speed to VPW 4x
-            if (!await this.device.SendMessage(BeginHighSpeed))
-            {
-                logger.AddUserMessage("Could not transmit request to switch to VPW 4x");
-                return false;
-            }
+            rx = await this.device.SendRequest(BeginHighSpeed);
 
             // Request the device to change
             await device.SetVPW4x(true);

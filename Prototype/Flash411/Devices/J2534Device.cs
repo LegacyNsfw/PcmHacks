@@ -59,8 +59,8 @@ namespace Flash411
             J2534Port.Functions = new J2534Extended();
             J2534Port.LoadedDevice = jport;
 
-            this.MaxSendSize = 2048;    // unverified
-            this.MaxReceiveSize = 2048; // unverified
+            this.MaxSendSize = 12;      // Driver or protocol limit?
+            this.MaxReceiveSize = 12;   // Driver or protocol limit?
             this.Supports4X = false;    // TODO: add code to support the switch to 4x and update this flag
         }
 
