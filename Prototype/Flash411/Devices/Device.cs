@@ -16,7 +16,7 @@ namespace Flash411
     /// They use the IPort interface to communicate with the hardware.
     /// TODO: Move the IPort stuff into the SerialDevice class, since J2534 devices don't need it.
     /// </summary>
-    abstract class Device : IDisposable
+    public abstract class Device : IDisposable
     {
         protected IPort Port { get; private set; }
 

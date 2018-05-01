@@ -48,6 +48,10 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TestLogger.cs" />
+    <Compile Include="TestPort.cs" />
+    <Compile Include="TestScenarios.cs" />
+    <Compile Include="ScanToolTests.cs" />
     <Compile Include="UtilityTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

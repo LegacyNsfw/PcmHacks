@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Flash411
 {
-    abstract class SerialDevice : Device
+    public abstract class SerialDevice : Device
     {
         public SerialDevice(IPort port, ILogger logger) : base(port, logger)
         {

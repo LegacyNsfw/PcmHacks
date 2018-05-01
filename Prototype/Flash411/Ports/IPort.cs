@@ -12,7 +12,7 @@ namespace Flash411
     /// The IPort implementations encapsulate the differences between serial 
     /// ports, J2534 passthrough devices, and whatever else we end up using.
     /// </summary>
-    interface IPort : IDisposable
+    public interface IPort : IDisposable
     {
         /// <summary>
         /// Open the port.
@@ -40,11 +40,11 @@ namespace Flash411
         Task<int> GetReceiveQueueSize();
     }
 
-    class PortConfiguration
+    public class PortConfiguration
     {
     }
 
-    class SerialPortConfiguration : PortConfiguration
+    public class SerialPortConfiguration : PortConfiguration
     {
         public int BaudRate { get; set; }
         public int Timeout { get; set; }

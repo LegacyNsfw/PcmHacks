@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,20 +8,23 @@ using System.Threading.Tasks;
 namespace Flash411
 {
     /// <summary>
-    /// This class is just here to enable testing without any actual interface hardware.
+    /// This class allows test cases to specify data to receive, and examine data that was sent.
     /// </summary>
-    /// <remarks>
-    /// Eventually the Receive method should return simulated VPW responses.
-    /// </remarks>
-    public class MockPort : IPort
+    public class TestPort : IPort
     {
-        public const string PortName = "Mock Port";
+        public List<byte[]> MessagesSent { get; }
 
-        private MockPcm pcm;
-    
-        public MockPort(ILogger logger)
+        public MemoryStream BytesToReceive { get; }
+
+        public TestPort(ILogger logger)
         {
-            this.pcm = new MockPcm(logger);
+            this.MessagesSent = new List<byte[]>();
+            this.BytesToReceive = new MemoryStream();
+        }
+
+        public void EnqueueBytes(byte[] bytes)
+        {
+            this.BytesToReceive.Write(bytes, 0, bytes.Length);
         }
 
         /// <summary>
@@ -28,7 +32,7 @@ namespace Flash411
         /// </summary>
         public override string ToString()
         {
-            return PortName;
+            return "Test Port";
         }
 
         /// <summary>
@@ -51,14 +55,7 @@ namespace Flash411
         /// </summary>
         Task IPort.Send(byte[] buffer)
         {
-            this.pcm.ResetCommunications();
-
-            foreach(byte b in buffer)
-            {
-                this.pcm.Push(b);
-            }
-
-            this.pcm.EndOfData();
+            this.MessagesSent.Add(buffer);
 
             return Task.CompletedTask;
         }
@@ -68,13 +65,7 @@ namespace Flash411
         /// </summary>
         Task<int> IPort.Receive(byte[] buffer, int offset, int count)
         {
-            byte[] responseBuffer = this.pcm.GetResponse();
-
-            for(int index = 0; index < count && index < responseBuffer.Length; index++)
-            {
-                buffer[offset + index] = responseBuffer[index];
-            }
-
+            BytesToReceive.Read(buffer, offset, count);
             return Task.FromResult(count);
         }
 
