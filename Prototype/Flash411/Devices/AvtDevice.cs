@@ -12,7 +12,7 @@ namespace Flash411
     /// This class encapsulates all code that is unique to the AVT 852 interface.
     /// </summary>
     /// 
-    class AvtDevice : SerialDevice
+    public class AvtDevice : SerialDevice
     {
         public const string DeviceType = "AVT (842/852)";
 
