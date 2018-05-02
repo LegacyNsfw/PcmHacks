@@ -10,7 +10,7 @@ namespace Flash411
     /// <summary>
     /// Message is a thin wrapper around an array of bytes.
     /// </summary>
-    class Message
+    public class Message
     {
         private byte[] message;
 

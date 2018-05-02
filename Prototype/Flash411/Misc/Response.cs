@@ -42,7 +42,7 @@ namespace Flash411
     /// related methods that can be called without requiring explicit 
     /// generic parameters.
     /// </summary>
-    class Response
+    public class Response
     {
         /// <summary>
         /// Create a response with the given status and value.
@@ -63,7 +63,7 @@ namespace Flash411
     /// The idea here is to make it easy to communicate values and errors from 
     /// low-level code up to the UI, using a single object.
     /// </remarks>
-    class Response<T>
+    public class Response<T>
     {
         /// <summary>
         /// Indicates success or gives us some idea of what went wrong.
