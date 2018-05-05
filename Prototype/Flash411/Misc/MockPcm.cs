@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +13,7 @@ namespace Flash411
     /// This implements message parsing completely independently from the 
     /// MessageParser class. Not sure if that's a good idea or not.
     /// </remarks>
-    class MockPcm
+    public class MockPcm
     {
         private int state = 0;
         private List<byte> payload = new List<byte>();

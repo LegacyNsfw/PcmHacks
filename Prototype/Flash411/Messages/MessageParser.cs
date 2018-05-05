@@ -15,7 +15,7 @@ namespace Flash411
     /// device sends a CRC byte to the caller, the Device class for that hardware must
     /// remove the CRC byte before the byte array is passed to this class.
     /// </remarks>
-    class MessageParser
+    public class MessageParser
     {
         /// <summary>
         /// Constructor.

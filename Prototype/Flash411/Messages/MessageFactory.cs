@@ -18,7 +18,7 @@ namespace Flash411
     /// Some devices will require these messages to be translated according to the specific
     /// device's protocol - that too is the job of the currently-selected Device class.
     /// </remarks>
-    class MessageFactory
+    public class MessageFactory
     {
         /// <summary>
         /// Create a request to read the given block of PCM memory.

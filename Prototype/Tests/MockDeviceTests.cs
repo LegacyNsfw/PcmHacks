@@ -33,5 +33,22 @@ namespace Tests
             // Confirm that the device interpreted the response as expected.
             Assert.AreEqual("6C F0 10 7C 01 00 31 47 31 59 59 C3", response.GetBytes().ToHex(), "Response message");
         }
+
+        [TestMethod]
+        public async Task GetVin1()
+        {
+            TestLogger logger = new TestLogger();
+            //TestPort port = new TestPort(logger);
+
+            MockPcmPort mockPcmPort = new MockPcmPort(new MockPcm(logger));
+
+            DeviceEmulator emulator = new DeviceEmulator(mockPcmPort);
+
+            MockDevice device = new MockDevice(port, logger);
+
+            Vehicle vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), logger);
+
+            Response<string> vinResponse = await vehicle.QueryVin();
+        }
     }
 }
