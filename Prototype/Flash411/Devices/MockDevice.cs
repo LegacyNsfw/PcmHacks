@@ -10,7 +10,7 @@ namespace Flash411
     /// <summary>
     /// This class provides a way to test most of the app without any interface hardware.
     /// </summary>
-    class MockDevice : Device
+    public class MockDevice : Device
     {
         public const string DeviceType = "Mock Serial Device";
         private IPort port;
@@ -49,7 +49,7 @@ namespace Flash411
             //List<byte> incoming = new List<byte>(5000);
             byte[] incoming = new byte[5000];
             int count = await this.port.Receive(incoming, 0, incoming.Length);
-            if(count > 0)
+            if (count > 0)
             {
                 byte[] sized = new byte[count];
                 Buffer.BlockCopy(incoming, 0, sized, 0, count);
