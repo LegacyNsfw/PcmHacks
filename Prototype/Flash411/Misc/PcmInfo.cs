@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Flash411
 {
-    class PcmInfo
+    public class PcmInfo
     {
         public uint OSID { get; private set; }
 

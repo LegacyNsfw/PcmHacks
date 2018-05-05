@@ -13,7 +13,7 @@ namespace Flash411
     /// <remarks>
     /// Methods in this class are high-level operations like "get the VIN," or "read the contents of the EEPROM."
     /// </remarks>
-    class Vehicle : IDisposable
+    public class Vehicle : IDisposable
     {
         /// <summary>
         /// The device we'll use to talk to the PCM.

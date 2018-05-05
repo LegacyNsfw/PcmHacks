@@ -48,6 +48,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DeviceEmulator.cs" />
     <Compile Include="MockDeviceTests.cs" />
     <Compile Include="AvtTests.cs" />
     <Compile Include="TestLogger.cs" />
