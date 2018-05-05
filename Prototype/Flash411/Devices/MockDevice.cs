@@ -10,7 +10,7 @@ namespace Flash411
     /// <summary>
     /// This class provides a way to test most of the app without any interface hardware.
     /// </summary>
-    class MockDevice : SerialDevice
+    public class MockDevice : SerialDevice
     {
         public const string DeviceType = "Mock Serial Device";
 
@@ -43,16 +43,17 @@ namespace Flash411
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
-        public override Task<Response<Message>> SendRequest(Message message)
+        public async override Task<Response<Message>> SendRequest(Message message)
         {
             StringBuilder builder = new StringBuilder();
             this.Logger.AddDebugMessage("Sending request " + message.GetBytes().ToHex());
-            this.Port.Send(message.GetBytes());
+            await this.Port.Send(message.GetBytes());
 
-            byte[] response = new byte[100];
-            this.Port.Receive(response, 0, 100);
+            byte[] responseBuffer = new byte[100];
+            int received = await this.Port.Receive(responseBuffer, 0, 100);
+            List<byte> actualResponse = new List<byte>(responseBuffer.Take(received));
 
-            return Task.FromResult(Response.Create(ResponseStatus.Success, new Message(response)));
+            return Response.Create(ResponseStatus.Success, new Message(actualResponse.ToArray()));
         }
 
         /// <summary>

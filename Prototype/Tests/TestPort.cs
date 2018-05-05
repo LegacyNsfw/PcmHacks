@@ -65,8 +65,8 @@ namespace Flash411
         /// </summary>
         Task<int> IPort.Receive(byte[] buffer, int offset, int count)
         {
-            BytesToReceive.Read(buffer, offset, count);
-            return Task.FromResult(count);
+            int received = BytesToReceive.Read(buffer, offset, count);
+            return Task.FromResult(received);
         }
 
         /// <summary>
