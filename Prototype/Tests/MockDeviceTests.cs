@@ -40,17 +40,18 @@ namespace Tests
         public async Task GetVin1()
         {
             TestLogger logger = new TestLogger();
-            //TestPort port = new TestPort(logger);
-
             MockPcmPort mockPcmPort = new MockPcmPort(new MockPcm(logger));
 
+            // In 'real' tests this would be, for example, AvtEmulator and AvtDevice.
             DeviceEmulator emulator = new DeviceEmulator(mockPcmPort);
+            MockDevice device = new MockDevice(emulator, logger);
 
-            MockDevice device = new MockDevice(port, logger);
-
+            // Exercise the code
             Vehicle vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), logger);
-
             Response<string> vinResponse = await vehicle.QueryVin();
+
+            // Validate the results
+
         }
     }
 }

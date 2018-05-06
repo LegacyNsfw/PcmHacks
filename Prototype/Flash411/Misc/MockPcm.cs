@@ -18,6 +18,7 @@ namespace Flash411
         private int state = 0;
         private List<byte> payload = new List<byte>();
         private int crc = 0xFF;
+        private byte checksum;
 
         private byte firstByte;
         private bool physical;
@@ -44,7 +45,7 @@ namespace Flash411
         /// <remarks>
         /// On second thought, this probably shouldn't really be necessary, and might even hide bugs.
         /// </remarks>
-        public void ResetCommunications()
+        private void ResetCommunications()
         {
             this.crc = 0xFF;
             this.state = 0;
@@ -62,7 +63,15 @@ namespace Flash411
             Crc(value);
             switch (state)
             {
+                case -1:
+                    // This state is used to receive the final byte, 
+                    // which should always be the VPW packet checksum.
+                    this.checksum = value;
+                    this.EndOfData();
+                    break;
+
                 case 0:
+                    // This is the initial state of the VPW message parser.
                     this.firstByte = value;
                     ParseFirstByte(value);
                     state++;
@@ -93,13 +102,15 @@ namespace Flash411
                     break;
 
                 case 4:
+                    this.payload.Add(value);
+                    state++;
+
                     if ((this.modeByte == 0x3B) || (this.modeByte == 0x3C))
                     {
                         this.readWriteBlockId = value;
                         this.readWriteBlockName = this.GetReadWriteBlock(this.readWriteBlockId);
+                        this.state = -1;
                     }
-                    this.payload.Add(value);
-                    state++;
                     break;
 
                 default:
@@ -112,11 +123,15 @@ namespace Flash411
         /// Call this after sending the last byte of a message.
         /// </summary>
         /// <remarks>
-        /// This also shouldn't be necessary. Should be able 
-        /// to infer end-of-message from the message itself.
+        /// This also shouldn't be necessary, the PCM should be able 
+        /// to infer end-of-message from the message itself. However
+        /// that is only implemented for the read-block and write-
+        /// block messages so far.
         /// </remarks>
         public void EndOfData()
         {
+            this.CheckCrc(this.checksum);
+
             if (this.readWriteBlockName != null)
             {
                 modeName += " / " + this.readWriteBlockName;
@@ -182,6 +197,8 @@ namespace Flash411
 
                 this.responseBuffer = response.ToArray();
             }
+
+            this.ResetCommunications();
         }
 
         /// <summary>
@@ -207,7 +224,7 @@ namespace Flash411
             this.header = "Pri" + priority.ToString() + " " + header + " " + inFrameResponse + " " + addressMode;
         }
 
-        public bool CheckCrc(byte value)
+        private bool CheckCrc(byte value)
         {
             if (this.GetCrc() == value)
             {

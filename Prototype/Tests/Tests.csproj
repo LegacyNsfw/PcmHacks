@@ -51,6 +51,7 @@
     <Compile Include="DeviceEmulator.cs" />
     <Compile Include="MockDeviceTests.cs" />
     <Compile Include="AvtTests.cs" />
+    <Compile Include="MockPcmPort.cs" />
     <Compile Include="TestLogger.cs" />
     <Compile Include="TestPort.cs" />
     <Compile Include="TestScenarios.cs" />

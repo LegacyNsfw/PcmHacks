@@ -92,6 +92,7 @@
     <Compile Include="Messages\Message.cs" />
     <Compile Include="Messages\MessageFactory.cs" />
     <Compile Include="Messages\MessageParser.cs" />
+    <Compile Include="Misc\CrcCalculator.cs" />
     <Compile Include="Misc\HttpServer.cs" />
     <Compile Include="Misc\ILogger.cs" />
     <Compile Include="Misc\MockPcm.cs" />
