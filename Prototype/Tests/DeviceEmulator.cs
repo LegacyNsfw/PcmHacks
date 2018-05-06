@@ -49,7 +49,17 @@ namespace Flash411
         /// </summary>
         Task IPort.Send(byte[] buffer)
         {
-            return this.port.Send(buffer);
+            byte[] bufferWithCrc = new byte[buffer.Length + 1];
+            CrcCalculator crc = new CrcCalculator();
+            for(int index = 0; index < buffer.Length; index++)
+            {
+                bufferWithCrc[index] = buffer[index];
+                crc.Add(buffer[index]);
+            }
+
+            bufferWithCrc[buffer.Length] = (byte)crc.Result;
+
+            return this.port.Send(bufferWithCrc);
         }
 
         /// <summary>

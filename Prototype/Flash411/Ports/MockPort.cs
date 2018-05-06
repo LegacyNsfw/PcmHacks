@@ -51,8 +51,6 @@ namespace Flash411
         /// </summary>
         Task IPort.Send(byte[] buffer)
         {
-            this.pcm.ResetCommunications();
-
             foreach(byte b in buffer)
             {
                 this.pcm.Push(b);
