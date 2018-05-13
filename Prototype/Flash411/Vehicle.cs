@@ -418,7 +418,7 @@ namespace Flash411
         /// Read the full contents of the PCM.
         /// Assumes the PCM is unlocked an were ready to go
         /// </summary>
-        public async Task<bool> ReadContents(PcmInfo info)
+        public async Task<Response<Stream>> ReadContents(PcmInfo info)
         {
             // switch to 4x, if possible. But continue either way.
             // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
@@ -428,16 +428,67 @@ namespace Flash411
             Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
             if (response.Status != ResponseStatus.Success) return false;
 
+            // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
             if (!await PCMExecute(response.Value, 0xFF9150))
             {
                 logger.AddUserMessage("Failed to upload kernel uploaded to PCM");
-                return false;
+                return new Response<Stream>(ResponseStatus.Error, null);
             }
 
             logger.AddUserMessage("kernel uploaded to PCM succesfully");
-            // read bin block by block
-            // return stream
-            return true;
+
+            int startAddress = info.ImageBaseAddress;
+            int endAddress = info.ImageBaseAddress + info.ImageSize;
+            int bytesRemaining = info.ImageSize;
+            int blockSize = 500;
+
+            byte[] image = new byte[info.ImageSize];
+
+            while (startAddress < endAddress)
+            {
+                if (startAddress + blockSize > endAddress)
+                {
+                    blockSize = endAddress - startAddress;
+                }
+
+                if (blockSize < 1)
+                {
+                    this.logger.AddUserMessage("Image download complete");
+                    break;
+                }
+
+                if (! await TryReadBlock(image, startAddress, blockSize))
+                {
+                    this.logger.AddUserMessage(
+                        string.Format(
+                            "Unable to read block from {0} to {1}",
+                            startAddress,
+                            endAddress));
+                    return new Response<Stream>(ResponseStatus.Error, null);
+                }
+
+                startAddress += blockSize;
+            }
+
+            MemoryStream stream = new MemoryStream(image);
+            return new Response<Stream>(ResponseStatus.Success, stream);
+        }
+
+        private async Task<bool> TryReadBlock(byte[] image, int startAddress, int blockSize)
+        {
+            this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, blockSize));
+
+            byte toolId = 0xF0;
+
+            for(int attempt = 1; attempt <= 5; attempt++)
+            {
+                Message message = this.messageFactory.CreateReadRequest(startAddress, blockSize);
+
+                this.logger.AddDebugMessage("Sending " + message.GetBytes().ToHex());
+                Response<Message> response = await this.device.SendRequest(message);
+
+                this.logger.AddDebugMessage("Received " + message.GetBytes().ToHex());
+            }
         }
 
         /// <summary>
