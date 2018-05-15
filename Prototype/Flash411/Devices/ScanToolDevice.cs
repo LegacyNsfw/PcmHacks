@@ -178,6 +178,22 @@ namespace Flash411
             }
         }
 
+        public async override Task<Response<Message>> ReadMessage()
+        {
+            // TODO? Should we set a mesage filter here?
+            if (!await this.SendAndVerify("ST M", "OK"))
+            {
+                return new Response<Message>(ResponseStatus.Error, null);
+            }
+
+            Response<string> stringResponse1 = await this.ReadELMLine();
+            Response<string> stringResponse2 = await this.ReadELMLine();
+            Response<string> stringResponse3 = await this.ReadELMLine();
+            this.ToString();
+
+            return new Response<Message>(ResponseStatus.Error, null);
+        }
+
         /// <summary>
         /// Separate the message into header and payload.
         /// </summary>

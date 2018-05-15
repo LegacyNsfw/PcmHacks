@@ -496,12 +496,48 @@ namespace Flash411
                 this.logger.AddDebugMessage("Sending " + message.GetBytes().ToHex());
                 Response<Message> response = await this.device.SendRequest(message);
 
+                if(response.Status != ResponseStatus.Success)
+                {
+                    this.logger.AddUserMessage("Unable to send:" + response.Status);
+                    continue;
+                }
+
                 this.logger.AddDebugMessage("Received " + message.GetBytes().ToHex());
 
-
-                if(success)
+                if(Utility.CompareArrays(response.Value.GetBytes(), this.messageFactory.CreateReadResponse().GetBytes()))
                 {
-                    Buffer.BlockCopy(payload, startAddress, image, startAddress, length);
+                    this.logger.AddUserMessage("Read request succeeded, waiting for data.");
+
+                    Response<Message> payloadResponse = await this.device.ReadMessage();
+                    if (payloadResponse.Status != ResponseStatus.Success)
+                    {
+                        this.logger.AddUserMessage("Error receiving payload: " + payloadResponse.Status.ToString());
+                        continue;
+                    }
+
+                    Message payloadMessage = payloadResponse.Value;
+                    byte[] payload = payloadMessage.GetBytes();
+                    
+                    if (payload.Length < 4)
+                    {
+                        this.logger.AddUserMessage("Payload too small, " + payload.Length.ToString() + " bytes.");
+                        continue;
+                    }
+
+                    if (payload[4] == 1) // TODO check length
+                    {
+                        Buffer.BlockCopy(payload, 10, image, startAddress, length);
+                    }
+                    else if (payload[4] == 2) // TODO check length
+                    {
+                        int runLength = payload[5] << 8 + payload[6];
+                        byte value = payload[10];
+                        for (int index = 0; index < runLength; index++)
+                        {
+                            image[startAddress + index] = value;
+                        }
+                    }
+
                     return true;
                 }                
             }

@@ -80,6 +80,11 @@ namespace Flash411
         public abstract Task<Response<Message>> SendRequest(Message message);
 
         /// <summary>
+        /// Create a message.
+        /// </summary>
+        public abstract Task<Response<Message>> ReadMessage();
+
+        /// <summary>
         /// Set the interface to low (false) or high (true) speed
         /// </summary>
         public abstract Task<bool> SetVPW4x(bool highspeed);

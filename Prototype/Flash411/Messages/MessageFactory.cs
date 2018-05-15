@@ -185,8 +185,22 @@ namespace Flash411
         /// <returns></returns>
         public Message CreateReadRequest(int startAddress, int length)
         {
-            // TODO
-            return new Message(new byte[0]);
+            byte[] request = { 0x6C, 0x10, DeviceId.Tool, 0x35, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
+            byte[] request2 = { 0x6C, 0x10, DeviceId.Tool, 0x37, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 24), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
+
+            if (startAddress > 0xFFFFFF)
+            {
+                return new Message(request2);
+            }
+            else
+            {
+                return new Message(request);
+            }
+        }
+
+        public Message CreateReadResponse()
+        {
+            return new Message(new byte[] { 0x6C, DeviceId.Tool, 0x10, 0x75, 0x01, 0x54 });
         }
 
         /// <summary>

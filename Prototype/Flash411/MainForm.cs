@@ -227,9 +227,9 @@ namespace Flash411
 
                 this.AddUserMessage("Unlock succeeded.");
 
-                await this.vehicle.ReadContents(info);
+                //await this.vehicle.ReadContents(info);
 
-                /*Response<Stream> readResponse = await this.vehicle.ReadContents();
+                Response<Stream> readResponse = await this.vehicle.ReadContents(info);
                 if (readResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
@@ -255,7 +255,7 @@ namespace Flash411
                 catch (IOException exception)
                 {
                     this.AddUserMessage(exception.Message);
-                }*/
+                }
             }
             catch(Exception exception)
             {
