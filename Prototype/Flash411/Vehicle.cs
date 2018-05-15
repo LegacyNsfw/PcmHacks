@@ -420,75 +420,93 @@ namespace Flash411
         /// </summary>
         public async Task<Response<Stream>> ReadContents(PcmInfo info)
         {
-            // switch to 4x, if possible. But continue either way.
-            // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-            await VehicleSetVPW4x(true);
-
-            // execute read kernel
-            Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
-            if (response.Status != ResponseStatus.Success) return false;
-
-            // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
-            if (!await PCMExecute(response.Value, 0xFF9150))
+            try
             {
-                logger.AddUserMessage("Failed to upload kernel uploaded to PCM");
-                return new Response<Stream>(ResponseStatus.Error, null);
-            }
+                // switch to 4x, if possible. But continue either way.
+                // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
+                await VehicleSetVPW4x(true);
 
-            logger.AddUserMessage("kernel uploaded to PCM succesfully");
-
-            int startAddress = info.ImageBaseAddress;
-            int endAddress = info.ImageBaseAddress + info.ImageSize;
-            int bytesRemaining = info.ImageSize;
-            int blockSize = 500;
-
-            byte[] image = new byte[info.ImageSize];
-
-            while (startAddress < endAddress)
-            {
-                if (startAddress + blockSize > endAddress)
+                // execute read kernel
+                Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
+                if (response.Status != ResponseStatus.Success)
                 {
-                    blockSize = endAddress - startAddress;
+                    logger.AddUserMessage("Failed to load kernel from file.");
+                    return new Response<Stream>(response.Status, null);
                 }
 
-                if (blockSize < 1)
+                // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
+                if (!await PCMExecute(response.Value, 0xFF9150))
                 {
-                    this.logger.AddUserMessage("Image download complete");
-                    break;
-                }
-
-                if (! await TryReadBlock(image, startAddress, blockSize))
-                {
-                    this.logger.AddUserMessage(
-                        string.Format(
-                            "Unable to read block from {0} to {1}",
-                            startAddress,
-                            endAddress));
+                    logger.AddUserMessage("Failed to upload kernel uploaded to PCM");
                     return new Response<Stream>(ResponseStatus.Error, null);
                 }
 
-                startAddress += blockSize;
-            }
+                logger.AddUserMessage("kernel uploaded to PCM succesfully");
 
-            MemoryStream stream = new MemoryStream(image);
-            return new Response<Stream>(ResponseStatus.Success, stream);
+                int startAddress = info.ImageBaseAddress;
+                int endAddress = info.ImageBaseAddress + info.ImageSize;
+                int bytesRemaining = info.ImageSize;
+                int blockSize = 500;
+
+                byte[] image = new byte[info.ImageSize];
+
+                while (startAddress < endAddress)
+                {
+                    if (startAddress + blockSize > endAddress)
+                    {
+                        blockSize = endAddress - startAddress;
+                    }
+
+                    if (blockSize < 1)
+                    {
+                        this.logger.AddUserMessage("Image download complete");
+                        break;
+                    }
+
+                    if (!await TryReadBlock(image, startAddress, blockSize))
+                    {
+                        this.logger.AddUserMessage(
+                            string.Format(
+                                "Unable to read block from {0} to {1}",
+                                startAddress,
+                                endAddress));
+                        return new Response<Stream>(ResponseStatus.Error, null);
+                    }
+
+                    startAddress += blockSize;
+                }
+
+                MemoryStream stream = new MemoryStream(image);
+                return new Response<Stream>(ResponseStatus.Success, stream);
+            }
+            finally
+            {
+                await device.SetVPW4x(false);
+            }
         }
 
-        private async Task<bool> TryReadBlock(byte[] image, int startAddress, int blockSize)
+        private async Task<bool> TryReadBlock(byte[] image, int startAddress, int length)
         {
-            this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, blockSize));
-
-            byte toolId = 0xF0;
-
+            this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, length));
+            
             for(int attempt = 1; attempt <= 5; attempt++)
             {
-                Message message = this.messageFactory.CreateReadRequest(startAddress, blockSize);
+                Message message = this.messageFactory.CreateReadRequest(startAddress, length);
 
                 this.logger.AddDebugMessage("Sending " + message.GetBytes().ToHex());
                 Response<Message> response = await this.device.SendRequest(message);
 
                 this.logger.AddDebugMessage("Received " + message.GetBytes().ToHex());
+
+
+                if(success)
+                {
+                    Buffer.BlockCopy(payload, startAddress, image, startAddress, length);
+                    return true;
+                }                
             }
+
+            return false;
         }
 
         /// <summary>

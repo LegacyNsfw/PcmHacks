@@ -173,6 +173,21 @@ namespace Flash411
 
             return new Message(AddBlockChecksum(Buffer));
         }
+        
+        /// <summary>
+        /// Create a request to read an arbitrary address range.
+        /// </summary>
+        /// <remarks>
+        /// This command is only understood by the reflash kernel.
+        /// </remarks>
+        /// <param name="startAddress">Address of the first byte to read.</param>
+        /// <param name="length">Number of bytes to read.</param>
+        /// <returns></returns>
+        public Message CreateReadRequest(int startAddress, int length)
+        {
+            // TODO
+            return new Message(new byte[0]);
+        }
 
         /// <summary>
         /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array
@@ -194,7 +209,7 @@ namespace Flash411
 
             return Block;
         }
-
+        
         /// <summary>
         /// Create a request for the PCM to test VPW speed switch to 4x is OK
         /// </summary>
