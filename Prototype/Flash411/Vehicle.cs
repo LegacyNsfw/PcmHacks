@@ -275,6 +275,12 @@ namespace Flash411
                 return Response.Create(seedResponse.Status, false);
             }
 
+            if (this.messageParser.IsUnlocked(seedResponse.Value.GetBytes()))
+            {
+                this.logger.AddUserMessage("PCM is already unlocked");
+                return Response.Create(ResponseStatus.Success, true);
+            }
+
             Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.Value.GetBytes());
             if (seedValueResponse.Status != ResponseStatus.Success)
             {

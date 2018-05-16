@@ -158,6 +158,22 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Indicates whether or not the reponse indicates that the PCM is unlocked.
+        /// </summary>
+        public bool IsUnlocked(byte[] response)
+        {
+            ResponseStatus status;
+            byte[] unlocked = { Priority.Type2, 0xF0, DeviceId.Pcm, 0x67, 0x01, 0x37 };
+
+            if (TryVerifyInitialBytes(response, unlocked, out status))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Parse the response to a seed request.
         /// </summary>
         public Response<UInt16> ParseSeed(byte[] response)
