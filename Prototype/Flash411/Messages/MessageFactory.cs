@@ -185,8 +185,8 @@ namespace Flash411
         /// <returns></returns>
         public Message CreateReadRequest(int startAddress, int length)
         {
-            byte[] request = { 0x6C, 0x10, DeviceId.Tool, 0x35, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
-            byte[] request2 = { 0x6C, 0x10, DeviceId.Tool, 0x37, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 24), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
+            byte[] request = { 0x6D, 0x10, DeviceId.Tool, 0x35, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
+            byte[] request2 = { 0x6D, 0x10, DeviceId.Tool, 0x37, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 24), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
 
             if (startAddress > 0xFFFFFF)
             {
@@ -200,6 +200,11 @@ namespace Flash411
 
         public Message CreateReadResponse()
         {
+            // Error:
+            // 6C F0 10 7F 35 01 01 F4 00 00 33
+            // return new Message(new byte[] { 0x6C, DeviceId.Tool, 0x10, 0x7F, 0x35, 0x01, 0x01, 0xF4, 0x00, 0x00, 0x33 });
+
+            // Success:
             return new Message(new byte[] { 0x6C, DeviceId.Tool, 0x10, 0x75, 0x01, 0x54 });
         }
 

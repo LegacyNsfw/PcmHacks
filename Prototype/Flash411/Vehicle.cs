@@ -446,7 +446,7 @@ namespace Flash411
                 int startAddress = info.ImageBaseAddress;
                 int endAddress = info.ImageBaseAddress + info.ImageSize;
                 int bytesRemaining = info.ImageSize;
-                int blockSize = 500;
+                int blockSize = 128;
 
                 byte[] image = new byte[info.ImageSize];
 
@@ -469,7 +469,7 @@ namespace Flash411
                             string.Format(
                                 "Unable to read block from {0} to {1}",
                                 startAddress,
-                                endAddress));
+                                blockSize));
                         return new Response<Stream>(ResponseStatus.Error, null);
                     }
 
@@ -478,6 +478,12 @@ namespace Flash411
 
                 MemoryStream stream = new MemoryStream(image);
                 return new Response<Stream>(ResponseStatus.Success, stream);
+            }
+            catch(Exception exception)
+            {
+                this.logger.AddUserMessage("Something went wrong. " + exception.Message);
+                this.logger.AddDebugMessage(exception.ToString());
+                return new Response<Stream>(ResponseStatus.Error, null);
             }
             finally
             {
@@ -502,9 +508,13 @@ namespace Flash411
                     continue;
                 }
 
-                this.logger.AddDebugMessage("Received " + message.GetBytes().ToHex());
+                this.logger.AddDebugMessage("Received " + response.Value.GetBytes().ToHex());
 
-                if(Utility.CompareArrays(response.Value.GetBytes(), this.messageFactory.CreateReadResponse().GetBytes()))
+                byte[] expected = this.messageFactory.CreateReadResponse().GetBytes();
+
+                this.logger.AddDebugMessage("Expecting " + expected.ToHex());
+
+                if (Utility.CompareArrays(response.Value.GetBytes(), expected))
                 {
                     this.logger.AddUserMessage("Read request succeeded, waiting for data.");
 
@@ -575,7 +585,7 @@ namespace Flash411
                 int loadaddress = address + offset;
 
                 //if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
-                //logger.AddDebugMessage("Calling CreateBlockMessage with payload size " + payload.Length + ", length " + length + " loadaddress " + loadaddress.ToString("X6") +  " exec " + exec);
+                logger.AddDebugMessage("Calling CreateBlockMessage with payload size " + payload.Length + ", length " + length + " loadaddress " + loadaddress.ToString("X6") +  " exec " + exec);
                 Message request = messageFactory.CreateUploadRequest(length, loadaddress);
                 Response<Message> response = await SendRequest(request, 5);
                 if (response.Status != ResponseStatus.Success)
@@ -591,6 +601,13 @@ namespace Flash411
                     logger.AddDebugMessage("Could not upload kernel to PCM (payload), aborting");
                     return false;
                 }
+
+                int percentLeft = bytesremain * 100 / payload.Length;
+                int percentDone = 100 - percentLeft;
+                this.logger.AddUserMessage(
+                    string.Format(
+                        "Kernel upload {0}% complete.",
+                        percentDone));
             }
 
             return true;
@@ -608,7 +625,7 @@ namespace Flash411
             if (!device.Supports4X)
             {
                 logger.AddUserMessage("This interface does not support VPW 4x");
-                return false;
+                return true;
             }
             logger.AddUserMessage("This interface does support VPW 4x");
 
