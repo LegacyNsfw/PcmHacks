@@ -263,16 +263,34 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Send a 'test device present' notification.
+        /// </summary>
+        private async Task NotifyTestDevicePreset()
+        {
+            this.logger.AddDebugMessage("Sending 'test device present' notification.");
+            Message testDevicePresent = this.messageFactory.CreateDevicePresentNotification();
+            await this.device.SendMessage(testDevicePresent);
+        }
+
+        /// <summary>
         /// Unlock the PCM by requesting a 'seed' and then sending the corresponding 'key' value.
         /// </summary>
         public async Task<Response<bool>> UnlockEcu(int keyAlgorithm)
         {
+            await this.NotifyTestDevicePreset();
+
             Message seedRequest = this.messageFactory.CreateSeedRequest();
             Response<Message> seedResponse = await this.device.SendRequest(seedRequest);
             if (seedResponse.Status != ResponseStatus.Success)
             {
                 if (seedResponse.Status != ResponseStatus.UnexpectedResponse) Response.Create(ResponseStatus.Success, true);
                 return Response.Create(seedResponse.Status, false);
+            }
+
+            if (this.messageParser.IsUnlocked(seedResponse.Value.GetBytes()))
+            {
+                this.logger.AddUserMessage("PCM is already unlocked");
+                return Response.Create(ResponseStatus.Success, true);
             }
 
             Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.Value.GetBytes());
@@ -418,26 +436,139 @@ namespace Flash411
         /// Read the full contents of the PCM.
         /// Assumes the PCM is unlocked an were ready to go
         /// </summary>
-        public async Task<bool> ReadContents(PcmInfo info)
+        public async Task<Response<Stream>> ReadContents(PcmInfo info)
         {
-            // switch to 4x, if possible. But continue either way.
-            // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-            await VehicleSetVPW4x(true);
-
-            // execute read kernel
-            Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
-            if (response.Status != ResponseStatus.Success) return false;
-
-            if (!await PCMExecute(response.Value, 0xFF9150))
+            try
             {
-                logger.AddUserMessage("Failed to upload kernel uploaded to PCM");
-                return false;
+                // switch to 4x, if possible. But continue either way.
+                // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
+                await VehicleSetVPW4x(true);
+
+                // execute read kernel
+                Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
+                if (response.Status != ResponseStatus.Success)
+                {
+                    logger.AddUserMessage("Failed to load kernel from file.");
+                    return new Response<Stream>(response.Status, null);
+                }
+
+                // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
+                if (!await PCMExecute(response.Value, 0xFF9150))
+                {
+                    logger.AddUserMessage("Failed to upload kernel uploaded to PCM");
+                    return new Response<Stream>(ResponseStatus.Error, null);
+                }
+
+                logger.AddUserMessage("kernel uploaded to PCM succesfully");
+
+                int startAddress = info.ImageBaseAddress;
+                int endAddress = info.ImageBaseAddress + info.ImageSize;
+                int bytesRemaining = info.ImageSize;
+                int blockSize = 128;
+
+                byte[] image = new byte[info.ImageSize];
+
+                while (startAddress < endAddress)
+                {
+                    if (startAddress + blockSize > endAddress)
+                    {
+                        blockSize = endAddress - startAddress;
+                    }
+
+                    if (blockSize < 1)
+                    {
+                        this.logger.AddUserMessage("Image download complete");
+                        break;
+                    }
+
+                    await this.NotifyTestDevicePreset();
+
+                    if (!await TryReadBlock(image, startAddress, blockSize))
+                    {
+                        this.logger.AddUserMessage(
+                            string.Format(
+                                "Unable to read block from {0} to {1}",
+                                startAddress,
+                                blockSize));
+                        return new Response<Stream>(ResponseStatus.Error, null);
+                    }
+
+                    startAddress += blockSize;
+                }
+
+                MemoryStream stream = new MemoryStream(image);
+                return new Response<Stream>(ResponseStatus.Success, stream);
+            }
+            catch(Exception exception)
+            {
+                this.logger.AddUserMessage("Something went wrong. " + exception.Message);
+                this.logger.AddDebugMessage(exception.ToString());
+                return new Response<Stream>(ResponseStatus.Error, null);
+            }
+            finally
+            {
+                await device.SetVPW4x(false);
+            }
+        }
+
+        private async Task<bool> TryReadBlock(byte[] image, int startAddress, int length)
+        {
+            this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, length));
+            
+            for(int attempt = 1; attempt <= 5; attempt++)
+            {
+                Message message = this.messageFactory.CreateReadRequest(startAddress, length);
+
+                this.logger.AddDebugMessage("Sending " + message.GetBytes().ToHex());
+                Response<Message> response = await this.device.SendRequest(message);
+
+                if(response.Status != ResponseStatus.Success)
+                {
+                    this.logger.AddUserMessage("Unable to send:" + response.Status);
+                    continue;
+                }
+
+                this.logger.AddDebugMessage("Received " + response.Value.GetBytes().ToHex());
+
+                if (this.messageParser.ParseReadResponse(response.Value.GetBytes()).Value)
+                {
+                    this.logger.AddUserMessage("Read request succeeded, waiting for data.");
+
+                    Response<Message> payloadResponse = await this.device.ReadMessage();
+                    if (payloadResponse.Status != ResponseStatus.Success)
+                    {
+                        this.logger.AddUserMessage("Error receiving payload: " + payloadResponse.Status.ToString());
+                        continue;
+                    }
+
+                    Message payloadMessage = payloadResponse.Value;
+                    byte[] payload = payloadMessage.GetBytes();
+                    
+                    if (payload.Length < 4)
+                    {
+                        this.logger.AddUserMessage("Payload too small, " + payload.Length.ToString() + " bytes.");
+                        continue;
+                    }
+
+                    if (payload[4] == 1) // TODO check length
+                    {
+                        Buffer.BlockCopy(payload, 10, image, startAddress, length);
+                    }
+                    else if (payload[4] == 2) // TODO check length
+                    {
+                        int runLength = payload[5] << 8 + payload[6];
+                        byte value = payload[10];
+                        for (int index = 0; index < runLength; index++)
+                        {
+                            image[startAddress + index] = value;
+                        }
+                    }
+
+                    return true;
+                }                
             }
 
-            logger.AddUserMessage("kernel uploaded to PCM succesfully");
-            // read bin block by block
-            // return stream
-            return true;
+            return false;
         }
 
         /// <summary>
@@ -470,7 +601,7 @@ namespace Flash411
                 int loadaddress = address + offset;
 
                 //if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
-                //logger.AddDebugMessage("Calling CreateBlockMessage with payload size " + payload.Length + ", length " + length + " loadaddress " + loadaddress.ToString("X6") +  " exec " + exec);
+                logger.AddDebugMessage("Calling CreateBlockMessage with payload size " + payload.Length + ", length " + length + " loadaddress " + loadaddress.ToString("X6") +  " exec " + exec);
                 Message request = messageFactory.CreateUploadRequest(length, loadaddress);
                 Response<Message> response = await SendRequest(request, 5);
                 if (response.Status != ResponseStatus.Success)
@@ -486,6 +617,13 @@ namespace Flash411
                     logger.AddDebugMessage("Could not upload kernel to PCM (payload), aborting");
                     return false;
                 }
+
+                int percentLeft = bytesremain * 100 / payload.Length;
+                int percentDone = 100 - percentLeft;
+                this.logger.AddUserMessage(
+                    string.Format(
+                        "Kernel upload {0}% complete.",
+                        percentDone));
             }
 
             return true;
@@ -503,7 +641,7 @@ namespace Flash411
             if (!device.Supports4X)
             {
                 logger.AddUserMessage("This interface does not support VPW 4x");
-                return false;
+                return true;
             }
             logger.AddUserMessage("This interface does support VPW 4x");
 

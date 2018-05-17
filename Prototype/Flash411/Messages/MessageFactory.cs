@@ -175,6 +175,38 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Tell the bus that a test device is present.
+        /// </summary>
+        public Message CreateDevicePresentNotification()
+        {
+            return new Message(new byte[] { 0x8C, 0xFE, DeviceId.Tool, 0x3F });
+        }
+        
+        /// <summary>
+        /// Create a request to read an arbitrary address range.
+        /// </summary>
+        /// <remarks>
+        /// This command is only understood by the reflash kernel.
+        /// </remarks>
+        /// <param name="startAddress">Address of the first byte to read.</param>
+        /// <param name="length">Number of bytes to read.</param>
+        /// <returns></returns>
+        public Message CreateReadRequest(int startAddress, int length)
+        {
+            byte[] request = { 0x6C, 0x10, DeviceId.Tool, 0x35, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
+            byte[] request2 = { 0x6C, 0x10, DeviceId.Tool, 0x37, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 24), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
+
+            if (startAddress > 0xFFFFFF)
+            {
+                return new Message(request2);
+            }
+            else
+            {
+                return new Message(request);
+            }
+        }
+
+        /// <summary>
         /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array
         /// </summary>
         /// <remarks>
@@ -194,7 +226,7 @@ namespace Flash411
 
             return Block;
         }
-
+        
         /// <summary>
         /// Create a request for the PCM to test VPW speed switch to 4x is OK
         /// </summary>
@@ -210,8 +242,7 @@ namespace Flash411
         {
             return new Message(new byte[] { Priority.Type2, DeviceId.Tool, DeviceId.Pcm, Mode.HighSpeedPrepare + Mode.Response });
         }
-
-
+        
         /// <summary>
         /// Create a request for the PCM to switch to VPW 4x
         /// </summary>

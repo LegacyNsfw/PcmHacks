@@ -20,7 +20,7 @@ namespace Flash411
         /// </summary>
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
-            this.MaxSendSize = 150;    // Accuracy?
+            this.MaxSendSize = 140;    // Accuracy?
             this.MaxReceiveSize = 150; // Accuracy?
             this.Supports4X = false;
         }
@@ -95,6 +95,7 @@ namespace Flash411
                     !await this.SendAndVerify("AT SP2", "OK") ||              // Set Protocol 2 (VPW)
                     !await this.SendAndVerify("AT DP", "SAE J1850 VPW") ||    // Get Protocol (Verify VPW)
                     !await this.SendAndVerify("AT AR", "OK") ||               // Turn Auto Receive on (default should be on anyway)
+                    !await this.SendAndVerify("AT ST 99", "OK") ||                  // Set timeout to N * 4 milliseconds - TODO: Adjust or remove!
                     !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK") || // Set receive filter to this tool ID
                     !await this.SendAndVerify("AT H1", "OK")                  // Send headers
                     )
@@ -176,6 +177,37 @@ namespace Flash411
             {
                 return Response.Create(ResponseStatus.Timeout, (Message)null);
             }
+        }
+
+        /// <summary>
+        /// Read a message, without sending one first.
+        /// </summary>
+        public async override Task<Response<Message>> ReadMessage()
+        {
+            // TODO? Should we set a mesage filter here?
+        //    if (!await this.SendAndVerify("ST M", "OK"))
+            {
+        //        return new Response<Message>(ResponseStatus.Error, null);
+            }
+            
+            Response<string> stringResponse1;
+            Response<string> stringResponse2;
+            Response<string> stringResponse3;
+
+            try
+            {
+                stringResponse1 = await this.ReadELMLine();
+                stringResponse2 = await this.ReadELMLine();
+                stringResponse3 = await this.ReadELMLine();
+                this.ToString();
+            }
+            catch(Exception exception)
+            {
+                // Just a place to set a breakpoint.
+                exception.ToString();
+            }
+
+            return new Response<Message>(ResponseStatus.Error, null);
         }
 
         /// <summary>
@@ -332,17 +364,19 @@ namespace Flash411
         /// </remarks>
         public override async Task<bool> SetVPW4x(bool highspeed)
         {
-
             if (highspeed != true)
             {
                 this.Logger.AddDebugMessage("AllPro setting VPW 1X");
-                if (!await this.SendAndVerify("AT VPW1", "OK")) return false;
+                if (!await this.SendAndVerify("AT VPW1", "OK"))
+                    return false;
             }
             else
             {
                 this.Logger.AddDebugMessage("AllPro setting VPW 4X");
-                if (!await this.SendAndVerify("AT VPW4", "OK")) return false;
+                if (!await this.SendAndVerify("AT VPW4", "OK"))
+                    return false;
             }
+
             return true;
         }
     }

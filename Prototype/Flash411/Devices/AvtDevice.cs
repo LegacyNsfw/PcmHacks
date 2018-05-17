@@ -309,6 +309,11 @@ namespace Flash411
             return response;
         }
 
+        public async override Task<Response<Message>> ReadMessage()
+        {
+            return new Response<Message>(ResponseStatus.Error, null);
+        }
+
         /// <summary>
         /// Set the interface to low (false) or high (true) speed
         /// </summary>

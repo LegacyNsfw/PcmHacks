@@ -158,6 +158,22 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Indicates whether or not the reponse indicates that the PCM is unlocked.
+        /// </summary>
+        public bool IsUnlocked(byte[] response)
+        {
+            ResponseStatus status;
+            byte[] unlocked = { Priority.Type2, 0xF0, DeviceId.Pcm, 0x67, 0x01, 0x37 };
+
+            if (TryVerifyInitialBytes(response, unlocked, out status))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Parse the response to a seed request.
         /// </summary>
         public Response<UInt16> ParseSeed(byte[] response)
@@ -183,6 +199,26 @@ namespace Flash411
             result = BitConverter.ToUInt16(response, 5);
 
             return Response.Create(ResponseStatus.Success, result);
+        }
+
+        /// <summary>
+        /// Parse the response to a read request.
+        /// </summary>
+        public Response<bool> ParseReadResponse(byte[] response)
+        {
+            ResponseStatus status;
+            byte[] success = new byte[] { 0x6C, DeviceId.Tool, 0x10, 0x75, 0x01, 0x54 };
+            if (TryVerifyInitialBytes(response, success, out status))
+            {
+                status = ResponseStatus.Success;
+                return Response.Create(status, true);
+            }
+
+            // Error:
+            // 6C F0 10 7F 35 01 01 F4 00 00 33
+            // return new Message(new byte[] { 0x6C, DeviceId.Tool, 0x10, 0x7F, 0x35, 0x01, 0x01, 0xF4, 0x00, 0x00, 0x33 });
+
+            return new Response<bool>(ResponseStatus.Error, false);
         }
 
         /// <summary>

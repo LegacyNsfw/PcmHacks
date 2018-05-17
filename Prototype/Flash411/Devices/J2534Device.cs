@@ -275,6 +275,11 @@ namespace Flash411
             return Task.FromResult(response);
         }
 
+        public async override Task<Response<Message>> ReadMessage()
+        {
+            return new Response<Message>(ResponseStatus.Error, null);
+        }
+
         /// <summary>
         /// load in dll
         /// </summary>
