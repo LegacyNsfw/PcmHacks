@@ -263,10 +263,22 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Send a 'test device present' notification.
+        /// </summary>
+        private async Task NotifyTestDevicePreset()
+        {
+            this.logger.AddDebugMessage("Sending 'test device present' notification.");
+            Message testDevicePresent = this.messageFactory.CreateDevicePresentNotification();
+            await this.device.SendMessage(testDevicePresent);
+        }
+
+        /// <summary>
         /// Unlock the PCM by requesting a 'seed' and then sending the corresponding 'key' value.
         /// </summary>
         public async Task<Response<bool>> UnlockEcu(int keyAlgorithm)
         {
+            await this.NotifyTestDevicePreset();
+
             Message seedRequest = this.messageFactory.CreateSeedRequest();
             Response<Message> seedResponse = await this.device.SendRequest(seedRequest);
             if (seedResponse.Status != ResponseStatus.Success)
@@ -469,6 +481,8 @@ namespace Flash411
                         break;
                     }
 
+                    await this.NotifyTestDevicePreset();
+
                     if (!await TryReadBlock(image, startAddress, blockSize))
                     {
                         this.logger.AddUserMessage(
@@ -516,11 +530,7 @@ namespace Flash411
 
                 this.logger.AddDebugMessage("Received " + response.Value.GetBytes().ToHex());
 
-                byte[] expected = this.messageFactory.CreateReadResponse().GetBytes();
-
-                this.logger.AddDebugMessage("Expecting " + expected.ToHex());
-
-                if (Utility.CompareArrays(response.Value.GetBytes(), expected))
+                if (this.messageParser.ParseReadResponse(response.Value.GetBytes()).Value)
                 {
                     this.logger.AddUserMessage("Read request succeeded, waiting for data.");
 

@@ -202,6 +202,26 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Parse the response to a read request.
+        /// </summary>
+        public Response<bool> ParseReadResponse(byte[] response)
+        {
+            ResponseStatus status;
+            byte[] success = new byte[] { 0x6C, DeviceId.Tool, 0x10, 0x75, 0x01, 0x54 };
+            if (TryVerifyInitialBytes(response, success, out status))
+            {
+                status = ResponseStatus.Success;
+                return Response.Create(status, true);
+            }
+
+            // Error:
+            // 6C F0 10 7F 35 01 01 F4 00 00 33
+            // return new Message(new byte[] { 0x6C, DeviceId.Tool, 0x10, 0x7F, 0x35, 0x01, 0x01, 0xF4, 0x00, 0x00, 0x33 });
+
+            return new Response<bool>(ResponseStatus.Error, false);
+        }
+
+        /// <summary>
         /// Confirm that the first portion of the 'actual' array of bytes matches the 'expected' array of bytes.
         /// </summary>
         private bool TryVerifyInitialBytes(Message actual, byte[] expected, out ResponseStatus status)
