@@ -207,7 +207,7 @@ namespace Flash411
         public Response<bool> ParseReadResponse(byte[] response)
         {
             ResponseStatus status;
-            byte[] success = new byte[] { 0x6C, DeviceId.Tool, 0x10, 0x75, 0x01, 0x54 };
+            byte[] success = new byte[] { 0x6C, DeviceId.Tool, 0x10, 0x75, 0x01, 0x54, 0x6C, 0xF0 };
             if (TryVerifyInitialBytes(response, success, out status))
             {
                 status = ResponseStatus.Success;

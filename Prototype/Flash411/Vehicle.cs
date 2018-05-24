@@ -272,6 +272,13 @@ namespace Flash411
             await this.device.SendMessage(testDevicePresent);
         }
 
+        private async Task SuppressChatter()
+        {
+            this.logger.AddDebugMessage("Suppressing VPW chatter.");
+            Message suppressChatter = this.messageFactory.CreateDisableNormalMessageTransmission();
+            await this.device.SendMessage(suppressChatter);
+        }
+
         /// <summary>
         /// Unlock the PCM by requesting a 'seed' and then sending the corresponding 'key' value.
         /// </summary>
@@ -470,6 +477,8 @@ namespace Flash411
 
                 while (startAddress < endAddress)
                 {
+                    await this.SuppressChatter();
+
                     if (startAddress + blockSize > endAddress)
                     {
                         blockSize = endAddress - startAddress;
@@ -481,7 +490,7 @@ namespace Flash411
                         break;
                     }
 
-                    await this.NotifyTestDevicePreset();
+//                     await this.NotifyTestDevicePreset();
 
                     if (!await TryReadBlock(image, startAddress, blockSize))
                     {
@@ -580,46 +589,81 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Load the executable payload on the PCM from the supplied address, and execute it.
+        /// Load the executable payload on the PCM at the supplied address, and execute it.
         /// </summary>
         public async Task<bool> PCMExecute(byte[] payload, int address)
         {
+            await this.SuppressChatter();
+
+            logger.AddDebugMessage("Calling CreateBlockMessage with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
+            Message request = messageFactory.CreateUploadRequest(payload.Length, address);
+            Response<Message> response = await SendRequest(request, 5);
+            if (response.Status != ResponseStatus.Success)
+            {
+                logger.AddDebugMessage("Could not upload kernel to PCM, permission denied.");
+                return false;
+            }
+
             logger.AddDebugMessage("Going to load a " + payload.Length + " byte payload to 0x" + address.ToString("X6"));
             // Loop through the payload building and sending packets, highest first, execute on last
-            for (int bytesremain = payload.Length; bytesremain > 0; bytesremain -= device.MaxSendSize)
+
+            int payloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
+            int chunkCount = payload.Length / payloadSize;
+            int remainder = payload.Length % chunkCount;
+
+            int offset = (chunkCount * payloadSize);
+            int startAddress = address + offset;
+            logger.AddDebugMessage(
+                string.Format(
+                    "Sending remainder payload with offset 0x{0:X}, start address 0x{1:X}, length 0x{2:X}.",
+                    offset,
+                    startAddress,
+                    remainder));
+
+            Message remainderMessage = messageFactory.CreateBlockMessage(
+                payload, 
+                offset, 
+                remainder, 
+                address + offset, 
+                remainder == payload.Length);
+
+            response = await SendRequest(remainderMessage, 5);
+            if (response.Status != ResponseStatus.Success)
             {
-                bool exec = false;
-                int length = device.MaxSendSize-12; //Headers use 10 bytes, sum uses 2 bytes
-                int offset = bytesremain - length;
+                logger.AddDebugMessage("Could not upload kernel to PCM, remainder payload not accepted.");
+                return false;
+            }
 
-                if (offset<=0) // Is this the last packet?
-                {
-                    offset = 0;
-                    length = bytesremain;
-                    exec = true;
-                }
-                int loadaddress = address + offset;
+            for (int chunkIndex = chunkCount; chunkIndex > 0; chunkIndex--)
+            {
+                await this.SuppressChatter();
 
-                //if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
-                logger.AddDebugMessage("Calling CreateBlockMessage with payload size " + payload.Length + ", length " + length + " loadaddress " + loadaddress.ToString("X6") +  " exec " + exec);
-                Message request = messageFactory.CreateUploadRequest(length, loadaddress);
-                Response<Message> response = await SendRequest(request, 5);
+                offset = (chunkIndex - 1) * payloadSize;
+                startAddress = address + offset;
+                Message payloadMessage = messageFactory.CreateBlockMessage(
+                    payload,
+                    offset,
+                    payloadSize,
+                    startAddress,
+                    offset == 0);
+
+                logger.AddDebugMessage(
+                    string.Format(
+                        "Sending payload with offset 0x{0:X}, start address 0x{1:X}, length 0x{2:X}.",
+                        offset,
+                        startAddress,
+                        payloadSize));
+
+                response = await SendRequest(payloadMessage, 5);
                 if (response.Status != ResponseStatus.Success)
                 {
-                    logger.AddDebugMessage("Could not upload kernel to PCM (request), aborting");
+                    logger.AddDebugMessage("Could not upload kernel to PCM, payload not accepted.");
                     return false;
                 }
 
-                Message block = messageFactory.CreateBlockMessage(payload, offset, length, loadaddress, exec);
-                response = await SendRequest(block, 5);
-                if (response.Status != ResponseStatus.Success)
-                {
-                    logger.AddDebugMessage("Could not upload kernel to PCM (payload), aborting");
-                    return false;
-                }
+                int bytesSent = payload.Length - offset;
+                int percentDone = bytesSent * 100 / payload.Length;
 
-                int percentLeft = bytesremain * 100 / payload.Length;
-                int percentDone = 100 - percentLeft;
                 this.logger.AddUserMessage(
                     string.Format(
                         "Kernel upload {0}% complete.",

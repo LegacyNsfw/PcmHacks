@@ -281,7 +281,7 @@ namespace Flash411
         /// <summary>
         /// Create a broadcast message telling all devices to disable normal message transmission (disable chatter)
         /// </summary>
-        public Message CreateDisableNormalMessageTransmition()
+        public Message CreateDisableNormalMessageTransmission()
         {
             byte[] Bytes = new byte[] { Priority.Type2, DeviceId.Broadcast, DeviceId.Tool, Mode.SilenceBus, SubMode.Null };
             return new Message(Bytes);
@@ -290,7 +290,7 @@ namespace Flash411
         /// <summary>
         /// Create a broadcast message telling all devices to disable normal message transmission (disable chatter)
         /// </summary>
-        public Message CreateDisableNormalMessageTransmitionOK()
+        public Message CreateDisableNormalMessageTransmissionOK()
         {
             byte[] bytes = new byte[] { Priority.Type2, DeviceId.Tool, DeviceId.Pcm, Mode.SilenceBus + Mode.Response , SubMode.Null };
             return new Message(bytes);

@@ -163,11 +163,12 @@ namespace Flash411
 
                 //this.Logger.AddDebugMessage("hexResponse: " + hexResponse);
                 // Make sure we can parse the response.
-                if (!hexResponse.IsHex())
+                if (string.IsNullOrWhiteSpace(hexResponse) || !hexResponse.IsHex())
                 {
                     this.Logger.AddDebugMessage("Unexpected response: " + hexResponse);
                     return Response.Create(ResponseStatus.UnexpectedResponse, (Message)null);
                 }
+
                 byte[] deviceResponseBytes = hexResponse.ToBytes();
                 Array.Resize(ref deviceResponseBytes, deviceResponseBytes.Length - 1); // remove checksum byte
                 this.Logger.AddDebugMessage("RX: " + deviceResponseBytes.ToHex());
