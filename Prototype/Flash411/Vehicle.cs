@@ -609,7 +609,7 @@ namespace Flash411
 
             int payloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
             int chunkCount = payload.Length / payloadSize;
-            int remainder = payload.Length % chunkCount;
+            int remainder = payload.Length % payloadSize;
 
             int offset = (chunkCount * payloadSize);
             int startAddress = address + offset;
