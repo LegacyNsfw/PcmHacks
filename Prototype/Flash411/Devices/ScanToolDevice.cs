@@ -137,6 +137,23 @@ namespace Flash411
         }
 
         /// <summary>
+        /// THIS IS AN UGLY HACK.
+        /// 
+        /// The fix will be to re-do the Device API so that SendMessage returns nothing,
+        /// but just enqueues the response. Callers will get responses by calling a 
+        /// ReceiveMessage method instead.
+        /// 
+        /// That will keep the API consistent no matter how many responses are expected
+        /// to follow each send. There are cases when the number of expected responses
+        /// can be zero (tool present, disable chatter) or one (read OSID, MEC, etc), 
+        /// or two (read memory range), so it was a mistake to create an API that was
+        /// based on the idea of a 1:1 send:receieve ratio.
+        /// 
+        /// But right now I'm very close to getting a full read, so hack hack hack.
+        /// </summary>
+        private Queue<Response<Message>> queue = new Queue<Response<Message>>();
+
+        /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
         /// <remarks>
@@ -157,10 +174,13 @@ namespace Flash411
                 return Response.Create(setHeaderResponse.Status, (Message)null);
             }
 
+            // Declaring this outside of the try block so I can look at it in the catch block.
+            string hexResponse;
+
             try
             {
-                string hexResponse = await this.SendRequest(payload);
-
+                hexResponse = await this.SendRequest(payload);
+ 
                 //this.Logger.AddDebugMessage("hexResponse: " + hexResponse);
                 // Make sure we can parse the response.
                 if (string.IsNullOrWhiteSpace(hexResponse) || !hexResponse.IsHex())
@@ -169,22 +189,58 @@ namespace Flash411
                     return Response.Create(ResponseStatus.UnexpectedResponse, (Message)null);
                 }
 
-                byte[] deviceResponseBytes = hexResponse.ToBytes();
-                Array.Resize(ref deviceResponseBytes, deviceResponseBytes.Length - 1); // remove checksum byte
-                this.Logger.AddDebugMessage("RX: " + deviceResponseBytes.ToHex());
-                return Response.Create(ResponseStatus.Success, new Message(deviceResponseBytes));
+                Response<Message> firstResponse = null;
+
+                string[] hexResponses = hexResponse.Split(' ');
+                foreach(string singleHexResponse in hexResponses)
+                {
+                    byte[] deviceResponseBytes = singleHexResponse.ToBytes();
+                    Array.Resize(ref deviceResponseBytes, deviceResponseBytes.Length - 1); // remove checksum byte
+                    this.Logger.AddDebugMessage("RX: " + deviceResponseBytes.ToHex());
+
+                    Response<Message> response = Response.Create(ResponseStatus.Success, new Message(deviceResponseBytes));
+                    if (firstResponse == null)
+                    {
+                        firstResponse = response;
+                        continue;
+                    }
+                    else
+                    {
+                        queue.Enqueue(response);
+                    }
+                }
+
+                return firstResponse;
             }
             catch (TimeoutException)
             {
                 return Response.Create(ResponseStatus.Timeout, (Message)null);
+            }
+            catch (Exception ex)
+            {
+                throw; // just a place to set a breakpoint
             }
         }
 
         /// <summary>
         /// Read a message, without sending one first.
         /// </summary>
-        public async override Task<Response<Message>> ReadMessage()
+        /// <remarks>
+        /// TEMPORARY HACK. SEE NOTES ABOVE THE queue DECLARATION.
+        /// </remarks>
+        public override async Task<Response<Message>> ReadMessage()
         {
+            if(this.queue.Count > 0)
+            {
+                return this.queue.Dequeue();
+            }
+
+            return Response.Create<Message>(ResponseStatus.Timeout, null);
+        }
+
+            /*
+        {
+            
             // TODO? Should we set a mesage filter here?
         //    if (!await this.SendAndVerify("ST M", "OK"))
             {
@@ -210,6 +266,7 @@ namespace Flash411
 
             return new Response<Message>(ResponseStatus.Error, null);
         }
+        */
 
         /// <summary>
         /// Separate the message into header and payload.

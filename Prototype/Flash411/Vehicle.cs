@@ -449,7 +449,7 @@ namespace Flash411
             {
                 // switch to 4x, if possible. But continue either way.
                 // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                await VehicleSetVPW4x(true);
+                await this.VehicleSetVPW4x(true);
 
                 // execute read kernel
                 Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
@@ -516,7 +516,7 @@ namespace Flash411
             }
             finally
             {
-                await device.SetVPW4x(false);
+                await this.VehicleSetVPW4x(false);
             }
         }
 
@@ -687,6 +687,7 @@ namespace Flash411
                 logger.AddUserMessage("This interface does not support VPW 4x");
                 return true;
             }
+
             logger.AddUserMessage("This interface does support VPW 4x");
 
             // PCM Pre-flight checks
