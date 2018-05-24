@@ -247,6 +247,8 @@ namespace Flash411
 
                 try
                 {
+                    readResponse.Value.Position = 0;
+
                     using (Stream output = File.OpenWrite(path))
                     {
                         await readResponse.Value.CopyToAsync(output);
