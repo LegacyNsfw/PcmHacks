@@ -550,7 +550,8 @@ namespace Flash411
                         continue;
                     }
 
-                    this.logger.AddUserMessage(string.Format("Read block starting at {0} / 0x{0:X}", startAddress));
+                    int percentDone = (startAddress * 100) / image.Length;
+                    this.logger.AddUserMessage(string.Format("Read block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));
 
                     Message payloadMessage = payloadResponse.Value;
                     byte[] payload = payloadMessage.GetBytes();
