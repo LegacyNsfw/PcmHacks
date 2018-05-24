@@ -541,7 +541,7 @@ namespace Flash411
 
                 if (this.messageParser.ParseReadResponse(response.Value.GetBytes()).Value)
                 {
-                    this.logger.AddUserMessage("Read request succeeded, waiting for data.");
+                    // this.logger.AddUserMessage("Read request succeeded, waiting for data.");
 
                     Response<Message> payloadResponse = await this.device.ReadMessage();
                     if (payloadResponse.Status != ResponseStatus.Success)
@@ -549,6 +549,8 @@ namespace Flash411
                         this.logger.AddUserMessage("Error receiving payload: " + payloadResponse.Status.ToString());
                         continue;
                     }
+
+                    this.logger.AddUserMessage(string.Format("Read block starting at {0} / 0x{0:X}", startAddress));
 
                     Message payloadMessage = payloadResponse.Value;
                     byte[] payload = payloadMessage.GetBytes();
