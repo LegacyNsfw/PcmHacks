@@ -471,7 +471,7 @@ namespace Flash411
                 int startAddress = info.ImageBaseAddress;
                 int endAddress = info.ImageBaseAddress + info.ImageSize;
                 int bytesRemaining = info.ImageSize;
-                int blockSize = 128;
+                int blockSize = 200; // Works with the ScanTool SX, will take about an  hour to download 512kb.
 
                 byte[] image = new byte[info.ImageSize];
 

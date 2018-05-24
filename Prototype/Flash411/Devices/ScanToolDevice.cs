@@ -85,7 +85,10 @@ namespace Flash411
                 {
                     this.Logger.AddUserMessage("All Pro ID: " + apID);
                     this.Logger.AddDebugMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
-                    this.Supports4X = true;
+                    
+                    //                    this.Supports4X = true;
+                    this.MaxSendSize = 1000;
+                    this.MaxReceiveSize = 1000;
                 }
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage
