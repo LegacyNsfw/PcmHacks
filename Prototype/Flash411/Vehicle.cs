@@ -516,8 +516,24 @@ namespace Flash411
             }
             finally
             {
+                // Sending the exit command twice, and at both speeds, just to
+                // be totally certain that the PCM goes back to normal. If the
+                // kernel is left running, the engine won't start, and the 
+                // dashboard lights up with all sorts of errors.
+                //
+                // You can reset by pulling the PCM's fuse, but I'd hate to 
+                // have a think that we've done some real damage before they
+                // figure that out.
+                await this.ExitKernel();
                 await this.VehicleSetVPW4x(false);
+                await this.ExitKernel();
             }
+        }
+
+        public async Task ExitKernel()
+        {
+            Message exitKernel = this.messageFactory.CreateExitKernel();
+            await this.device.SendMessage(exitKernel);
         }
 
         private async Task<bool> TryReadBlock(byte[] image, int startAddress, int length)

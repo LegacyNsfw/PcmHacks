@@ -261,6 +261,15 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Create a message to tell the RAM-resident kernel to exit.
+        /// </summary>
+        public Message CreateExitKernel()
+        {
+            byte[] bytes = new byte[] { Priority.Block, DeviceId.Pcm, DeviceId.Tool, 0x20 };
+            return new Message(bytes);
+        }
+
+        /// <summary>
         /// Create a broadcast message telling the PCM to clear DTCs
         /// </summary>
         public Message CreateClearDTCs()

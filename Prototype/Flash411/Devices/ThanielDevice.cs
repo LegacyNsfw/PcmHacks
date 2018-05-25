@@ -38,18 +38,15 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Send a message, wait for a response, return the response.
+        /// Try to read an incoming message from the device.
         /// </summary>
-        public override Task<Response<Message>> SendRequest(Message message)
+        /// <returns></returns>
+        protected override Task Receive()
         {
-            return Task.FromResult(Response.Create(ResponseStatus.Success, new Message(new byte[] { })));
+            this.Logger.AddDebugMessage("Not Implemented: Thaniel Receieve");
+            return Task.FromResult(0);
         }
-
-        public async override Task<Response<Message>> ReadMessage()
-        {
-            return new Response<Message>(ResponseStatus.Error, null);
-        }
-
+        
         /// <summary>
         /// Set the interface to low (false) or high (true) speed
         /// </summary>

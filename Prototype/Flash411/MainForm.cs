@@ -208,11 +208,12 @@ namespace Flash411
                     // were enabled when they shouldn't be.
                     return;
                 }
-
+                
                 Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
                 if (osidResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+                    await this.vehicle.ExitKernel();
                     return;
                 }
 

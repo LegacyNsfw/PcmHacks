@@ -18,8 +18,6 @@ namespace Flash411
     /// </summary>
     public abstract class Device : IDisposable
     {
-        protected IPort Port { get; private set; }
-
         protected ILogger Logger { get; private set; }
 
         public int MaxSendSize { get; protected set; }
@@ -28,9 +26,16 @@ namespace Flash411
 
         public bool Supports4X { get; protected set; }
 
-        public Device(IPort port, ILogger logger)
+        /// <summary>
+        /// Queue of messages received from the VPW bus.
+        /// </summary>
+        private Queue<Message> queue = new Queue<Message>();
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public Device(ILogger logger)
         {
-            this.Port = port;
             this.Logger = logger;
 
             // These default values can be overwritten in derived classes.
@@ -39,54 +44,73 @@ namespace Flash411
             this.Supports4X = false;
         }
 
-        public Device(ILogger logger)
-        {
-            this.Logger = logger;
-        }
-
+        /// <summary>
+        /// Finalizer (invoked during garbage collection).
+        /// </summary>
         ~Device()
         {
             this.Dispose(false);
         }
 
+        /// <summary>
+        /// Clean up anything allocated by this instane.
+        /// </summary>
         public virtual void Dispose()
         {
             this.Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            this.Close();
-        }
-
+        /// <summary>
+        /// Make the device ready to communicate with the VPW bus.
+        /// </summary>
         public abstract Task<bool> Initialize();
 
-        protected virtual void Close()
-        {
-            if (this.Port != null)
-            {
-                this.Port.Dispose();
-            }
-        }
-
         /// <summary>
-        /// Send a message, do not expect a response.
+        /// Send a message.
         /// </summary>
         public abstract Task<bool> SendMessage(Message message);
 
         /// <summary>
-        /// Send a message, wait for a response, return the response.
+        /// Reads a message from the VPW bus and returns it.
         /// </summary>
-        public abstract Task<Response<Message>> SendRequest(Message message);
+        public async Task<Message> ReceiveMessage()
+        {
+            await this.Receive();
 
-        /// <summary>
-        /// Create a message.
-        /// </summary>
-        public abstract Task<Response<Message>> ReadMessage();
+            lock (this.queue)
+            {
+                if (this.queue.Count > 0)
+                {
+                    return this.queue.Dequeue();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
 
         /// <summary>
         /// Set the interface to low (false) or high (true) speed
         /// </summary>
         public abstract Task<bool> SetVPW4x(bool highspeed);
+
+        /// <summary>
+        /// Clean up anything that this instance has allocated.
+        /// </summary>
+        protected abstract void Dispose(bool disposing);
+
+        /// <summary>
+        /// Add a received message to the queue.
+        /// </summary>
+        protected void Enqueue(Message message)
+        {
+            lock (this.queue)
+            {
+                this.queue.Enqueue(message);
+            }
+        }
+
+        protected abstract Task Receive();
     }
 }
