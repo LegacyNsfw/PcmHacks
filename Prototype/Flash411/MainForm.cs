@@ -219,17 +219,15 @@ namespace Flash411
 
                 PcmInfo info = new PcmInfo(osidResponse.Value);
 
-                Response<bool> unlockResponse = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                if (unlockResponse.Status != ResponseStatus.Success)
+                bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                if (!unlocked)
                 {
                     this.AddUserMessage("Unlock was not successful.");
                     return;
                 }
 
                 this.AddUserMessage("Unlock succeeded.");
-
-                //await this.vehicle.ReadContents(info);
-
+                
                 Response<Stream> readResponse = await this.vehicle.ReadContents(info);
                 if (readResponse.Status != ResponseStatus.Success)
                 {
@@ -305,8 +303,8 @@ namespace Flash411
 
             PcmInfo info = new PcmInfo(osidResponse.Value);
 
-            Response<bool> unlockResponse = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-            if (unlockResponse.Status != ResponseStatus.Success)
+            bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+            if (!unlocked)
             {
                 this.AddUserMessage("Unlock was not successful.");
                 return;
@@ -376,25 +374,23 @@ namespace Flash411
 
                 if (dialogResult == DialogResult.OK)
                 {
-                    Response<bool> unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                    if (unlocked.Value)
+                    bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                    if (!unlocked)
                     {
-                        Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
-                        if (vinmodified.Value)
-                        {
-                            this.AddUserMessage("VIN successfully updated to " + vinForm.Vin);
-                            MessageBox.Show("VIN updated to " + vinForm.Vin + " successfully.", "Good news.", MessageBoxButtons.OK);
-                        }
-                        else
-                        {
-                            MessageBox.Show("Unable to change the VIN to " + vinForm.Vin + ". Error: " + vinmodified.Status, "Bad news.", MessageBoxButtons.OK);
-                        }
+                        this.AddUserMessage("Unable to unlock PCM.");
+                        return;
+                    }
+
+                    Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
+                    if (vinmodified.Value)
+                    {
+                        this.AddUserMessage("VIN successfully updated to " + vinForm.Vin);
+                        MessageBox.Show("VIN updated to " + vinForm.Vin + " successfully.", "Good news.", MessageBoxButtons.OK);
                     }
                     else
                     {
-
+                        MessageBox.Show("Unable to change the VIN to " + vinForm.Vin + ". Error: " + vinmodified.Status, "Bad news.", MessageBoxButtons.OK);
                     }
-
                 }
             }
             catch (Exception exception)

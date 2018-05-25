@@ -26,6 +26,8 @@ namespace Flash411
 
         public bool Supports4X { get; protected set; }
 
+        public int ReceivedMessageCount { get { return this.queue.Count; } }
+
         /// <summary>
         /// Queue of messages received from the VPW bus.
         /// </summary>
@@ -69,6 +71,14 @@ namespace Flash411
         /// Send a message.
         /// </summary>
         public abstract Task<bool> SendMessage(Message message);
+
+        /// <summary>
+        /// Removes any messages that might be waiting in the incoming-message queue.
+        /// </summary>
+        public void ClearMessageQueue()
+        {
+            this.queue.Clear();
+        }
 
         /// <summary>
         /// Reads a message from the VPW bus and returns it.
