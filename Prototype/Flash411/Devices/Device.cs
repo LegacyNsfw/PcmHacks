@@ -75,7 +75,10 @@ namespace Flash411
         /// </summary>
         public async Task<Message> ReceiveMessage()
         {
-            await this.Receive();
+            if (this.queue.Count == 0)
+            {
+                await this.Receive();
+            }
 
             lock (this.queue)
             {

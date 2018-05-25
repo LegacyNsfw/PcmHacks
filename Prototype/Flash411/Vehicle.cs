@@ -99,25 +99,40 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryVin()
         {
-            Response<Message> response1 = await this.device.SendRequest(this.messageFactory.CreateVinRequest1());
-            if (response1.Status != ResponseStatus.Success)
+            if (!await this.device.SendMessage(this.messageFactory.CreateVinRequest1()))
             {
-                return Response.Create(response1.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 1 failed.");
             }
 
-            Response<Message> response2 = await this.device.SendRequest(this.messageFactory.CreateVinRequest2());
-            if (response1.Status != ResponseStatus.Success)
+            Message response1 = await this.device.ReceiveMessage();
+            if (response1 == null)
             {
-                return Response.Create(response1.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 1.");
             }
 
-            Response<Message> response3 = await this.device.SendRequest(this.messageFactory.CreateVinRequest3());
-            if (response1.Status != ResponseStatus.Success)
+            if (!await this.device.SendMessage(this.messageFactory.CreateVinRequest2()))
             {
-                return Response.Create(response1.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 2 failed.");
             }
 
-            return this.messageParser.ParseVinResponses(response1.Value.GetBytes(), response2.Value.GetBytes(), response3.Value.GetBytes());
+            Message response2 = await this.device.ReceiveMessage();
+            if (response2 == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 2.");
+            }
+
+            if (!await this.device.SendMessage(this.messageFactory.CreateVinRequest3()))
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 3 failed.");
+            }
+
+            Message response3 = await this.device.ReceiveMessage();
+            if (response3 == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 3.");
+            }
+
+            return this.messageParser.ParseVinResponses(response1.GetBytes(), response2.GetBytes(), response3.GetBytes());
         }
 
         /// <summary>
@@ -125,25 +140,40 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QuerySerial()
         {
-            Response<Message> response1 = await this.device.SendRequest(this.messageFactory.CreateSerialRequest1());
-            if (response1.Status != ResponseStatus.Success)
+            if (!await this.device.SendMessage(this.messageFactory.CreateSerialRequest1()))
             {
-                return Response.Create(response1.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 1 failed.");
             }
 
-            Response<Message> response2 = await this.device.SendRequest(this.messageFactory.CreateSerialRequest2());
-            if (response2.Status != ResponseStatus.Success)
+            Message response1 = await this.device.ReceiveMessage();
+            if (response1 == null)
             {
-                return Response.Create(response2.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 1.");
             }
 
-            Response<Message> response3 = await this.device.SendRequest(this.messageFactory.CreateSerialRequest3());
-            if (response3.Status != ResponseStatus.Success)
+            if (!await this.device.SendMessage(this.messageFactory.CreateSerialRequest2()))
             {
-                return Response.Create(response3.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 2 failed.");
             }
 
-            return this.messageParser.ParseSerialResponses(response1.Value, response2.Value, response3.Value);
+            Message response2 = await this.device.ReceiveMessage();
+            if (response2 == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 2.");
+            }
+
+            if (!await this.device.SendMessage(this.messageFactory.CreateSerialRequest3()))
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 3 failed.");
+            }
+
+            Message response3 = await this.device.ReceiveMessage();
+            if (response3 == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 3.");
+            }
+
+            return this.messageParser.ParseSerialResponses(response1, response2, response3);
         }
 
         /// <summary>
@@ -151,13 +181,18 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryBCC()
         {
-            Response<Message> response = await this.device.SendRequest(this.messageFactory.CreateBCCRequest());
-            if (response.Status != ResponseStatus.Success)
+            if (!await this.device.SendMessage(this.messageFactory.CreateBCCRequest()))
             {
-                return Response.Create(response.Status, "Unknown");
+                return Response.Create(ResponseStatus.Error, "Unknown. Request failed.");
             }
 
-            return this.messageParser.ParseBCCresponse(response.Value.GetBytes());
+            Message response = await this.device.ReceiveMessage();
+            if (response == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response received.");
+            }
+
+            return this.messageParser.ParseBCCresponse(response.GetBytes());
         }
 
         /// <summary>
@@ -165,13 +200,18 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryMEC()
         {
-            Response<Message> response = await this.device.SendRequest(this.messageFactory.CreateMECRequest());
-            if (response.Status != ResponseStatus.Success)
+            if (!await this.device.SendMessage(this.messageFactory.CreateMECRequest()))
             {
-                return Response.Create(response.Status, "Unknown");
+                return Response.Create(ResponseStatus.Error, "Unknow. Request failed.");
             }
 
-            return this.messageParser.ParseMECresponse(response.Value.GetBytes());
+            Message response = await this.device.ReceiveMessage();
+            if (response == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response received.");
+            }
+
+            return this.messageParser.ParseMECresponse(response.GetBytes());
         }
 
         /// <summary>
@@ -215,13 +255,7 @@ namespace Flash411
         public async Task<Response<UInt32>> QueryOperatingSystemId()
         {
             Message request = this.messageFactory.CreateOperatingSystemIdReadRequest();
-            var response = await this.device.SendRequest(request);
-            if (response.Status != ResponseStatus.Success)
-            {
-                return Response.Create(response.Status, (UInt32)0);
-            }
-
-            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
+            return await this.QueryUnsignedValue(request);
         }
 
         /// <summary>
@@ -234,13 +268,7 @@ namespace Flash411
         public async Task<Response<UInt32>> QueryHardwareId()
         {
             Message request = this.messageFactory.CreateHardwareIdReadRequest();
-            var response = await this.device.SendRequest(request);
-            if (response.Status != ResponseStatus.Success)
-            {
-                return Response.Create(response.Status, (UInt32)0);
-            }
-
-            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
+            return await this.QueryUnsignedValue(request);
         }
 
         /// <summary>
@@ -253,13 +281,23 @@ namespace Flash411
         public async Task<Response<UInt32>> QueryCalibrationId()
         {
             Message request = this.messageFactory.CreateCalibrationIdReadRequest();
-            var response = await this.device.SendRequest(request);
-            if (response.Status != ResponseStatus.Success)
+            return await this.QueryUnsignedValue(request);
+        }
+
+        private async Task<Response<UInt32>> QueryUnsignedValue(Message request)
+        {
+            if (!await this.device.SendMessage(request))
             {
-                return Response.Create(response.Status, (UInt32)0);
+                return Response.Create(ResponseStatus.Error, (UInt32)0);
             }
 
-            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
+            var response = await this.device.ReceiveMessage();
+            if (response == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, (UInt32)0);
+            }
+
+            return this.messageParser.ParseBlockUInt32(response.GetBytes());
         }
 
         /// <summary>
@@ -284,6 +322,7 @@ namespace Flash411
         /// </summary>
         public async Task<Response<bool>> UnlockEcu(int keyAlgorithm)
         {
+            /*
             await this.NotifyTestDevicePreset();
 
             Message seedRequest = this.messageFactory.CreateSeedRequest();
@@ -331,17 +370,19 @@ namespace Flash411
             {
                 this.logger.AddUserMessage("PCM Unlocked");
             }
-
+            
             return result;
+            */
+            return Response.Create(ResponseStatus.Error, false);
         }
 
         /// <summary>
         /// Writes a block of data to the PCM
         /// Requires an unlocked PCM
         /// </summary>
-        public async Task<Response<bool>> WriteBlock(byte block, byte[] data)
+        private async Task<Response<bool>> WriteBlock(byte block, byte[] data)
         {
-
+            /*
             Message tx;
             Message ok = new Message(new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7B, block });
 
@@ -371,6 +412,8 @@ namespace Flash411
 
             logger.AddDebugMessage("Successful write to block " + block);
             return Response.Create(ResponseStatus.Success, true);
+            */
+            return Response.Create(ResponseStatus.Error, false);
         }
 
         public async Task<byte[]> LoadKernelFromFidle(string kernel)
@@ -445,6 +488,7 @@ namespace Flash411
         /// </summary>
         public async Task<Response<Stream>> ReadContents(PcmInfo info)
         {
+            /*
             try
             {
                 // switch to 4x, if possible. But continue either way.
@@ -528,6 +572,9 @@ namespace Flash411
                 await this.VehicleSetVPW4x(false);
                 await this.ExitKernel();
             }
+            */
+
+            return Response.Create(ResponseStatus.Error, (Stream)null);
         }
 
         public async Task ExitKernel()
@@ -538,6 +585,7 @@ namespace Flash411
 
         private async Task<bool> TryReadBlock(byte[] image, int startAddress, int length)
         {
+            /*
             this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, length));
             
             for(int attempt = 1; attempt <= 5; attempt++)
@@ -596,6 +644,8 @@ namespace Flash411
                 }                
             }
 
+            return false;
+            */
             return false;
         }
 
@@ -710,17 +760,32 @@ namespace Flash411
             logger.AddUserMessage("This interface does support VPW 4x");
 
             // PCM Pre-flight checks
-            Response<Message> rx = await this.device.SendRequest(HighSpeedCheck);
-            if (rx.Status != ResponseStatus.Success || !Utility.CompareArraysPart(rx.Value.GetBytes(), HighSpeedOK.GetBytes()))
+            if (!await this.device.SendMessage(HighSpeedCheck))
+            {
+                logger.AddUserMessage("Unable to request permission to use 4x.");
+                return false;
+            }
+
+            Message rx = await this.device.ReceiveMessage();
+            if (rx == null)
+            {
+                logger.AddUserMessage("No response received to high-speed permission request.");
+                return false;
+            }
+
+            if (!Utility.CompareArraysPart(rx.GetBytes(), HighSpeedOK.GetBytes()))
             {
                 logger.AddUserMessage("PCM is not allowing a switch to VPW 4x");
                 return false;
             }
-            logger.AddUserMessage("PCM is allowing a switch to VPW 4x");
 
-            logger.AddUserMessage("Asking PCM to swtich to VPW 4x");
-            // Request all devices on the bus to change speed to VPW 4x
-            rx = await this.device.SendRequest(BeginHighSpeed);
+            logger.AddUserMessage("PCM is allowing a switch to VPW 4x. Requesting all VPW modules to do so.");
+            if(!await this.device.SendMessage(BeginHighSpeed))
+            {
+                return false;
+            }
+
+            rx = await this.device.ReceiveMessage();
 
             // Request the device to change
             await device.SetVPW4x(true);
@@ -736,13 +801,23 @@ namespace Flash411
         /// </remarks>
         async Task<Response<Message>> SendRequest(Message message, int retries)
         {
-            Response<Message> response;
             for (int i = retries; i>0; i--)
             {
-                response = await device.SendRequest(message);
-                if (response.Status == ResponseStatus.Success) return response;
+                if (!await device.SendMessage(message))
+                {
+                    this.logger.AddDebugMessage("Unable to send message.");
+                    continue;
+                }
+
+                Message response = await this.device.ReceiveMessage();
+                if (response != null)
+                {
+                    return Response.Create(ResponseStatus.Success, response);
+                }
+
                 await Task.Delay(10); // incase were going too fast, we might want to change this logic
             }
+
             return Response.Create(ResponseStatus.Error, (Message)null); // this should be response from the loop but the compiler thinks the response variable isnt in scope here????
         }
     }

@@ -134,6 +134,8 @@ namespace Flash411
                 {
                     return false;
                 }
+
+                this.currentHeader = header;
             }
                         
             string sendMessageResponse = await this.SendRequest(payload);
@@ -231,9 +233,16 @@ namespace Flash411
             this.Logger.AddDebugMessage("TX: " + request);
             await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
 
-            string response = await ReadELMLine();
+            try
+            {
+                string response = await ReadELMLine();
 
-            return response;
+                return response;
+            }
+            catch (TimeoutException)
+            {
+                return string.Empty;
+            }
         }
 
         /// <summary>
