@@ -256,6 +256,8 @@ namespace Flash411
 
                 try
                 {
+                    this.AddUserMessage("Saving contents to " + path);
+
                     readResponse.Value.Position = 0;
 
                     using (Stream output = File.OpenWrite(path))
@@ -265,7 +267,8 @@ namespace Flash411
                 }
                 catch (IOException exception)
                 {
-                    this.AddUserMessage(exception.Message);
+                    this.AddUserMessage("Unable to save file: " + exception.Message);
+                    this.AddDebugMessage(exception.ToString());
                 }
             }
             catch(Exception exception)

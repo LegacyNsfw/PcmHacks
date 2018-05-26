@@ -22,9 +22,10 @@ namespace Flash411
 
         public async Task Notify()
         {
-            if(DateTime.Now > lastNotificationTime + TimeSpan.FromSeconds(2))
+            if(DateTime.Now > this.lastNotificationTime + TimeSpan.FromSeconds(2))
             {
                 await this.SendNotification();
+                this.lastNotificationTime = DateTime.Now;
             }
         }
 
