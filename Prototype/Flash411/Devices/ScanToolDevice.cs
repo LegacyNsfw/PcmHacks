@@ -199,6 +199,12 @@ namespace Flash411
                 return true;
             }
 
+            if (rawResponse.EndsWith("OK"))
+            {
+                this.Logger.AddDebugMessage("WTF: Response not valid, but ends with OK.");
+                return true;
+            }
+
             this.Logger.AddDebugMessage(
                 string.Format(
                     "Unexpected response to {0}: {1}",

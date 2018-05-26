@@ -113,6 +113,8 @@ namespace Flash411
                 if (vinResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("VIN query failed: " + vinResponse.Status.ToString());
+                    await this.vehicle.ExitKernel();
+                    await this.vehicle.ExitKernel();
                     return;
                 }
                 this.AddUserMessage("VIN: " + vinResponse.Value);
@@ -212,9 +214,16 @@ namespace Flash411
                 Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
                 if (osidResponse.Status != ResponseStatus.Success)
                 {
-                    this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+                    this.AddUserMessage("Operating system query failed, will retry: " + osidResponse.Status);
                     await this.vehicle.ExitKernel();
-                    return;
+                    await this.vehicle.ExitKernel();
+
+                    osidResponse = await this.vehicle.QueryOperatingSystemId();
+                    if (osidResponse.Status != ResponseStatus.Success)
+                    {
+                        this.AddUserMessage("Operating system query failed, giving up: " + osidResponse.Status);
+                        return;
+                    }
                 }
 
                 PcmInfo info = new PcmInfo(osidResponse.Value);
