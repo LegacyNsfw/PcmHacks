@@ -237,13 +237,6 @@ namespace Flash411
                 }
 
                 this.AddUserMessage("Unlock succeeded.");
-                
-                Response<Stream> readResponse = await this.vehicle.ReadContents(info);
-                if (readResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
-                    return;
-                }
 
                 string path = this.ShowSaveAsDialog();
                 if (path == null)
@@ -252,7 +245,14 @@ namespace Flash411
                     return;
                 }
 
-                this.AddUserMessage("Saving to " + path);
+                this.AddUserMessage("Will save to " + path);
+                
+                Response<Stream> readResponse = await this.vehicle.ReadContents(info);
+                if (readResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
+                    return;
+                }
 
                 try
                 {
