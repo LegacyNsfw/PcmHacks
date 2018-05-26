@@ -20,8 +20,8 @@ namespace Flash411
         /// </summary>
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
-            this.MaxSendSize = 140;    // Accuracy?
-            this.MaxReceiveSize = 200; // 200 Works with the ScanTool SX, will take about a half hour to download 512kb.
+            this.MaxSendSize = 192 + 12; // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
+            this.MaxReceiveSize = 512;   // 200 Works with the ScanTool SX, will take about a half hour to download 512kb.
             this.Supports4X = false;
         }
 
@@ -100,7 +100,8 @@ namespace Flash411
                     !await this.SendAndVerify("AT AR", "OK") ||               // Turn Auto Receive on (default should be on anyway)
                     !await this.SendAndVerify("AT ST 50", "OK") ||                  // Set timeout to N * 4 milliseconds - TODO: Adjust or remove!
                     !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK") || // Set receive filter to this tool ID
-                    !await this.SendAndVerify("AT H1", "OK")                  // Send headers
+                    !await this.SendAndVerify("AT H1", "OK")                   // Send headers
+                 
                     )
                 {
                     return false;
@@ -137,9 +138,10 @@ namespace Flash411
 
                 this.currentHeader = header;
             }
-                        
+
+            payload = payload.Replace(" ", "");
+
             string sendMessageResponse = await this.SendRequest(payload + " ");
-            this.Logger.AddDebugMessage("SendMessage response: " + sendMessageResponse);
             if (!this.ProcessResponse(sendMessageResponse, "message content"))
             {
                 return false;
