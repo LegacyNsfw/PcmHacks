@@ -98,7 +98,7 @@ namespace Flash411
                     !await this.SendAndVerify("AT SP2", "OK") ||              // Set Protocol 2 (VPW)
                     !await this.SendAndVerify("AT DP", "SAE J1850 VPW") ||    // Get Protocol (Verify VPW)
                     !await this.SendAndVerify("AT AR", "OK") ||               // Turn Auto Receive on (default should be on anyway)
-                    !await this.SendAndVerify("AT ST 99", "OK") ||                  // Set timeout to N * 4 milliseconds - TODO: Adjust or remove!
+                    !await this.SendAndVerify("AT ST 50", "OK") ||                  // Set timeout to N * 4 milliseconds - TODO: Adjust or remove!
                     !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK") || // Set receive filter to this tool ID
                     !await this.SendAndVerify("AT H1", "OK")                  // Send headers
                     )
