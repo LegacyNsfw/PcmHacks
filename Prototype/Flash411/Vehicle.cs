@@ -312,16 +312,6 @@ namespace Flash411
             return this.messageParser.ParseBlockUInt32(response.GetBytes());
         }
 
-        /// <summary>
-        /// Send a 'test device present' notification.
-        /// </summary>
-        private async Task NotifyTestDevicePreset()
-        {
-            this.logger.AddDebugMessage("Sending 'test device present' notification.");
-            Message testDevicePresent = this.messageFactory.CreateDevicePresentNotification();
-            await this.device.SendMessage(testDevicePresent);
-        }
-
         private async Task SuppressChatter()
         {
             this.logger.AddDebugMessage("Suppressing VPW chatter.");
@@ -334,8 +324,6 @@ namespace Flash411
         /// </summary>
         public async Task<bool> UnlockEcu(int keyAlgorithm)
         {   
-            await this.NotifyTestDevicePreset();
-
             this.device.ClearMessageQueue();
 
             this.logger.AddDebugMessage("Sending seed request.");
@@ -533,6 +521,10 @@ namespace Flash411
                     return new Response<Stream>(response.Status, null);
                 }
 
+                ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
+
+                await toolPresentNotifier.Notify();
+
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
                 if (!await PCMExecute(response.Value, 0xFF9150))
                 {
@@ -551,6 +543,8 @@ namespace Flash411
 
                 while (startAddress < endAddress)
                 {
+                    await toolPresentNotifier.Notify();
+
                     if (startAddress + blockSize > endAddress)
                     {
                         blockSize = endAddress - startAddress;
@@ -561,9 +555,7 @@ namespace Flash411
                         this.logger.AddUserMessage("Image download complete");
                         break;
                     }
-
-//                     await this.NotifyTestDevicePreset();
-
+                    
                     if (!await TryReadBlock(image, startAddress, blockSize))
                     {
                         this.logger.AddUserMessage(
@@ -594,8 +586,8 @@ namespace Flash411
                 // dashboard lights up with all sorts of errors.
                 //
                 // You can reset by pulling the PCM's fuse, but I'd hate to 
-                // have a think that we've done some real damage before they
-                // figure that out.
+                // have a user think that we've done some real damage before 
+                // they figure that out.
                 await this.ExitKernel();
                 await this.VehicleSetVPW4x(false);
                 await this.ExitKernel();
