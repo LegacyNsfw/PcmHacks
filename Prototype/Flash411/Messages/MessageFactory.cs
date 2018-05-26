@@ -322,14 +322,5 @@ namespace Flash411
             
             return new Message(requestupload);
         }
-
-        /// <summary>
-        /// This is the successessfull response signalling an upload is allowed
-        /// </summary>
-        public Message CreateUploadRequestOK()
-        {
-            byte[] RequestAccepted = { Priority.Type2, DeviceId.Tool, DeviceId.Pcm, Mode.PCMUpload + Mode.Response, SubMode.UploadOK };
-            return new Message(RequestAccepted);
-        }
     }
 }

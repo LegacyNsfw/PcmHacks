@@ -21,7 +21,7 @@ namespace Flash411
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
             this.MaxSendSize = 140;    // Accuracy?
-            this.MaxReceiveSize = 150; // Accuracy?
+            this.MaxReceiveSize = 200; // 200 Works with the ScanTool SX, will take about a half hour to download 512kb.
             this.Supports4X = false;
         }
 
@@ -86,9 +86,9 @@ namespace Flash411
                     this.Logger.AddUserMessage("All Pro ID: " + apID);
                     this.Logger.AddDebugMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
                     
-                    //                    this.Supports4X = true;
-                    this.MaxSendSize = 1000;
-                    this.MaxReceiveSize = 1000;
+                    // this.Supports4X = true;
+                    // this.MaxSendSize = 268;
+                    this.MaxReceiveSize = 512;
                 }
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage
@@ -138,7 +138,7 @@ namespace Flash411
                 this.currentHeader = header;
             }
                         
-            string sendMessageResponse = await this.SendRequest(payload);
+            string sendMessageResponse = await this.SendRequest(payload + " ");
             this.Logger.AddDebugMessage("SendMessage response: " + sendMessageResponse);
             if (!this.ProcessResponse(sendMessageResponse, "message content"))
             {

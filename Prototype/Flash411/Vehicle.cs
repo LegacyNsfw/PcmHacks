@@ -333,11 +333,12 @@ namespace Flash411
         /// Unlock the PCM by requesting a 'seed' and then sending the corresponding 'key' value.
         /// </summary>
         public async Task<bool> UnlockEcu(int keyAlgorithm)
-        {
+        {   
             await this.NotifyTestDevicePreset();
 
             this.device.ClearMessageQueue();
 
+            this.logger.AddDebugMessage("Sending seed request.");
             Message seedRequest = this.messageFactory.CreateSeedRequest();
 
             if (!await this.device.SendMessage(seedRequest))
@@ -359,6 +360,7 @@ namespace Flash411
                 return true;
             }
 
+            this.logger.AddDebugMessage("Parsing seed value.");
             Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.GetBytes());
             if (seedValueResponse.Status != ResponseStatus.Success)
             {
@@ -374,6 +376,7 @@ namespace Flash411
 
             UInt16 key = KeyAlgorithm.GetKey(keyAlgorithm, seedValueResponse.Value);
 
+            this.logger.AddDebugMessage("Sending unlock request.");
             Message unlockRequest = this.messageFactory.CreateUnlockRequest(key);
             if (!await this.device.SendMessage(unlockRequest))
             {
@@ -542,7 +545,7 @@ namespace Flash411
                 int startAddress = info.ImageBaseAddress;
                 int endAddress = info.ImageBaseAddress + info.ImageSize;
                 int bytesRemaining = info.ImageSize;
-                int blockSize = 200; // Works with the ScanTool SX, will take about an  hour to download 512kb.
+                int blockSize = this.device.MaxReceiveSize; 
 
                 byte[] image = new byte[info.ImageSize];
 
@@ -633,7 +636,7 @@ namespace Flash411
 
                     this.logger.AddDebugMessage("Received " + response.GetBytes().ToHex());
 
-                    if (this.messageParser.ParseReadResponse(response.GetBytes()).Value)
+                    if (this.messageParser.ParseReadResponse(response).Value)
                     {
                         Message payloadMessage = await this.device.ReceiveMessage();
                         if (payloadMessage == null)
@@ -685,30 +688,64 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Read messages from the device, ignoring irrelevant messages.
+        /// </summary>
+        private async Task<bool> WaitForSuccess(Func<Message, Response<bool>> filter)
+        {
+            for(int attempt = 1; attempt<=5; attempt++)
+            {
+                Message message = await this.device.ReceiveMessage();
+                if(message == null)
+                {
+                    continue;
+                }
+
+                Response<bool> response = filter(message);
+                if (response.Status != ResponseStatus.Success)
+                {
+                    this.logger.AddDebugMessage("Ignoring unrelated message.");
+                    continue;
+                }
+
+                this.logger.AddDebugMessage("Found response, " + (response.Value ? "succeeded." : "failed."));
+                return response.Value;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Load the executable payload on the PCM at the supplied address, and execute it.
         /// </summary>
         public async Task<bool> PCMExecute(byte[] payload, int address)
         {
             await this.SuppressChatter();
 
-            logger.AddDebugMessage("Calling CreateBlockMessage with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
+            logger.AddDebugMessage("Sending upload request with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
             Message request = messageFactory.CreateUploadRequest(payload.Length, address);
-            Response<Message> response = await SendRequest(request, 5);
-            if (response.Status != ResponseStatus.Success)
+            if(!await this.device.SendMessage(request))
             {
-                logger.AddDebugMessage("Could not upload kernel to PCM, permission denied.");
+                logger.AddUserMessage("Unable to send request to upload kernel to RAM.");
                 return false;
             }
 
+            if (!await this.WaitForSuccess(this.messageParser.ParseUploadPermissionResponse))
+            {
+                logger.AddUserMessage("Permission to upload kernel was denied.");
+                return false;
+            }
+            
             logger.AddDebugMessage("Going to load a " + payload.Length + " byte payload to 0x" + address.ToString("X6"));
-            // Loop through the payload building and sending packets, highest first, execute on last
 
+            // Loop through the payload building and sending packets, highest first, execute on last
             int payloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
             int chunkCount = payload.Length / payloadSize;
             int remainder = payload.Length % payloadSize;
 
             int offset = (chunkCount * payloadSize);
             int startAddress = address + offset;
+
+            // First we send the 'remainder' payload, containing any bytes that won't fill up an entire upload packet.
             logger.AddDebugMessage(
                 string.Format(
                     "Sending remainder payload with offset 0x{0:X}, start address 0x{1:X}, length 0x{2:X}.",
@@ -723,13 +760,14 @@ namespace Flash411
                 address + offset, 
                 remainder == payload.Length);
 
-            response = await SendRequest(remainderMessage, 5);
-            if (response.Status != ResponseStatus.Success)
+            Response<bool> uploadResponse = await WriteToRam(remainderMessage, 5);
+            if (uploadResponse.Status != ResponseStatus.Success)
             {
                 logger.AddDebugMessage("Could not upload kernel to PCM, remainder payload not accepted.");
                 return false;
             }
 
+            // Now we send a series of full upload packets
             for (int chunkIndex = chunkCount; chunkIndex > 0; chunkIndex--)
             {
                 offset = (chunkIndex - 1) * payloadSize;
@@ -748,8 +786,8 @@ namespace Flash411
                         startAddress,
                         payloadSize));
 
-                response = await SendRequest(payloadMessage, 5);
-                if (response.Status != ResponseStatus.Success)
+                uploadResponse = await WriteToRam(payloadMessage, 5);
+                if (uploadResponse.Status != ResponseStatus.Success)
                 {
                     logger.AddDebugMessage("Could not upload kernel to PCM, payload not accepted.");
                     return false;
@@ -824,26 +862,26 @@ namespace Flash411
         /// <remarks>
         /// Returns a succsefull Response on the first successful attempt, or the failed Response if we run out of tries.
         /// </remarks>
-        async Task<Response<Message>> SendRequest(Message message, int retries)
+        async Task<Response<bool>> WriteToRam(Message message, int retries)
         {
             for (int i = retries; i>0; i--)
             {
                 if (!await device.SendMessage(message))
                 {
-                    this.logger.AddDebugMessage("Unable to send message.");
+                    this.logger.AddDebugMessage("WriteToRam: Unable to send message.");
                     continue;
                 }
 
-                Message response = await this.device.ReceiveMessage();
-                if (response != null)
+                if (await this.WaitForSuccess(this.messageParser.ParseUploadResponse))
                 {
-                    return Response.Create(ResponseStatus.Success, response);
+                    return Response.Create(ResponseStatus.Success, true);
                 }
 
-                await Task.Delay(10); // incase were going too fast, we might want to change this logic
+                this.logger.AddDebugMessage("WriteToRam: Upload request failed.");
             }
 
-            return Response.Create(ResponseStatus.Error, (Message)null); // this should be response from the loop but the compiler thinks the response variable isnt in scope here????
+            this.logger.AddDebugMessage("WriteToRam: Giving up.");
+            return Response.Create(ResponseStatus.Error, false); // this should be response from the loop but the compiler thinks the response variable isnt in scope here????
         }
     }
 }

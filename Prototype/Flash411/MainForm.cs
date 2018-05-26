@@ -210,7 +210,8 @@ namespace Flash411
                     // were enabled when they shouldn't be.
                     return;
                 }
-                
+
+                this.AddUserMessage("Querying operating system of current PCM.");
                 Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
                 if (osidResponse.Status != ResponseStatus.Success)
                 {
