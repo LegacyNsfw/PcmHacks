@@ -13,7 +13,7 @@ namespace Flash411
     public class ScanToolDevice : SerialDevice
     {
         public const string DeviceType = "ObdLink or AllPro";
-        string setheader = "unset";
+        string currentHeader = "unset";
 
         /// <summary>
         /// Constructor.
@@ -21,7 +21,7 @@ namespace Flash411
         public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
         {
             this.MaxSendSize = 140;    // Accuracy?
-            this.MaxReceiveSize = 150; // Accuracy?
+            this.MaxReceiveSize = 200; // 200 Works with the ScanTool SX, will take about a half hour to download 512kb.
             this.Supports4X = false;
         }
 
@@ -44,7 +44,7 @@ namespace Flash411
             // to forgot what header the app previously told it to use. That requires
             // the app to forget what header the interface was told to use - that will
             // cause the app to send another set-header command later on.
-            this.setheader = "header not yet set";
+            this.currentHeader = "header not yet set";
             
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 115200;
@@ -85,7 +85,10 @@ namespace Flash411
                 {
                     this.Logger.AddUserMessage("All Pro ID: " + apID);
                     this.Logger.AddDebugMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
-                    this.Supports4X = true;
+                    
+                    // this.Supports4X = true;
+                    // this.MaxSendSize = 268;
+                    this.MaxReceiveSize = 512;
                 }
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage
@@ -123,93 +126,95 @@ namespace Flash411
             string payload;
             this.ParseMessage(messageBytes, out header, out payload);
 
-            Response<bool> setHeaderResponse = await this.SetHeader(header);
-            if(setHeaderResponse.Status != ResponseStatus.Success)
+            if (header != this.currentHeader)
+            {
+                string setHeaderResponse = await this.SendRequest("AT SH " + header);
+                this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
+                if (!this.ProcessResponse(setHeaderResponse, "set-header command"))
+                {
+                    return false;
+                }
+
+                this.currentHeader = header;
+            }
+                        
+            string sendMessageResponse = await this.SendRequest(payload + " ");
+            this.Logger.AddDebugMessage("SendMessage response: " + sendMessageResponse);
+            if (!this.ProcessResponse(sendMessageResponse, "message content"))
             {
                 return false;
             }
 
-            string deviceResponse = await this.SendRequest(payload);
-            this.Logger.AddDebugMessage("SendMessage produced " + deviceResponse);
-
-            // TODO: Parse deviceResponse, determine whether we actually succeeded or failed.
             return true;
         }
 
         /// <summary>
-        /// Send a message, wait for a response, return the response.
+        /// Try to read an incoming message from the device.
         /// </summary>
-        /// <remarks>
-        /// The 'message' parameter contains the exact sequence of bytes to send to the PCM,
-        /// and this method must return the exact sequence of bytes that came from the PCM.
-        /// The ELM/STN protocol gets in the way of that, so we have to translate in both directions.
-        /// </remarks>
-        public async override Task<Response<Message>> SendRequest(Message message)
+        /// <returns></returns>
+        protected override async Task Receive()
         {
-            byte[] messageBytes = message.GetBytes();
-            string header;
-            string payload;
-            this.ParseMessage(messageBytes, out header, out payload);
-
-            Response<bool> setHeaderResponse = await this.SetHeader(header);
-            if (setHeaderResponse.Status != ResponseStatus.Success)
-            {
-                return Response.Create(setHeaderResponse.Status, (Message)null);
-            }
-
             try
             {
-                string hexResponse = await this.SendRequest(payload);
-
-                //this.Logger.AddDebugMessage("hexResponse: " + hexResponse);
-                // Make sure we can parse the response.
-                if (!hexResponse.IsHex())
-                {
-                    this.Logger.AddDebugMessage("Unexpected response: " + hexResponse);
-                    return Response.Create(ResponseStatus.UnexpectedResponse, (Message)null);
-                }
-                byte[] deviceResponseBytes = hexResponse.ToBytes();
-                Array.Resize(ref deviceResponseBytes, deviceResponseBytes.Length - 1); // remove checksum byte
-                this.Logger.AddDebugMessage("RX: " + deviceResponseBytes.ToHex());
-                return Response.Create(ResponseStatus.Success, new Message(deviceResponseBytes));
+                string response = await this.ReadELMLine();
+                this.ProcessResponse(response, "receive");
             }
             catch (TimeoutException)
             {
-                return Response.Create(ResponseStatus.Timeout, (Message)null);
+                this.Logger.AddDebugMessage("Timeout during receive.");
             }
         }
 
         /// <summary>
-        /// Read a message, without sending one first.
+        /// Process responses from the EML/ST devices.
         /// </summary>
-        public async override Task<Response<Message>> ReadMessage()
+        private bool ProcessResponse(string rawResponse, string context)
         {
-            // TODO? Should we set a mesage filter here?
-        //    if (!await this.SendAndVerify("ST M", "OK"))
+            if (string.IsNullOrWhiteSpace(rawResponse))
             {
-        //        return new Response<Message>(ResponseStatus.Error, null);
-            }
-            
-            Response<string> stringResponse1;
-            Response<string> stringResponse2;
-            Response<string> stringResponse3;
-
-            try
-            {
-                stringResponse1 = await this.ReadELMLine();
-                stringResponse2 = await this.ReadELMLine();
-                stringResponse3 = await this.ReadELMLine();
-                this.ToString();
-            }
-            catch(Exception exception)
-            {
-                // Just a place to set a breakpoint.
-                exception.ToString();
+                this.Logger.AddDebugMessage(
+                    string.Format("Empty response to {0}.",
+                    context));
+                return false;
             }
 
-            return new Response<Message>(ResponseStatus.Error, null);
+            if (rawResponse == "OK")
+            {
+                return true;
+            }
+
+            if (rawResponse.IsHex())
+            {
+                string[] hexResponses = rawResponse.Split(' ');
+                foreach (string singleHexResponse in hexResponses)
+                {
+                    byte[] deviceResponseBytes = singleHexResponse.ToBytes();
+                    Array.Resize(ref deviceResponseBytes, deviceResponseBytes.Length - 1); // remove checksum byte
+                    this.Logger.AddDebugMessage("RX: " + deviceResponseBytes.ToHex());
+
+                    Message response = new Message(deviceResponseBytes);
+                    this.Enqueue(response);
+                }
+
+                return true;
+            }
+
+            if (rawResponse.EndsWith("OK"))
+            {
+                this.Logger.AddDebugMessage("WTF: Response not valid, but ends with OK.");
+                return true;
+            }
+
+            this.Logger.AddDebugMessage(
+                string.Format(
+                    "Unexpected response to {0}: {1}",
+                    context,
+                    rawResponse));
+
+
+            return false;
         }
-
+        
         /// <summary>
         /// Separate the message into header and payload.
         /// </summary>
@@ -220,27 +225,6 @@ namespace Flash411
             string hexRequest = messageBytes.ToHex();
             header = hexRequest.Substring(0, 9);
             payload = hexRequest.Substring(9);
-        }
-
-        /// <summary>
-        /// Set the header that the Elm device will use for the next message.
-        /// </summary>
-        /// <remark>
-        /// This is a no-op if the header has not changed since the last request, and just returns success
-        /// </remark>
-        public async Task<Response<bool>> SetHeader(string header)
-        {
-            if (header != this.setheader)
-            {
-                string setHeaderResponse = await this.SendRequest("AT SH " + header);
-                if (setHeaderResponse != "OK")
-                {
-                    this.Logger.AddDebugMessage("Unexpected response to set-header command: " + setHeaderResponse);
-                    return Response.Create(ResponseStatus.UnexpectedResponse, false);
-                }
-                this.setheader = header;
-            }
-            return Response.Create(ResponseStatus.Success, true);
         }
 
         /// <summary>
@@ -255,9 +239,16 @@ namespace Flash411
             this.Logger.AddDebugMessage("TX: " + request);
             await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
 
-            Response<string> response = await ReadELMLine();
+            try
+            {
+                string response = await ReadELMLine();
 
-            return response.Value;
+                return response;
+            }
+            catch (TimeoutException)
+            {
+                return string.Empty;
+            }
         }
 
         /// <summary>
@@ -287,7 +278,7 @@ namespace Flash411
         /// <remarks>
         /// Strips Non Printable, >, and Line Feeds. Converts Carriage Return to Space. Strips leading and trailing whitespace.
         /// </remarks>
-        async private Task<Response<string>> ReadELMLine()
+        private async Task<string> ReadELMLine()
         {
             int buffersize = (MaxReceiveSize * 3) + 7; // payload with spaces (3 bytes per character) plus the longest possible prompt
             byte[] buffer = new byte[buffersize];
@@ -336,22 +327,21 @@ namespace Flash411
             //this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
             string line = System.Text.Encoding.ASCII.GetString(filtered).Trim(); // strip leading and trailing whitespace, too
 
-            //this.Logger.AddDebugMessage("Read \"" + line + "\"");
+            this.Logger.AddDebugMessage("Read \"" + line + "\"");
 
-            if (i == buffersize) return Response.Create(ResponseStatus.Truncated, line);
-
-            return Response.Create(ResponseStatus.Success, line);
+            return line;
         }
 
         /// <summary>
         /// Collects a line with ReadELMLine() and converts it to a Message
         /// </summary>
-        async private Task<Response<Message>> ReadELMPacket()
+        private async Task<Response<Message>> ReadELMPacket()
         {
             //this.Logger.AddDebugMessage("Trace: ReadELMPacket");
 
-            Response<string> response = await ReadELMLine();
-            byte[] message = response.Value.ToBytes();
+            string response = await ReadELMLine();
+
+            byte[] message = response.ToBytes();
 
             return Response.Create(ResponseStatus.Success, new Message(message));
         }

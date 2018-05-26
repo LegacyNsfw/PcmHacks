@@ -19,6 +19,10 @@ namespace Flash411
 
         }
 
+        protected override void Dispose(bool disposing)
+        {    
+        }
+
         public override string GetDeviceType()
         {
             return DeviceType;
@@ -41,23 +45,13 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Send a message, wait for a response, return the response.
+        /// Try to read an incoming message from the device.
         /// </summary>
-        public override Task<Response<Message>> SendRequest(Message message)
+        /// <returns></returns>
+        protected override Task Receive()
         {
-            StringBuilder builder = new StringBuilder();
-            this.Logger.AddDebugMessage("Sending request " + message.GetBytes().ToHex());
-            this.Port.Send(message.GetBytes());
-
-            byte[] response = new byte[100];
-            this.Port.Receive(response, 0, 100);
-
-            return Task.FromResult(Response.Create(ResponseStatus.Success, new Message(response)));
-        }
-
-        public async override Task<Response<Message>> ReadMessage()
-        {
-            return new Response<Message>(ResponseStatus.Error, null);
+            this.Logger.AddDebugMessage("Not Implemented: Mock Receieve");
+            return Task.FromResult(0);
         }
 
         /// <summary>

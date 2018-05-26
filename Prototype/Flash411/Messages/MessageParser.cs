@@ -202,23 +202,50 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Parse the response to an upload-to-RAM request.
+        /// </summary>
+        public Response<bool> ParseUploadResponse(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6D, 0x36);
+        }
+                
+        /// <summary>
         /// Parse the response to a read request.
         /// </summary>
-        public Response<bool> ParseReadResponse(byte[] response)
+        public Response<bool> ParseReadResponse(Message message)
         {
+            return this.DoSimpleValidation(message, 0x6C, 0x35);
+        }
+
+        /// <summary>
+        /// Parse the response to a request for permission to upload a RAM kernel.
+        /// </summary>
+        internal Response<bool> ParseUploadPermissionResponse(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6C, 0x34);
+        }
+
+        /// <summary>
+        /// Check for an accept/reject message with the given mode byte.
+        /// </summary>
+        private Response<bool> DoSimpleValidation(Message message, byte priority, byte mode)
+        {
+            byte[] actual = message.GetBytes();
             ResponseStatus status;
-            byte[] success = new byte[] { 0x6C, DeviceId.Tool, 0x10, 0x75, 0x01, 0x54 };
-            if (TryVerifyInitialBytes(response, success, out status))
+
+            byte[] success = new byte[] { priority, DeviceId.Tool, DeviceId.Pcm, (byte)(mode + 0x40), };
+            if (this.TryVerifyInitialBytes(actual, success, out status))
             {
-                status = ResponseStatus.Success;
-                return Response.Create(status, true);
+                return Response.Create(ResponseStatus.Success, true);
             }
 
-            // Error:
-            // 6C F0 10 7F 35 01 01 F4 00 00 33
-            // return new Message(new byte[] { 0x6C, DeviceId.Tool, 0x10, 0x7F, 0x35, 0x01, 0x01, 0xF4, 0x00, 0x00, 0x33 });
+            byte[] failure = new byte[] { priority, DeviceId.Tool, DeviceId.Pcm, 0x7F, mode };
+            if (this.TryVerifyInitialBytes(actual, failure, out status))
+            {
+                return Response.Create(ResponseStatus.Success, false);
+            }
 
-            return new Response<bool>(ResponseStatus.Error, false);
+            return Response.Create(ResponseStatus.UnexpectedResponse, false);
         }
 
         /// <summary>

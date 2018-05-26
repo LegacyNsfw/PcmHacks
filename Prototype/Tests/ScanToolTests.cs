@@ -26,17 +26,20 @@ namespace Tests
 
             // Send a message.
             Message message = new Message(new byte[] { 0x6c, 0x10, 0xF0, 0x3C, 0x01 });
-            Response<Message> response = await device.SendRequest(message);
+            bool sendSuccess = await device.SendMessage(message);
 
             // Confirm success.
-            Assert.AreEqual(ResponseStatus.Success, response.Status, "Response status");
+            Assert.IsTrue(sendSuccess, "Send success.");
 
             // Confirm that the device sent the bytes we expect it to send.
             Assert.AreEqual("AT SH 6C 10 F0 \r\n", System.Text.Encoding.ASCII.GetString(port.MessagesSent[0]), "Set-header command");
             Assert.AreEqual("3C 01\r\n", Encoding.ASCII.GetString(port.MessagesSent[1]), "Read block 1 command");
 
             // Confirm that the device interpreted the response as expected.
-            Assert.AreEqual("6C F0 10 7C 01 00 31 47 31 59 59", response.Value.GetBytes().ToHex(), "Response message");
+            Message response = await device.ReceiveMessage();
+
+            Assert.IsNotNull(response, "Response should not be null.");
+            Assert.AreEqual("6C F0 10 7C 01 00 31 47 31 59 59", response.GetBytes().ToHex(), "Response message");
         }
     }
 }

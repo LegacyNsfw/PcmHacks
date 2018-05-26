@@ -99,25 +99,42 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryVin()
         {
-            Response<Message> response1 = await this.device.SendRequest(this.messageFactory.CreateVinRequest1());
-            if (response1.Status != ResponseStatus.Success)
+            this.device.ClearMessageQueue();
+
+            if (!await this.device.SendMessage(this.messageFactory.CreateVinRequest1()))
             {
-                return Response.Create(response1.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 1 failed.");
             }
 
-            Response<Message> response2 = await this.device.SendRequest(this.messageFactory.CreateVinRequest2());
-            if (response1.Status != ResponseStatus.Success)
+            Message response1 = await this.device.ReceiveMessage();
+            if (response1 == null)
             {
-                return Response.Create(response1.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 1.");
             }
 
-            Response<Message> response3 = await this.device.SendRequest(this.messageFactory.CreateVinRequest3());
-            if (response1.Status != ResponseStatus.Success)
+            if (!await this.device.SendMessage(this.messageFactory.CreateVinRequest2()))
             {
-                return Response.Create(response1.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 2 failed.");
             }
 
-            return this.messageParser.ParseVinResponses(response1.Value.GetBytes(), response2.Value.GetBytes(), response3.Value.GetBytes());
+            Message response2 = await this.device.ReceiveMessage();
+            if (response2 == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 2.");
+            }
+
+            if (!await this.device.SendMessage(this.messageFactory.CreateVinRequest3()))
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 3 failed.");
+            }
+
+            Message response3 = await this.device.ReceiveMessage();
+            if (response3 == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 3.");
+            }
+
+            return this.messageParser.ParseVinResponses(response1.GetBytes(), response2.GetBytes(), response3.GetBytes());
         }
 
         /// <summary>
@@ -125,25 +142,42 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QuerySerial()
         {
-            Response<Message> response1 = await this.device.SendRequest(this.messageFactory.CreateSerialRequest1());
-            if (response1.Status != ResponseStatus.Success)
+            this.device.ClearMessageQueue();
+
+            if (!await this.device.SendMessage(this.messageFactory.CreateSerialRequest1()))
             {
-                return Response.Create(response1.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 1 failed.");
             }
 
-            Response<Message> response2 = await this.device.SendRequest(this.messageFactory.CreateSerialRequest2());
-            if (response2.Status != ResponseStatus.Success)
+            Message response1 = await this.device.ReceiveMessage();
+            if (response1 == null)
             {
-                return Response.Create(response2.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 1.");
             }
 
-            Response<Message> response3 = await this.device.SendRequest(this.messageFactory.CreateSerialRequest3());
-            if (response3.Status != ResponseStatus.Success)
+            if (!await this.device.SendMessage(this.messageFactory.CreateSerialRequest2()))
             {
-                return Response.Create(response3.Status, "Unknown");
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 2 failed.");
             }
 
-            return this.messageParser.ParseSerialResponses(response1.Value, response2.Value, response3.Value);
+            Message response2 = await this.device.ReceiveMessage();
+            if (response2 == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 2.");
+            }
+
+            if (!await this.device.SendMessage(this.messageFactory.CreateSerialRequest3()))
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 3 failed.");
+            }
+
+            Message response3 = await this.device.ReceiveMessage();
+            if (response3 == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 3.");
+            }
+
+            return this.messageParser.ParseSerialResponses(response1, response2, response3);
         }
 
         /// <summary>
@@ -151,13 +185,20 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryBCC()
         {
-            Response<Message> response = await this.device.SendRequest(this.messageFactory.CreateBCCRequest());
-            if (response.Status != ResponseStatus.Success)
+            this.device.ClearMessageQueue();
+
+            if (!await this.device.SendMessage(this.messageFactory.CreateBCCRequest()))
             {
-                return Response.Create(response.Status, "Unknown");
+                return Response.Create(ResponseStatus.Error, "Unknown. Request failed.");
             }
 
-            return this.messageParser.ParseBCCresponse(response.Value.GetBytes());
+            Message response = await this.device.ReceiveMessage();
+            if (response == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response received.");
+            }
+
+            return this.messageParser.ParseBCCresponse(response.GetBytes());
         }
 
         /// <summary>
@@ -165,13 +206,20 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryMEC()
         {
-            Response<Message> response = await this.device.SendRequest(this.messageFactory.CreateMECRequest());
-            if (response.Status != ResponseStatus.Success)
+            this.device.ClearMessageQueue();
+
+            if (!await this.device.SendMessage(this.messageFactory.CreateMECRequest()))
             {
-                return Response.Create(response.Status, "Unknown");
+                return Response.Create(ResponseStatus.Error, "Unknow. Request failed.");
             }
 
-            return this.messageParser.ParseMECresponse(response.Value.GetBytes());
+            Message response = await this.device.ReceiveMessage();
+            if (response == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, "Unknown. No response received.");
+            }
+
+            return this.messageParser.ParseMECresponse(response.GetBytes());
         }
 
         /// <summary>
@@ -182,6 +230,8 @@ namespace Flash411
         /// </remarks>
         public async Task<Response<bool>> UpdateVin(string vin)
         {
+            this.device.ClearMessageQueue();
+
             if (vin.Length != 17) // should never happen, but....
             {
                 this.logger.AddUserMessage("VIN " + vin + " is not 17 characters long!");
@@ -215,13 +265,7 @@ namespace Flash411
         public async Task<Response<UInt32>> QueryOperatingSystemId()
         {
             Message request = this.messageFactory.CreateOperatingSystemIdReadRequest();
-            var response = await this.device.SendRequest(request);
-            if (response.Status != ResponseStatus.Success)
-            {
-                return Response.Create(response.Status, (UInt32)0);
-            }
-
-            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
+            return await this.QueryUnsignedValue(request);
         }
 
         /// <summary>
@@ -234,13 +278,7 @@ namespace Flash411
         public async Task<Response<UInt32>> QueryHardwareId()
         {
             Message request = this.messageFactory.CreateHardwareIdReadRequest();
-            var response = await this.device.SendRequest(request);
-            if (response.Status != ResponseStatus.Success)
-            {
-                return Response.Create(response.Status, (UInt32)0);
-            }
-
-            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
+            return await this.QueryUnsignedValue(request);
         }
 
         /// <summary>
@@ -253,69 +291,96 @@ namespace Flash411
         public async Task<Response<UInt32>> QueryCalibrationId()
         {
             Message request = this.messageFactory.CreateCalibrationIdReadRequest();
-            var response = await this.device.SendRequest(request);
-            if (response.Status != ResponseStatus.Success)
-            {
-                return Response.Create(response.Status, (UInt32)0);
-            }
-
-            return this.messageParser.ParseBlockUInt32(response.Value.GetBytes());
+            return await this.QueryUnsignedValue(request);
         }
 
-        /// <summary>
-        /// Send a 'test device present' notification.
-        /// </summary>
-        private async Task NotifyTestDevicePreset()
+        private async Task<Response<UInt32>> QueryUnsignedValue(Message request)
         {
-            this.logger.AddDebugMessage("Sending 'test device present' notification.");
-            Message testDevicePresent = this.messageFactory.CreateDevicePresentNotification();
-            await this.device.SendMessage(testDevicePresent);
+            this.device.ClearMessageQueue();
+
+            if (!await this.device.SendMessage(request))
+            {
+                return Response.Create(ResponseStatus.Error, (UInt32)0);
+            }
+
+            var response = await this.device.ReceiveMessage();
+            if (response == null)
+            {
+                return Response.Create(ResponseStatus.Timeout, (UInt32)0);
+            }
+
+            return this.messageParser.ParseBlockUInt32(response.GetBytes());
+        }
+
+        private async Task SuppressChatter()
+        {
+            this.logger.AddDebugMessage("Suppressing VPW chatter.");
+            Message suppressChatter = this.messageFactory.CreateDisableNormalMessageTransmission();
+            await this.device.SendMessage(suppressChatter);
         }
 
         /// <summary>
         /// Unlock the PCM by requesting a 'seed' and then sending the corresponding 'key' value.
         /// </summary>
-        public async Task<Response<bool>> UnlockEcu(int keyAlgorithm)
-        {
-            await this.NotifyTestDevicePreset();
+        public async Task<bool> UnlockEcu(int keyAlgorithm)
+        {   
+            this.device.ClearMessageQueue();
 
+            this.logger.AddDebugMessage("Sending seed request.");
             Message seedRequest = this.messageFactory.CreateSeedRequest();
-            Response<Message> seedResponse = await this.device.SendRequest(seedRequest);
-            if (seedResponse.Status != ResponseStatus.Success)
+
+            if (!await this.device.SendMessage(seedRequest))
             {
-                if (seedResponse.Status != ResponseStatus.UnexpectedResponse) Response.Create(ResponseStatus.Success, true);
-                return Response.Create(seedResponse.Status, false);
+                this.logger.AddDebugMessage("Unable to send seed request.");
+                return false;
             }
 
-            if (this.messageParser.IsUnlocked(seedResponse.Value.GetBytes()))
+            Message seedResponse = await this.device.ReceiveMessage();
+            if (seedResponse == null)
+            {
+                this.logger.AddDebugMessage("No response to seed request.");
+                return false;
+            }
+
+            if (this.messageParser.IsUnlocked(seedResponse.GetBytes()))
             {
                 this.logger.AddUserMessage("PCM is already unlocked");
-                return Response.Create(ResponseStatus.Success, true);
+                return true;
             }
 
-            Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.Value.GetBytes());
+            this.logger.AddDebugMessage("Parsing seed value.");
+            Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.GetBytes());
             if (seedValueResponse.Status != ResponseStatus.Success)
             {
-                return Response.Create(seedValueResponse.Status, false);
+                this.logger.AddDebugMessage("Unable to parse seed response.");
+                return false;
             }
 
             if (seedValueResponse.Value == 0x0000)
             {
                 this.logger.AddUserMessage("PCM Unlock not required");
-                return Response.Create(seedValueResponse.Status, true);
+                return true;
             }
 
             UInt16 key = KeyAlgorithm.GetKey(keyAlgorithm, seedValueResponse.Value);
 
+            this.logger.AddDebugMessage("Sending unlock request.");
             Message unlockRequest = this.messageFactory.CreateUnlockRequest(key);
-            Response<Message> unlockResponse = await this.device.SendRequest(unlockRequest);
-            if (unlockResponse.Status != ResponseStatus.Success)
+            if (!await this.device.SendMessage(unlockRequest))
             {
-                return Response.Create(unlockResponse.Status, false);
+                this.logger.AddDebugMessage("Unable to send unlock request.");
+                return false;
             }
 
+            Message unlockResponse = await this.device.ReceiveMessage();
+            if (unlockResponse == null)
+            {
+                this.logger.AddDebugMessage("No response to unlock request.");
+                return false;
+            }
+            
             string errorMessage;
-            Response<bool> result = this.messageParser.ParseUnlockResponse(unlockResponse.Value.GetBytes(), out errorMessage);
+            Response<bool> result = this.messageParser.ParseUnlockResponse(unlockResponse.GetBytes(), out errorMessage);
             if (errorMessage != null)
             {
                 this.logger.AddUserMessage(errorMessage);
@@ -325,16 +390,16 @@ namespace Flash411
                 this.logger.AddUserMessage("PCM Unlocked");
             }
 
-            return result;
+            return result.Value;
         }
 
         /// <summary>
         /// Writes a block of data to the PCM
         /// Requires an unlocked PCM
         /// </summary>
-        public async Task<Response<bool>> WriteBlock(byte block, byte[] data)
+        private async Task<Response<bool>> WriteBlock(byte block, byte[] data)
         {
-
+            /*
             Message tx;
             Message ok = new Message(new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7B, block });
 
@@ -364,6 +429,8 @@ namespace Flash411
 
             logger.AddDebugMessage("Successful write to block " + block);
             return Response.Create(ResponseStatus.Success, true);
+            */
+            return Response.Create(ResponseStatus.Error, false);
         }
 
         public async Task<byte[]> LoadKernelFromFidle(string kernel)
@@ -440,9 +507,11 @@ namespace Flash411
         {
             try
             {
+                this.device.ClearMessageQueue();
+
                 // switch to 4x, if possible. But continue either way.
                 // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                await VehicleSetVPW4x(true);
+                await this.VehicleSetVPW4x(true);
 
                 // execute read kernel
                 Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
@@ -451,6 +520,10 @@ namespace Flash411
                     logger.AddUserMessage("Failed to load kernel from file.");
                     return new Response<Stream>(response.Status, null);
                 }
+
+                ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
+
+                await toolPresentNotifier.Notify();
 
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
                 if (!await PCMExecute(response.Value, 0xFF9150))
@@ -464,12 +537,14 @@ namespace Flash411
                 int startAddress = info.ImageBaseAddress;
                 int endAddress = info.ImageBaseAddress + info.ImageSize;
                 int bytesRemaining = info.ImageSize;
-                int blockSize = 128;
+                int blockSize = this.device.MaxReceiveSize; 
 
                 byte[] image = new byte[info.ImageSize];
 
                 while (startAddress < endAddress)
                 {
+                    await toolPresentNotifier.Notify();
+
                     if (startAddress + blockSize > endAddress)
                     {
                         blockSize = endAddress - startAddress;
@@ -480,9 +555,7 @@ namespace Flash411
                         this.logger.AddUserMessage("Image download complete");
                         break;
                     }
-
-                    await this.NotifyTestDevicePreset();
-
+                    
                     if (!await TryReadBlock(image, startAddress, blockSize))
                     {
                         this.logger.AddUserMessage(
@@ -507,8 +580,26 @@ namespace Flash411
             }
             finally
             {
-                await device.SetVPW4x(false);
+                // Sending the exit command twice, and at both speeds, just to
+                // be totally certain that the PCM goes back to normal. If the
+                // kernel is left running, the engine won't start, and the 
+                // dashboard lights up with all sorts of errors.
+                //
+                // You can reset by pulling the PCM's fuse, but I'd hate to 
+                // have a user think that we've done some real damage before 
+                // they figure that out.
+                await this.ExitKernel();
+                await this.VehicleSetVPW4x(false);
+                await this.ExitKernel();
             }
+        }
+
+        public async Task ExitKernel()
+        {
+            this.device.ClearMessageQueue();
+
+            Message exitKernel = this.messageFactory.CreateExitKernel();
+            await this.device.SendMessage(exitKernel);
         }
 
         private async Task<bool> TryReadBlock(byte[] image, int startAddress, int length)
@@ -520,52 +611,61 @@ namespace Flash411
                 Message message = this.messageFactory.CreateReadRequest(startAddress, length);
 
                 this.logger.AddDebugMessage("Sending " + message.GetBytes().ToHex());
-                Response<Message> response = await this.device.SendRequest(message);
-
-                if(response.Status != ResponseStatus.Success)
+                if (!await this.device.SendMessage(message))
                 {
-                    this.logger.AddUserMessage("Unable to send:" + response.Status);
-                    continue;
+                    this.logger.AddDebugMessage("Unable to send read request.");
+                    return false;
                 }
 
-                this.logger.AddDebugMessage("Received " + response.Value.GetBytes().ToHex());
-
-                if (this.messageParser.ParseReadResponse(response.Value.GetBytes()).Value)
+                while (this.device.ReceivedMessageCount > 0)
                 {
-                    this.logger.AddUserMessage("Read request succeeded, waiting for data.");
-
-                    Response<Message> payloadResponse = await this.device.ReadMessage();
-                    if (payloadResponse.Status != ResponseStatus.Success)
+                    Message response = await this.device.ReceiveMessage();
+                    if (response == null)
                     {
-                        this.logger.AddUserMessage("Error receiving payload: " + payloadResponse.Status.ToString());
+                        this.logger.AddDebugMessage("No response to read request.");
                         continue;
                     }
 
-                    Message payloadMessage = payloadResponse.Value;
-                    byte[] payload = payloadMessage.GetBytes();
-                    
-                    if (payload.Length < 4)
-                    {
-                        this.logger.AddUserMessage("Payload too small, " + payload.Length.ToString() + " bytes.");
-                        continue;
-                    }
+                    this.logger.AddDebugMessage("Received " + response.GetBytes().ToHex());
 
-                    if (payload[4] == 1) // TODO check length
+                    if (this.messageParser.ParseReadResponse(response).Value)
                     {
-                        Buffer.BlockCopy(payload, 10, image, startAddress, length);
-                    }
-                    else if (payload[4] == 2) // TODO check length
-                    {
-                        int runLength = payload[5] << 8 + payload[6];
-                        byte value = payload[10];
-                        for (int index = 0; index < runLength; index++)
+                        Message payloadMessage = await this.device.ReceiveMessage();
+                        if (payloadMessage == null)
                         {
-                            image[startAddress + index] = value;
+                            this.logger.AddDebugMessage("No payload following read request.");
+                            continue;
                         }
-                    }
 
-                    return true;
-                }                
+                        int percentDone = (startAddress * 100) / image.Length;
+                        this.logger.AddUserMessage(string.Format("Read block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));
+
+                        // TODO: Move this into a new "byte[] MessageParser.ParseReadPayload()"
+                        byte[] payload = payloadMessage.GetBytes();
+
+                        if (payload.Length < 4)
+                        {
+                            this.logger.AddUserMessage("Payload too small, " + payload.Length.ToString() + " bytes.");
+                            continue;
+                        }
+
+                        if (payload[4] == 1) // TODO check length
+                        {
+                            Buffer.BlockCopy(payload, 10, image, startAddress, length);
+                        }
+                        else if (payload[4] == 2) // TODO check length
+                        {
+                            int runLength = payload[5] << 8 + payload[6];
+                            byte value = payload[10];
+                            for (int index = 0; index < runLength; index++)
+                            {
+                                image[startAddress + index] = value;
+                            }
+                        }
+
+                        return true;
+                    }
+                }
             }
 
             return false;
@@ -580,46 +680,114 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Load the executable payload on the PCM from the supplied address, and execute it.
+        /// Read messages from the device, ignoring irrelevant messages.
+        /// </summary>
+        private async Task<bool> WaitForSuccess(Func<Message, Response<bool>> filter)
+        {
+            for(int attempt = 1; attempt<=5; attempt++)
+            {
+                Message message = await this.device.ReceiveMessage();
+                if(message == null)
+                {
+                    continue;
+                }
+
+                Response<bool> response = filter(message);
+                if (response.Status != ResponseStatus.Success)
+                {
+                    this.logger.AddDebugMessage("Ignoring unrelated message.");
+                    continue;
+                }
+
+                this.logger.AddDebugMessage("Found response, " + (response.Value ? "succeeded." : "failed."));
+                return response.Value;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Load the executable payload on the PCM at the supplied address, and execute it.
         /// </summary>
         public async Task<bool> PCMExecute(byte[] payload, int address)
         {
-            logger.AddDebugMessage("Going to load a " + payload.Length + " byte payload to 0x" + address.ToString("X6"));
-            // Loop through the payload building and sending packets, highest first, execute on last
-            for (int bytesremain = payload.Length; bytesremain > 0; bytesremain -= device.MaxSendSize)
+            await this.SuppressChatter();
+
+            logger.AddDebugMessage("Sending upload request with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
+            Message request = messageFactory.CreateUploadRequest(payload.Length, address);
+            if(!await this.device.SendMessage(request))
             {
-                bool exec = false;
-                int length = device.MaxSendSize-12; //Headers use 10 bytes, sum uses 2 bytes
-                int offset = bytesremain - length;
+                logger.AddUserMessage("Unable to send request to upload kernel to RAM.");
+                return false;
+            }
 
-                if (offset<=0) // Is this the last packet?
-                {
-                    offset = 0;
-                    length = bytesremain;
-                    exec = true;
-                }
-                int loadaddress = address + offset;
+            if (!await this.WaitForSuccess(this.messageParser.ParseUploadPermissionResponse))
+            {
+                logger.AddUserMessage("Permission to upload kernel was denied.");
+                return false;
+            }
+            
+            logger.AddDebugMessage("Going to load a " + payload.Length + " byte payload to 0x" + address.ToString("X6"));
 
-                //if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
-                logger.AddDebugMessage("Calling CreateBlockMessage with payload size " + payload.Length + ", length " + length + " loadaddress " + loadaddress.ToString("X6") +  " exec " + exec);
-                Message request = messageFactory.CreateUploadRequest(length, loadaddress);
-                Response<Message> response = await SendRequest(request, 5);
-                if (response.Status != ResponseStatus.Success)
+            // Loop through the payload building and sending packets, highest first, execute on last
+            int payloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
+            int chunkCount = payload.Length / payloadSize;
+            int remainder = payload.Length % payloadSize;
+
+            int offset = (chunkCount * payloadSize);
+            int startAddress = address + offset;
+
+            // First we send the 'remainder' payload, containing any bytes that won't fill up an entire upload packet.
+            logger.AddDebugMessage(
+                string.Format(
+                    "Sending remainder payload with offset 0x{0:X}, start address 0x{1:X}, length 0x{2:X}.",
+                    offset,
+                    startAddress,
+                    remainder));
+
+            Message remainderMessage = messageFactory.CreateBlockMessage(
+                payload, 
+                offset, 
+                remainder, 
+                address + offset, 
+                remainder == payload.Length);
+
+            Response<bool> uploadResponse = await WriteToRam(remainderMessage, 5);
+            if (uploadResponse.Status != ResponseStatus.Success)
+            {
+                logger.AddDebugMessage("Could not upload kernel to PCM, remainder payload not accepted.");
+                return false;
+            }
+
+            // Now we send a series of full upload packets
+            for (int chunkIndex = chunkCount; chunkIndex > 0; chunkIndex--)
+            {
+                offset = (chunkIndex - 1) * payloadSize;
+                startAddress = address + offset;
+                Message payloadMessage = messageFactory.CreateBlockMessage(
+                    payload,
+                    offset,
+                    payloadSize,
+                    startAddress,
+                    offset == 0);
+
+                logger.AddDebugMessage(
+                    string.Format(
+                        "Sending payload with offset 0x{0:X}, start address 0x{1:X}, length 0x{2:X}.",
+                        offset,
+                        startAddress,
+                        payloadSize));
+
+                uploadResponse = await WriteToRam(payloadMessage, 5);
+                if (uploadResponse.Status != ResponseStatus.Success)
                 {
-                    logger.AddDebugMessage("Could not upload kernel to PCM (request), aborting");
+                    logger.AddDebugMessage("Could not upload kernel to PCM, payload not accepted.");
                     return false;
                 }
 
-                Message block = messageFactory.CreateBlockMessage(payload, offset, length, loadaddress, exec);
-                response = await SendRequest(block, 5);
-                if (response.Status != ResponseStatus.Success)
-                {
-                    logger.AddDebugMessage("Could not upload kernel to PCM (payload), aborting");
-                    return false;
-                }
+                int bytesSent = payload.Length - offset;
+                int percentDone = bytesSent * 100 / payload.Length;
 
-                int percentLeft = bytesremain * 100 / payload.Length;
-                int percentDone = 100 - percentLeft;
                 this.logger.AddUserMessage(
                     string.Format(
                         "Kernel upload {0}% complete.",
@@ -643,20 +811,36 @@ namespace Flash411
                 logger.AddUserMessage("This interface does not support VPW 4x");
                 return true;
             }
+
             logger.AddUserMessage("This interface does support VPW 4x");
 
             // PCM Pre-flight checks
-            Response<Message> rx = await this.device.SendRequest(HighSpeedCheck);
-            if (rx.Status != ResponseStatus.Success || !Utility.CompareArraysPart(rx.Value.GetBytes(), HighSpeedOK.GetBytes()))
+            if (!await this.device.SendMessage(HighSpeedCheck))
+            {
+                logger.AddUserMessage("Unable to request permission to use 4x.");
+                return false;
+            }
+
+            Message rx = await this.device.ReceiveMessage();
+            if (rx == null)
+            {
+                logger.AddUserMessage("No response received to high-speed permission request.");
+                return false;
+            }
+
+            if (!Utility.CompareArraysPart(rx.GetBytes(), HighSpeedOK.GetBytes()))
             {
                 logger.AddUserMessage("PCM is not allowing a switch to VPW 4x");
                 return false;
             }
-            logger.AddUserMessage("PCM is allowing a switch to VPW 4x");
 
-            logger.AddUserMessage("Asking PCM to swtich to VPW 4x");
-            // Request all devices on the bus to change speed to VPW 4x
-            rx = await this.device.SendRequest(BeginHighSpeed);
+            logger.AddUserMessage("PCM is allowing a switch to VPW 4x. Requesting all VPW modules to do so.");
+            if(!await this.device.SendMessage(BeginHighSpeed))
+            {
+                return false;
+            }
+
+            rx = await this.device.ReceiveMessage();
 
             // Request the device to change
             await device.SetVPW4x(true);
@@ -670,16 +854,26 @@ namespace Flash411
         /// <remarks>
         /// Returns a succsefull Response on the first successful attempt, or the failed Response if we run out of tries.
         /// </remarks>
-        async Task<Response<Message>> SendRequest(Message message, int retries)
+        async Task<Response<bool>> WriteToRam(Message message, int retries)
         {
-            Response<Message> response;
             for (int i = retries; i>0; i--)
             {
-                response = await device.SendRequest(message);
-                if (response.Status == ResponseStatus.Success) return response;
-                await Task.Delay(10); // incase were going too fast, we might want to change this logic
+                if (!await device.SendMessage(message))
+                {
+                    this.logger.AddDebugMessage("WriteToRam: Unable to send message.");
+                    continue;
+                }
+
+                if (await this.WaitForSuccess(this.messageParser.ParseUploadResponse))
+                {
+                    return Response.Create(ResponseStatus.Success, true);
+                }
+
+                this.logger.AddDebugMessage("WriteToRam: Upload request failed.");
             }
-            return Response.Create(ResponseStatus.Error, (Message)null); // this should be response from the loop but the compiler thinks the response variable isnt in scope here????
+
+            this.logger.AddDebugMessage("WriteToRam: Giving up.");
+            return Response.Create(ResponseStatus.Error, false); // this should be response from the loop but the compiler thinks the response variable isnt in scope here????
         }
     }
 }

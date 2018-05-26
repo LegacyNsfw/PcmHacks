@@ -98,6 +98,7 @@
     <Compile Include="Misc\PcmInfo.cs" />
     <Compile Include="Misc\Response.cs" />
     <Compile Include="Misc\KeyAlgorithm.cs" />
+    <Compile Include="Misc\ToolPresentNotifier.cs" />
     <Compile Include="Misc\Utility.cs" />
     <Compile Include="Ports\HttpPort.cs" />
     <Compile Include="Ports\IPort.cs" />

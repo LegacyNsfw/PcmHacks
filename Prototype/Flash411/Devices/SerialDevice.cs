@@ -8,14 +8,22 @@ namespace Flash411
 {
     public abstract class SerialDevice : Device
     {
-        public SerialDevice(IPort port, ILogger logger) : base(port, logger)
-        {
+        protected IPort Port { get; private set; }
 
+        public SerialDevice(IPort port, ILogger logger) : base(logger)
+        {
+            this.Port = port;
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            this.Port.Dispose();
+            if (disposing)
+            {
+                if (this.Port != null)
+                {
+                    this.Port.Dispose();
+                }
+            }
         }
 
         public void UpdateAppConfiguration()
@@ -30,6 +38,7 @@ namespace Flash411
             return this.GetDeviceType() + " on " + this.Port.ToString();
 
         }
+
         public abstract string GetDeviceType();
     }
 }

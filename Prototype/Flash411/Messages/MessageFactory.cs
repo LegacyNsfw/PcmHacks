@@ -193,8 +193,8 @@ namespace Flash411
         /// <returns></returns>
         public Message CreateReadRequest(int startAddress, int length)
         {
-            byte[] request = { 0x6C, 0x10, DeviceId.Tool, 0x35, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
-            byte[] request2 = { 0x6C, 0x10, DeviceId.Tool, 0x37, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 24), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
+            byte[] request = { 0x6D, 0x10, DeviceId.Tool, 0x35, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
+            byte[] request2 = { 0x6D, 0x10, DeviceId.Tool, 0x37, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 24), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
 
             if (startAddress > 0xFFFFFF)
             {
@@ -261,6 +261,15 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Create a message to tell the RAM-resident kernel to exit.
+        /// </summary>
+        public Message CreateExitKernel()
+        {
+            byte[] bytes = new byte[] { Priority.Block, DeviceId.Pcm, DeviceId.Tool, 0x20 };
+            return new Message(bytes);
+        }
+
+        /// <summary>
         /// Create a broadcast message telling the PCM to clear DTCs
         /// </summary>
         public Message CreateClearDTCs()
@@ -281,7 +290,7 @@ namespace Flash411
         /// <summary>
         /// Create a broadcast message telling all devices to disable normal message transmission (disable chatter)
         /// </summary>
-        public Message CreateDisableNormalMessageTransmition()
+        public Message CreateDisableNormalMessageTransmission()
         {
             byte[] Bytes = new byte[] { Priority.Type2, DeviceId.Broadcast, DeviceId.Tool, Mode.SilenceBus, SubMode.Null };
             return new Message(Bytes);
@@ -290,7 +299,7 @@ namespace Flash411
         /// <summary>
         /// Create a broadcast message telling all devices to disable normal message transmission (disable chatter)
         /// </summary>
-        public Message CreateDisableNormalMessageTransmitionOK()
+        public Message CreateDisableNormalMessageTransmissionOK()
         {
             byte[] bytes = new byte[] { Priority.Type2, DeviceId.Tool, DeviceId.Pcm, Mode.SilenceBus + Mode.Response , SubMode.Null };
             return new Message(bytes);
@@ -312,15 +321,6 @@ namespace Flash411
             requestupload[9] = unchecked((byte)(Address & 0xFF));
             
             return new Message(requestupload);
-        }
-
-        /// <summary>
-        /// This is the successessfull response signalling an upload is allowed
-        /// </summary>
-        public Message CreateUploadRequestOK()
-        {
-            byte[] RequestAccepted = { Priority.Type2, DeviceId.Tool, DeviceId.Pcm, Mode.PCMUpload + Mode.Response, SubMode.UploadOK };
-            return new Message(RequestAccepted);
         }
     }
 }

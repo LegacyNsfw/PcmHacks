@@ -281,39 +281,30 @@ namespace Flash411
                 return Response.Create(ResponseStatus.Error, false);
             }
         }
-
-        /// <summary>
-        /// Send a message, do not expect a response.
-        /// </summary>
-        public override async Task<bool> SendMessage(Message message)
-        {
-            this.Logger.AddDebugMessage("Sending message " + message.GetBytes().ToHex());
-            await this.Port.Send(message.GetBytes());
-            return true;
-        }
-
+        
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
-        public override async Task<Response <Message>> SendRequest(Message message)
+        public override async Task<bool> SendMessage(Message message)
         {
             //this.Logger.AddDebugMessage("Sendrequest called");
             this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
             await SendAVTPacket(message);
-
-            Response<Message> response = await ReadAVTPacket();
-            if (response.Status != ResponseStatus.Success) return response;
-
-            this.Logger.AddDebugMessage("RX: " + response.Value.GetBytes().ToHex());
-
-            return response;
+            return true;
         }
 
-        public async override Task<Response<Message>> ReadMessage()
+        protected async override Task Receive()
         {
-            return new Response<Message>(ResponseStatus.Error, null);
-        }
+            Response<Message> response = await ReadAVTPacket();
+            if (response.Status == ResponseStatus.Success)
+            {
+                this.Logger.AddDebugMessage("RX: " + response.Value.GetBytes().ToHex());
+                this.Enqueue(response.Value);
+            }
 
+            this.Logger.AddDebugMessage("AVT: no message waiting.");            
+        }
+        
         /// <summary>
         /// Set the interface to low (false) or high (true) speed
         /// </summary>

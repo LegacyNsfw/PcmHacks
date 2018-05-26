@@ -113,6 +113,8 @@ namespace Flash411
                 if (vinResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("VIN query failed: " + vinResponse.Status.ToString());
+                    await this.vehicle.ExitKernel();
+                    await this.vehicle.ExitKernel();
                     return;
                 }
                 this.AddUserMessage("VIN: " + vinResponse.Value);
@@ -209,32 +211,32 @@ namespace Flash411
                     return;
                 }
 
+                this.AddUserMessage("Querying operating system of current PCM.");
                 Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
                 if (osidResponse.Status != ResponseStatus.Success)
                 {
-                    this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
-                    return;
+                    this.AddUserMessage("Operating system query failed, will retry: " + osidResponse.Status);
+                    await this.vehicle.ExitKernel();
+                    await this.vehicle.ExitKernel();
+
+                    osidResponse = await this.vehicle.QueryOperatingSystemId();
+                    if (osidResponse.Status != ResponseStatus.Success)
+                    {
+                        this.AddUserMessage("Operating system query failed, giving up: " + osidResponse.Status);
+                        return;
+                    }
                 }
 
                 PcmInfo info = new PcmInfo(osidResponse.Value);
 
-                Response<bool> unlockResponse = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                if (unlockResponse.Status != ResponseStatus.Success)
+                bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                if (!unlocked)
                 {
                     this.AddUserMessage("Unlock was not successful.");
                     return;
                 }
 
                 this.AddUserMessage("Unlock succeeded.");
-
-                //await this.vehicle.ReadContents(info);
-
-                Response<Stream> readResponse = await this.vehicle.ReadContents(info);
-                if (readResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
-                    return;
-                }
 
                 string path = this.ShowSaveAsDialog();
                 if (path == null)
@@ -243,10 +245,19 @@ namespace Flash411
                     return;
                 }
 
-                this.AddUserMessage("Saving to " + path);
+                this.AddUserMessage("Will save to " + path);
+                
+                Response<Stream> readResponse = await this.vehicle.ReadContents(info);
+                if (readResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
+                    return;
+                }
 
                 try
                 {
+                    readResponse.Value.Position = 0;
+
                     using (Stream output = File.OpenWrite(path))
                     {
                         await readResponse.Value.CopyToAsync(output);
@@ -302,8 +313,8 @@ namespace Flash411
 
             PcmInfo info = new PcmInfo(osidResponse.Value);
 
-            Response<bool> unlockResponse = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-            if (unlockResponse.Status != ResponseStatus.Success)
+            bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+            if (!unlocked)
             {
                 this.AddUserMessage("Unlock was not successful.");
                 return;
@@ -373,25 +384,23 @@ namespace Flash411
 
                 if (dialogResult == DialogResult.OK)
                 {
-                    Response<bool> unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                    if (unlocked.Value)
+                    bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                    if (!unlocked)
                     {
-                        Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
-                        if (vinmodified.Value)
-                        {
-                            this.AddUserMessage("VIN successfully updated to " + vinForm.Vin);
-                            MessageBox.Show("VIN updated to " + vinForm.Vin + " successfully.", "Good news.", MessageBoxButtons.OK);
-                        }
-                        else
-                        {
-                            MessageBox.Show("Unable to change the VIN to " + vinForm.Vin + ". Error: " + vinmodified.Status, "Bad news.", MessageBoxButtons.OK);
-                        }
+                        this.AddUserMessage("Unable to unlock PCM.");
+                        return;
+                    }
+
+                    Response<bool> vinmodified = await this.vehicle.UpdateVin(vinForm.Vin.Trim());
+                    if (vinmodified.Value)
+                    {
+                        this.AddUserMessage("VIN successfully updated to " + vinForm.Vin);
+                        MessageBox.Show("VIN updated to " + vinForm.Vin + " successfully.", "Good news.", MessageBoxButtons.OK);
                     }
                     else
                     {
-
+                        MessageBox.Show("Unable to change the VIN to " + vinForm.Vin + ". Error: " + vinmodified.Status, "Bad news.", MessageBoxButtons.OK);
                     }
-
                 }
             }
             catch (Exception exception)

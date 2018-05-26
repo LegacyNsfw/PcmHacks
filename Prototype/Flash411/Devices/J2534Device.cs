@@ -66,7 +66,6 @@ namespace Flash411
 
         protected override void Dispose(bool disposing)
         {
-            base.Dispose(disposing);
             DisconnectTool();
         }
 
@@ -177,7 +176,7 @@ namespace Flash411
         /// <summary>
         /// Read an network packet from the interface, and return a Response/Message
         /// </summary>
-        private Response<Message> ReadNetworkMessage()
+        protected override Task Receive()
         {
             //this.Logger.AddDebugMessage("Trace: Read Network Packet");
 
@@ -195,10 +194,18 @@ namespace Flash411
             {
                 NumMessages = 1;
                 OBDError = J2534Port.Functions.PassThruReadMsgs((int)ChannelID, rxMsgs, ref NumMessages, ReadTimeout);
-                if (OBDError != J2534Err.STATUS_NOERROR) { return Response.Create(ResponseStatus.Error, new Message(null, 0, (ulong)OBDError)); }
+                if (OBDError != J2534Err.STATUS_NOERROR)
+                {
+                    this.Logger.AddDebugMessage("ReadMsgs OBDError: " + OBDError);
+                    return Task.FromResult(0);
+                }
+
                 sw.Stop();
-               PassMess = rxMsgs.AsMsgList(1).Last();
-                if ((int)PassMess.RxStatus == (((int)RxStatus.TX_INDICATION_SUCCESS) + ((int)RxStatus.TX_MSG_TYPE)) || (PassMess.RxStatus == RxStatus.START_OF_MESSAGE)) continue;
+                PassMess = rxMsgs.AsMsgList(1).Last();
+                if ((int)PassMess.RxStatus == (((int)RxStatus.TX_INDICATION_SUCCESS) + ((int)RxStatus.TX_MSG_TYPE)) || (PassMess.RxStatus == RxStatus.START_OF_MESSAGE))
+                {
+                    continue;
+                }
                 else
                 {
                     byte[] TempBytes = PassMess.GetBytes();
@@ -207,9 +214,16 @@ namespace Flash411
                 }
             }
             Marshal.FreeHGlobal(rxMsgs);
-            if (OBDError != J2534Err.STATUS_NOERROR || sw.ElapsedMilliseconds > (long)ReadTimeout) return Response.Create(ResponseStatus.Error, new Message(null, 0, (ulong)OBDError));
 
-            return Response.Create(ResponseStatus.Success, new Message(PassMess.GetBytes(), PassMess.Timestamp, (ulong)OBDError));
+            if (OBDError != J2534Err.STATUS_NOERROR || sw.ElapsedMilliseconds > (long)ReadTimeout)
+            {
+                this.Logger.AddDebugMessage("ReadMsgs OBDError: " + OBDError);
+                return Task.FromResult(0);
+            }
+
+            this.Enqueue(new Message(PassMess.GetBytes(), PassMess.Timestamp, (ulong)OBDError));
+
+            return Task.FromResult(0);
         }
 
         /// <summary>
@@ -237,49 +251,23 @@ namespace Flash411
             }
             return Response.Create(ResponseStatus.Success, OBDError);
         }
-
-        /// <summary>
-        /// Send a message, do not expect a response.
-        /// </summary>
-        public override Task<bool> SendMessage(Message message)
-        {
-            //this.Logger.AddDebugMessage("Sendmessage called");
-            StringBuilder builder = new StringBuilder();
-            this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
-            this.Port.Send(message.GetBytes());
-            return Task.FromResult(true);
-        }
-
+        
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
-        public override Task<Response<Message>> SendRequest(Message message)
+        public override Task<bool> SendMessage(Message message)
         {
             //this.Logger.AddDebugMessage("Send request called");
             this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
             Response<J2534Err> MyError = SendNetworkMessage(message,TxFlag.NONE);
             if (MyError.Status != ResponseStatus.Success)
             {
-                //error here!!
-                return Task.FromResult(Response.Create(MyError.Status, new Message(null)));
+                return Task.FromResult(false);
             }
 
-            Response<Message> response = ReadNetworkMessage();
-            if (response.Status != ResponseStatus.Success)
-            {
-                return Task.FromResult(response);
-            }
-
-            this.Logger.AddDebugMessage("RX: " + response.Value.GetBytes().ToHex());
-
-            return Task.FromResult(response);
+            return Task.FromResult(true);
         }
-
-        public async override Task<Response<Message>> ReadMessage()
-        {
-            return new Response<Message>(ResponseStatus.Error, null);
-        }
-
+        
         /// <summary>
         /// load in dll
         /// </summary>
