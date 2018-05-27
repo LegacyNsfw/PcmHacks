@@ -606,7 +606,7 @@ namespace Flash411
         {
             this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, length));
             
-            for(int attempt = 1; attempt <= 5; attempt++)
+            for(int sendAttempt = 1; sendAttempt <= 5; sendAttempt++)
             {
                 Message message = this.messageFactory.CreateReadRequest(startAddress, length);
 
@@ -617,54 +617,76 @@ namespace Flash411
                     return false;
                 }
 
-                while (this.device.ReceivedMessageCount > 0)
-                {
-                    Message response = await this.device.ReceiveMessage();
-                    if (response == null)
+                bool sendAgain = false;
+                for (int receiveAttempt = 1; receiveAttempt <= 5 && !sendAgain; receiveAttempt++)
+                { 
+                    // The ELM-based devices will read a response as part of the
+                    // send operation, however AVT devices require the app to wait
+                    // for a response.
+                    Message response = null;
+                    for (int pause = 0; pause < 10; pause++) 
                     {
-                        this.logger.AddDebugMessage("No response to read request.");
+                        response = await this.device.ReceiveMessage();
+                        if (response == null)
+                        {
+                            this.logger.AddDebugMessage("No response to read request yet.");
+                            await Task.Delay(10);
+                            continue;
+                        }
+
+                        break;
+                    }
+
+                    this.logger.AddDebugMessage("Processing message " + response.GetBytes().ToHex());
+
+                    Response<bool> readResponse = this.messageParser.ParseReadResponse(response);
+                    if (readResponse.Status != ResponseStatus.Success)
+                    {
+                        this.logger.AddDebugMessage("Not a read response.");
                         continue;
                     }
 
-                    this.logger.AddDebugMessage("Received " + response.GetBytes().ToHex());
-
-                    if (this.messageParser.ParseReadResponse(response).Value)
+                    if (!readResponse.Value)
                     {
-                        Message payloadMessage = await this.device.ReceiveMessage();
-                        if (payloadMessage == null)
-                        {
-                            this.logger.AddDebugMessage("No payload following read request.");
-                            continue;
-                        }
-
-                        int percentDone = (startAddress * 100) / image.Length;
-                        this.logger.AddUserMessage(string.Format("Read block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));
-
-                        // TODO: Move this into a new "byte[] MessageParser.ParseReadPayload()"
-                        byte[] payload = payloadMessage.GetBytes();
-
-                        if (payload.Length < 4)
-                        {
-                            this.logger.AddUserMessage("Payload too small, " + payload.Length.ToString() + " bytes.");
-                            continue;
-                        }
-
-                        if (payload[4] == 1) // TODO check length
-                        {
-                            Buffer.BlockCopy(payload, 10, image, startAddress, length);
-                        }
-                        else if (payload[4] == 2) // TODO check length
-                        {
-                            int runLength = payload[5] << 8 + payload[6];
-                            byte value = payload[10];
-                            for (int index = 0; index < runLength; index++)
-                            {
-                                image[startAddress + index] = value;
-                            }
-                        }
-
-                        return true;
+                        this.logger.AddDebugMessage("Read request failed.");
+                        sendAgain = true;
+                        continue;
                     }
+
+                    Message payloadMessage = await this.device.ReceiveMessage();
+                    if (payloadMessage == null)
+                    {
+                        this.logger.AddDebugMessage("No payload following read request.");
+                        continue;
+                    }
+
+                    int percentDone = (startAddress * 100) / image.Length;
+                    this.logger.AddUserMessage(string.Format("Read block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));
+
+                    // TODO: Move this into a new "byte[] MessageParser.ParseReadPayload()"
+                    byte[] payload = payloadMessage.GetBytes();
+
+                    if (payload.Length < 4)
+                    {
+                        this.logger.AddUserMessage("Payload too small, " + payload.Length.ToString() + " bytes.");
+                        continue;
+                    }
+
+                    if (payload[4] == 1) // TODO check length
+                    {
+                        Buffer.BlockCopy(payload, 10, image, startAddress, length);
+                    }
+                    else if (payload[4] == 2) // TODO check length
+                    {
+                        int runLength = payload[5] << 8 + payload[6];
+                        byte value = payload[10];
+                        for (int index = 0; index < runLength; index++)
+                        {
+                            image[startAddress + index] = value;
+                        }
+                    }
+
+                    return true;
                 }
             }
 
