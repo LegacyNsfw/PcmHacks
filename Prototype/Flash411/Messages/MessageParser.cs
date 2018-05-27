@@ -218,7 +218,46 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Parse the response to a request for permission to upload a RAM kernel.
+        /// Parse the payload of a read request.
+        /// </summary>
+        public Response<byte[]> ParsePayload(Message message)
+        {
+            ResponseStatus status;
+            byte[] actual = message.GetBytes();
+            byte[] expected = new byte[] { 0x6D, 0xF0, 0x10, 0x36 };
+            if (!TryVerifyInitialBytes(actual, expected, out status))
+            {
+                return Response.Create(status, new byte[0]);
+            }
+
+            if (actual.Length < 7)
+            {
+                return Response.Create(ResponseStatus.Truncated, new byte[0]);
+            }
+
+            int length = (actual[5] << 8) + actual[6];
+
+            byte[] result = new byte[length];
+
+            if (actual[4] == 1) 
+            {
+                Buffer.BlockCopy(actual, 10, result, 0, length);
+            }
+            else if (actual[4] == 2) // TODO check length
+            {
+                int runLength = actual[5] << 8 + actual[6];
+                byte value = actual[10];
+                for (int index = 0; index < runLength; index++)
+                {
+                    result[index] = value;
+                }
+            }
+
+            return Response.Create(ResponseStatus.Success, result);
+        }
+
+        /// <summary>
+        /// Parse the response to a request for permission to upload a RAM kernel (or part of a kernel).
         /// </summary>
         internal Response<bool> ParseUploadPermissionResponse(Message message)
         {
