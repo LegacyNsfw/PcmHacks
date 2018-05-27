@@ -643,6 +643,10 @@ namespace Flash411
                         sendAgain = true;
                         break;
                     }
+
+                    // We got a successful read response, so now wait for the payload.
+                    sendAgain = false;
+                    break;
                 }
 
                 if (sendAgain)
