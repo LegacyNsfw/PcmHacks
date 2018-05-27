@@ -227,6 +227,21 @@ namespace Flash411
                     }
                 }
 
+                // Get the path to save the image to.
+                //
+                // TODO: remember this value and offer to re-use it, in case 
+                // the read fails and the user has to try again.
+                //
+                string path = this.ShowSaveAsDialog();
+                if (path == null)
+                {
+                    this.AddUserMessage("Save canceled.");
+                    return;
+                }
+
+                this.AddUserMessage("Will save to " + path);
+
+                // Look up the information about this PCM, based on the OSID;
                 PcmInfo info = new PcmInfo(osidResponse.Value);
 
                 bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
@@ -237,16 +252,8 @@ namespace Flash411
                 }
 
                 this.AddUserMessage("Unlock succeeded.");
-
-                string path = this.ShowSaveAsDialog();
-                if (path == null)
-                {
-                    this.AddUserMessage("Save canceled.");
-                    return;
-                }
-
-                this.AddUserMessage("Will save to " + path);
                 
+                // Do the actual reading.
                 Response<Stream> readResponse = await this.vehicle.ReadContents(info);
                 if (readResponse.Status != ResponseStatus.Success)
                 {
@@ -254,6 +261,7 @@ namespace Flash411
                     return;
                 }
 
+                // Save the contents to the path that the user provided.
                 try
                 {
                     this.AddUserMessage("Saving contents to " + path);
