@@ -35,7 +35,9 @@ namespace Flash411
         {
             this.MaxSendSize = 4112;    // From the device manual 4096+16 (does not include 3 length bytes)
             this.MaxReceiveSize = 4112; // From the device manual 4096+16 (does not include 3 length bytes)
-            this.Supports4X = true;     // TODO: Need to add code to support the switch to 4x
+            this.MaxSendSize = 4096;    // round number
+            this.MaxReceiveSize = 4096; // round number
+            this.Supports4X = true;
         }
 
         public override string GetDeviceType()
@@ -320,16 +322,16 @@ namespace Flash411
                 await this.Port.Send(AvtDevice.AVT_1X_SPEED.GetBytes());
                 await Task.Delay(100);
                 byte[] rx = new byte[2];
-                await this.Port.Receive(rx, 0, 2); // C1 00
+                await ReadAVTPacket(); // C1 00
             }
             else
             {
                 byte[] rx = new byte[4];
                 await Task.Delay(100);
-                await this.Port.Receive(rx, 0, 4); // 23 83 00 20 AVT generated response from generic PCM switch high speed command in Vehicle.cs
+                await ReadAVTPacket(); // 23 83 00 20 AVT generated response from generic PCM switch high speed command in Vehicle.cs
                 this.Logger.AddDebugMessage("AVT setting VPW 4X");
                 await this.Port.Send(AvtDevice.AVT_4X_SPEED.GetBytes());
-                await this.Port.Receive(rx, 0, 2); // C1 01
+                await ReadAVTPacket(); // if we get a response, eat it
             }
 
             return true;
