@@ -109,6 +109,8 @@ namespace Flash411
             {
                 this.DisableUserInput();
 
+                 
+
                 var vinResponse = await this.vehicle.QueryVin();
                 if (vinResponse.Status != ResponseStatus.Success)
                 {

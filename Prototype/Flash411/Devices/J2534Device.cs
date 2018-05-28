@@ -20,8 +20,8 @@ namespace Flash411
         /// <summary>
         /// Configuration settings
         /// </summary>
-        public int ReadTimeout = 3000;
-        public int WriteTimeout = 1000;
+        public int ReadTimeout = 6000;
+        public int WriteTimeout = 3000;
 
         /// <summary>
         /// variety of properties used to id channels, fitlers and status
@@ -59,8 +59,8 @@ namespace Flash411
             J2534Port.Functions = new J2534Extended();
             J2534Port.LoadedDevice = jport;
 
-            this.MaxSendSize = 12;      // Driver or protocol limit?
-            this.MaxReceiveSize = 12;   // Driver or protocol limit?
+            this.MaxSendSize = 4096;      // Driver or protocol limit?
+            this.MaxReceiveSize = 4096;   // Driver or protocol limit?
             this.Supports4X = false;    // TODO: add code to support the switch to 4x and update this flag
         }
 
@@ -154,7 +154,7 @@ namespace Flash411
             this.Logger.AddDebugMessage("Protocol Set");
 
             //Set filter
-            m = SetFilter(0xFFFFFF, 0x6CF010, 0, TxFlag.NONE, FilterType.PASS_FILTER);
+            m = SetFilter(0xFEFFFF, 0x6CF010, 0, TxFlag.NONE, FilterType.PASS_FILTER);
             if (m.Status != ResponseStatus.Success)
             {
                 this.Logger.AddDebugMessage("Failed to set filter, J2534 error code: 0x" + m.Value.ToString("X2"));
@@ -424,6 +424,12 @@ namespace Flash411
             }
 
             return Task.FromResult(true);
+        }
+
+        public override void ClearMessageBuffer()
+        {
+            J2534Port.Functions.ClearRxBuffer((int)DeviceID);
+            J2534Port.Functions.ClearTxBuffer((int)DeviceID);
         }
     }
 }

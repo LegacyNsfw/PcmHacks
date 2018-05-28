@@ -66,5 +66,9 @@ namespace Flash411
 
             return Task.FromResult(false);
         }
+        public override void ClearMessageBuffer()
+        {
+            this.Port.DiscardBuffers();
+        }
     }
 }
