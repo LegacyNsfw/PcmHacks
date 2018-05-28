@@ -364,7 +364,7 @@ namespace Flash411
 
             UInt16 key = KeyAlgorithm.GetKey(keyAlgorithm, seedValueResponse.Value);
 
-            this.logger.AddDebugMessage("Sending unlock request.");
+            this.logger.AddDebugMessage("Sending unlock request (" + seedValueResponse.Value.ToString("X4") + ", " + key.ToString("X4") + ")");
             Message unlockRequest = this.messageFactory.CreateUnlockRequest(key);
             if (!await this.device.SendMessage(unlockRequest))
             {
@@ -384,10 +384,6 @@ namespace Flash411
             if (errorMessage != null)
             {
                 this.logger.AddUserMessage(errorMessage);
-            }
-            else
-            {
-                this.logger.AddUserMessage("PCM Unlocked");
             }
 
             return result.Value;
@@ -537,7 +533,7 @@ namespace Flash411
                 int startAddress = info.ImageBaseAddress;
                 int endAddress = info.ImageBaseAddress + info.ImageSize;
                 int bytesRemaining = info.ImageSize;
-                int blockSize = this.device.MaxReceiveSize; 
+                int blockSize = this.device.MaxReceiveSize - 10 - 2; // allow space for the header and block checksum
 
                 byte[] image = new byte[info.ImageSize];
 
@@ -844,44 +840,54 @@ namespace Flash411
             Message HighSpeedOK = messageFactory.CreateHighSpeedOKResponse();
             Message BeginHighSpeed = messageFactory.CreateBeginHighSpeed();
 
-            if (!device.Supports4X)
+            if (highspeed && !device.Supports4X)
             {
                 logger.AddUserMessage("This interface does not support VPW 4x");
                 return true;
             }
 
-            logger.AddUserMessage("This interface does support VPW 4x");
-
-            // PCM Pre-flight checks
-            if (!await this.device.SendMessage(HighSpeedCheck))
+            if (highspeed)
             {
-                logger.AddUserMessage("Unable to request permission to use 4x.");
-                return false;
+                logger.AddUserMessage("Attempting switch to VPW 4x");
+            }
+            else
+            {
+                logger.AddUserMessage("Reverting to VPW 1x");
             }
 
-            Message rx = await this.device.ReceiveMessage();
-            if (rx == null)
+            if (highspeed)
             {
-                logger.AddUserMessage("No response received to high-speed permission request.");
-                return false;
-            }
+                // PCM Pre-flight checks
+                if (!await this.device.SendMessage(HighSpeedCheck))
+                {
+                    logger.AddUserMessage("Unable to request permission to use 4x.");
+                    return false;
+                }
 
-            if (!Utility.CompareArraysPart(rx.GetBytes(), HighSpeedOK.GetBytes()))
-            {
-                logger.AddUserMessage("PCM is not allowing a switch to VPW 4x");
-                return false;
-            }
+                Message rx = await this.device.ReceiveMessage();
+                if (rx == null)
+                {
+                    logger.AddUserMessage("No response received to high-speed permission request.");
+                    return false;
+                }
 
-            logger.AddUserMessage("PCM is allowing a switch to VPW 4x. Requesting all VPW modules to do so.");
-            if(!await this.device.SendMessage(BeginHighSpeed))
-            {
-                return false;
-            }
+                if (!Utility.CompareArraysPart(rx.GetBytes(), HighSpeedOK.GetBytes()))
+                {
+                    logger.AddUserMessage("PCM is not allowing a switch to VPW 4x");
+                    return false;
+                }
 
-            rx = await this.device.ReceiveMessage();
+                logger.AddUserMessage("PCM is allowing a switch to VPW 4x. Requesting all VPW modules to do so.");
+                if (!await this.device.SendMessage(BeginHighSpeed))
+                {
+                    return false;
+                }
+
+                rx = await this.device.ReceiveMessage();
+            }
 
             // Request the device to change
-            await device.SetVPW4x(true);
+            await device.SetVPW4x(highspeed);
 
             return true;
         }
