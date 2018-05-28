@@ -840,23 +840,20 @@ namespace Flash411
             Message HighSpeedOK = messageFactory.CreateHighSpeedOKResponse();
             Message BeginHighSpeed = messageFactory.CreateBeginHighSpeed();
 
-            if (highspeed && !device.Supports4X)
+            if (!device.Supports4X) 
             {
-                logger.AddUserMessage("This interface does not support VPW 4x");
+                if (highspeed)
+                {
+                    // where there is no support only report no switch to 4x
+                    logger.AddUserMessage("This interface does not support VPW 4x");
+                }
                 return true;
             }
-
+            
+            // Configure the vehicle bus when switching to 4x
             if (highspeed)
             {
                 logger.AddUserMessage("Attempting switch to VPW 4x");
-            }
-            else
-            {
-                logger.AddUserMessage("Reverting to VPW 1x");
-            }
-
-            if (highspeed)
-            {
                 // PCM Pre-flight checks
                 if (!await this.device.SendMessage(HighSpeedCheck))
                 {
@@ -882,8 +879,10 @@ namespace Flash411
                 {
                     return false;
                 }
-
-                rx = await this.device.ReceiveMessage();
+            }
+            else
+            {
+                logger.AddUserMessage("Reverting to VPW 1x");
             }
 
             // Request the device to change
