@@ -91,9 +91,16 @@ namespace Flash411
         public static void Write(string key, string value)
         {
             var configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            configuration.AppSettings.Settings.Remove(key);
-            configuration.AppSettings.Settings.Add(key, value);
-            configuration.Save();
+            try
+            {
+                configuration.AppSettings.Settings.Remove(key);
+                configuration.AppSettings.Settings.Add(key, value);
+                configuration.Save();
+            }
+            catch (Exception e)
+            {
+                // this.Logger.AddDebugMessage("Could not save configuration: '{0}'", e); //TODO: How can we get the logger in scope?
+            }
         }
     }
 }

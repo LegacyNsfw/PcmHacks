@@ -227,21 +227,8 @@ namespace Flash411
                     }
                 }
 
-                // Get the path to save the image to.
-                //
-                // TODO: remember this value and offer to re-use it, in case 
-                // the read fails and the user has to try again.
-                //
-                string path = this.ShowSaveAsDialog();
-                if (path == null)
-                {
-                    this.AddUserMessage("Save canceled.");
-                    return;
-                }
-
-                this.AddUserMessage("Will save to " + path);
-
                 // Look up the information about this PCM, based on the OSID;
+                this.AddUserMessage("OSID: " + osidResponse.Value);
                 PcmInfo info = new PcmInfo(osidResponse.Value);
 
                 bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
@@ -258,8 +245,24 @@ namespace Flash411
                 if (readResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
+                    await this.vehicle.ExitKernel();
+                    //await this.vehicle.device.SetVPW4x(false); TODO: How to call this from here?
                     return;
                 }
+
+                // Get the path to save the image to.
+                //
+                // TODO: remember this value and offer to re-use it, in case 
+                // the read fails and the user has to try again.
+                //
+                string path = this.ShowSaveAsDialog();
+                if (path == null)
+                {
+                    this.AddUserMessage("Save canceled.");
+                    return;
+                }
+
+                this.AddUserMessage("Will save to " + path);
 
                 // Save the contents to the path that the user provided.
                 try
