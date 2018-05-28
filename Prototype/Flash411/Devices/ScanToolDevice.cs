@@ -24,7 +24,7 @@ namespace Flash411
             // and these are only used with the Scantool SX interface anyhow. If we detect an AllPro
             // adapter we'll overwrite these values, see the Initialize method below.
             this.MaxSendSize = 192 + 12; // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
-            this.MaxReceiveSize = 512;   // The ScanTool SX will download 512kb in just under 20 minutes at 512 bytes per read.
+            this.MaxReceiveSize = 512 + 12;   // The ScanTool SX will download 512kb in just under 20 minutes at 512 bytes per read.
             this.Supports4X = false;
         }
 
