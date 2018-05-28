@@ -33,10 +33,8 @@ namespace Flash411
 
         public AvtDevice(IPort port, ILogger logger) : base(port, logger)
         {
-            this.MaxSendSize = 4112;    // From the device manual 4096+16 (does not include 3 length bytes)
-            this.MaxReceiveSize = 4112; // From the device manual 4096+16 (does not include 3 length bytes)
-            this.MaxSendSize = 4096;    // round number
-            this.MaxReceiveSize = 4096; // round number
+            this.MaxSendSize = 4096+10+2;    // packets up to 4112 but we want 4096 byte data blocks
+            this.MaxReceiveSize = 4096+10+2; // with 10 byte header and 2 byte block checksum
             this.Supports4X = true;
         }
 
@@ -58,15 +56,26 @@ namespace Flash411
 
             this.Logger.AddDebugMessage("Sending 'reset' message.");
             await this.Port.Send(AvtDevice.AVT_RESET.GetBytes());
-            m = await this.FindResponse(AVT_852_IDLE);
-            if (m.Status == ResponseStatus.Success )
+            m = await ReadAVTPacket();
+            if (m.Status == ResponseStatus.Success)
             {
-                this.Logger.AddUserMessage("AVT device reset ok");
+                switch (m.Value.GetBytes()[0])
+                {
+                    case 0x27:
+                        this.Logger.AddUserMessage("AVT 852 Reset OK");
+                        break;
+                    case 0x12:
+                        this.Logger.AddUserMessage("AVT 842 Reset OK");
+                        break;
+                    default:
+                        this.Logger.AddUserMessage("Unknown and unsupported AVT device detected. Please add support and submit a patch!");
+                        return false;
+                        break;
+                }
             }
             else
             {
                 this.Logger.AddUserMessage("AVT device not found or failed reset");
-                this.Logger.AddDebugMessage("Expected " + AvtDevice.AVT_852_IDLE.GetString());
                 return false;
             }
 
@@ -161,26 +170,39 @@ namespace Flash411
                     //this.Logger.AddDebugMessage("RX: Header " + rx[0].ToString("X2"));
                     int type = rx[0] >> 4;
                     switch (type) {
-                        case 0: // standard < 16 byte data packet
+                        case 0x0: // standard < 16 byte data packet
                             length = rx[0] & 0x0F;
                             break;
-                        case 2:
+                        case 0x2:
                             length = rx[0] & 0x0F;
                             status = false;
                             break;
-                        case 3: // Invalid Command
+                        case 0x3: // Invalid Command
                             length = rx[0] & 0x0F;
                             byte[] r = new byte[length];
                             await this.Port.Receive(r, 0, 1);
                             this.Logger.AddDebugMessage("RX: Invalid command. Packet that began with  " + r.ToHex() + " was rejected by the AVT");
                             return Response.Create(ResponseStatus.Error, new Message(r));
-                        case 6: // avt filter
-                        case 9: // init and version
+                        case 0x6: // avt filter
+                            length = rx[0] & 0x0F;
+                            status = false;
+                            break;
+                        case 0x8: // high speed notifications
+                            length = rx[0] & 0x0F;
+                            length--;
+                            status = false;
+                            break;
+                        case 0x9: // init and version
+                            length = rx[0] & 0x0F;
+                            status = false;
+                            break;
+                        case 0xC: // C1 01 for 4x OK
                             length = rx[0] & 0x0F;
                             status = false;
                             break;
                         default:
                             this.Logger.AddDebugMessage("RX: Unhandled packet type " + type + ". Add support to ReadAVTPacket()");
+                            status = false; // all non-zero high nibble type bytes have no status
                             break;
                     }
                     break;
@@ -199,12 +221,22 @@ namespace Flash411
                 return Response.Create(ResponseStatus.Error, (Message)null);
             }
 
-            // return the packet
+            // build a complete packet
             byte[] receive = new byte[length];
-            await this.Port.Receive(receive, 0, length);
-            //this.Logger.AddDebugMessage("Length=" + length + " RX: " + receive.ToHex());
-
-            return Response.Create(ResponseStatus.Success, new Message(receive));
+            byte[] packet = new byte[length];
+            int bytes;
+            DateTime start = DateTime.Now;
+            DateTime stop = start + TimeSpan.FromSeconds(2);
+            for (int i = 0; i < length; )
+            {
+                if (DateTime.Now > stop) return Response.Create(ResponseStatus.Timeout, (Message)null);
+                bytes = await this.Port.Receive(receive, 0, length);
+                Buffer.BlockCopy(receive, 0, packet, i, bytes);
+                i += bytes;
+            }
+            
+            //this.Logger.AddDebugMessage("Total Length=" + length + " RX: " + packet.ToHex());
+            return Response.Create(ResponseStatus.Success, new Message(packet));
         }
 
         /// <summary>
@@ -322,7 +354,7 @@ namespace Flash411
                 await this.Port.Send(AvtDevice.AVT_1X_SPEED.GetBytes());
                 await Task.Delay(100);
                 byte[] rx = new byte[2];
-                await ReadAVTPacket(); // C1 00
+                await ReadAVTPacket(); // C1 00 (switched to 1x)
             }
             else
             {
@@ -331,7 +363,8 @@ namespace Flash411
                 await ReadAVTPacket(); // 23 83 00 20 AVT generated response from generic PCM switch high speed command in Vehicle.cs
                 this.Logger.AddDebugMessage("AVT setting VPW 4X");
                 await this.Port.Send(AvtDevice.AVT_4X_SPEED.GetBytes());
-                await ReadAVTPacket(); // if we get a response, eat it
+                await Task.Delay(500); // This can take a while....
+                await ReadAVTPacket(); // C1 01 (switched to 4x)
             }
 
             return true;
