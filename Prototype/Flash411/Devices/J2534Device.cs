@@ -59,9 +59,9 @@ namespace Flash411
             J2534Port.Functions = new J2534Extended();
             J2534Port.LoadedDevice = jport;
 
-            this.MaxSendSize = 4096;      // Driver or protocol limit?
-            this.MaxReceiveSize = 4096;   // Driver or protocol limit?
-            this.Supports4X = false;    // TODO: add code to support the switch to 4x and update this flag
+            this.MaxSendSize = 4096+10+2;    // Driver or protocol limit?
+            this.MaxReceiveSize = 4096+10+2; // Driver or protocol limit?
+            this.Supports4X = false;         // TODO: add code to support the switch to 4x and update this flag
         }
 
         protected override void Dispose(bool disposing)
@@ -77,9 +77,9 @@ namespace Flash411
         // This needs to return Task<bool> for consistency with the Device base class.
         // However it doesn't do anything asynchronous, so to make the code more readable
         // it just wraps a private method that does the real work and returns a bool.
-        public override Task<bool> Initialize()
+        public override async Task<bool> Initialize()
         {
-            return Task.FromResult(this.InitializeInternal());
+            return await Task.FromResult(this.InitializeInternal());
         }
 
         // This returns 'bool' for the sake of readability. That bool needs to be
@@ -168,15 +168,24 @@ namespace Flash411
         /// <summary>
         /// This will process incoming messages for up to 500ms looking for a message
         /// </summary>
-        public Task<Response<Message>> FindResponse(Message expected)
+        public async Task<Response<Message>> FindResponse(Message expected)
         {
-            return Task.FromResult(new Response<Message>(ResponseStatus.Error, null));
+            //this.Logger.AddDebugMessage("FindResponse called");
+            for (int iterations = 0; iterations < 5; iterations++)
+            {
+                Message response = await this.ReceiveMessage();
+                    if (Utility.CompareArraysPart(response.GetBytes(), expected.GetBytes()))
+                        return Response.Create(ResponseStatus.Success, response);
+                await Task.Delay(100);
+            }
+
+            return Response.Create(ResponseStatus.Timeout, (Message)null);
         }
 
         /// <summary>
         /// Read an network packet from the interface, and return a Response/Message
         /// </summary>
-        protected override Task Receive()
+        protected async override Task Receive()
         {
             //this.Logger.AddDebugMessage("Trace: Read Network Packet");
 
@@ -197,7 +206,7 @@ namespace Flash411
                 if (OBDError != J2534Err.STATUS_NOERROR)
                 {
                     this.Logger.AddDebugMessage("ReadMsgs OBDError: " + OBDError);
-                    return Task.FromResult(0);
+                    return;
                 }
 
                 sw.Stop();
@@ -218,18 +227,16 @@ namespace Flash411
             if (OBDError != J2534Err.STATUS_NOERROR || sw.ElapsedMilliseconds > (long)ReadTimeout)
             {
                 this.Logger.AddDebugMessage("ReadMsgs OBDError: " + OBDError);
-                return Task.FromResult(0);
+                return;
             }
 
             this.Enqueue(new Message(PassMess.GetBytes(), PassMess.Timestamp, (ulong)OBDError));
-
-            return Task.FromResult(0);
         }
 
         /// <summary>
         /// Convert a Message to an J2534 formatted transmit, and send to the interface
         /// </summary>
-        private Response<J2534Err> SendNetworkMessage(Message message, TxFlag Flags)
+        private async Task<Response<J2534Err>> SendNetworkMessage(Message message, TxFlag Flags)
         {
             //this.Logger.AddDebugMessage("Trace: Send Network Packet");
 
@@ -255,17 +262,17 @@ namespace Flash411
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
-        public override Task<bool> SendMessage(Message message)
+        public async override Task<bool> SendMessage(Message message)
         {
             //this.Logger.AddDebugMessage("Send request called");
             this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
-            Response<J2534Err> MyError = SendNetworkMessage(message,TxFlag.NONE);
+            Response<J2534Err> MyError = await SendNetworkMessage(message,TxFlag.NONE);
             if (MyError.Status != ResponseStatus.Success)
             {
-                return Task.FromResult(false);
+                return false;
             }
 
-            return Task.FromResult(true);
+            return true;
         }
         
         /// <summary>
