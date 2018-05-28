@@ -88,7 +88,8 @@ namespace Flash411
                 {
                     this.Logger.AddUserMessage("All Pro ID: " + apID);
                     this.Logger.AddDebugMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
-                    
+                    this.Logger.AddDebugMessage("All Pro firmware: " + await this.SendRequest("AT @1"));          // firmware check
+
                     // this.Supports4X = true;
                     // this.MaxSendSize = 268;
                     this.MaxReceiveSize = 512;
