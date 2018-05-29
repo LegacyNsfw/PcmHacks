@@ -895,7 +895,7 @@ namespace Flash411
                     return false;
                 }
 
-                rx = await this.device.ReceiveMessage();
+               // rx = await this.device.ReceiveMessage();
             }
 
             // Request the device to change
