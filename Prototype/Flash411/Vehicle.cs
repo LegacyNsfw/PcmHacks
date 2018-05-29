@@ -864,18 +864,30 @@ namespace Flash411
                     return false;
                 }
 
-                Message rx = await this.device.ReceiveMessage();
-                if (rx == null)
+                Message rx;
+                try
                 {
-                    logger.AddUserMessage("No response received to high-speed permission request.");
+                     rx = await this.device.ReceiveMessage();
+                    Byte[] fff = rx.GetBytes();
+                    if (rx == null)
+                    {
+                        logger.AddUserMessage("No response received to high-speed permission request.");
+                        return false;
+                    }
+
+                    if (!Utility.CompareArraysPart(rx.GetBytes(), HighSpeedOK.GetBytes()))
+                    {
+                        logger.AddUserMessage("PCM is not allowing a switch to VPW 4x");
+                        return false;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    this.logger.AddUserMessage("Something went wrong at vpw4x. " + exception.Message);
+                    this.logger.AddDebugMessage(exception.ToString());
                     return false;
                 }
 
-                if (!Utility.CompareArraysPart(rx.GetBytes(), HighSpeedOK.GetBytes()))
-                {
-                    logger.AddUserMessage("PCM is not allowing a switch to VPW 4x");
-                    return false;
-                }
 
                 logger.AddUserMessage("PCM is allowing a switch to VPW 4x. Requesting all VPW modules to do so.");
                 if (!await this.device.SendMessage(BeginHighSpeed))
