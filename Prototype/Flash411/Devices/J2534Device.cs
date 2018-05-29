@@ -61,7 +61,7 @@ namespace Flash411
 
             this.MaxSendSize = 4096+10+2;    // Driver or protocol limit?
             this.MaxReceiveSize = 4096+10+2; // Driver or protocol limit?
-            this.Supports4X = false;         // TODO: add code to support the switch to 4x and update this flag
+            this.Supports4X = true;       
         }
 
         protected override void Dispose(bool disposing)
@@ -366,6 +366,17 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Disconnect from protocol
+        /// </summary>
+        private Response<J2534Err> DisconnectFromProtocol()
+        {
+            OBDError = J2534Port.Functions.PassThruDisconnect((int)ChannelID);
+            if (OBDError != J2534Err.STATUS_NOERROR) return Response.Create(ResponseStatus.Error, OBDError);
+            IsProtocolOpen = false;
+            return Response.Create(ResponseStatus.Success, OBDError);
+        }
+
+        /// <summary>
         /// Read battery voltage
         /// </summary>
         public Response<double> ReadVoltage()
@@ -423,11 +434,35 @@ namespace Flash411
         {
             if (!highspeed)
             {
-                this.Logger.AddDebugMessage("Not Implemented: J2534 setting VPW 1X");
+                this.Logger.AddDebugMessage("J2534 setting VPW 1X");
+                //Disconnect from current protocol
+                DisconnectFromProtocol();
+
+                //Connect at new speed
+                ConnectToProtocol(ProtocolID.J1850VPW, BaudRate.J1850VPW_10400, ConnectFlag.NONE);
+
+                //Set Filter
+                SetFilter(0xFEFFFF, 0x6CF010, 0, TxFlag.NONE, FilterType.PASS_FILTER);
+                //if (m.Status != ResponseStatus.Success)
+                //{
+                //    this.Logger.AddDebugMessage("Failed to set filter, J2534 error code: 0x" + m.Value.ToString("X2"));
+                //    return false;
+                //}
+
+
             }
             else
             {
-                this.Logger.AddDebugMessage("Not Implemented: J2534 setting VPW 4X");
+                this.Logger.AddDebugMessage("J2534 setting VPW 4X");
+                //Disconnect from current protocol
+                DisconnectFromProtocol();
+
+                //Connect at new speed
+                ConnectToProtocol(ProtocolID.J1850VPW, BaudRate.J1850VPW_41600, ConnectFlag.NONE);
+
+                //Set Filter
+                SetFilter(0xFEFFFF, 0x6CF010, 0, TxFlag.NONE, FilterType.PASS_FILTER);
+
             }
 
             return Task.FromResult(true);

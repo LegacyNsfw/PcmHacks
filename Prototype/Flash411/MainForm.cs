@@ -19,6 +19,8 @@ namespace Flash411
     public partial class MainForm : Form, ILogger
     {
         private Vehicle vehicle;
+        private System.Threading.Thread BackgroundWorker = new System.Threading.Thread(delegate(){ return; });
+
 
         public MainForm()
         {
@@ -84,16 +86,17 @@ namespace Flash411
 
         private void EnableUserInput()
         {
-            this.interfaceBox.Enabled = true;
+            this.interfaceBox.Invoke((MethodInvoker)delegate () { this.interfaceBox.Enabled = true; });
+
 
             // The operation buttons have to be enabled/disabled individually
             // (rather than via the parent GroupBox) because we sometimes want
             // to enable the re-initialize operation while the others are disabled.
-            this.readPropertiesButton.Enabled = true;
-            this.readFullContentsButton.Enabled = true;
-            this.modifyVinButton.Enabled = true;
-            this.writeFullContentsButton.Enabled = true;
-            this.reinitializeButton.Enabled = true;
+            this.readPropertiesButton.Invoke((MethodInvoker)delegate () { this.readPropertiesButton.Enabled = true; });
+            this.readFullContentsButton.Invoke((MethodInvoker)delegate () { this.readFullContentsButton.Enabled = true;});
+            this.modifyVinButton.Invoke((MethodInvoker)delegate () { this.modifyVinButton.Enabled = true;});
+            this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true;});
+            this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true;});
         }
         
         private async void readPropertiesButton_Click(object sender, EventArgs e)
@@ -200,98 +203,18 @@ namespace Flash411
         }
 
 
-        private async void readFullContentsButton_Click(object sender, EventArgs e)
+        private void readFullContentsButton_Click(object sender, EventArgs e)
         {
             this.DisableUserInput();
 
-            try
+            if (!BackgroundWorker.IsAlive)
             {
-                if (this.vehicle == null)
-                {
-                    // This shouldn't be possible - it would mean the buttons 
-                    // were enabled when they shouldn't be.
-                    return;
-                }
-
-                this.AddUserMessage("Querying operating system of current PCM.");
-                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
-                if (osidResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("Operating system query failed, will retry: " + osidResponse.Status);
-                    await this.vehicle.ExitKernel();
-                    await this.vehicle.ExitKernel();
-
-                    osidResponse = await this.vehicle.QueryOperatingSystemId();
-                    if (osidResponse.Status != ResponseStatus.Success)
-                    {
-                        this.AddUserMessage("Operating system query failed, giving up: " + osidResponse.Status);
-                        return;
-                    }
-                }
-
-                // Look up the information about this PCM, based on the OSID;
-                this.AddUserMessage("OSID: " + osidResponse.Value);
-                PcmInfo info = new PcmInfo(osidResponse.Value);
-
-                bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                if (!unlocked)
-                {
-                    this.AddUserMessage("Unlock was not successful.");
-                    return;
-                }
-
-                this.AddUserMessage("Unlock succeeded.");
-                
-                // Do the actual reading.
-                Response<Stream> readResponse = await this.vehicle.ReadContents(info);
-                if (readResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
-                    await this.vehicle.ExitKernel();
-                    //await this.vehicle.device.SetVPW4x(false); TODO: How to call this from here?
-                    return;
-                }
-
-                // Get the path to save the image to.
-                //
-                // TODO: remember this value and offer to re-use it, in case 
-                // the read fails and the user has to try again.
-                //
-                string path = this.ShowSaveAsDialog();
-                if (path == null)
-                {
-                    this.AddUserMessage("Save canceled.");
-                    return;
-                }
-
-                this.AddUserMessage("Will save to " + path);
-
-                // Save the contents to the path that the user provided.
-                try
-                {
-                    this.AddUserMessage("Saving contents to " + path);
-
-                    readResponse.Value.Position = 0;
-
-                    using (Stream output = File.OpenWrite(path))
-                    {
-                        await readResponse.Value.CopyToAsync(output);
-                    }
-                }
-                catch (IOException exception)
-                {
-                    this.AddUserMessage("Unable to save file: " + exception.Message);
-                    this.AddDebugMessage(exception.ToString());
-                }
+                BackgroundWorker = new System.Threading.Thread(() => readFullContents_Routine());
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
             }
-            catch(Exception exception)
-            {
-                this.AddUserMessage("Read failed: " + exception.ToString());
-            }
-            finally
-            {
-                this.EnableUserInput();
-            }
+
+          
         }
 
         private string ShowSaveAsDialog()
@@ -311,7 +234,7 @@ namespace Flash411
             return null;
         }
 
-        private async void writeFullContentsButton_Click(object sender, EventArgs e)
+        private  async void writeFullContentsButton_Click(object sender, EventArgs e)
         {
             if (this.vehicle == null)
             {
@@ -357,6 +280,7 @@ namespace Flash411
             {
                 this.AddUserMessage(exception.ToString());
             }
+
         }
 
         private string ShowOpenDialog()
@@ -504,6 +428,100 @@ namespace Flash411
 
             this.EnableUserInput();
             return true;
+        }
+
+
+        private async void readFullContents_Routine()
+        {
+            try
+            {
+                if (this.vehicle == null)
+                {
+                    // This shouldn't be possible - it would mean the buttons 
+                    // were enabled when they shouldn't be.
+                    return;
+                }
+
+                this.AddUserMessage("Querying operating system of current PCM.");
+                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                if (osidResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Operating system query failed, will retry: " + osidResponse.Status);
+                    await this.vehicle.ExitKernel();
+                    await this.vehicle.ExitKernel();
+
+                    osidResponse = await this.vehicle.QueryOperatingSystemId();
+                    if (osidResponse.Status != ResponseStatus.Success)
+                    {
+                        this.AddUserMessage("Operating system query failed, giving up: " + osidResponse.Status);
+                        return;
+                    }
+                }
+
+                // Look up the information about this PCM, based on the OSID;
+                this.AddUserMessage("OSID: " + osidResponse.Value);
+                PcmInfo info = new PcmInfo(osidResponse.Value);
+
+                bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                if (!unlocked)
+                {
+                    this.AddUserMessage("Unlock was not successful.");
+                    return;
+                }
+
+                this.AddUserMessage("Unlock succeeded.");
+
+                // Do the actual reading.
+                Response<Stream> readResponse = await this.vehicle.ReadContents(info);
+                if (readResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
+                    await this.vehicle.ExitKernel();
+                    //await this.vehicle.device.SetVPW4x(false); TODO: How to call this from here?
+                    return;
+                }
+
+                // Get the path to save the image to.
+                //
+                // TODO: remember this value and offer to re-use it, in case 
+                // the read fails and the user has to try again.
+                //
+                string path = "";
+                this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
+                if (path == null)
+                {
+                    this.AddUserMessage("Save canceled.");
+                    return;
+                }
+
+                this.AddUserMessage("Will save to " + path);
+
+                // Save the contents to the path that the user provided.
+                try
+                {
+                    this.AddUserMessage("Saving contents to " + path);
+
+                    readResponse.Value.Position = 0;
+
+                    using (Stream output = File.OpenWrite(path))
+                    {
+                        await readResponse.Value.CopyToAsync(output);
+                    }
+                }
+                catch (IOException exception)
+                {
+                    this.AddUserMessage("Unable to save file: " + exception.Message);
+                    this.AddDebugMessage(exception.ToString());
+                }
+            }
+            catch (Exception exception)
+            {
+                this.AddUserMessage("Read failed: " + exception.ToString());
+            }
+            finally
+            {
+                this.EnableUserInput();
+            }
         }
     }
 }
