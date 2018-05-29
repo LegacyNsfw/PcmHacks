@@ -373,6 +373,7 @@ namespace Flash411
         public override void ClearMessageBuffer()
         {
             this.Port.DiscardBuffers();
+            System.Threading.Thread.Sleep(50);
         }
     }
     
