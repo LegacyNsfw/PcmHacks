@@ -290,8 +290,19 @@ namespace Flash411
         /// <returns></returns>
         public async Task<Response<UInt32>> QueryCalibrationId()
         {
-            Message request = this.messageFactory.CreateCalibrationIdReadRequest();
-            return await this.QueryUnsignedValue(request);
+            //Message request = this.messageFactory.CreateCalibrationIdReadRequest();
+            //return await this.QueryUnsignedValue(request);
+
+            var query = this.CreateQuery(
+                this.messageFactory.CreateCalibrationIdReadRequest,
+                this.messageParser.ParseBlockUInt32);
+            return await query.Execute();
+
+        }
+
+        private Query<T> CreateQuery<T>(Func<Message> generator, Func<Message, Response<T>> filter)
+        {
+            return new Query<T>(this.device, generator, filter, this.logger);
         }
 
         private async Task<Response<UInt32>> QueryUnsignedValue(Message request)
@@ -309,7 +320,7 @@ namespace Flash411
                 return Response.Create(ResponseStatus.Timeout, (UInt32)0);
             }
 
-            return this.messageParser.ParseBlockUInt32(response.GetBytes());
+            return this.messageParser.ParseBlockUInt32(response);
         }
 
         private async Task SuppressChatter()

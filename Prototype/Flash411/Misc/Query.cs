@@ -4,14 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411.Misc
+namespace Flash411
 {
     class Query<T>
     {
-        Device device;
-        Func<Message> generator;
-        Func<Message, Response<T>> filter;
-        public Query(Device device, Func<Message> generator, Func<Message, Response<T>> filter)
+        private Device device;
+        private Func<Message> generator;
+        private Func<Message, Response<T>> filter;
+        private ILogger logger;
+
+        public Query(Device device, Func<Message> generator, Func<Message, Response<T>> filter, ILogger logger)
         {
             this.device = device;
             this.generator = generator;
@@ -20,6 +22,8 @@ namespace Flash411.Misc
 
         public async Task<Response<T>> Execute()
         {
+            this.device.ClearMessageQueue();
+
             Message request = this.generator();
 
             bool success = false;

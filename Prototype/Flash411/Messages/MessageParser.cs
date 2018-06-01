@@ -31,21 +31,22 @@ namespace Flash411
         /// <summary>
         /// Parse the response to an OS ID request.
         /// </summary>
-        public Response<UInt32> ParseBlockUInt32(byte[] response)
+        public Response<UInt32> ParseBlockUInt32(Message message)
         {
+            byte[] bytes = message.GetBytes();
             int result = 0;
             ResponseStatus status;
 
             byte[] expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C };
-            if (!TryVerifyInitialBytes(response, expected, out status))
+            if (!TryVerifyInitialBytes(bytes, expected, out status))
             {
                 return Response.Create(ResponseStatus.Error, (UInt32)result);
             }
 
-            result = response[5] << 24;
-            result += response[6] << 16;
-            result += response[7] << 8;
-            result += response[8];
+            result = bytes[5] << 24;
+            result += bytes[6] << 16;
+            result += bytes[7] << 8;
+            result += bytes[8];
 
             return Response.Create(ResponseStatus.Success, (UInt32)result);
         }
