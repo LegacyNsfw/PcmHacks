@@ -10,24 +10,20 @@ namespace Flash411
     /// <summary>
     /// This class provides a way to test most of the app without any interface hardware.
     /// </summary>
-    class MockDevice : SerialDevice
+    class MockDevice : Device
     {
         public const string DeviceType = "Mock Serial Device";
-
-        public MockDevice(IPort port, ILogger logger) : base(port, logger)
+        private IPort port;
+        
+        public MockDevice(IPort port, ILogger logger) : base(logger)
         {
-
+            this.port = port;
         }
 
         protected override void Dispose(bool disposing)
         {    
         }
-
-        public override string GetDeviceType()
-        {
-            return DeviceType;
-        }
-
+        
         public override Task<bool> Initialize()
         {
             return Task.FromResult(true);
@@ -40,7 +36,7 @@ namespace Flash411
         {
             StringBuilder builder = new StringBuilder();
             this.Logger.AddDebugMessage("Sending message " + message.GetBytes().ToHex());
-            this.Port.Send(message.GetBytes());
+            this.port.Send(message.GetBytes());
             return Task.FromResult(true);
         }
 
@@ -48,10 +44,19 @@ namespace Flash411
         /// Try to read an incoming message from the device.
         /// </summary>
         /// <returns></returns>
-        protected override Task Receive()
+        protected async override Task Receive()
         {
-            this.Logger.AddDebugMessage("Not Implemented: Mock Receieve");
-            return Task.FromResult(0);
+            //List<byte> incoming = new List<byte>(5000);
+            byte[] incoming = new byte[5000];
+            int count = await this.port.Receive(incoming, 0, incoming.Length);
+            if(count > 0)
+            {
+                byte[] sized = new byte[count];
+                Buffer.BlockCopy(incoming, 0, sized, 0, count);
+                base.Enqueue(new Message(sized));
+            }
+
+            return;
         }
 
         /// <summary>

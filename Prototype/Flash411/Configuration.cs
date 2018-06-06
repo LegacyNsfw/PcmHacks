@@ -99,7 +99,7 @@ namespace Flash411
             }
             catch (Exception e)
             {
-                // this.Logger.AddDebugMessage("Could not save configuration: '{0}'", e); //TODO: How can we get the logger in scope?
+                System.Diagnostics.Debug.WriteLine("Could not save configuration: '{0}'", e);
             }
         }
     }
