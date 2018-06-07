@@ -25,7 +25,7 @@ namespace Flash411
         /// </summary>
         public Message CreateReadRequest(byte Block)
         { 
-            byte[] Bytes = new byte[] { Priority.Type2, DeviceId.Pcm, DeviceId.Tool, Mode.ReadBlock, Block };
+            byte[] Bytes = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.ReadBlock, Block };
             return new Message(Bytes);
         }
 
@@ -125,7 +125,7 @@ namespace Flash411
         /// </summary>
         public Message CreateSeedRequest()
         {
-            byte[] Bytes = new byte[] { Priority.Type2, DeviceId.Pcm, DeviceId.Tool, Mode.Seed, SubMode.GetSeed };
+            byte[] Bytes = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.Seed, SubMode.GetSeed };
             return new Message(Bytes);
         }
 
@@ -136,7 +136,7 @@ namespace Flash411
         {
             byte KeyHigh = (byte)((Key & 0xFF00) >> 8);
             byte KeyLow = (byte)(Key & 0xFF);
-            byte[] Bytes = new byte[] { Priority.Type2, DeviceId.Pcm, DeviceId.Tool, Mode.Seed, SubMode.SendKey, KeyHigh, KeyLow };
+            byte[] Bytes = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.Seed, SubMode.SendKey, KeyHigh, KeyLow };
             return new Message(Bytes);
         }
 
@@ -232,7 +232,7 @@ namespace Flash411
         /// </summary>
         public Message CreateHighSpeedCheck()
         {
-            return new Message(new byte[] { Priority.Type2, DeviceId.Broadcast, DeviceId.Tool, Mode.HighSpeedPrepare});
+            return new Message(new byte[] { Priority.Physical0, DeviceId.Broadcast, DeviceId.Tool, Mode.HighSpeedPrepare});
         }
 
         /// <summary>
@@ -240,7 +240,7 @@ namespace Flash411
         /// </summary>
         public Message CreateHighSpeedOKResponse()
         {
-            return new Message(new byte[] { Priority.Type2, DeviceId.Tool, DeviceId.Pcm, Mode.HighSpeedPrepare + Mode.Response });
+            return new Message(new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.HighSpeedPrepare + Mode.Response });
         }
         
         /// <summary>
@@ -248,7 +248,7 @@ namespace Flash411
         /// </summary>
         public Message CreateBeginHighSpeed()
         {
-            return new Message(new byte[] { Priority.Type2, DeviceId.Broadcast, DeviceId.Tool, Mode.HighSpeed });
+            return new Message(new byte[] { Priority.Physical0, DeviceId.Broadcast, DeviceId.Tool, Mode.HighSpeed });
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace Flash411
         /// </summary>
         public Message CreateTestDevicePresent()
         {
-            byte[] bytes = new byte[] { Priority.Type2, DeviceId.Broadcast, DeviceId.Tool, Mode.TestDevicePresent };
+            byte[] bytes = new byte[] { Priority.Physical0, DeviceId.Broadcast, DeviceId.Tool, Mode.TestDevicePresent };
             return new Message(bytes);
         }
 
@@ -265,7 +265,7 @@ namespace Flash411
         /// </summary>
         public Message CreateExitKernel()
         {
-            byte[] bytes = new byte[] { Priority.Block, DeviceId.Pcm, DeviceId.Tool, 0x20 };
+            byte[] bytes = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, 0x20 };
             return new Message(bytes);
         }
 
@@ -274,7 +274,7 @@ namespace Flash411
         /// </summary>
         public Message CreateClearDTCs()
         {
-            byte[] bytes = new byte[] { Priority.Type0, 0x6A, DeviceId.Tool, Mode.ClearDTCs };
+            byte[] bytes = new byte[] { Priority.Physical0, 0x6A, DeviceId.Tool, Mode.ClearDTCs };
             return new Message(bytes);
         }
 
@@ -292,7 +292,7 @@ namespace Flash411
         /// </summary>
         public Message CreateDisableNormalMessageTransmission()
         {
-            byte[] Bytes = new byte[] { Priority.Type2, DeviceId.Broadcast, DeviceId.Tool, Mode.SilenceBus, SubMode.Null };
+            byte[] Bytes = new byte[] { Priority.Physical0, DeviceId.Broadcast, DeviceId.Tool, Mode.SilenceBus, SubMode.Null };
             return new Message(Bytes);
         }
 
@@ -301,7 +301,25 @@ namespace Flash411
         /// </summary>
         public Message CreateDisableNormalMessageTransmissionOK()
         {
-            byte[] bytes = new byte[] { Priority.Type2, DeviceId.Tool, DeviceId.Pcm, Mode.SilenceBus + Mode.Response , SubMode.Null };
+            byte[] bytes = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.SilenceBus + Mode.Response , SubMode.Null };
+            return new Message(bytes);
+        }
+
+        /// <summary>
+        /// Create a broadcast message telling all devices to clear their DTCs
+        /// </summary>
+        public Message ClearDTCs()
+        {
+            byte[] bytes = new byte[] { Priority.Functional0, 0x6A, DeviceId.Tool, Mode.ClearDTCs };
+            return new Message(bytes);
+        }
+        
+        /// <summary>
+        /// PCM Response to Clear DTCs
+        /// </summary>
+        public Message ClearDTCsOK()
+        {
+            byte[] bytes = new byte[] { Priority.Functional0Low, 0x6B, DeviceId.Pcm, Mode.ClearDTCs + Mode.Response };
             return new Message(bytes);
         }
 
@@ -313,7 +331,7 @@ namespace Flash411
         /// </remarks>
         public Message CreateUploadRequest(int Size, int Address)
         {
-            byte[] requestupload = { Priority.Type2, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, SubMode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            byte[] requestupload = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, SubMode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
             requestupload[5] = unchecked((byte)(Size >> 8));
             requestupload[6] = unchecked((byte)(Size & 0xFF));
             requestupload[7] = unchecked((byte)(Address >> 16));

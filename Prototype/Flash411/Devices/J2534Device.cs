@@ -230,6 +230,7 @@ namespace Flash411
                 return;
             }
 
+            this.Logger.AddDebugMessage("RX: " + PassMess.GetBytes().ToHex());
             this.Enqueue(new Message(PassMess.GetBytes(), PassMess.Timestamp, (ulong)OBDError));
         }
 

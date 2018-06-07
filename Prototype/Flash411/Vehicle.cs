@@ -606,6 +606,21 @@ namespace Flash411
             await this.device.SendMessage(exitKernel);
         }
 
+        /// <summary>
+        /// Clears DTCs
+        /// </summary>
+        /// <remarks>
+        /// Return code is not checked as its an uncommon mode and IDs, different devices will handle this differently.
+        /// </remarks>
+        public async Task ClearDTCs()
+        {
+            Message ClearDTCs = this.messageFactory.CreateClearDTCs();
+            Message ClearDTCsOK = this.messageFactory.CreateClearDTCsOK();
+
+            await this.device.SendMessage(ClearDTCs);
+            this.device.ClearMessageQueue();
+        }
+
         private async Task<bool> TryReadBlock(byte[] image, int length, int startAddress)
         {
             this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, length));
