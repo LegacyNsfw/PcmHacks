@@ -70,7 +70,6 @@ namespace Flash411
                     default:
                         this.Logger.AddUserMessage("Unknown and unsupported AVT device detected. Please add support and submit a patch!");
                         return false;
-                        break;
                 }
             }
             else

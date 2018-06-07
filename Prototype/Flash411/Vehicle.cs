@@ -185,20 +185,11 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryBCC()
         {
-            this.device.ClearMessageQueue();
+            var query = this.CreateQuery(
+                this.messageFactory.CreateBCCRequest,
+                this.messageParser.ParseBCCresponse);
 
-            if (!await this.device.SendMessage(this.messageFactory.CreateBCCRequest()))
-            {
-                return Response.Create(ResponseStatus.Error, "Unknown. Request failed.");
-            }
-
-            Message response = await this.device.ReceiveMessage();
-            if (response == null)
-            {
-                return Response.Create(ResponseStatus.Timeout, "Unknown. No response received.");
-            }
-
-            return this.messageParser.ParseBCCresponse(response.GetBytes());
+            return await query.Execute();
         }
 
         /// <summary>
@@ -206,20 +197,11 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryMEC()
         {
-            this.device.ClearMessageQueue();
+            var query = this.CreateQuery(
+                this.messageFactory.CreateMECRequest,
+                this.messageParser.ParseMECresponse);
 
-            if (!await this.device.SendMessage(this.messageFactory.CreateMECRequest()))
-            {
-                return Response.Create(ResponseStatus.Error, "Unknow. Request failed.");
-            }
-
-            Message response = await this.device.ReceiveMessage();
-            if (response == null)
-            {
-                return Response.Create(ResponseStatus.Timeout, "Unknown. No response received.");
-            }
-
-            return this.messageParser.ParseMECresponse(response.GetBytes());
+            return await query.Execute();
         }
 
         /// <summary>
@@ -264,8 +246,7 @@ namespace Flash411
         /// <returns></returns>
         public async Task<Response<UInt32>> QueryOperatingSystemId()
         {
-            Message request = this.messageFactory.CreateOperatingSystemIdReadRequest();
-            return await this.QueryUnsignedValue(request);
+            return await this.QueryUnsignedValue(this.messageFactory.CreateOperatingSystemIdReadRequest);
         }
 
         /// <summary>
@@ -277,8 +258,7 @@ namespace Flash411
         /// <returns></returns>
         public async Task<Response<UInt32>> QueryHardwareId()
         {
-            Message request = this.messageFactory.CreateHardwareIdReadRequest();
-            return await this.QueryUnsignedValue(request);
+            return await this.QueryUnsignedValue(this.messageFactory.CreateHardwareIdReadRequest);
         }
 
         /// <summary>
@@ -290,33 +270,56 @@ namespace Flash411
         /// <returns></returns>
         public async Task<Response<UInt32>> QueryCalibrationId()
         {
-            Message request = this.messageFactory.CreateCalibrationIdReadRequest();
-            return await this.QueryUnsignedValue(request);
+            var query = this.CreateQuery(
+                this.messageFactory.CreateCalibrationIdReadRequest,
+                this.messageParser.ParseBlockUInt32);
+            return await query.Execute();
+
         }
 
-        private async Task<Response<UInt32>> QueryUnsignedValue(Message request)
+        /// <summary>
+        /// Helper function to create Query objects.
+        /// </summary>
+        private Query<T> CreateQuery<T>(Func<Message> generator, Func<Message, Response<T>> filter)
         {
-            this.device.ClearMessageQueue();
-
-            if (!await this.device.SendMessage(request))
-            {
-                return Response.Create(ResponseStatus.Error, (UInt32)0);
-            }
-
-            var response = await this.device.ReceiveMessage();
-            if (response == null)
-            {
-                return Response.Create(ResponseStatus.Timeout, (UInt32)0);
-            }
-
-            return this.messageParser.ParseBlockUInt32(response.GetBytes());
+            return new Query<T>(this.device, generator, filter, this.logger);
         }
 
+        /// <summary>
+        /// Helper function for queries that return unsigned 32-bit integers.
+        /// </summary>
+        private async Task<Response<UInt32>> QueryUnsignedValue(Func<Message> generator)
+        {
+            var query = this.CreateQuery(generator, this.messageParser.ParseBlockUInt32);
+            return await query.Execute();
+        }
+
+        /// <summary>
+        /// Suppres chatter on the VPW bus.
+        /// </summary>
         private async Task SuppressChatter()
         {
             this.logger.AddDebugMessage("Suppressing VPW chatter.");
             Message suppressChatter = this.messageFactory.CreateDisableNormalMessageTransmission();
             await this.device.SendMessage(suppressChatter);
+        }
+
+        /// <summary>
+        /// Try to send a message, retrying if necessary.
+        /// </summary
+        private async Task<bool> TrySendMessage(Message message, string description)
+        {
+            for (int attempt = 1; attempt < 5; attempt++)
+            {
+                if (await this.device.SendMessage(message))
+                {
+                    return true;
+                }
+
+                this.logger.AddDebugMessage("Unable to send " + description + " message. Attempt #" + attempt.ToString());
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -329,64 +332,85 @@ namespace Flash411
             this.logger.AddDebugMessage("Sending seed request.");
             Message seedRequest = this.messageFactory.CreateSeedRequest();
 
-            if (!await this.device.SendMessage(seedRequest))
+            if (!await this.TrySendMessage(seedRequest, "seed request"))
             {
-                this.logger.AddDebugMessage("Unable to send seed request.");
+                this.logger.AddUserMessage("Unable to send seed request.");
                 return false;
             }
 
-            Message seedResponse = await this.device.ReceiveMessage();
-            if (seedResponse == null)
+            bool seedReceived = false;
+            UInt16 seedValue = 0;
+
+            for (int attempt = 1; attempt < 5; attempt++)
             {
-                this.logger.AddDebugMessage("No response to seed request.");
+                Message seedResponse = await this.device.ReceiveMessage();
+                if (seedResponse == null)
+                {
+                    this.logger.AddDebugMessage("No response to seed request.");
+                    return false;
+                }
+
+                if (this.messageParser.IsUnlocked(seedResponse.GetBytes()))
+                {
+                    this.logger.AddUserMessage("PCM is already unlocked");
+                    return true;
+                }
+
+                this.logger.AddDebugMessage("Parsing seed value.");
+                Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.GetBytes());
+                if (seedValueResponse.Status == ResponseStatus.Success)
+                {
+                    seedValue = seedValueResponse.Value;
+                    seedReceived = true;
+                    break;
+                }
+
+                this.logger.AddDebugMessage("Unable to parse seed response. Attempt #" + attempt.ToString());
+            }
+
+            if (!seedReceived)
+            {
+                this.logger.AddUserMessage("No seed reponse received, unable to unlock PCM.");
                 return false;
             }
 
-            if (this.messageParser.IsUnlocked(seedResponse.GetBytes()))
-            {
-                this.logger.AddUserMessage("PCM is already unlocked");
-                return true;
-            }
-
-            this.logger.AddDebugMessage("Parsing seed value.");
-            Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.GetBytes());
-            if (seedValueResponse.Status != ResponseStatus.Success)
-            {
-                this.logger.AddDebugMessage("Unable to parse seed response.");
-                return false;
-            }
-
-            if (seedValueResponse.Value == 0x0000)
+            if (seedValue == 0x0000)
             {
                 this.logger.AddUserMessage("PCM Unlock not required");
                 return true;
             }
 
-            UInt16 key = KeyAlgorithm.GetKey(keyAlgorithm, seedValueResponse.Value);
+            UInt16 key = KeyAlgorithm.GetKey(keyAlgorithm, seedValue);
 
-            this.logger.AddDebugMessage("Sending unlock request (" + seedValueResponse.Value.ToString("X4") + ", " + key.ToString("X4") + ")");
+            this.logger.AddDebugMessage("Sending unlock request (" + seedValue.ToString("X4") + ", " + key.ToString("X4") + ")");
             Message unlockRequest = this.messageFactory.CreateUnlockRequest(key);
-            if (!await this.device.SendMessage(unlockRequest))
+            if (!await this.TrySendMessage(unlockRequest, "unlock request"))
             {
                 this.logger.AddDebugMessage("Unable to send unlock request.");
                 return false;
             }
 
-            Message unlockResponse = await this.device.ReceiveMessage();
-            if (unlockResponse == null)
+            for (int attempt = 1; attempt < 5; attempt++)
             {
-                this.logger.AddDebugMessage("No response to unlock request.");
-                return false;
-            }
-            
-            string errorMessage;
-            Response<bool> result = this.messageParser.ParseUnlockResponse(unlockResponse.GetBytes(), out errorMessage);
-            if (errorMessage != null)
-            {
+                Message unlockResponse = await this.device.ReceiveMessage();
+                if (unlockResponse == null)
+                {
+                    this.logger.AddDebugMessage("No response to unlock request. Attempt #" + attempt.ToString());
+                    continue;
+                }
+
+                string errorMessage;
+                Response<bool> result = this.messageParser.ParseUnlockResponse(unlockResponse.GetBytes(), out errorMessage);
+                if (errorMessage == null)
+                {
+                    return result.Value;
+                }
+
                 this.logger.AddUserMessage(errorMessage);
             }
 
-            return result.Value;
+            this.logger.AddUserMessage("Unable to process unlock response.");
+            return false;
         }
 
         /// <summary>
