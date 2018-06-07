@@ -66,6 +66,11 @@ namespace Flash411
         /// 0x6C: 0110=Priority 3, GM. C=1100 GM, Physical, Type 0
         /// </summary>
         public const byte Physical0 = 0x6C;
+
+        /// <summary>
+        /// 0x8C: 1000=Priority 4, GM. C=1100 GM, Physical, Type 0
+        /// </summary>
+        public const byte Physical0High = 0x8C;
     }
 
     /// <summary>

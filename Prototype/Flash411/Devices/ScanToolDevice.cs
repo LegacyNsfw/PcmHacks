@@ -94,8 +94,6 @@ namespace Flash411
                     this.Supports4X = true;
                     this.MaxSendSize = 2048 + 12;
                     this.MaxReceiveSize = 2048 + 12;
-
-                    //await this.SendAndVerify("AT JTM 5", "OK"); // used to multiply timeouts by 5 mis-using the allpro commands.
                 }
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage

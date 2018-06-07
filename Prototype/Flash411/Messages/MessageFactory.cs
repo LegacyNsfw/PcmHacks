@@ -256,7 +256,7 @@ namespace Flash411
         /// </summary>
         public Message CreateTestDevicePresent()
         {
-            byte[] bytes = new byte[] { Priority.Physical0, DeviceId.Broadcast, DeviceId.Tool, Mode.TestDevicePresent };
+            byte[] bytes = new byte[] { Priority.Physical0High, DeviceId.Broadcast, DeviceId.Tool, Mode.TestDevicePresent };
             return new Message(bytes);
         }
 
