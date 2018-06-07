@@ -39,6 +39,7 @@ namespace Flash411
                 {
                     port = new HttpPort(logger);
                 }
+                else
                 {
                     port = new StandardPort(serialPortName);
                 }

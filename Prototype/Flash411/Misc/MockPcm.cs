@@ -151,25 +151,64 @@ namespace Flash411
                 byte[] responseData = new byte[0];
                 switch (this.readWriteBlockId)
                 {
-                    case 1:
+                    case BlockId.Vin1:
                         responseData = Encoding.ASCII.GetBytes("12345");
                         break;
 
-                    case 2:
-                        responseData = Encoding.ASCII.GetBytes("ABCD");
+                    case BlockId.Vin2:
+                        responseData = Encoding.ASCII.GetBytes("ABCDEF");
                         break;
 
-                    case 3:
+                    case BlockId.Vin3:
+                        responseData = Encoding.ASCII.GetBytes("123456");
+                        break;
+
+                    case BlockId.Serial1:
                         responseData = Encoding.ASCII.GetBytes("1234");
                         break;
 
-                    case 10:
+                    case BlockId.Serial2:
+                        responseData = Encoding.ASCII.GetBytes("2345");
+                        break;
+
+                    case BlockId.Serial3:
+                        responseData = Encoding.ASCII.GetBytes("3456");
+                        break;
+
+                    case BlockId.BCC:
+                        responseData = Encoding.ASCII.GetBytes("4321");
+                        break;
+
+                    case BlockId.MEC:
+                        responseData = new byte[1];
+                        responseData[0] = 123;
+                        break;
+
+                    case BlockId.OperatingSystemID:
+                        responseData = UnsignedToByteArray(12593358);
+                        break;
+
+                    case BlockId.CalibrationID:
+                        responseData = UnsignedToByteArray(12345);
+                        break;
+
+                    case BlockId.HardwareID:
+                        responseData = UnsignedToByteArray(23456);
+                        break;
+
+                    case BlockId.SystemCalID:
                         responseData = new byte[] { 0xBA, 0x48, 0xC2, 0x00 };
                         break;
                 }
 
                 List<byte> response = new List<byte>();
-                response.AddRange(new byte[] { 0x6C, 0xF0, 0x10, 0x7C, this.readWriteBlockId, 0x00 });
+                response.AddRange(new byte[] { 0x6C, 0xF0, 0x10, 0x7C, this.readWriteBlockId });
+
+                if (this.readWriteBlockId == 1)
+                {
+                    response.Add(0);
+                }
+
                 response.AddRange(responseData);
 
                 this.crc = 0xFF;
@@ -478,6 +517,17 @@ namespace Flash411
                 case 0xA0: return "Manufacturer Enable Counter";
                 default: return "Unknown";
             }
+        }
+
+        private byte[] UnsignedToByteArray(uint value)
+        {
+            byte[] native = BitConverter.GetBytes(value);
+            byte[] result = new byte[4];
+            result[0] = native[3];
+            result[1] = native[2];
+            result[2] = native[1];
+            result[3] = native[0];
+            return result;
         }
     }
 
