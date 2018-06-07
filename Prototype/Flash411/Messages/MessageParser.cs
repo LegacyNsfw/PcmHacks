@@ -122,10 +122,11 @@ namespace Flash411
             return Response.Create(ResponseStatus.Success, serial);
         }
 
-        public Response<string> ParseBCCresponse(byte[] response)
+        public Response<string> ParseBCCresponse(Message responseMessage)
         {
             string result = "Unknown";
             ResponseStatus status;
+            byte[] response = responseMessage.GetBytes();
 
             byte[] expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C, BlockId.BCC };
             if (!TryVerifyInitialBytes(response, expected, out status))
@@ -142,10 +143,11 @@ namespace Flash411
             return Response.Create(ResponseStatus.Success, BCC);
         }
 
-        public Response<string> ParseMECresponse(byte[] response)
+        public Response<string> ParseMECresponse(Message responseMessage)
         {
             string result = "Unknown";
             ResponseStatus status;
+            byte[] response = responseMessage.GetBytes();
 
             byte[] expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C, BlockId.MEC };
             if (!TryVerifyInitialBytes(response, expected, out status))
