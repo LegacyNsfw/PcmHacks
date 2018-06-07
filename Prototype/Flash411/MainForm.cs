@@ -114,7 +114,6 @@ namespace Flash411
                 {
                     this.AddUserMessage("VIN query failed: " + vinResponse.Status.ToString());
                     await this.vehicle.ExitKernel();
-                    await this.vehicle.ExitKernel();
                     return;
                 }
                 this.AddUserMessage("VIN: " + vinResponse.Value);
@@ -217,7 +216,6 @@ namespace Flash411
                 {
                     this.AddUserMessage("Operating system query failed, will retry: " + osidResponse.Status);
                     await this.vehicle.ExitKernel();
-                    await this.vehicle.ExitKernel();
 
                     osidResponse = await this.vehicle.QueryOperatingSystemId();
                     if (osidResponse.Status != ResponseStatus.Success)
@@ -246,7 +244,6 @@ namespace Flash411
                 {
                     this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
                     await this.vehicle.ExitKernel();
-                    //await this.vehicle.device.SetVPW4x(false); TODO: How to call this from here?
                     return;
                 }
 
