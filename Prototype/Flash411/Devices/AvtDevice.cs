@@ -144,7 +144,24 @@ namespace Flash411
             // Get the first packet byte.
             try
             {
-                await this.Port.Receive(rx, 0, 1);
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
+                while (sw.ElapsedMilliseconds < 2000)
+                {
+                    if (await this.Port.GetReceiveQueueSize() > 0) { break;}
+                }
+                if (await this.Port.GetReceiveQueueSize() > 0)
+                {
+                    await this.Port.Receive(rx, 0, 1);
+                }
+                else
+                {
+                    this.Logger.AddDebugMessage("Waited 2seconds.. no data present");
+                    return Response.Create(ResponseStatus.Timeout, (Message)null);
+                }
+
+
+                 
             }
             catch (Exception) // timeout exception - log no data, return error.
             {
@@ -328,6 +345,7 @@ namespace Flash411
 
         protected async override Task Receive()
         {
+           
             Response<Message> response = await ReadAVTPacket();
             if (response.Status == ResponseStatus.Success)
             {
@@ -368,5 +386,12 @@ namespace Flash411
 
             return true;
         }
+
+        public override void ClearMessageBuffer()
+        {
+            this.Port.DiscardBuffers();
+            System.Threading.Thread.Sleep(50);
+        }
     }
+    
 }
