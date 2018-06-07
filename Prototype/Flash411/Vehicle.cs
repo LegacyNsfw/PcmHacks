@@ -892,7 +892,6 @@ namespace Flash411
                     return false;
                 }
 
-
                 logger.AddUserMessage("PCM is allowing a switch to VPW 4x. Requesting all VPW modules to do so.");
                 await this.device.SendMessage(BeginHighSpeed);
             }
