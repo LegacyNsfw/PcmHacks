@@ -51,7 +51,7 @@ namespace Flash411
             
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 115200;
-            configuration.Timeout = 1000;
+            configuration.Timeout = 1200;
 
             await this.Port.OpenAsync(configuration);
             await this.Port.DiscardBuffers();
@@ -59,6 +59,7 @@ namespace Flash411
             try
             {
                 // Reset
+                await this.SendRequest(""); // send a cr/lf to prevent the ATZ failing.
                 this.Logger.AddDebugMessage(await this.SendRequest("AT Z"));  // reset
                 this.Logger.AddDebugMessage(await this.SendRequest("AT E0")); // disable echo
                 this.Logger.AddDebugMessage(await this.SendRequest("AT S0")); // no spaces on responses
@@ -87,12 +88,14 @@ namespace Flash411
                 if (apID != "?")
                 {
                     this.Logger.AddUserMessage("All Pro ID: " + apID);
-                    this.Logger.AddDebugMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
-                    this.Logger.AddDebugMessage("All Pro firmware: " + await this.SendRequest("AT @1"));          // firmware check
+                    this.Logger.AddUserMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
+                    this.Logger.AddUserMessage("All Pro firmware: " + await this.SendRequest("AT @1"));          // firmware check
 
-                    // this.Supports4X = true;
-                    // this.MaxSendSize = 268;
-                    this.MaxReceiveSize = 512;
+                    this.Supports4X = true;
+                    this.MaxSendSize = 2048 + 12;
+                    this.MaxReceiveSize = 2048 + 12;
+
+                    //await this.SendAndVerify("AT JTM 5", "OK"); // used to multiply timeouts by 5 mis-using the allpro commands.
                 }
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage
@@ -102,7 +105,8 @@ namespace Flash411
                     !await this.SendAndVerify("AT SP2", "OK") ||              // Set Protocol 2 (VPW)
                     !await this.SendAndVerify("AT DP", "SAE J1850 VPW") ||    // Get Protocol (Verify VPW)
                     !await this.SendAndVerify("AT AR", "OK") ||               // Turn Auto Receive on (default should be on anyway)
-                    !await this.SendAndVerify("AT ST 50", "OK") ||                  // Set timeout to N * 4 milliseconds - TODO: Adjust or remove!
+                    !await this.SendAndVerify("AT AT0", "OK") ||              // Disable adaptive timeouts
+                    !await this.SendAndVerify("AT ST FF", "OK") ||            // Set timeout to N * 4 milliseconds - TODO: Adjust or remove!
                     !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK") || // Set receive filter to this tool ID
                     !await this.SendAndVerify("AT H1", "OK")                   // Send headers
                  
@@ -333,7 +337,7 @@ namespace Flash411
             //this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
             string line = System.Text.Encoding.ASCII.GetString(filtered).Trim(); // strip leading and trailing whitespace, too
 
-            this.Logger.AddDebugMessage("Read \"" + line + "\"");
+            //this.Logger.AddDebugMessage("Read \"" + line + "\"");
 
             return line;
         }
@@ -374,6 +378,11 @@ namespace Flash411
             }
 
             return true;
+        }
+
+        public override void ClearMessageBuffer()
+        {
+            this.Port.DiscardBuffers();
         }
     }
 }

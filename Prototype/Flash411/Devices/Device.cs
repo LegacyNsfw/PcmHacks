@@ -78,7 +78,13 @@ namespace Flash411
         public void ClearMessageQueue()
         {
             this.queue.Clear();
+            ClearMessageBuffer();
         }
+        /// <summary>
+        /// Clears Serial port buffer or J2534 api buffer
+        /// </summary>
+        public abstract void ClearMessageBuffer();
+
 
         /// <summary>
         /// Reads a message from the VPW bus and returns it.
