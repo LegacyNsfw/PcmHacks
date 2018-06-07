@@ -581,10 +581,22 @@ namespace Flash411
             finally
             {
                 // Sending the exit command at both speeds and revert to 1x.
-                await this.ExitKernel();
+                await this.Cleanup();
             }
         }
-        
+
+        /// <summary>
+        /// Cleanup calls the various cleanup routines to get everything back to normal
+        /// </summary>
+        /// <remarks>
+        /// Exit kernel at 4x, 1x, and clear DTCs
+        /// </remarks>
+        public async Task Cleanup()
+        {
+            await this.ExitKernel();
+            await this.ClearDTCs();
+        }
+
         /// <summary>
         /// Exits the kernel at 4x, then at 1x. Once this function has been called the bus will be back at 1x.
         /// </summary>
