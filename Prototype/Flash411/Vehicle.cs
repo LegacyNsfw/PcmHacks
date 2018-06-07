@@ -593,7 +593,9 @@ namespace Flash411
         /// </remarks>
         public async Task Cleanup()
         {
+            this.logger.AddDebugMessage("Cleaning up Flash Kernel");
             await this.ExitKernel();
+            this.logger.AddDebugMessage("Clear DTCs");
             await this.ClearDTCs();
         }
 

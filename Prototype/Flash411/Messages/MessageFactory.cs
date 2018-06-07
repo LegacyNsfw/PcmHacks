@@ -274,7 +274,7 @@ namespace Flash411
         /// </summary>
         public Message CreateClearDTCs()
         {
-            byte[] bytes = new byte[] { Priority.Physical0, 0x6A, DeviceId.Tool, Mode.ClearDTCs };
+            byte[] bytes = new byte[] { Priority.Functional0, 0x6A, DeviceId.Tool, Mode.ClearDTCs };
             return new Message(bytes);
         }
 
