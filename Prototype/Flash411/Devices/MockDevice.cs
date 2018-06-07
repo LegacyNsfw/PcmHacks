@@ -81,7 +81,7 @@ namespace Flash411
 
         public override void ClearMessageBuffer()
         {
-            this.Port.DiscardBuffers();
+            this.port.DiscardBuffers();
         }
     }
 }

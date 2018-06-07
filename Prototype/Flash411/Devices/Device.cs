@@ -60,6 +60,7 @@ namespace Flash411
         public virtual void Dispose()
         {
             this.Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
