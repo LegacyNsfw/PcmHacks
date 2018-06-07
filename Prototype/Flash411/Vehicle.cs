@@ -552,7 +552,7 @@ namespace Flash411
                         break;
                     }
                     
-                    if (!await TryReadBlock(image, startAddress, blockSize))
+                    if (!await TryReadBlock(image, blockSize, startAddress))
                     {
                         this.logger.AddUserMessage(
                             string.Format(
@@ -576,29 +576,33 @@ namespace Flash411
             }
             finally
             {
-                // Sending the exit command twice, and at both speeds, just to
-                // be totally certain that the PCM goes back to normal. If the
-                // kernel is left running, the engine won't start, and the 
-                // dashboard lights up with all sorts of errors.
-                //
-                // You can reset by pulling the PCM's fuse, but I'd hate to 
-                // have a user think that we've done some real damage before 
-                // they figure that out.
-                await this.ExitKernel();
-                await this.VehicleSetVPW4x(false);
+                // Sending the exit command at both speeds and revert to 1x.
                 await this.ExitKernel();
             }
         }
-
+        
+        /// <summary>
+        /// Exits the kernel at 4x, then at 1x. Once this function has been called the bus will be back at 1x.
+        /// </summary>
+        /// <remarks>
+        /// Can be used to force exit the kernel, if requied. Does not attempt the 4x exit if not supported by the current device.
+        /// </remarks>
         public async Task ExitKernel()
         {
-            this.device.ClearMessageQueue();
-
             Message exitKernel = this.messageFactory.CreateExitKernel();
+
+            this.device.ClearMessageQueue();
+            if (device.Supports4X)
+            {
+                await device.SetVPW4x(true);
+                await this.device.SendMessage(exitKernel);
+                await device.SetVPW4x(false);
+            }
+
             await this.device.SendMessage(exitKernel);
         }
 
-        private async Task<bool> TryReadBlock(byte[] image, int startAddress, int length)
+        private async Task<bool> TryReadBlock(byte[] image, int length, int startAddress)
         {
             this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, length));
             
@@ -606,7 +610,7 @@ namespace Flash411
             {
                 Message message = this.messageFactory.CreateReadRequest(startAddress, length);
 
-                this.logger.AddDebugMessage("Sending " + message.GetBytes().ToHex());
+                //this.logger.AddDebugMessage("Sending " + message.GetBytes().ToHex());
                 if (!await this.device.SendMessage(message))
                 {
                     this.logger.AddDebugMessage("Unable to send read request.");
@@ -624,7 +628,7 @@ namespace Flash411
                         break;
                     }
 
-                    this.logger.AddDebugMessage("Processing message " + response.GetBytes().ToHex());
+                    this.logger.AddDebugMessage("Processing message");
 
                     Response<bool> readResponse = this.messageParser.ParseReadResponse(response);
                     if (readResponse.Status != ResponseStatus.Success)
@@ -660,9 +664,9 @@ namespace Flash411
                         continue;
                     }
 
-                    this.logger.AddDebugMessage("Processing message " + payloadMessage.GetBytes().ToHex());
+                    this.logger.AddDebugMessage("Processing message");
 
-                    Response<byte[]> payloadResponse = this.messageParser.ParsePayload(payloadMessage);
+                    Response<byte[]> payloadResponse = this.messageParser.ParsePayload(payloadMessage, length, startAddress);
                     if (payloadResponse.Status != ResponseStatus.Success)
                     {
                         this.logger.AddDebugMessage("Not payload message.");
@@ -878,12 +882,9 @@ namespace Flash411
                 }
 
                 logger.AddUserMessage("PCM is allowing a switch to VPW 4x. Requesting all VPW modules to do so.");
-                if (!await this.device.SendMessage(BeginHighSpeed))
-                {
-                    return false;
-                }
+                await this.device.SendMessage(BeginHighSpeed);
 
-                rx = await this.device.ReceiveMessage();
+                //rx = await this.device.ReceiveMessage();
             }
 
             // Request the device to change

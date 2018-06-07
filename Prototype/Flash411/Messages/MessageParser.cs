@@ -220,7 +220,7 @@ namespace Flash411
         /// <summary>
         /// Parse the payload of a read request.
         /// </summary>
-        public Response<byte[]> ParsePayload(Message message)
+        public Response<byte[]> ParsePayload(Message message, int length, int address)
         {
             ResponseStatus status;
             byte[] actual = message.GetBytes();
@@ -235,22 +235,34 @@ namespace Flash411
                 return Response.Create(ResponseStatus.Truncated, new byte[0]);
             }
 
-            int length = (actual[5] << 8) + actual[6];
+            int raddr = ((actual[7] << 16) + (actual[8] << 8) + actual[9]);
+            if (raddr != address)
+            {
+                return Response.Create(ResponseStatus.UnexpectedResponse, new byte[0]);
+            }
 
             byte[] result = new byte[length];
 
-            if (actual[4] == 1) 
+            if (actual[4] == 1)
             {
+                //Regular encoding should be an exact match for size
+                int rlen = (actual[5] << 8) + actual[6];
+                if (rlen != length) // did we get the expected length?
+                {
+                    return Response.Create(ResponseStatus.Truncated, new byte[0]);
+                }
                 Buffer.BlockCopy(actual, 10, result, 0, length);
             }
             else if (actual[4] == 2) // TODO check length
             {
+                // This isnt going to work with existing kernels... need to support variable length.
                 int runLength = actual[5] << 8 + actual[6];
                 byte value = actual[10];
                 for (int index = 0; index < runLength; index++)
                 {
                     result[index] = value;
                 }
+                return Response.Create(ResponseStatus.Error, result);
             }
 
             return Response.Create(ResponseStatus.Success, result);
