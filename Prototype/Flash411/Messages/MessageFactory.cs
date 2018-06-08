@@ -265,7 +265,7 @@ namespace Flash411
         /// </summary>
         public Message CreateExitKernel()
         {
-            byte[] bytes = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, 0x20 };
+            byte[] bytes = new byte[] { Priority.Functional0, DeviceId.Pcm, DeviceId.Tool, 0x20 };
             return new Message(bytes);
         }
 
