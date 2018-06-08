@@ -569,6 +569,8 @@ namespace Flash411
                     startAddress += blockSize;
                 }
 
+                await this.Cleanup(); // Not sure why this does not get called in the finally block on successfull read?
+
                 MemoryStream stream = new MemoryStream(image);
                 return new Response<Stream>(ResponseStatus.Success, stream);
             }
