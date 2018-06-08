@@ -166,7 +166,7 @@ namespace Flash411
         public bool IsUnlocked(byte[] response)
         {
             ResponseStatus status;
-            byte[] unlocked = { Priority.Type2, 0xF0, DeviceId.Pcm, 0x67, 0x01, 0x37 };
+            byte[] unlocked = { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, 0x67, 0x01, 0x37 };
 
             if (TryVerifyInitialBytes(response, unlocked, out status))
             {
@@ -184,8 +184,8 @@ namespace Flash411
             ResponseStatus status;
             UInt16 result = 0;
 
-            byte[] unlocked = { Priority.Type2, 0x70, DeviceId.Pcm, 0x67, 0x01, 0x37 };
-            byte[] seed = new byte[] { Priority.Type2, DeviceId.Tool, DeviceId.Pcm, 0x67, 0x01, };
+            byte[] unlocked = { Priority.Physical0, 0x70, DeviceId.Pcm, Mode.Seed + Mode.Response, 0x01, 0x37 };
+            byte[] seed = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, 0x67, 0x01, };
 
             if (TryVerifyInitialBytes(response, unlocked, out status))
             {

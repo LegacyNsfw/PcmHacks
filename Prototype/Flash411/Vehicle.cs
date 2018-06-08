@@ -569,6 +569,8 @@ namespace Flash411
                     startAddress += blockSize;
                 }
 
+                await this.Cleanup(); // Not sure why this does not get called in the finally block on successfull read?
+
                 MemoryStream stream = new MemoryStream(image);
                 return new Response<Stream>(ResponseStatus.Success, stream);
             }
@@ -581,10 +583,24 @@ namespace Flash411
             finally
             {
                 // Sending the exit command at both speeds and revert to 1x.
-                await this.ExitKernel();
+                await this.Cleanup();
             }
         }
-        
+
+        /// <summary>
+        /// Cleanup calls the various cleanup routines to get everything back to normal
+        /// </summary>
+        /// <remarks>
+        /// Exit kernel at 4x, 1x, and clear DTCs
+        /// </remarks>
+        public async Task Cleanup()
+        {
+            this.logger.AddDebugMessage("Cleaning up Flash Kernel");
+            await this.ExitKernel();
+            this.logger.AddDebugMessage("Clear DTCs");
+            await this.ClearDTCs();
+        }
+
         /// <summary>
         /// Exits the kernel at 4x, then at 1x. Once this function has been called the bus will be back at 1x.
         /// </summary>
@@ -604,6 +620,21 @@ namespace Flash411
             }
 
             await this.device.SendMessage(exitKernel);
+        }
+
+        /// <summary>
+        /// Clears DTCs
+        /// </summary>
+        /// <remarks>
+        /// Return code is not checked as its an uncommon mode and IDs, different devices will handle this differently.
+        /// </remarks>
+        public async Task ClearDTCs()
+        {
+            Message ClearDTCs = this.messageFactory.CreateClearDTCs();
+            Message ClearDTCsOK = this.messageFactory.CreateClearDTCsOK();
+
+            await this.device.SendMessage(ClearDTCs);
+            this.device.ClearMessageQueue();
         }
 
         private async Task<bool> TryReadBlock(byte[] image, int length, int startAddress)

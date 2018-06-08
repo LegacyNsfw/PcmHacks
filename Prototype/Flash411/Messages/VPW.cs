@@ -43,19 +43,34 @@ namespace Flash411
         */
 
         /// <summary>
-        /// 0x68 where 0110=Priority 3 with GM header and C=1000 GM, Functional, Type 0
+        /// 0x48: 6=0100=Priority 1, GM. 8=1000 GM, Functional, Type 0
         /// </summary>
-        public const byte Type0 = 0x68;
+        public const byte Functional0Low = 0x48;
 
         /// <summary>
-        /// 0x6C where 0110=Priority 3 with GM header and C=1010 GM, Functional, Type 2
+        /// 0x68: 6=0110=Priority 3, GM. 8=1000 GM, Functional, Type 0
         /// </summary>
-        public const byte Type2 = 0x6C;
-
+        public const byte Functional0 = 0x68;
+        
         /// <summary>
-        /// /// 0x6D where 0110=Priority 3 with GM header and C=1101 GM Functional, Block Transfer, Type 1
+        /// 0x6D: 0110=Priority 3, GM. C=1101 GM, Functional, Type 1 (Block Transfer)
         /// </summary>
         public const byte Block = 0x6D;
+
+        /// <summary>
+        /// 0x6A: 0110=Priority 3, GM. C=1010 GM, Functional, Type 2
+        /// </summary>
+        public const byte Functional2 = 0x6A;
+
+        /// <summary>
+        /// 0x6C: 0110=Priority 3, GM. C=1100 GM, Physical, Type 0
+        /// </summary>
+        public const byte Physical0 = 0x6C;
+
+        /// <summary>
+        /// 0x8C: 1000=Priority 4, GM. C=1100 GM, Physical, Type 0
+        /// </summary>
+        public const byte Physical0High = 0x8C;
     }
 
     /// <summary>
