@@ -553,7 +553,7 @@ namespace Flash411
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
                 if (!await PCMExecute(response.Value, 0xFF9150))
                 {
-                    logger.AddUserMessage("Failed to upload kernel uploaded to PCM");
+                    logger.AddUserMessage("Failed to upload kernel to PCM");
                     return new Response<Stream>(ResponseStatus.Error, null);
                 }
 

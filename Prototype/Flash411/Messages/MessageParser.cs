@@ -209,17 +209,7 @@ namespace Flash411
         /// </summary>
         public Response<bool> ParseUploadResponse(Message message)
         {
-            Response<bool> response = this.DoSimpleValidation(message, 0x6D, 0x36);
-
-            if (response.Status == ResponseStatus.Success)
-            {
-                return response;
-            }
-            else
-            {
-                // Not sure why the PCM replies with 2D rather than 6D, but it sometimes happens.
-                return this.DoSimpleValidation(message, 0x2D, 0x36);
-            }
+            return this.DoSimpleValidation(message, 0x6D, 0x36);
         }
                 
         /// <summary>
