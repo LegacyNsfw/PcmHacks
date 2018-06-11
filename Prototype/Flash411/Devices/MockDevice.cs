@@ -30,6 +30,14 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Not needed.
+        /// </summary>
+        public override Task SetTimeout(TimeoutScenario scenario)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>
         public override Task<bool> SendMessage(Message message)

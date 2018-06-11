@@ -13,7 +13,10 @@ namespace Flash411
     public class ScanToolDevice : SerialDevice
     {
         public const string DeviceType = "ObdLink or AllPro";
-        string currentHeader = "unset";
+
+        private TimeoutScenario currentTimeout = TimeoutScenario.Undefined;
+
+        private string currentHeader = "unset";
 
         /// <summary>
         /// Constructor.
@@ -104,7 +107,6 @@ namespace Flash411
                     !await this.SendAndVerify("AT DP", "SAE J1850 VPW") ||    // Get Protocol (Verify VPW)
                     !await this.SendAndVerify("AT AR", "OK") ||               // Turn Auto Receive on (default should be on anyway)
                     !await this.SendAndVerify("AT AT0", "OK") ||              // Disable adaptive timeouts
-                    !await this.SendAndVerify("AT ST FF", "OK") ||            // Set timeout to N * 4 milliseconds - TODO: Adjust or remove!
                     !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK") || // Set receive filter to this tool ID
                     !await this.SendAndVerify("AT H1", "OK")                   // Send headers
                  
@@ -121,6 +123,33 @@ namespace Flash411
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Not yet implemented.
+        /// </summary>
+        public override async Task SetTimeout(TimeoutScenario scenario)
+        {
+            if (this.currentTimeout == scenario)
+            {
+                return;
+            }
+
+            this.Logger.AddDebugMessage("Setting timeout to " + scenario);
+
+            switch(scenario)
+            {
+                case TimeoutScenario.ReadProperty:
+                    await this.SendAndVerify("AT ST 20", "OK");
+                    return;
+
+                case TimeoutScenario.ReadMemoryBlock:
+                    await this.SendAndVerify("AT SF FF", "OK");
+                    return;
+
+                default:
+                    throw new Exception("Timeout type '" + scenario + "' is not yet implemented.");
+            }
         }
 
         /// <summary>
@@ -190,6 +219,15 @@ namespace Flash411
             {
                 return true;
             }
+
+            // Probably not a good idea?
+            /*
+            if (rawResponse == "NO DATA")
+            {
+                this.Logger.AddDebugMessage("Received \"NO DATA\"");
+                return true;
+            }
+            */
 
             if (rawResponse.IsHex())
             {

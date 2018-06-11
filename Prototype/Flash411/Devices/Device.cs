@@ -9,6 +9,13 @@ using System.Threading.Tasks;
 
 namespace Flash411
 {
+    public enum TimeoutScenario
+    {
+        Undefined = 0,
+        ReadProperty,
+        ReadMemoryBlock,
+    }
+
     /// <summary>
     /// The Interface classes are responsible for commanding a hardware
     /// interface to send and receive VPW messages.
@@ -67,6 +74,11 @@ namespace Flash411
         /// Make the device ready to communicate with the VPW bus.
         /// </summary>
         public abstract Task<bool> Initialize();
+
+        /// <summary>
+        /// Set the timeout period to wait for responses to incoming messages.
+        /// </summary>
+        public abstract Task SetTimeout(TimeoutScenario scenario);
 
         /// <summary>
         /// Send a message.

@@ -59,10 +59,6 @@ namespace Flash411
                         device = new ScanToolDevice(port, logger);
                         break;
 
-                    case ThanielDevice.DeviceType:
-                        device = new ThanielDevice(port, logger);
-                        break;
-
                     default:
                         device = null;
                         break;

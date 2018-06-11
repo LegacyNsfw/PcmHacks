@@ -74,7 +74,6 @@
     <Compile Include="Devices\MockDevice.cs" />
     <Compile Include="Devices\ScanToolDevice.cs" />
     <Compile Include="Devices\SerialDevice.cs" />
-    <Compile Include="Devices\ThanielDevice.cs" />
     <Compile Include="DialogBoxes\DevicePicker.cs">
       <SubType>Form</SubType>
     </Compile>
