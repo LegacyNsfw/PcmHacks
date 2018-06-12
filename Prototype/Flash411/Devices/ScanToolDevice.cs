@@ -144,7 +144,7 @@ namespace Flash411
                     return;
 
                 case TimeoutScenario.ReadMemoryBlock:
-                    await this.SendAndVerify("AT SF FF", "OK");
+                    await this.SendAndVerify("AT ST FF", "OK");
                     return;
 
                 default:
