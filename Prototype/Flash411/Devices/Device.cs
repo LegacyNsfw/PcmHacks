@@ -16,6 +16,12 @@ namespace Flash411
         ReadMemoryBlock,
     }
 
+    public enum VpwSpeed
+    {
+        Standard, // 10.4 kbps
+        FourX, // 41.2 kbps
+    }
+
     /// <summary>
     /// The Interface classes are responsible for commanding a hardware
     /// interface to send and receive VPW messages.
@@ -41,6 +47,11 @@ namespace Flash411
         private Queue<Message> queue = new Queue<Message>();
 
         /// <summary>
+        /// Current speed of the VPW bus.
+        /// </summary>
+        private VpwSpeed speed;
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         public Device(ILogger logger)
@@ -51,6 +62,7 @@ namespace Flash411
             this.MaxSendSize = 100;
             this.MaxReceiveSize = 100;
             this.Supports4X = false;
+            this.speed = VpwSpeed.Standard;
         }
 
         /// <summary>
@@ -123,9 +135,28 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Set the device's VPW data rate.
+        /// </summary>
+        public async Task<bool> SetVpwSpeed(VpwSpeed newSpeed)
+        {
+            if (this.speed == newSpeed)
+            {
+                return true;
+            }
+
+            if (!await this.SetVpwSpeedInternal(newSpeed))
+            {
+                return false;
+            }
+
+            this.speed = newSpeed;
+            return true;
+        }
+
+        /// <summary>
         /// Set the interface to low (false) or high (true) speed
         /// </summary>
-        public abstract Task<bool> SetVPW4x(bool highspeed);
+        protected abstract Task<bool> SetVpwSpeedInternal(VpwSpeed newSpeed);
 
         /// <summary>
         /// Clean up anything that this instance has allocated.
@@ -143,6 +174,35 @@ namespace Flash411
             }
         }
 
+        /// <summary>
+        /// List for an incoming message of the VPW bus.
+        /// </summary>
         protected abstract Task Receive();
+
+        /// <summary>
+        /// Calculates the time required for the given scenario at the current VPW speed.
+        /// </summary>
+        protected int GetVpwTimeoutMilliseconds(TimeoutScenario scenario)
+        {
+            int responseSize;
+            if (scenario == TimeoutScenario.ReadMemoryBlock)
+            {
+                // Adding 20 bytes to account for the 'read request accepted' 
+                // message that comes before the read payload.
+                responseSize = 20 + this.MaxReceiveSize;
+            }
+            else
+            {
+                // Number of bytes in a get-VIN or get-OSID response.
+                responseSize = 20;
+            }
+
+            int bitsPerByte = 9; // 8N1 serial
+            double bitsPerSecond = this.speed == VpwSpeed.Standard ? 10.4 : 41.6;
+            double milliseconds = (responseSize * bitsPerByte) / bitsPerSecond;
+
+            // Add 10% just in case.
+            return (int)(milliseconds * 1.1);
+        }
     }
 }

@@ -536,7 +536,7 @@ namespace Flash411
 
                 // switch to 4x, if possible. But continue either way.
                 // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                await this.VehicleSetVPW4x(true);
+                await this.VehicleSetVPW4x(VpwSpeed.FourX);
 
                 // execute read kernel
                 Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
@@ -641,9 +641,9 @@ namespace Flash411
             this.device.ClearMessageQueue();
             if (device.Supports4X)
             {
-                await device.SetVPW4x(true);
+                await device.SetVpwSpeed(VpwSpeed.FourX);
                 await this.device.SendMessage(exitKernel);
-                await device.SetVPW4x(false);
+                await device.SetVpwSpeed(VpwSpeed.Standard);
             }
 
             await this.device.SendMessage(exitKernel);
@@ -900,7 +900,7 @@ namespace Flash411
         /// <summary>
         /// Does everything required to switch to VPW 4x
         /// </summary>
-        public async Task<bool> VehicleSetVPW4x(bool highspeed)
+        public async Task<bool> VehicleSetVPW4x(VpwSpeed newSpeed)
         {
             Message HighSpeedCheck = messageFactory.CreateHighSpeedCheck();
             Message HighSpeedOK = messageFactory.CreateHighSpeedOKResponse();
@@ -908,7 +908,7 @@ namespace Flash411
 
             if (!device.Supports4X) 
             {
-                if (highspeed)
+                if (newSpeed == VpwSpeed.FourX)
                 {
                     // where there is no support only report no switch to 4x
                     logger.AddUserMessage("This interface does not support VPW 4x");
@@ -917,7 +917,7 @@ namespace Flash411
             }
             
             // Configure the vehicle bus when switching to 4x
-            if (highspeed)
+            if (newSpeed == VpwSpeed.FourX)
             {
                 logger.AddUserMessage("Attempting switch to VPW 4x");
                 // PCM Pre-flight checks
@@ -950,7 +950,10 @@ namespace Flash411
                     this.logger.AddDebugMessage(exception.ToString());
                     return false;
                 }
+
                 logger.AddUserMessage("PCM is allowing a switch to VPW 4x. Requesting all VPW modules to do so.");
+
+                // This will return No DATA because the bus switches but the device doesn't, yet.
                 await this.device.SendMessage(BeginHighSpeed);
             }
             else
@@ -959,7 +962,10 @@ namespace Flash411
             }
 
             // Request the device to change
-            await device.SetVPW4x(highspeed);
+            await device.SetVpwSpeed(newSpeed);
+
+            TimeoutScenario scenario = newSpeed == VpwSpeed.Standard ? TimeoutScenario.ReadProperty : TimeoutScenario.ReadMemoryBlock;
+            await device.SetTimeout(scenario);
 
             return true;
         }

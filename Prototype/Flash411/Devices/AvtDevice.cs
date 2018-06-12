@@ -370,10 +370,10 @@ namespace Flash411
         /// <remarks>
         /// The caller must also tell the PCM to switch speeds
         /// </remarks>
-        public override async Task<bool> SetVPW4x(bool highspeed)
+        protected override async Task<bool> SetVpwSpeedInternal(VpwSpeed newSpeed)
         {
 
-            if (!highspeed)
+            if (newSpeed == VpwSpeed.Standard)
             {
                 this.Logger.AddDebugMessage("AVT setting VPW 1X");
                 await this.Port.Send(AvtDevice.AVT_1X_SPEED.GetBytes());

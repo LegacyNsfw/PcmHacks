@@ -121,6 +121,13 @@ namespace Flash411
             return Task.FromResult(0);
         }
 
+        /// <summary>
+        /// Sets the read timeout.
+        /// </summary>
+        public void SetTimeout(int milliseconds)
+        {
+            this.port.ReadTimeout = milliseconds;
+        }
 
         /// <summary>
         /// Serial data callback.

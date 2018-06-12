@@ -73,9 +73,9 @@ namespace Flash411
         /// <remarks>
         /// The caller must also tell the PCM to switch speeds
         /// </remarks>
-        public override Task<bool> SetVPW4x(bool highspeed)
+        protected override Task<bool> SetVpwSpeedInternal(VpwSpeed newSpeed)
         {
-            if (!highspeed)
+            if (newSpeed == VpwSpeed.Standard)
             {
                 this.Logger.AddDebugMessage("Setting VPW 1X");
             }

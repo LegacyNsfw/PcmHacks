@@ -94,7 +94,7 @@ namespace Flash411
                     this.Logger.AddUserMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
                     this.Logger.AddUserMessage("All Pro firmware: " + await this.SendRequest("AT @1"));          // firmware check
 
-                    this.Supports4X = true;
+//                    this.Supports4X = true;
                     this.MaxSendSize = 2048 + 12;
                     this.MaxReceiveSize = 2048 + 12;
                 }
@@ -135,16 +135,27 @@ namespace Flash411
                 return;
             }
 
-            this.Logger.AddDebugMessage("Setting timeout to " + scenario);
+            int milliseconds = this.GetVpwTimeoutMilliseconds(scenario);
+
+            // Adding some more just in case...
+            milliseconds += 20;
+
+            this.Logger.AddDebugMessage("Setting timeout to " + scenario + ", " + milliseconds.ToString() + " ms.");
+
+            // Adding yet more just in case...
+            this.Port.SetTimeout(milliseconds + 50);
+
+            int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 99);
+            string value = parameter.ToString("00");
 
             switch(scenario)
             {
                 case TimeoutScenario.ReadProperty:
-                    await this.SendAndVerify("AT ST 20", "OK");
+                    await this.SendAndVerify("AT ST " + value, "OK");
                     return;
 
                 case TimeoutScenario.ReadMemoryBlock:
-                    await this.SendAndVerify("AT ST FF", "OK");
+                    await this.SendAndVerify("AT ST " + value, "OK");
                     return;
 
                 default:
@@ -398,9 +409,9 @@ namespace Flash411
         /// <remarks>
         /// The caller must also tell the PCM to switch speeds
         /// </remarks>
-        public override async Task<bool> SetVPW4x(bool highspeed)
+        protected override async Task<bool> SetVpwSpeedInternal(VpwSpeed newSpeed)
         {
-            if (highspeed != true)
+            if (newSpeed == VpwSpeed.Standard)
             {
                 this.Logger.AddDebugMessage("AllPro setting VPW 1X");
                 if (!await this.SendAndVerify("AT VPW1", "OK"))
