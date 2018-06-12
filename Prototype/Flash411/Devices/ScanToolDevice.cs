@@ -94,9 +94,11 @@ namespace Flash411
                     this.Logger.AddUserMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
                     this.Logger.AddUserMessage("All Pro firmware: " + await this.SendRequest("AT @1"));          // firmware check
 
-//                    this.Supports4X = true;
-                    this.MaxSendSize = 2048 + 12;
-                    this.MaxReceiveSize = 2048 + 12;
+                    // this.Supports4X = true;
+                    // this.MaxSendSize = 2048 + 12;
+                    // this.MaxReceiveSize = 2048 + 12;
+                    this.MaxSendSize = 1024 + 12;
+                    this.MaxReceiveSize = 1024 + 12;
                 }
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage
@@ -330,13 +332,56 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Reads and filteres a line from the device, returns it as a string
+        /// Reads and filters a line from the device, returns it as a string
         /// </summary>
         /// <remarks>
         /// Strips Non Printable, >, and Line Feeds. Converts Carriage Return to Space. Strips leading and trailing whitespace.
         /// </remarks>
         private async Task<string> ReadELMLine()
         {
+            List<byte> characters = new List<byte>(20);
+            byte[] b = new byte[1];
+
+            int maxBytes = this.MaxReceiveSize * 4 + 100;
+            for (int i = 0; i < maxBytes; i++)
+            {
+                await this.Port.Receive(b, 0, 1);
+
+                char c = (char)b[0];
+
+                switch (c)
+                {
+                    case '\r':
+                        characters.Add((byte)' ');
+                        break;
+
+                    case '\n':
+                        characters.Add((byte)' ');
+                        break;
+
+                    case '>':
+                        // Exit the loop too.
+                        i = maxBytes;
+                        break;
+
+                    default:
+                        characters.Add(b[0]);
+                        break;
+                }
+            }
+
+            byte[] buffer = characters.ToArray();
+            string wholeResponse = System.Text.Encoding.ASCII.GetString(buffer);
+            wholeResponse = wholeResponse.Trim();
+            
+            return wholeResponse;
+        }
+
+        /// <summary>
+        /// Keeping this as a reference as I work on the replacement above.
+        /// </summary>
+        private async Task<string> OriginalReadElmLine()
+        { 
             int buffersize = (MaxReceiveSize * 3) + 7; // payload with spaces (3 bytes per character) plus the longest possible prompt
             byte[] buffer = new byte[buffersize];
 

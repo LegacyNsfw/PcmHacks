@@ -16,6 +16,7 @@ namespace Flash411
         private string name;
         private SerialPort port;
         private Action<object, SerialDataReceivedEventArgs> dataReceivedCallback;
+        private Queue<byte> receiveQueue = new Queue<byte>();
 
         /// <summary>
         /// Constructor.
@@ -69,7 +70,31 @@ namespace Flash411
             // to implement the timeout yourself if you use the async approach.
             this.port.BaseStream.ReadTimeout = this.port.ReadTimeout;
 
+            this.port.DataReceived += Port_DataReceived;
+
             return Task.CompletedTask;
+        }
+
+        private async void Port_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            switch(e.EventType)
+            {
+                case SerialData.Chars:
+                    while (this.port.BytesToRead > 0)
+                    {
+                        int b = (byte)this.port.ReadByte();
+                        if (b == -1)
+                        {
+                            break;
+                        }
+
+                        lock (this.receiveQueue)
+                        {
+                            this.receiveQueue.Enqueue((byte)b);
+                        }
+                    }
+                    break;
+            }
         }
 
         /// <summary>
@@ -99,6 +124,22 @@ namespace Flash411
         /// Receive a sequence of bytes over the serial port.
         /// </summary>
         async Task<int> IPort.Receive(byte[] buffer, int offset, int count)
+        {
+            int copied = 0;
+            for(int i = 0; i < count && this.receiveQueue.Count > 0; i++)
+            {
+                lock (this.receiveQueue)
+                {
+                    buffer[offset + i] = this.receiveQueue.Dequeue();
+                }
+
+                copied++;
+            }
+
+            return copied;
+        }
+
+        private async Task<int> OriginalReceive(byte[] buffer, int offset, int count)
         {
             var readTask = this.port.BaseStream.ReadAsync(buffer, offset, count);
             if (await readTask.AwaitWithTimeout(TimeSpan.FromMilliseconds(this.port.ReadTimeout)))
