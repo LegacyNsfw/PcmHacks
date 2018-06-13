@@ -183,7 +183,7 @@ namespace Flash411
         /// <summary>
         /// Calculates the time required for the given scenario at the current VPW speed.
         /// </summary>
-        protected int __GetVpwTimeoutMilliseconds(TimeoutScenario scenario)
+        protected int GetVpwTimeoutMilliseconds(TimeoutScenario scenario)
         {
             int packetSize;
 
@@ -198,6 +198,9 @@ namespace Flash411
                     // Adding 20 bytes to account for the 'read request accepted' 
                     // message that comes before the read payload.
                     packetSize = 20 + this.MaxReceiveSize;
+
+                    // Not sure why this is necessary, but AllPro 2k reads won't work without it.
+                    packetSize = (int) (packetSize * 1.1);
                     break;
 
                 case TimeoutScenario.SendKernel:
@@ -216,11 +219,10 @@ namespace Flash411
             return (int)(milliseconds * 1.1);
         }
 
-
         /// <summary>
         /// Estimate timeouts. The code above seems to do a pretty good job, but this is easier to experiment with.
         /// </summary>
-        protected int GetVpwTimeoutMilliseconds(TimeoutScenario scenario)
+        protected int __GetVpwTimeoutMilliseconds(TimeoutScenario scenario)
         {
             switch (scenario)
             {
