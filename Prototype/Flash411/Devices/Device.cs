@@ -13,6 +13,7 @@ namespace Flash411
     {
         Undefined = 0,
         ReadProperty,
+        SendKernel,
         ReadMemoryBlock,
     }
 
@@ -182,27 +183,59 @@ namespace Flash411
         /// <summary>
         /// Calculates the time required for the given scenario at the current VPW speed.
         /// </summary>
-        protected int GetVpwTimeoutMilliseconds(TimeoutScenario scenario)
+        protected int __GetVpwTimeoutMilliseconds(TimeoutScenario scenario)
         {
-            int responseSize;
-            if (scenario == TimeoutScenario.ReadMemoryBlock)
+            int packetSize;
+
+            switch (scenario)
             {
-                // Adding 20 bytes to account for the 'read request accepted' 
-                // message that comes before the read payload.
-                responseSize = 20 + this.MaxReceiveSize;
-            }
-            else
-            {
-                // Number of bytes in a get-VIN or get-OSID response.
-                responseSize = 20;
+                case TimeoutScenario.ReadProperty:
+                    // Approximate number of bytes in a get-VIN or get-OSID response.
+                    packetSize = 20;
+                    break;
+
+                case TimeoutScenario.ReadMemoryBlock:
+                    // Adding 20 bytes to account for the 'read request accepted' 
+                    // message that comes before the read payload.
+                    packetSize = 20 + this.MaxReceiveSize;
+                    break;
+
+                case TimeoutScenario.SendKernel:
+                    packetSize = this.MaxSendSize + 20;
+                    break;
+
+                default:
+                    throw new NotImplementedException("Unknown timeout scenario " + scenario);
             }
 
             int bitsPerByte = 9; // 8N1 serial
             double bitsPerSecond = this.speed == VpwSpeed.Standard ? 10.4 : 41.6;
-            double milliseconds = (responseSize * bitsPerByte) / bitsPerSecond;
+            double milliseconds = (packetSize * bitsPerByte) / bitsPerSecond;
 
             // Add 10% just in case.
             return (int)(milliseconds * 1.1);
+        }
+
+
+        /// <summary>
+        /// Estimate timeouts. The code above seems to do a pretty good job, but this is easier to experiment with.
+        /// </summary>
+        protected int GetVpwTimeoutMilliseconds(TimeoutScenario scenario)
+        {
+            switch (scenario)
+            {
+                case TimeoutScenario.ReadProperty:
+                    return 100;
+
+                case TimeoutScenario.ReadMemoryBlock:
+                    return 2500;
+
+                case TimeoutScenario.SendKernel:
+                    return 1000;
+
+                default:
+                    throw new NotImplementedException("Unknown timeout scenario " + scenario);
+            }
         }
     }
 }

@@ -94,7 +94,10 @@ namespace Flash411
                     this.Logger.AddUserMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
                     this.Logger.AddUserMessage("All Pro firmware: " + await this.SendRequest("AT @1"));          // firmware check
 
-//                    this.Supports4X = true;
+                    // this.Supports4X = true;
+                    //this.MaxSendSize = 1024 + 12;
+                    //this.MaxReceiveSize = 1024 + 12;
+
                     this.MaxSendSize = 2048 + 12;
                     this.MaxReceiveSize = 2048 + 12;
                 }
@@ -140,27 +143,23 @@ namespace Flash411
             // Adding some more just in case...
             milliseconds += 20;
 
-            this.Logger.AddDebugMessage("Setting timeout to " + scenario + ", " + milliseconds.ToString() + " ms.");
+            this.Logger.AddDebugMessage("Setting timeout for " + scenario + ", " + milliseconds.ToString() + " ms.");
 
-            // Adding yet more just in case...
-            this.Port.SetTimeout(milliseconds + 50);
+            // The port timeout needs to be considerably longer than the device timeout,
+            // otherwise you get "STOPPED" or "NO DATA" somewhat randomly. (I mostly saw
+            // this when sending the tool-present messages, but that might be coincidence.)
+            //
+            // 100 was not enough
+            // 150 seems like enough
+            // Consider 200 if STOPPED / NO DATA is still a problem. 
+            this.Port.SetTimeout(milliseconds + 150);
 
+            // I briefly tried hard-coding timeout values for the AT ST command,
+            // but that's a recipe for failure. If the port timeout is shorter
+            // than the device timeout, reads will consistently fail.
             int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 99);
             string value = parameter.ToString("00");
-
-            switch(scenario)
-            {
-                case TimeoutScenario.ReadProperty:
-                    await this.SendAndVerify("AT ST " + value, "OK");
-                    return;
-
-                case TimeoutScenario.ReadMemoryBlock:
-                    await this.SendAndVerify("AT ST " + value, "OK");
-                    return;
-
-                default:
-                    throw new Exception("Timeout type '" + scenario + "' is not yet implemented.");
-            }
+            await this.SendAndVerify("AT ST " + value, "OK");
         }
 
         /// <summary>
@@ -177,6 +176,14 @@ namespace Flash411
             {
                 string setHeaderResponse = await this.SendRequest("AT SH " + header);
                 this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
+
+                if(setHeaderResponse == "STOPPED")
+                {
+                    // Does it help to retry once?
+                    setHeaderResponse = await this.SendRequest("AT SH " + header);
+                    this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
+                }
+
                 if (!this.ProcessResponse(setHeaderResponse, "set-header command"))
                 {
                     return false;

@@ -532,7 +532,7 @@ namespace Flash411
             {
                 this.device.ClearMessageQueue();
 
-                await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+                await this.device.SetTimeout(TimeoutScenario.SendKernel);
 
                 // switch to 4x, if possible. But continue either way.
                 // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
