@@ -13,7 +13,10 @@ namespace Flash411
     public class ScanToolDevice : SerialDevice
     {
         public const string DeviceType = "ObdLink or AllPro";
-        string currentHeader = "unset";
+
+        private TimeoutScenario currentTimeout = TimeoutScenario.Undefined;
+
+        private string currentHeader = "unset";
 
         /// <summary>
         /// Constructor.
@@ -104,10 +107,9 @@ namespace Flash411
                     !await this.SendAndVerify("AT DP", "SAE J1850 VPW") ||    // Get Protocol (Verify VPW)
                     !await this.SendAndVerify("AT AR", "OK") ||               // Turn Auto Receive on (default should be on anyway)
                     !await this.SendAndVerify("AT AT0", "OK") ||              // Disable adaptive timeouts
-                    !await this.SendAndVerify("AT ST FF", "OK") ||            // Set timeout to N * 4 milliseconds - TODO: Adjust or remove!
                     !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK") || // Set receive filter to this tool ID
-                    !await this.SendAndVerify("AT H1", "OK")                   // Send headers
-                 
+                    !await this.SendAndVerify("AT H1", "OK") ||               // Send headers
+                    !await this.SendAndVerify("AT ST 20", "OK")              // Set timeout (will be adjusted later, too)                 
                     )
                 {
                     return false;
@@ -124,6 +126,40 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Not yet implemented.
+        /// </summary>
+        public override async Task SetTimeout(TimeoutScenario scenario)
+        {
+            if (this.currentTimeout == scenario)
+            {
+                return;
+            }
+
+            int milliseconds = this.GetVpwTimeoutMilliseconds(scenario);
+
+            // Adding some more just in case...
+            milliseconds += 20;
+
+            this.Logger.AddDebugMessage("Setting timeout for " + scenario + ", " + milliseconds.ToString() + " ms.");
+
+            // The port timeout needs to be considerably longer than the device timeout,
+            // otherwise you get "STOPPED" or "NO DATA" somewhat randomly. (I mostly saw
+            // this when sending the tool-present messages, but that might be coincidence.)
+            //
+            // 100 was not enough
+            // 150 seems like enough
+            // Consider 200 if STOPPED / NO DATA is still a problem. 
+            this.Port.SetTimeout(milliseconds + 150);
+
+            // I briefly tried hard-coding timeout values for the AT ST command,
+            // but that's a recipe for failure. If the port timeout is shorter
+            // than the device timeout, reads will consistently fail.
+            int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 99);
+            string value = parameter.ToString("00");
+            await this.SendAndVerify("AT ST " + value, "OK");
+        }
+
+        /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>
         public override async Task<bool> SendMessage(Message message)
@@ -137,6 +173,14 @@ namespace Flash411
             {
                 string setHeaderResponse = await this.SendRequest("AT SH " + header);
                 this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
+
+                if(setHeaderResponse == "STOPPED")
+                {
+                    // Does it help to retry once?
+                    setHeaderResponse = await this.SendRequest("AT SH " + header);
+                    this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
+                }
+
                 if (!this.ProcessResponse(setHeaderResponse, "set-header command"))
                 {
                     return false;
@@ -190,6 +234,15 @@ namespace Flash411
             {
                 return true;
             }
+
+            // Probably not a good idea?
+            /*
+            if (rawResponse == "NO DATA")
+            {
+                this.Logger.AddDebugMessage("Received \"NO DATA\"");
+                return true;
+            }
+            */
 
             if (rawResponse.IsHex())
             {
@@ -360,9 +413,9 @@ namespace Flash411
         /// <remarks>
         /// The caller must also tell the PCM to switch speeds
         /// </remarks>
-        public override async Task<bool> SetVPW4x(bool highspeed)
+        protected override async Task<bool> SetVpwSpeedInternal(VpwSpeed newSpeed)
         {
-            if (highspeed != true)
+            if (newSpeed == VpwSpeed.Standard)
             {
                 this.Logger.AddDebugMessage("AllPro setting VPW 1X");
                 if (!await this.SendAndVerify("AT VPW1", "OK"))

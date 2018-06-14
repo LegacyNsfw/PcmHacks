@@ -166,6 +166,14 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Not yet implemented.
+        /// </summary>
+        public override Task SetTimeout(TimeoutScenario scenario)
+        {
+            return Task.FromResult(0);
+        }
+
+        /// <summary>
         /// This will process incoming messages for up to 500ms looking for a message
         /// </summary>
         public async Task<Response<Message>> FindResponse(Message expected)
@@ -431,9 +439,9 @@ namespace Flash411
         /// <remarks>
         /// The caller must also tell the PCM to switch speeds
         /// </remarks>
-        public override Task<bool> SetVPW4x(bool highspeed)
+        protected override Task<bool> SetVpwSpeedInternal(VpwSpeed newSpeed)
         {
-            if (!highspeed)
+            if (newSpeed == VpwSpeed.Standard)
             {
                 this.Logger.AddDebugMessage("J2534 setting VPW 1X");
                 //Disconnect from current protocol

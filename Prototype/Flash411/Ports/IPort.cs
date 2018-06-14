@@ -38,6 +38,11 @@ namespace Flash411
         /// Indicates the number of bytes waiting in the receive queue.
         /// </summary>
         Task<int> GetReceiveQueueSize();
+
+        /// <summary>
+        /// Sets the timeout for incoming messages;
+        /// </summary>
+        void SetTimeout(int milliseconds);
     }
 
     public class PortConfiguration

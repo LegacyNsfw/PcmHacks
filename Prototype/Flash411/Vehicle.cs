@@ -16,6 +16,16 @@ namespace Flash411
     class Vehicle : IDisposable
     {
         /// <summary>
+        /// How many times we should attempt to send a message before giving up.
+        /// </summary>
+        private const int MaxSendAttempts = 10;
+
+        /// <summary>
+        /// How many times we should attempt to receive a message before giving up.
+        /// </summary>
+        private const int MaxReceiveAttempts = 10;
+
+        /// <summary>
         /// The device we'll use to talk to the PCM.
         /// </summary>
         private Device device;
@@ -100,6 +110,8 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryVin()
         {
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+
             this.device.ClearMessageQueue();
 
             if (!await this.device.SendMessage(this.messageFactory.CreateVinRequest1()))
@@ -143,6 +155,8 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QuerySerial()
         {
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+
             this.device.ClearMessageQueue();
 
             if (!await this.device.SendMessage(this.messageFactory.CreateSerialRequest1()))
@@ -186,6 +200,8 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryBCC()
         {
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+
             var query = this.CreateQuery(
                 this.messageFactory.CreateBCCRequest,
                 this.messageParser.ParseBCCresponse);
@@ -198,6 +214,8 @@ namespace Flash411
         /// </summary>
         public async Task<Response<string>> QueryMEC()
         {
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+
             var query = this.CreateQuery(
                 this.messageFactory.CreateMECRequest,
                 this.messageParser.ParseMECresponse);
@@ -271,11 +289,12 @@ namespace Flash411
         /// <returns></returns>
         public async Task<Response<UInt32>> QueryCalibrationId()
         {
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+
             var query = this.CreateQuery(
                 this.messageFactory.CreateCalibrationIdReadRequest,
                 this.messageParser.ParseBlockUInt32);
             return await query.Execute();
-
         }
 
         /// <summary>
@@ -291,6 +310,8 @@ namespace Flash411
         /// </summary>
         private async Task<Response<UInt32>> QueryUnsignedValue(Func<Message> generator)
         {
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+
             var query = this.CreateQuery(generator, this.messageParser.ParseBlockUInt32);
             return await query.Execute();
         }
@@ -310,7 +331,7 @@ namespace Flash411
         /// </summary
         private async Task<bool> TrySendMessage(Message message, string description)
         {
-            for (int attempt = 1; attempt < 5; attempt++)
+            for (int attempt = 1; attempt <= MaxSendAttempts; attempt++)
             {
                 if (await this.device.SendMessage(message))
                 {
@@ -327,7 +348,9 @@ namespace Flash411
         /// Unlock the PCM by requesting a 'seed' and then sending the corresponding 'key' value.
         /// </summary>
         public async Task<bool> UnlockEcu(int keyAlgorithm)
-        {   
+        {
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+
             this.device.ClearMessageQueue();
 
             this.logger.AddDebugMessage("Sending seed request.");
@@ -342,7 +365,7 @@ namespace Flash411
             bool seedReceived = false;
             UInt16 seedValue = 0;
 
-            for (int attempt = 1; attempt < 5; attempt++)
+            for (int attempt = 1; attempt < MaxReceiveAttempts; attempt++)
             {
                 Message seedResponse = await this.device.ReceiveMessage();
                 if (seedResponse == null)
@@ -391,7 +414,7 @@ namespace Flash411
                 return false;
             }
 
-            for (int attempt = 1; attempt < 5; attempt++)
+            for (int attempt = 1; attempt < MaxReceiveAttempts; attempt++)
             {
                 Message unlockResponse = await this.device.ReceiveMessage();
                 if (unlockResponse == null)
@@ -509,9 +532,11 @@ namespace Flash411
             {
                 this.device.ClearMessageQueue();
 
+                await this.device.SetTimeout(TimeoutScenario.SendKernel);
+
                 // switch to 4x, if possible. But continue either way.
                 // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                await this.VehicleSetVPW4x(true);
+                await this.VehicleSetVPW4x(VpwSpeed.FourX);
 
                 // execute read kernel
                 Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
@@ -528,11 +553,13 @@ namespace Flash411
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
                 if (!await PCMExecute(response.Value, 0xFF9150))
                 {
-                    logger.AddUserMessage("Failed to upload kernel uploaded to PCM");
+                    logger.AddUserMessage("Failed to upload kernel to PCM");
                     return new Response<Stream>(ResponseStatus.Error, null);
                 }
 
                 logger.AddUserMessage("kernel uploaded to PCM succesfully");
+
+                await this.device.SetTimeout(TimeoutScenario.ReadMemoryBlock);
 
                 int startAddress = info.ImageBaseAddress;
                 int endAddress = info.ImageBaseAddress + info.ImageSize;
@@ -614,9 +641,9 @@ namespace Flash411
             this.device.ClearMessageQueue();
             if (device.Supports4X)
             {
-                await device.SetVPW4x(true);
+                await device.SetVpwSpeed(VpwSpeed.FourX);
                 await this.device.SendMessage(exitKernel);
-                await device.SetVPW4x(false);
+                await device.SetVpwSpeed(VpwSpeed.Standard);
             }
 
             await this.device.SendMessage(exitKernel);
@@ -641,7 +668,7 @@ namespace Flash411
         {
             this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, length));
             
-            for(int sendAttempt = 1; sendAttempt <= 5; sendAttempt++)
+            for(int sendAttempt = 1; sendAttempt <= MaxSendAttempts; sendAttempt++)
             {
                 Message message = this.messageFactory.CreateReadRequest(startAddress, length);
 
@@ -649,11 +676,11 @@ namespace Flash411
                 if (!await this.device.SendMessage(message))
                 {
                     this.logger.AddDebugMessage("Unable to send read request.");
-                    return false;
+                    continue;
                 }
 
                 bool sendAgain = false;
-                for (int receiveAttempt = 1; receiveAttempt <= 5; receiveAttempt++)
+                for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
                 {
                     Message response = await this.ReceiveMessage();
                     if (response == null)
@@ -690,7 +717,7 @@ namespace Flash411
                 }
 
                 this.logger.AddDebugMessage("Read request allowed, expecting for payload...");
-                for (int receiveAttempt = 1; receiveAttempt <= 5; receiveAttempt++)
+                for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
                 {   
                     Message payloadMessage = await this.device.ReceiveMessage();
                     if (payloadMessage == null)
@@ -757,7 +784,7 @@ namespace Flash411
         /// </summary>
         private async Task<bool> WaitForSuccess(Func<Message, Response<bool>> filter)
         {
-            for(int attempt = 1; attempt<=5; attempt++)
+            for(int attempt = 1; attempt<=MaxReceiveAttempts; attempt++)
             {
                 Message message = await this.device.ReceiveMessage();
                 if(message == null)
@@ -788,9 +815,9 @@ namespace Flash411
 
             logger.AddDebugMessage("Sending upload request with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
             Message request = messageFactory.CreateUploadRequest(payload.Length, address);
-            if(!await this.device.SendMessage(request))
+
+            if(!await TrySendMessage(request, "upload request"))
             {
-                logger.AddUserMessage("Unable to send request to upload kernel to RAM.");
                 return false;
             }
 
@@ -825,7 +852,7 @@ namespace Flash411
                 address + offset, 
                 remainder == payload.Length);
 
-            Response<bool> uploadResponse = await WriteToRam(remainderMessage, 5);
+            Response<bool> uploadResponse = await WriteToRam(remainderMessage);
             if (uploadResponse.Status != ResponseStatus.Success)
             {
                 logger.AddDebugMessage("Could not upload kernel to PCM, remainder payload not accepted.");
@@ -851,7 +878,7 @@ namespace Flash411
                         startAddress,
                         payloadSize));
 
-                uploadResponse = await WriteToRam(payloadMessage, 5);
+                uploadResponse = await WriteToRam(payloadMessage);
                 if (uploadResponse.Status != ResponseStatus.Success)
                 {
                     logger.AddDebugMessage("Could not upload kernel to PCM, payload not accepted.");
@@ -873,7 +900,7 @@ namespace Flash411
         /// <summary>
         /// Does everything required to switch to VPW 4x
         /// </summary>
-        public async Task<bool> VehicleSetVPW4x(bool highspeed)
+        public async Task<bool> VehicleSetVPW4x(VpwSpeed newSpeed)
         {
             Message HighSpeedCheck = messageFactory.CreateHighSpeedCheck();
             Message HighSpeedOK = messageFactory.CreateHighSpeedOKResponse();
@@ -881,7 +908,7 @@ namespace Flash411
 
             if (!device.Supports4X) 
             {
-                if (highspeed)
+                if (newSpeed == VpwSpeed.FourX)
                 {
                     // where there is no support only report no switch to 4x
                     logger.AddUserMessage("This interface does not support VPW 4x");
@@ -890,7 +917,7 @@ namespace Flash411
             }
             
             // Configure the vehicle bus when switching to 4x
-            if (highspeed)
+            if (newSpeed == VpwSpeed.FourX)
             {
                 logger.AddUserMessage("Attempting switch to VPW 4x");
                 // PCM Pre-flight checks
@@ -923,7 +950,10 @@ namespace Flash411
                     this.logger.AddDebugMessage(exception.ToString());
                     return false;
                 }
+
                 logger.AddUserMessage("PCM is allowing a switch to VPW 4x. Requesting all VPW modules to do so.");
+
+                // This will return No DATA because the bus switches but the device doesn't, yet.
                 await this.device.SendMessage(BeginHighSpeed);
             }
             else
@@ -932,7 +962,10 @@ namespace Flash411
             }
 
             // Request the device to change
-            await device.SetVPW4x(highspeed);
+            await device.SetVpwSpeed(newSpeed);
+
+            TimeoutScenario scenario = newSpeed == VpwSpeed.Standard ? TimeoutScenario.ReadProperty : TimeoutScenario.ReadMemoryBlock;
+            await device.SetTimeout(scenario);
 
             return true;
         }
@@ -943,9 +976,9 @@ namespace Flash411
         /// <remarks>
         /// Returns a succsefull Response on the first successful attempt, or the failed Response if we run out of tries.
         /// </remarks>
-        async Task<Response<bool>> WriteToRam(Message message, int retries)
+        async Task<Response<bool>> WriteToRam(Message message)
         {
-            for (int i = retries; i>0; i--)
+            for (int i = MaxSendAttempts; i>0; i--)
             {
                 if (!await device.SendMessage(message))
                 {

@@ -91,7 +91,6 @@ namespace Flash411
             this.serialDeviceList.Items.Add(AvtDevice.DeviceType);
             this.serialDeviceList.Items.Add(MockDevice.DeviceType);
             this.serialDeviceList.Items.Add(ScanToolDevice.DeviceType);
-            this.serialDeviceList.Items.Add(ThanielDevice.DeviceType);
         }
 
         private void FillJ2534DeviceList()

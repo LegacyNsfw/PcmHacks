@@ -54,10 +54,20 @@ namespace Flash411
         /// </summary>
         public static byte[] ToBytes(this string hex)
         {
-            return Enumerable.Range(0, hex.Length)
-                                .Where(x => x % 2 == 0)
-                                .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
-                                .ToArray();
+            try
+            {
+                // This left-shift-and-multiply step ensures that we don't throw
+                // an exception if the string contains an odd number of characters, 
+                int bytesToConvert = hex.Length >> 1;
+                return Enumerable.Range(0, bytesToConvert * 2)
+                                    .Where(x => x % 2 == 0)
+                                    .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                                    .ToArray();
+            }
+            catch (Exception exception)
+            {
+                throw new ArgumentException("Unable to convert \"" + hex + "\" to from hexadecimal to bytes", exception);
+            }
         }
 
         /// <summary>

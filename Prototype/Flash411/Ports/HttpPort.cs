@@ -121,6 +121,13 @@ namespace Flash411
         }
 
         /// <summary>
+        /// Sets the read timeout.
+        /// </summary>
+        public void SetTimeout(int milliseconds)
+        {
+        }
+
+        /// <summary>
         /// Indicates the number of bytes waiting in the queue.
         /// </summary>
         /// <remarks>

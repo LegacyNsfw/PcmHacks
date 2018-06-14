@@ -100,15 +100,8 @@ namespace Flash411
         /// </summary>
         async Task<int> IPort.Receive(byte[] buffer, int offset, int count)
         {
-            var readTask = this.port.BaseStream.ReadAsync(buffer, offset, count);
-            if (await readTask.AwaitWithTimeout(TimeSpan.FromMilliseconds(this.port.ReadTimeout)))
-            {
-                return readTask.Result;
-            }
-            else
-            {
-                throw new TimeoutException();
-            }
+            // Using the BaseStream causes data to be lost.
+            return this.port.Read(buffer, offset, count);
         }
 
         /// <summary>
@@ -121,6 +114,13 @@ namespace Flash411
             return Task.FromResult(0);
         }
 
+        /// <summary>
+        /// Sets the read timeout.
+        /// </summary>
+        public void SetTimeout(int milliseconds)
+        {
+            this.port.ReadTimeout = milliseconds;
+        }
 
         /// <summary>
         /// Serial data callback.
