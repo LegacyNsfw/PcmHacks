@@ -102,6 +102,61 @@ namespace Flash411
         public const byte Execute = 0x80;
 
         public const byte UploadOK = 0x00;
+    }
 
+    class VPWUtils
+    {
+        /// <summary>
+        /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array
+        /// </summary>
+        /// <remarks>
+        /// Caller to provide valid array
+        /// </remarks>
+        public UInt16 CalcBlockChecksum(byte[] Block)
+        {
+            UInt16 Sum = 0;
+            int PayloadLength = (Block[5] << 8) + Block[6];
+
+            for (int i = 4; i < PayloadLength; i++) // skip prio, dest, src, mode
+            {
+                Sum += Block[i];
+            }
+
+            return Sum;
+        }
+
+        /// <summary>
+        /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array
+        /// </summary>
+        /// <remarks>
+        /// Appends 2 bytes at the end of the array with the sum
+        /// TODO: Throw an error if the input data is not valid?
+        /// 
+        /// 6C|10|F0|36/80|03 F1|FF 91 50 .... CA CS
+        /// 0  1  2  3  4  5  6  7  8  9
+        /// 1  2  3  4  5  6  7  8  9  10      11 12
+        /// </remarks>
+        public byte[] AddBlockChecksum(byte[] Block)
+        {
+            UInt16 Sum = 0;
+            int PayloadLength;
+
+            // Only generate the sum and append to the block if the length is right
+            if (Block.Length > 6) // Do we have a length?
+            {
+                PayloadLength = (Block[5] << 8) + Block[6];
+                if (Block.Length == PayloadLength + 12) // Correct block size?
+                {
+                    Sum = CalcBlockChecksum(Block);
+                    byte[] BlockSum = new byte[PayloadLength + 12];
+
+                    BlockSum[BlockSum.Length - 2] = unchecked((byte)(Sum >> 8));
+                    BlockSum[BlockSum.Length - 1] = unchecked((byte)(Sum & 0xFF));
+
+                    return BlockSum;
+                }
+            }
+            return Block;
+        }
     }
 }

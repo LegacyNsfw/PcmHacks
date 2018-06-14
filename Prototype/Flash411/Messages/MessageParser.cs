@@ -218,6 +218,8 @@ namespace Flash411
         public Response<bool> ParseReadResponse(Message message)
         {
             return this.DoSimpleValidation(message, 0x6C, 0x35);
+
+            // collect the 
         }
 
         /// <summary>
@@ -233,7 +235,7 @@ namespace Flash411
                 return Response.Create(status, new byte[0]);
             }
 
-            if (actual.Length < 7)
+            if (actual.Length < 10) // 7 byte header, 2 byte sum
             {
                 return Response.Create(ResponseStatus.Truncated, new byte[0]);
             }
@@ -246,6 +248,7 @@ namespace Flash411
 
             byte[] result = new byte[length];
 
+            // Normal read
             if (actual[4] == 1)
             {
                 //Regular encoding should be an exact match for size
@@ -254,8 +257,20 @@ namespace Flash411
                 {
                     return Response.Create(ResponseStatus.Truncated, new byte[0]);
                 }
+
+                // Verify block checksum
+                if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
+                UInt16 ValidSum = CalcBlockChecksum(actual);
+                int PayloadSum = actual[10 + rlen] << 8 + actual[11 + rlen]; //blame c# for the typeing
+
+                if (PayloadSum != ValidSum)
+                {
+                    //TODO: fix checksum check implementation
+                    //return Response.Create(ResponseStatus.Error, new byte[0]);
+                }
                 Buffer.BlockCopy(actual, 10, result, 0, length);
             }
+            // RLE block
             else if (actual[4] == 2) // TODO check length
             {
                 // This isnt going to work with existing kernels... need to support variable length.
@@ -269,6 +284,19 @@ namespace Flash411
             }
 
             return Response.Create(ResponseStatus.Success, result);
+        }
+        //TODO: use the copy of this function in VPW.cs
+        public UInt16 CalcBlockChecksum(byte[] Block)
+        {
+            UInt16 Sum = 0;
+            int PayloadLength = (Block[5] << 8) + Block[6];
+
+            for (int i = 4; i < PayloadLength; i++) // skip prio, dest, src, mode
+            {
+                Sum += Block[i];
+            }
+
+            return Sum;
         }
 
         /// <summary>
