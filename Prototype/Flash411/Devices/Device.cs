@@ -200,7 +200,8 @@ namespace Flash411
                     packetSize = 20 + this.MaxReceiveSize;
 
                     // Not sure why this is necessary, but AllPro 2k reads won't work without it.
-                    packetSize = (int) (packetSize * 1.1);
+                    //packetSize = (int) (packetSize * 1.1);
+                    packetSize = (int) (packetSize * 2.2);
                     break;
 
                 case TimeoutScenario.SendKernel:
