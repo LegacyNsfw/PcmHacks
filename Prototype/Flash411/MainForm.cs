@@ -25,14 +25,14 @@ namespace Flash411
         private Vehicle vehicle;
 
         /// <summary>
-        /// We had to move some operations to a background thread to keep the J2534 code happy.
+        /// We had to move some operations to a background thread for the J2534 code as the DLL functions do not have an awaiter.
         /// </summary>
         private System.Threading.Thread BackgroundWorker = new System.Threading.Thread(delegate(){ return; });
 
         /// <summary>
         /// This flag will initialized when a long-running operation begins. 
         /// It will be toggled if the user clicks the cancel button.
-        /// Long-running operations to should abort in that case.
+        /// Long-running operations can abort when this flag changes.
         /// </summary>
         private CancellationTokenSource cancellationTokenSource;
 
@@ -87,7 +87,7 @@ namespace Flash411
                 this.operationsBox.Enabled = true;
                 this.startServerButton.Enabled = false;
 
-                // This will be enabled during full reads and writes.
+                // This will be enabled during full reads (but not writes)
                 this.cancelButton.Enabled = false;
 
                 await this.ResetDevice();
@@ -100,7 +100,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Disable buttons during a long-running operation (like reading or writing the EEPROM).
+        /// Disable buttons during a long-running operation (like reading or writing the flash).
         /// </summary>
         private void DisableUserInput()
         {
@@ -244,7 +244,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Read the entire contents of the EEPROM.
+        /// Read the entire contents of the flash.
         /// </summary>
         private void readFullContentsButton_Click(object sender, EventArgs e)
         {
@@ -277,7 +277,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Write the contents of the EEPROM.
+        /// Write the contents of the flash.
         /// </summary>
         private  async void writeFullContentsButton_Click(object sender, EventArgs e)
         {
@@ -329,7 +329,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Show the file-open dialog box, so the user can choose the file to write to the EEPROM.
+        /// Show the file-open dialog box, so the user can choose the file to write to the flash.
         /// </summary>
         private string ShowOpenDialog()
         {
@@ -491,7 +491,7 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Read the entire contents of the EEPROM.
+        /// Read the entire contents of the flash.
         /// </summary>
         private async void readFullContents_Routine()
         {
