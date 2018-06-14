@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Flash411
@@ -526,7 +527,7 @@ namespace Flash411
         /// Read the full contents of the PCM.
         /// Assumes the PCM is unlocked an were ready to go
         /// </summary>
-        public async Task<Response<Stream>> ReadContents(PcmInfo info)
+        public async Task<Response<Stream>> ReadContents(PcmInfo info, CancellationToken cancellationToken)
         {
             try
             {
@@ -545,19 +546,27 @@ namespace Flash411
                     logger.AddUserMessage("Failed to load kernel from file.");
                     return new Response<Stream>(response.Status, null);
                 }
-
+                
                 ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
 
                 await toolPresentNotifier.Notify();
 
-                // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
-                if (!await PCMExecute(response.Value, 0xFF9150))
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    logger.AddUserMessage("Failed to upload kernel to PCM");
-                    return new Response<Stream>(ResponseStatus.Error, null);
+                    return Response.Create(ResponseStatus.Cancelled, (Stream)null);
                 }
 
-                logger.AddUserMessage("kernel uploaded to PCM succesfully");
+                // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
+                if (!await PCMExecute(response.Value, 0xFF9150, cancellationToken))
+                {
+                    logger.AddUserMessage("Failed to upload kernel to PCM");
+
+                    return new Response<Stream>(
+                        cancellationToken.IsCancellationRequested ? ResponseStatus.Cancelled : ResponseStatus.Error, 
+                        null);
+                }
+
+                logger.AddUserMessage("kernel uploaded to PCM succesfully. Requesting data...");
 
                 await this.device.SetTimeout(TimeoutScenario.ReadMemoryBlock);
 
@@ -570,6 +579,11 @@ namespace Flash411
 
                 while (startAddress < endAddress)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return Response.Create(ResponseStatus.Cancelled, (Stream)null);
+                    }
+
                     await toolPresentNotifier.Notify();
 
                     if (startAddress + blockSize > endAddress)
@@ -809,9 +823,11 @@ namespace Flash411
         /// <summary>
         /// Load the executable payload on the PCM at the supplied address, and execute it.
         /// </summary>
-        public async Task<bool> PCMExecute(byte[] payload, int address)
+        public async Task<bool> PCMExecute(byte[] payload, int address, CancellationToken cancellationToken)
         {
             await this.SuppressChatter();
+
+            logger.AddUserMessage("Uploading kernel to PCM.");
 
             logger.AddDebugMessage("Sending upload request with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
             Message request = messageFactory.CreateUploadRequest(payload.Length, address);
@@ -826,7 +842,12 @@ namespace Flash411
                 logger.AddUserMessage("Permission to upload kernel was denied.");
                 return false;
             }
-            
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return false;
+            }
+
             logger.AddDebugMessage("Going to load a " + payload.Length + " byte payload to 0x" + address.ToString("X6"));
 
             // Loop through the payload building and sending packets, highest first, execute on last
@@ -862,6 +883,11 @@ namespace Flash411
             // Now we send a series of full upload packets
             for (int chunkIndex = chunkCount; chunkIndex > 0; chunkIndex--)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return false;
+                }
+
                 offset = (chunkIndex - 1) * payloadSize;
                 startAddress = address + offset;
                 Message payloadMessage = messageFactory.CreateBlockMessage(
