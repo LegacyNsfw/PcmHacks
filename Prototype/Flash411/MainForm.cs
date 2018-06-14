@@ -610,6 +610,7 @@ namespace Flash411
         /// </summary>
         private void CancelButton_Click(object sender, EventArgs e)
         {
+            this.AddUserMessage("Cancel button clicked.");
             this.cancellationTokenSource.Cancel();
         }
     }
