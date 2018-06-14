@@ -11,6 +11,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -18,15 +19,34 @@ namespace Flash411
 {
     public partial class MainForm : Form, ILogger
     {
+        /// <summary>
+        /// The Vehicle object is our interface to the car. It has the device, the message generator, and the message parser.
+        /// </summary>
         private Vehicle vehicle;
+
+        /// <summary>
+        /// We had to move some operations to a background thread for the J2534 code as the DLL functions do not have an awaiter.
+        /// </summary>
         private System.Threading.Thread BackgroundWorker = new System.Threading.Thread(delegate(){ return; });
 
+        /// <summary>
+        /// This flag will initialized when a long-running operation begins. 
+        /// It will be toggled if the user clicks the cancel button.
+        /// Long-running operations can abort when this flag changes.
+        /// </summary>
+        private CancellationTokenSource cancellationTokenSource;
 
+        /// <summary>
+        /// Initializes a new instance of the main window.
+        /// </summary>
         public MainForm()
         {
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Add a message to the main window.
+        /// </summary>
         public void AddUserMessage(string message)
         {
             string timestamp = DateTime.Now.ToString("hh:mm:ss:fff");
@@ -42,6 +62,9 @@ namespace Flash411
                 });
         }
 
+        /// <summary>
+        /// Add a message to the debug pane of the main window.
+        /// </summary>
         public void AddDebugMessage(string message)
         {
             string timestamp = DateTime.Now.ToString("hh:mm:ss:fff");
@@ -53,6 +76,9 @@ namespace Flash411
                 });
         }
 
+        /// <summary>
+        /// Called when the main window is being created.
+        /// </summary>
         private async void MainForm_Load(object sender, EventArgs e)
         {
             try
@@ -60,6 +86,9 @@ namespace Flash411
                 this.interfaceBox.Enabled = true;
                 this.operationsBox.Enabled = true;
                 this.startServerButton.Enabled = false;
+
+                // This will be enabled during full reads (but not writes)
+                this.cancelButton.Enabled = false;
 
                 await this.ResetDevice();
             }
@@ -70,6 +99,9 @@ namespace Flash411
             }
         }
 
+        /// <summary>
+        /// Disable buttons during a long-running operation (like reading or writing the flash).
+        /// </summary>
         private void DisableUserInput()
         {
             this.interfaceBox.Enabled = false;
@@ -84,6 +116,9 @@ namespace Flash411
             this.reinitializeButton.Enabled = false;
         }
 
+        /// <summary>
+        /// Enable the buttons when a long-running operation completes.
+        /// </summary>
         private void EnableUserInput()
         {
             this.interfaceBox.Invoke((MethodInvoker)delegate () { this.interfaceBox.Enabled = true; });
@@ -99,6 +134,9 @@ namespace Flash411
             this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true;});
         }
         
+        /// <summary>
+        /// Read the VIN, OS, etc.
+        /// </summary>
         private async void readPropertiesButton_Click(object sender, EventArgs e)
         {
             if (this.vehicle == null)
@@ -111,9 +149,7 @@ namespace Flash411
             try
             {
                 this.DisableUserInput();
-
-                 
-
+                
                 var vinResponse = await this.vehicle.QueryVin();
                 if (vinResponse.Status != ResponseStatus.Success)
                 {
@@ -177,45 +213,52 @@ namespace Flash411
             }
         }
 
+        /// <summary>
+        /// Reset the current interface device.
+        /// </summary>
         private async void reinitializeButton_Click(object sender, EventArgs e)
         {
             await this.InitializeCurrentDevice();
         }
         
+        /// <summary>
+        /// Set the HTTP server. This hasn't worked for a while, might just removing it rather than fixing it...
+        /// </summary>
         private void startServerButton_Click(object sender, EventArgs e)
         {
             /*
-                    this.DisableUserInput();
-                    this.startServerButton.Enabled = false;
+            this.DisableUserInput();
+            this.startServerButton.Enabled = false;
 
-                    // It doesn't count if the user selected the prompt.
-                    if (selectedPort == null)
-                    {
-                        this.AddUserMessage("You must select an actual port before starting the server.");
-                        return;
-                    }
+            // It doesn't count if the user selected the prompt.
+            if (selectedPort == null)
+            {
+                this.AddUserMessage("You must select an actual port before starting the server.");
+                return;
+            }
 
-                    this.AddUserMessage("There is no way to exit the HTTP server. Just close the app when you're done.");
+            this.AddUserMessage("There is no way to exit the HTTP server. Just close the app when you're done.");
 
-                    HttpServer.StartWebServer(selectedPort, this);
+            HttpServer.StartWebServer(selectedPort, this);
             */
         }
 
-
+        /// <summary>
+        /// Read the entire contents of the flash.
+        /// </summary>
         private void readFullContentsButton_Click(object sender, EventArgs e)
         {
-            this.DisableUserInput();
-
             if (!BackgroundWorker.IsAlive)
             {
                 BackgroundWorker = new System.Threading.Thread(() => readFullContents_Routine());
                 BackgroundWorker.IsBackground = true;
                 BackgroundWorker.Start();
-            }
-
-          
+            }          
         }
 
+        /// <summary>
+        /// Show the save-as dialog box (after a full read has completed).
+        /// </summary>
         private string ShowSaveAsDialog()
         {
             SaveFileDialog dialog = new SaveFileDialog();
@@ -233,6 +276,9 @@ namespace Flash411
             return null;
         }
 
+        /// <summary>
+        /// Write the contents of the flash.
+        /// </summary>
         private  async void writeFullContentsButton_Click(object sender, EventArgs e)
         {
             if (this.vehicle == null)
@@ -282,6 +328,9 @@ namespace Flash411
 
         }
 
+        /// <summary>
+        /// Show the file-open dialog box, so the user can choose the file to write to the flash.
+        /// </summary>
         private string ShowOpenDialog()
         {
             OpenFileDialog dialog = new OpenFileDialog();
@@ -297,6 +346,9 @@ namespace Flash411
             return null;
         }
 
+        /// <summary>
+        /// Update the VIN.
+        /// </summary>
         private async void modifyVinButton_Click(object sender, EventArgs e)
         {
             try
@@ -348,6 +400,9 @@ namespace Flash411
             }
         }
 
+        /// <summary>
+        /// Select which interface device to use. This opens the Device-Picker dialog box.
+        /// </summary>
         private async void selectButton_Click(object sender, EventArgs e)
         {
             if (this.vehicle != null)
@@ -369,6 +424,9 @@ namespace Flash411
             await this.ResetDevice();
         }    
         
+        /// <summary>
+        /// Close the old interface device and open a new one.
+        /// </summary>
         private async Task ResetDevice()
         {
             if (this.vehicle != null)
@@ -390,6 +448,9 @@ namespace Flash411
             await this.InitializeCurrentDevice();
         }
 
+        /// <summary>
+        /// Initialize the current device.
+        /// </summary>
         private async Task<bool> InitializeCurrentDevice()
         {
             this.DisableUserInput();
@@ -429,11 +490,21 @@ namespace Flash411
             return true;
         }
 
-
+        /// <summary>
+        /// Read the entire contents of the flash.
+        /// </summary>
         private async void readFullContents_Routine()
         {
             try
             {
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.DisableUserInput();
+                    this.cancelButton.Enabled = true;
+                });
+
+                this.cancellationTokenSource = new CancellationTokenSource();
+
                 if (this.vehicle == null)
                 {
                     // This shouldn't be possible - it would mean the buttons 
@@ -469,8 +540,13 @@ namespace Flash411
 
                 this.AddUserMessage("Unlock succeeded.");
 
+                if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    return;
+                }
+
                 // Do the actual reading.
-                Response<Stream> readResponse = await this.vehicle.ReadContents(info);
+                Response<Stream> readResponse = await this.vehicle.ReadContents(info, this.cancellationTokenSource.Token);
                 if (readResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
@@ -516,8 +592,26 @@ namespace Flash411
             }
             finally
             {
-                this.EnableUserInput();
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.EnableUserInput();
+                    this.cancelButton.Enabled = false;
+                });
+
+                // This should not get used again. If it does, that would 
+                // indicate a bug, so let's make sure that any attempt to 
+                // use it won't go un-noticed.
+                this.cancellationTokenSource = null;
             }
+        }
+
+        /// <summary>
+        /// Set the cancelOperation flag, so that an ongoing operation can be aborted.
+        /// </summary>
+        private void CancelButton_Click(object sender, EventArgs e)
+        {
+            this.AddUserMessage("Cancel button clicked.");
+            this.cancellationTokenSource.Cancel();
         }
     }
 }

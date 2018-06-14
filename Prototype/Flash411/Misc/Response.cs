@@ -35,6 +35,11 @@ namespace Flash411
         /// No response was received before the timeout expired.
         /// </summary>
         Timeout = 4,
+
+        /// <summary>
+        /// The operation was cancelled by the user.
+        /// </summary>
+        Cancelled = 5,
     }
 
     /// <summary>
