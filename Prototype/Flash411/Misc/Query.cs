@@ -58,6 +58,8 @@ namespace Flash411
                                     timeouts));
                             break;
                         }
+
+                        continue;
                     }
 
                     Response<T> result = this.filter(received);
