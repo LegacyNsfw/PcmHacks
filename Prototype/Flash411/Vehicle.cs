@@ -24,7 +24,13 @@ namespace Flash411
         /// <summary>
         /// How many times we should attempt to receive a message before giving up.
         /// </summary>
-        private const int MaxReceiveAttempts = 10;
+        /// <remarks>
+        /// 10 is too small for the case when we get a bunch of "chatter 
+        /// suppressed" messages right before trying to upload the kernel.
+        /// Might be worth making this a parameter to the retry loops since
+        /// in most cases when only need about 5.
+        /// </remarks>
+        private const int MaxReceiveAttempts = 15;
 
         /// <summary>
         /// The device we'll use to talk to the PCM.
@@ -537,7 +543,11 @@ namespace Flash411
 
                 // switch to 4x, if possible. But continue either way.
                 // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                await this.VehicleSetVPW4x(VpwSpeed.FourX);
+                if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
+                {
+                    this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
+                    return Response.Create(ResponseStatus.Error, (Stream)null);
+                }
 
                 // execute read kernel
                 Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
