@@ -204,6 +204,27 @@ namespace Flash411
             return Response.Create(ResponseStatus.Success, result);
         }
 
+        public Response<bool> ParseHighSpeedCheckResponse(Message message)
+        {
+            byte[] actual = message.GetBytes();
+            byte[] ok = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.HighSpeedPrepare + Mode.Response };
+
+            ResponseStatus status;
+            if (TryVerifyInitialBytes(actual, ok, out status))
+            {
+                return Response.Create(status, true);
+            }
+
+            byte[] denied = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.Rejected, Mode.HighSpeedPrepare };
+
+            if (TryVerifyInitialBytes(actual, denied, out status))
+            {
+                return Response.Create(status, false);
+            }
+
+            return Response.Create(ResponseStatus.Error, false);
+        }
+
         /// <summary>
         /// Parse the response to an upload-to-RAM request.
         /// </summary>

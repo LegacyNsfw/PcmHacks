@@ -928,10 +928,6 @@ namespace Flash411
         /// </summary>
         public async Task<bool> VehicleSetVPW4x(VpwSpeed newSpeed)
         {
-            Message HighSpeedCheck = messageFactory.CreateHighSpeedCheck();
-            Message HighSpeedOK = messageFactory.CreateHighSpeedOKResponse();
-            Message BeginHighSpeed = messageFactory.CreateBeginHighSpeed();
-
             if (!device.Supports4X) 
             {
                 if (newSpeed == VpwSpeed.FourX)
@@ -946,41 +942,24 @@ namespace Flash411
             if (newSpeed == VpwSpeed.FourX)
             {
                 logger.AddUserMessage("Attempting switch to VPW 4x");
-                // PCM Pre-flight checks
-                if (!await this.device.SendMessage(HighSpeedCheck))
+
+                var query = new Query<bool>(
+                    this.device,
+                    this.messageFactory.CreateHighSpeedCheck, 
+                    this.messageParser.ParseHighSpeedCheckResponse, 
+                    this.logger);
+
+                Response<bool> switchResponse = await query.Execute();
+                if ((switchResponse.Status != ResponseStatus.Success) || !switchResponse.Value)
                 {
-                    logger.AddUserMessage("Unable to request permission to use 4x.");
+                    this.logger.AddUserMessage("PCM will not allow 4X.");
                     return false;
                 }
-
-                Message rx;
-                try
-                {
-                     rx = await this.device.ReceiveMessage();
-                    Byte[] fff = rx.GetBytes();
-                    if (rx == null)
-                    {
-                        logger.AddUserMessage("No response received to high-speed permission request.");
-                        return false;
-                    }
-
-                    if (!Utility.CompareArraysPart(rx.GetBytes(), HighSpeedOK.GetBytes()))
-                    {
-                        logger.AddUserMessage("PCM is not allowing a switch to VPW 4x");
-                        return false;
-                    }
-                }
-                catch (Exception exception)
-                {
-                    this.logger.AddUserMessage("Something went wrong at vpw4x. " + exception.Message);
-                    this.logger.AddDebugMessage(exception.ToString());
-                    return false;
-                }
-
+                
                 logger.AddUserMessage("PCM is allowing a switch to VPW 4x. Requesting all VPW modules to do so.");
 
                 // This will return No DATA because the bus switches but the device doesn't, yet.
-                await this.device.SendMessage(BeginHighSpeed);
+                await this.device.SendMessage(this.messageFactory.CreateBeginHighSpeed());
             }
             else
             {
