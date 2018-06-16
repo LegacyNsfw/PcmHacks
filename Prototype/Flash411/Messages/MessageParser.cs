@@ -204,6 +204,9 @@ namespace Flash411
             return Response.Create(ResponseStatus.Success, result);
         }
 
+        /// <summary>
+        /// Parse the response to a request for permission to switch to 4X mode.
+        /// </summary>
         public Response<bool> ParseHighSpeedCheckResponse(Message message)
         {
             byte[] actual = message.GetBytes();

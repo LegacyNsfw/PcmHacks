@@ -51,6 +51,11 @@ namespace Flash411
                         if (timeouts >= 2)
                         {
                             // Maybe try sending again if we haven't run out of send attempts.
+                            this.logger.AddDebugMessage(
+                                string.Format(
+                                    "Receive timed out. Attempt #{0}, Timeout #{1}.",
+                                    receiveAttempt,
+                                    timeouts));
                             break;
                         }
                     }
@@ -64,7 +69,7 @@ namespace Flash411
                     this.logger.AddDebugMessage(
                         string.Format(
                             "Received an unexpected response. Attempt #{0}, status {1}.",
-                            receiveAttempt.ToString(),
+                            receiveAttempt,
                             result.Status));
                 }
             }
