@@ -234,14 +234,6 @@ namespace Flash411
         {
             return new Message(new byte[] { Priority.Physical0, DeviceId.Broadcast, DeviceId.Tool, Mode.HighSpeedPrepare});
         }
-
-        /// <summary>
-        /// PCM Response if a switch to VPW 4x is OK
-        /// </summary>
-        public Message CreateHighSpeedOKResponse()
-        {
-            return new Message(new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.HighSpeedPrepare + Mode.Response });
-        }
         
         /// <summary>
         /// Create a request for the PCM to switch to VPW 4x

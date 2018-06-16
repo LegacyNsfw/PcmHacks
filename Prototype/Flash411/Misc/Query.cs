@@ -28,38 +28,52 @@ namespace Flash411
             Message request = this.generator();
 
             bool success = false;
-            for (int attempt = 1; attempt <= 5; attempt++)
+            for (int sendAttempt = 1; sendAttempt <= 5; sendAttempt++)
             {
                 success = await this.device.SendMessage(request);
 
-                if (success)
+                if (!success)
                 {
-                    break;
+                    this.logger.AddDebugMessage("Send failed. Attempt #" + sendAttempt.ToString());
+                    continue;
                 }
 
-                this.logger.AddDebugMessage("Send failed. Attempt #" + attempt.ToString());
-            }
-
-            if (!success)
-            {
-                this.logger.AddDebugMessage("Too many send failures, giving up.");
-                return Response.Create(ResponseStatus.Error, default(T));
-            }
-
-            for(int attempt = 1; attempt <= 5; attempt++)
-            {
-                Message received = await this.device.ReceiveMessage();
-                Response<T> result = this.filter(received);
-                if (result.Status == ResponseStatus.Success)
+                // We'll read up to 50 times from the queue (just to avoid 
+                // looping forever) but we will but only allow two timeouts.
+                int timeouts = 0;
+                for (int receiveAttempt = 1; receiveAttempt <= 50; receiveAttempt++)
                 {
-                    return result;
-                }
+                    Message received = await this.device.ReceiveMessage();
 
-                this.logger.AddDebugMessage(
-                    string.Format(
-                        "Send failed. Attempt #{0}, status {1}.", 
-                        attempt.ToString(),
-                        result.Status));
+                    if (received == null)
+                    {
+                        timeouts++;
+                        if (timeouts >= 2)
+                        {
+                            // Maybe try sending again if we haven't run out of send attempts.
+                            this.logger.AddDebugMessage(
+                                string.Format(
+                                    "Receive timed out. Attempt #{0}, Timeout #{1}.",
+                                    receiveAttempt,
+                                    timeouts));
+                            break;
+                        }
+
+                        continue;
+                    }
+
+                    Response<T> result = this.filter(received);
+                    if (result.Status == ResponseStatus.Success)
+                    {
+                        return result;
+                    }
+
+                    this.logger.AddDebugMessage(
+                        string.Format(
+                            "Received an unexpected response. Attempt #{0}, status {1}.",
+                            receiveAttempt,
+                            result.Status));
+                }
             }
 
             return Response.Create(ResponseStatus.Error, default(T));

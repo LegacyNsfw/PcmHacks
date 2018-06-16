@@ -79,6 +79,7 @@ namespace Flash411
     class Mode
     {
         public const byte Response = 0x40; // added to the Mode by the PCM for it's the response
+        public const byte Rejected = 0x75;
 
         public const byte ClearDTCs = 0x04;
         public const byte ExitKernel = 0x20;
