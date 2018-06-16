@@ -225,6 +225,9 @@ namespace Flash411
         /// <summary>
         /// Parse the payload of a read request.
         /// </summary>
+        /// <remarks>
+        /// It is the callers responsability to check the ResponseStatus for errors
+        /// </remarks>
         public Response<byte[]> ParsePayload(Message message, int length, int address)
         {
             ResponseStatus status;
@@ -259,16 +262,10 @@ namespace Flash411
                 }
 
                 // Verify block checksum
-                if (System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
                 UInt16 ValidSum = CalcBlockChecksum(actual);
-                int PayloadSum = actual[10 + rlen] << 8 + actual[11 + rlen]; //blame c# for the typeing
-
-                if (PayloadSum != ValidSum)
-                {
-                    //TODO: fix checksum check implementation
-                    //return Response.Create(ResponseStatus.Error, new byte[0]);
-                }
+                int PayloadSum = (actual[rlen + 10] << 8) + actual[rlen + 11];
                 Buffer.BlockCopy(actual, 10, result, 0, length);
+                if (PayloadSum != ValidSum) return Response.Create(ResponseStatus.Error, result);
             }
             // RLE block
             else if (actual[4] == 2) // TODO check length
@@ -291,7 +288,7 @@ namespace Flash411
             UInt16 Sum = 0;
             int PayloadLength = (Block[5] << 8) + Block[6];
 
-            for (int i = 4; i < PayloadLength; i++) // skip prio, dest, src, mode
+            for (int i = 4; i < PayloadLength + 10; i++) // start after prio, dest, src, mode, stop at end of payload
             {
                 Sum += Block[i];
             }
