@@ -218,11 +218,16 @@ namespace Flash411
         public Response<bool> ParseReadResponse(Message message)
         {
             return this.DoSimpleValidation(message, 0x6C, 0x35);
+
+            // collect the 
         }
 
         /// <summary>
         /// Parse the payload of a read request.
         /// </summary>
+        /// <remarks>
+        /// It is the callers responsability to check the ResponseStatus for errors
+        /// </remarks>
         public Response<byte[]> ParsePayload(Message message, int length, int address)
         {
             ResponseStatus status;
@@ -233,7 +238,7 @@ namespace Flash411
                 return Response.Create(status, new byte[0]);
             }
 
-            if (actual.Length < 7)
+            if (actual.Length < 10) // 7 byte header, 2 byte sum
             {
                 return Response.Create(ResponseStatus.Truncated, new byte[0]);
             }
@@ -246,6 +251,7 @@ namespace Flash411
 
             byte[] result = new byte[length];
 
+            // Normal read
             if (actual[4] == 1)
             {
                 //Regular encoding should be an exact match for size
@@ -254,8 +260,14 @@ namespace Flash411
                 {
                     return Response.Create(ResponseStatus.Truncated, new byte[0]);
                 }
+
+                // Verify block checksum
+                UInt16 ValidSum = CalcBlockChecksum(actual);
+                int PayloadSum = (actual[rlen + 10] << 8) + actual[rlen + 11];
                 Buffer.BlockCopy(actual, 10, result, 0, length);
+                if (PayloadSum != ValidSum) return Response.Create(ResponseStatus.Error, result);
             }
+            // RLE block
             else if (actual[4] == 2) // TODO check length
             {
                 // This isnt going to work with existing kernels... need to support variable length.
@@ -269,6 +281,19 @@ namespace Flash411
             }
 
             return Response.Create(ResponseStatus.Success, result);
+        }
+        //TODO: use the copy of this function in VPW.cs
+        public UInt16 CalcBlockChecksum(byte[] Block)
+        {
+            UInt16 Sum = 0;
+            int PayloadLength = (Block[5] << 8) + Block[6];
+
+            for (int i = 4; i < PayloadLength + 10; i++) // start after prio, dest, src, mode, stop at end of payload
+            {
+                Sum += Block[i];
+            }
+
+            return Sum;
         }
 
         /// <summary>

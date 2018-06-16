@@ -109,7 +109,7 @@ namespace Flash411
                     !await this.SendAndVerify("AT AT0", "OK") ||              // Disable adaptive timeouts
                     !await this.SendAndVerify("AT SR " + DeviceId.Tool.ToString("X2"), "OK") || // Set receive filter to this tool ID
                     !await this.SendAndVerify("AT H1", "OK") ||               // Send headers
-                    !await this.SendAndVerify("AT ST 20", "OK")              // Set timeout (will be adjusted later, too)                 
+                    !await this.SendAndVerify("AT ST 20", "OK")               // Set timeout (will be adjusted later, too)                 
                     )
                 {
                     return false;

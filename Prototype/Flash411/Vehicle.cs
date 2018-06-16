@@ -745,7 +745,7 @@ namespace Flash411
                     Response<byte[]> payloadResponse = this.messageParser.ParsePayload(payloadMessage, length, startAddress);
                     if (payloadResponse.Status != ResponseStatus.Success)
                     {
-                        this.logger.AddDebugMessage("Not payload message.");
+                        this.logger.AddDebugMessage("Not a valid payload message or bad checksum");
                         continue;
                     }
 
