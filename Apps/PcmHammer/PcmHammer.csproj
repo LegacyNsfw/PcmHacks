@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A6B28831-A16F-48F3-8C48-9B02CF0B6678}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Flash411</RootNamespace>
-    <AssemblyName>Flash411</AssemblyName>
+    <RootNamespace>PcmHacking</RootNamespace>
+    <AssemblyName>PcmHammer</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

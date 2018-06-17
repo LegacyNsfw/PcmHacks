@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Flash411", "Flash411\Flash411.csproj", "{A6B28831-A16F-48F3-8C48-9B02CF0B6678}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PcmHammer", "PcmHammer\PcmHammer.csproj", "{A6B28831-A16F-48F3-8C48-9B02CF0B6678}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{0AA6F273-995D-4ADE-8CBB-DB1B6E8A0FCE}"
 EndProject
