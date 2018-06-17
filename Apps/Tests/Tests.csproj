@@ -60,7 +60,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Flash411\Flash411.csproj">
+    <ProjectReference Include="..\PcmHammer\PcmHammer.csproj">
       <Project>{a6b28831-a16f-48f3-8c48-9b02cf0b6678}</Project>
       <Name>Flash411</Name>
     </ProjectReference>

@@ -227,16 +227,14 @@
             // 
             // debugLog
             // 
-            this.debugLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.debugLog.Location = new System.Drawing.Point(4, 5);
+            this.debugLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.debugLog.Location = new System.Drawing.Point(2, 2);
             this.debugLog.Margin = new System.Windows.Forms.Padding(2);
             this.debugLog.Multiline = true;
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.debugLog.Size = new System.Drawing.Size(516, 327);
+            this.debugLog.Size = new System.Drawing.Size(565, 373);
             this.debugLog.TabIndex = 0;
             // 
             // startServerButton
