@@ -5,4 +5,4 @@ Our goal is to be able to read and write the contents of GM Powertrain Control M
 Current read functionality requires a flash kernel in c:\kernel.bin.
 This file will be released later, and its load will be streamlined.
 
-For now see the Prototype sub dir for the flash tool work in progress.
+For now see the /Apps/PcmHammer subdirectory for the flash tool work-in-progress.
