@@ -326,7 +326,7 @@ namespace Flash411
         /// <summary>
         /// Suppres chatter on the VPW bus.
         /// </summary>
-        private async Task SuppressChatter()
+        public async Task SuppressChatter()
         {
             this.logger.AddDebugMessage("Suppressing VPW chatter.");
             Message suppressChatter = this.messageFactory.CreateDisableNormalMessageTransmission();
@@ -835,8 +835,6 @@ namespace Flash411
         /// </summary>
         public async Task<bool> PCMExecute(byte[] payload, int address, CancellationToken cancellationToken)
         {
-            await this.SuppressChatter();
-
             logger.AddUserMessage("Uploading kernel to PCM.");
 
             logger.AddDebugMessage("Sending upload request with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));

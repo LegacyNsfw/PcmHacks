@@ -122,8 +122,7 @@ namespace Flash411
         private void EnableUserInput()
         {
             this.interfaceBox.Invoke((MethodInvoker)delegate () { this.interfaceBox.Enabled = true; });
-
-
+            
             // The operation buttons have to be enabled/disabled individually
             // (rather than via the parent GroupBox) because we sometimes want
             // to enable the re-initialize operation while the others are disabled.
@@ -530,6 +529,8 @@ namespace Flash411
                 // Look up the information about this PCM, based on the OSID;
                 this.AddUserMessage("OSID: " + osidResponse.Value);
                 PcmInfo info = new PcmInfo(osidResponse.Value);
+
+                await this.vehicle.SuppressChatter();
 
                 bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
                 if (!unlocked)
