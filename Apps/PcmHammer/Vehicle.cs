@@ -1001,18 +1001,32 @@ namespace Flash411
             return true;
         }
 
+        // TODO: Clear this when initializing the device.
+        private List<byte> knownModules = null;
+
         private async Task<List<byte>> RequestHighSpeedPermission()
         {
-            for(byte moduleId = 0; moduleId < 0xFF; moduleId++)
+            if (knownModules == null)
             {
-                if ((moduleId == DeviceId.Broadcast) ||
-                    (moduleId == DeviceId.Tool))
+                for (byte moduleId = 0; moduleId < 0xFF; moduleId++)
                 {
-                    continue;
-                }
+                    if ((moduleId == DeviceId.Broadcast) ||
+                        (moduleId == DeviceId.Tool))
+                    {
+                        continue;
+                    }
 
-                Message request = this.messageFactory.CreateHighSpeedPermissionRequest(moduleId);
-                await this.device.SendMessage(request);
+                    Message request = this.messageFactory.CreateHighSpeedPermissionRequest(moduleId);
+                    await this.device.SendMessage(request);
+                }
+            }
+            else
+            {
+                foreach(byte moduleId in knownModules)
+                {
+                    Message request = this.messageFactory.CreateHighSpeedPermissionRequest(moduleId);
+                    await this.device.SendMessage(request);
+                }
             }
 
             List<byte> result = new List<byte>();
@@ -1027,16 +1041,19 @@ namespace Flash411
                     continue;
                 }
 
+                result.Add(parsed.ModuleId);
+
                 if (parsed.PermissionGranted)
                 {
                     this.logger.AddUserMessage(string.Format("Module 0x{0:X2} has agreed to enter high-speed mode.", parsed.ModuleId));
-                    result.Add(parsed.ModuleId);
                     continue;
                 }
 
                 this.logger.AddUserMessage(string.Format("Module 0x{0:X2} has refused to enter high-speed mode.", parsed.ModuleId));
                 anyRefused = true;
             }
+
+            knownModules = result;
 
             if (anyRefused)
             {
