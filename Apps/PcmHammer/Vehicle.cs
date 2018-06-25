@@ -950,24 +950,42 @@ namespace Flash411
             if (newSpeed == VpwSpeed.FourX)
             {
                 logger.AddUserMessage("Attempting switch to VPW 4x");
+                await device.SetTimeout(TimeoutScenario.ReadProperty);
 
-                var query = new Query<bool>(
-                    this.device,
-                    this.messageFactory.CreateHighSpeedCheck, 
-                    this.messageParser.ParseHighSpeedCheckResponse, 
-                    this.logger);
-
-                Response<bool> switchResponse = await query.Execute();
-                if ((switchResponse.Status != ResponseStatus.Success) || !switchResponse.Value)
+                List<byte> modules = await this.RequestHighSpeedPermission();
+                if (modules == null)
                 {
-                    this.logger.AddUserMessage("PCM will not allow 4X.");
+                    // A device has refused the switch to high speed mode.
                     return false;
                 }
-                
-                logger.AddUserMessage("PCM is allowing a switch to VPW 4x. Requesting all VPW modules to do so.");
 
-                // This will return No DATA because the bus switches but the device doesn't, yet.
-                await this.device.SendMessage(this.messageFactory.CreateBeginHighSpeed());
+                // Re-send requests because the previous ones may have timed out.
+                foreach(byte moduleId in modules)
+                {
+                    // Message request = this.messageFactory.CreateBeginHighSpeed(moduleId);
+                    Message request = this.messageFactory.CreateHighSpeedPermissionRequest(moduleId);
+                    await this.device.SendMessage(request);
+                }
+
+                Message broadcast = this.messageFactory.CreateBeginHighSpeed(DeviceId.Broadcast);
+                await this.device.SendMessage(broadcast);
+
+                Message response = null;
+                while ((response = await this.device.ReceiveMessage()) != null)
+                {
+                    Response<bool> refused = this.messageParser.ParseHighSpeedRefusal(response);
+                    if (refused.Status != ResponseStatus.Success)
+                    {
+                        continue;
+                    }
+
+                    if (refused.Value == false)
+                    {
+                        // TODO: Add module number.
+                        this.logger.AddUserMessage("Module refused high-speed switch.");
+                        return false;
+                    }
+                }
             }
             else
             {
@@ -981,6 +999,51 @@ namespace Flash411
             await device.SetTimeout(scenario);
 
             return true;
+        }
+
+        private async Task<List<byte>> RequestHighSpeedPermission()
+        {
+            for(byte moduleId = 0; moduleId < 0xFF; moduleId++)
+            {
+                if ((moduleId == DeviceId.Broadcast) ||
+                    (moduleId == DeviceId.Tool))
+                {
+                    continue;
+                }
+
+                Message request = this.messageFactory.CreateHighSpeedPermissionRequest(moduleId);
+                await this.device.SendMessage(request);
+            }
+
+            List<byte> result = new List<byte>();
+            Message response = null;
+            bool anyRefused = false;
+            while ((response = await this.device.ReceiveMessage()) != null)
+            {
+                this.logger.AddDebugMessage("Parsing " + response.GetBytes().ToHex());
+                MessageParser.HighSpeedPermissionResult parsed = this.messageParser.ParseHighSpeedPermissionResponse(response);
+                if (!parsed.IsValid)
+                {
+                    continue;
+                }
+
+                if (parsed.PermissionGranted)
+                {
+                    this.logger.AddUserMessage(string.Format("Module 0x{0:X2} has agreed to enter high-speed mode.", parsed.ModuleId));
+                    result.Add(parsed.ModuleId);
+                    continue;
+                }
+
+                this.logger.AddUserMessage(string.Format("Module 0x{0:X2} has refused to enter high-speed mode.", parsed.ModuleId));
+                anyRefused = true;
+            }
+
+            if (anyRefused)
+            {
+                return null;
+            }
+
+            return result;
         }
 
         /// <summary>
