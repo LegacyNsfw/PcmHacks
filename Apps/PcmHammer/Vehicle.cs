@@ -539,7 +539,9 @@ namespace Flash411
             {
                 this.device.ClearMessageQueue();
 
-                await this.device.SetTimeout(TimeoutScenario.SendKernel);
+                // This must precede the switch to 4X.
+                ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
+                await toolPresentNotifier.Notify();
 
                 // switch to 4x, if possible. But continue either way.
                 // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
@@ -549,6 +551,8 @@ namespace Flash411
                     return Response.Create(ResponseStatus.Error, (Stream)null);
                 }
 
+                await toolPresentNotifier.Notify();
+
                 // execute read kernel
                 Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
                 if (response.Status != ResponseStatus.Success)
@@ -557,14 +561,12 @@ namespace Flash411
                     return new Response<Stream>(response.Status, null);
                 }
                 
-                ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
-
-                await toolPresentNotifier.Notify();
-
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return Response.Create(ResponseStatus.Cancelled, (Stream)null);
                 }
+
+                await toolPresentNotifier.Notify();
 
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
                 if (!await PCMExecute(response.Value, 0xFF9150, cancellationToken))
@@ -858,6 +860,8 @@ namespace Flash411
 
             logger.AddDebugMessage("Going to load a " + payload.Length + " byte payload to 0x" + address.ToString("X6"));
 
+            await this.device.SetTimeout(TimeoutScenario.SendKernel);
+
             // Loop through the payload building and sending packets, highest first, execute on last
             int payloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
             int chunkCount = payload.Length / payloadSize;
@@ -952,6 +956,9 @@ namespace Flash411
                 logger.AddUserMessage("Attempting switch to VPW 4x");
                 await device.SetTimeout(TimeoutScenario.ReadProperty);
 
+                // The list of modules may not be useful after all, but 
+                // checking for an empty list indicates an uncooperative
+                // module on the VPW bus.
                 List<byte> modules = await this.RequestHighSpeedPermission();
                 if (modules == null)
                 {
@@ -959,17 +966,11 @@ namespace Flash411
                     return false;
                 }
 
-                // Re-send requests because the previous ones may have timed out.
-                foreach(byte moduleId in modules)
-                {
-                    // Message request = this.messageFactory.CreateBeginHighSpeed(moduleId);
-                    Message request = this.messageFactory.CreateHighSpeedPermissionRequest(moduleId);
-                    await this.device.SendMessage(request);
-                }
-
                 Message broadcast = this.messageFactory.CreateBeginHighSpeed(DeviceId.Broadcast);
                 await this.device.SendMessage(broadcast);
 
+                // Check for any devices that refused to switch to 4X speed.
+                // These responses usually get lost, so this code might be pointless.
                 Message response = null;
                 while ((response = await this.device.ReceiveMessage()) != null)
                 {
@@ -1000,35 +1001,18 @@ namespace Flash411
 
             return true;
         }
-
-        // TODO: Clear this when initializing the device.
-        private List<byte> knownModules = null;
-
+        
+        /// <summary>
+        /// Ask all of the devices on the VPW bus for permission to switch to 4X speed.
+        /// </summary>
         private async Task<List<byte>> RequestHighSpeedPermission()
         {
-            if (knownModules == null)
-            {
-                for (byte moduleId = 0; moduleId < 0xFF; moduleId++)
-                {
-                    if ((moduleId == DeviceId.Broadcast) ||
-                        (moduleId == DeviceId.Tool))
-                    {
-                        continue;
-                    }
+            Message permissionCheck = this.messageFactory.CreateHighSpeedPermissionRequest(DeviceId.Broadcast);
+            await this.device.SendMessage(permissionCheck);
 
-                    Message request = this.messageFactory.CreateHighSpeedPermissionRequest(moduleId);
-                    await this.device.SendMessage(request);
-                }
-            }
-            else
-            {
-                foreach(byte moduleId in knownModules)
-                {
-                    Message request = this.messageFactory.CreateHighSpeedPermissionRequest(moduleId);
-                    await this.device.SendMessage(request);
-                }
-            }
-
+            // Note that as of right now, the AllPro only receives 6 of the 11 responses.
+            // So until that gets fixed, we could miss a 'refuse' response and try to switch
+            // to 4X anyhow. That just results in an aborted read attempt, with no harm done.
             List<byte> result = new List<byte>();
             Message response = null;
             bool anyRefused = false;
@@ -1041,20 +1025,18 @@ namespace Flash411
                     continue;
                 }
 
-                result.Add(parsed.ModuleId);
+                result.Add(parsed.DeviceId);
 
                 if (parsed.PermissionGranted)
                 {
-                    this.logger.AddUserMessage(string.Format("Module 0x{0:X2} has agreed to enter high-speed mode.", parsed.ModuleId));
+                    this.logger.AddUserMessage(string.Format("Module 0x{0:X2} has agreed to enter high-speed mode.", parsed.DeviceId));
                     continue;
                 }
 
-                this.logger.AddUserMessage(string.Format("Module 0x{0:X2} has refused to enter high-speed mode.", parsed.ModuleId));
+                this.logger.AddUserMessage(string.Format("Module 0x{0:X2} has refused to enter high-speed mode.", parsed.DeviceId));
                 anyRefused = true;
             }
-
-            knownModules = result;
-
+            
             if (anyRefused)
             {
                 return null;

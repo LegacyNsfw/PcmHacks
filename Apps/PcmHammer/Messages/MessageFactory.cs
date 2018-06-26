@@ -230,17 +230,17 @@ namespace Flash411
         /// <summary>
         /// Create a request for a module to test VPW speed switch to 4x is OK
         /// </summary>
-        public Message CreateHighSpeedPermissionRequest(byte moduleId)
+        public Message CreateHighSpeedPermissionRequest(byte deviceId)
         {
-            return new Message(new byte[] { Priority.Physical0, moduleId, DeviceId.Tool, Mode.HighSpeedPrepare});
+            return new Message(new byte[] { Priority.Physical0, deviceId, DeviceId.Tool, Mode.HighSpeedPrepare});
         }
         
         /// <summary>
         /// Create a request for a specific module to switch to VPW 4x
         /// </summary>
-        public Message CreateBeginHighSpeed(byte moduleId)
+        public Message CreateBeginHighSpeed(byte deviceId)
         {
-            return new Message(new byte[] { Priority.Physical0, moduleId, DeviceId.Tool, Mode.HighSpeed });
+            return new Message(new byte[] { Priority.Physical0, deviceId, DeviceId.Tool, Mode.HighSpeed });
         }
         
         /// <summary>

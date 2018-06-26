@@ -207,7 +207,7 @@ namespace Flash411
         public class HighSpeedPermissionResult
         {
             public bool IsValid { get; set; }
-            public byte ModuleId { get; set; }
+            public byte DeviceId { get; set; }
             public bool PermissionGranted { get; set; }
         }
 
@@ -237,12 +237,12 @@ namespace Flash411
             // Permission granted?
             if (actual[3] == Mode.HighSpeedPrepare + Mode.Response)
             {
-                return new HighSpeedPermissionResult() { IsValid = true, ModuleId = moduleId, PermissionGranted = true };
+                return new HighSpeedPermissionResult() { IsValid = true, DeviceId = moduleId, PermissionGranted = true };
             }
 
             if ((actual[3] == Mode.Rejected) || (actual[3] == 0x7F))
             {
-                return new HighSpeedPermissionResult() { IsValid = true, ModuleId = moduleId, PermissionGranted = false };
+                return new HighSpeedPermissionResult() { IsValid = true, DeviceId = moduleId, PermissionGranted = false };
             }
 
             return new HighSpeedPermissionResult() { IsValid = false };
