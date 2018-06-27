@@ -228,21 +228,21 @@ namespace Flash411
         }
         
         /// <summary>
-        /// Create a request for the PCM to test VPW speed switch to 4x is OK
+        /// Create a request for a module to test VPW speed switch to 4x is OK
         /// </summary>
-        public Message CreateHighSpeedCheck()
+        public Message CreateHighSpeedPermissionRequest(byte deviceId)
         {
-            return new Message(new byte[] { Priority.Physical0, DeviceId.Broadcast, DeviceId.Tool, Mode.HighSpeedPrepare});
+            return new Message(new byte[] { Priority.Physical0, deviceId, DeviceId.Tool, Mode.HighSpeedPrepare});
         }
         
         /// <summary>
-        /// Create a request for the PCM to switch to VPW 4x
+        /// Create a request for a specific module to switch to VPW 4x
         /// </summary>
-        public Message CreateBeginHighSpeed()
+        public Message CreateBeginHighSpeed(byte deviceId)
         {
-            return new Message(new byte[] { Priority.Physical0, DeviceId.Broadcast, DeviceId.Tool, Mode.HighSpeed });
+            return new Message(new byte[] { Priority.Physical0, deviceId, DeviceId.Tool, Mode.HighSpeed });
         }
-
+        
         /// <summary>
         /// Create a broadcast message announcing there is a test device connected to the vehicle
         /// </summary>
