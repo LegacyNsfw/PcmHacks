@@ -615,7 +615,7 @@ namespace Flash411
                             string.Format(
                                 "Unable to read block from {0} to {1}",
                                 startAddress,
-                                blockSize));
+                                (startAddress + blockSize) - 1));
                         return new Response<Stream>(ResponseStatus.Error, null);
                     }
 
