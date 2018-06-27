@@ -1029,11 +1029,11 @@ namespace Flash411
 
                 if (parsed.PermissionGranted)
                 {
-                    this.logger.AddUserMessage(string.Format("Module 0x{0:X2} has agreed to enter high-speed mode.", parsed.DeviceId));
+                    this.logger.AddUserMessage(string.Format("Module 0x{0:X2} ({1}) has agreed to enter high-speed mode.", parsed.DeviceId, DeviceId.DeviceCategory(parsed.DeviceId)));
                     continue;
                 }
 
-                this.logger.AddUserMessage(string.Format("Module 0x{0:X2} has refused to enter high-speed mode.", parsed.DeviceId));
+                this.logger.AddUserMessage(string.Format("Module 0x{0:X2} ({1}) has refused to enter high-speed mode.", parsed.DeviceId, DeviceId.DeviceCategory(parsed.DeviceId)));
                 anyRefused = true;
             }
             
