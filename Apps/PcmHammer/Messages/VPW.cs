@@ -10,7 +10,7 @@ namespace Flash411
     /// It is tempting to make this an enum, but if we need to change
     /// the Tool ID at run-time that will become a problem.
     /// </summary>
-    class DeviceId
+    static class DeviceId
     {
         /// <summary>
         /// OBD2 Device ID for the Powertrain Control Module.
@@ -30,7 +30,7 @@ namespace Flash411
         /// <summary>
         /// Returns a string describing the module which is the target a message
         /// </summary>
-        public string ReceiverCategory(Message message)
+        public static string ReceiverCategory(Message message)
         {
             byte[] b = message.GetBytes();
             if (b.Length < 3) return "invalid message";
@@ -40,7 +40,7 @@ namespace Flash411
         /// <summary>
         /// Returns a string describing the module which is sending a message
         /// </summary>
-        public string SenderCategory(Message message)
+        public static string SenderCategory(Message message)
         {
             byte[] b = message.GetBytes();
             if (b.Length < 3) return "invalid message";
@@ -50,7 +50,7 @@ namespace Flash411
         /// <summary>
         /// Returns a string describing the category of a given device id
         /// </summary>
-        public string DeviceCategory(byte DeviceId)
+        public static string DeviceCategory(byte DeviceId)
         {
             if (DeviceId >= 0x00 && DeviceId <= 0x0F) return "powertrain controller";
             if (DeviceId >= 0x10 && DeviceId <= 0x17) return "engine controller";
