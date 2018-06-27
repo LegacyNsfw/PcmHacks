@@ -26,6 +26,60 @@ namespace Flash411
         /// OBD2 Device ID for a broadcast message
         /// </summary>
         public const byte Broadcast = 0xFE;
+
+        /// <summary>
+        /// Returns a string describing the module which is the target a message
+        /// </summary>
+        public string ReceiverCategory(Message message)
+        {
+            byte[] b = message.GetBytes();
+            if (b.Length < 3) return "invalid message";
+            return DeviceCategory(b[1]);
+        }
+
+        /// <summary>
+        /// Returns a string describing the module which is sending a message
+        /// </summary>
+        public string SenderCategory(Message message)
+        {
+            byte[] b = message.GetBytes();
+            if (b.Length < 3) return "invalid message";
+            return DeviceCategory(b[2]);
+        }
+
+        /// <summary>
+        /// Returns a string describing the category of a given device id
+        /// </summary>
+        public string DeviceCategory(byte DeviceId)
+        {
+            if (DeviceId >= 0x00 && DeviceId <= 0x0F) return "powertrain controller";
+            if (DeviceId >= 0x10 && DeviceId <= 0x17) return "engine controller";
+            if (DeviceId >= 0x18 && DeviceId <= 0x1F) return "transmission controller";
+            if (DeviceId >= 0x20 && DeviceId <= 0x27) return "chassis controller";
+            if (DeviceId >= 0x28 && DeviceId <= 0x2F) return "brake controller";
+            if (DeviceId >= 0x30 && DeviceId <= 0x37) return "steering controller";
+            if (DeviceId >= 0x38 && DeviceId <= 0x3F) return "suspension controller";
+            if (DeviceId >= 0x40 && DeviceId <= 0x47) return "body controller";
+            if (DeviceId >= 0x48 && DeviceId <= 0x5F) return "restraint controller";
+            if (DeviceId >= 0x60 && DeviceId <= 0x6F) return "driver information display";
+            if (DeviceId >= 0x70 && DeviceId <= 0x7F) return "lighting controller";
+            if (DeviceId >= 0x80 && DeviceId <= 0x8F) return "entertainment system";
+            if (DeviceId >= 0x90 && DeviceId <= 0x97) return "personal communications";
+            if (DeviceId >= 0x98 && DeviceId <= 0x9F) return "climate control (HVAC)";
+            if (DeviceId >= 0xA0 && DeviceId <= 0xBF) return "convinience (door/seats/window/etc)";
+            if (DeviceId >= 0xC0 && DeviceId <= 0xC7) return "security module";
+            if (DeviceId >= 0xC8 && DeviceId <= 0xCB) return "EV energy transfer system";
+            if (DeviceId == 0xC8)                     return "utility connection service";
+            if (DeviceId == 0xC9)                     return "AC to AC conversion";
+            if (DeviceId == 0xCA)                     return "AC to DC conversion";
+            if (DeviceId == 0xCB)                     return "energy storage management";
+            //if (DeviceId >= 0xCC && DeviceId <= 0xCF) return "future expansion";
+            //if (DeviceId >= 0xD0 && DeviceId <= 0xEF) return "manufacturer specific";
+            if (DeviceId >= 0xF0 && DeviceId <= 0xFD) return "off board tool";
+            if (DeviceId == 0xFE)                     return "broadcast message";
+
+            return "unknown";
+        }
     }
 
     /// <summary>
