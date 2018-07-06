@@ -26,8 +26,14 @@ namespace PcmHacking
             // Both of these numbers could be slightly larger, but round numbers are easier to work with,
             // and these are only used with the Scantool SX interface anyhow. If we detect an AllPro
             // adapter we'll overwrite these values, see the Initialize method below.
-            this.MaxSendSize = 192 + 12; // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
-            this.MaxReceiveSize = 512 + 12;   // The ScanTool SX will download 512kb in just under 20 minutes at 512 bytes per read.
+
+            // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
+            this.MaxSendSize = 192 + 12;
+
+            // The ScanTool SX will download 512kb in roughly 20 minutes at 500 bytes per read.
+            // ScanTool reliability suffers at 508 bytes or more, so we're going with a number
+            // that's round in base 10 rather than in base 2.
+            this.MaxReceiveSize = 500 + 12;   
             this.Supports4X = false;
         }
 
