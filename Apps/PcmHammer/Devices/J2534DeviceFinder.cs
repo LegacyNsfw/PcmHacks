@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
     class J2534DeviceFinder
     {

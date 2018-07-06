@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Flash411
+namespace PcmHacking
 {
     static class Program
     {

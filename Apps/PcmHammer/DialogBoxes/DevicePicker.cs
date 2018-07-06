@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 using J2534;
 
-namespace Flash411
+namespace PcmHacking
 {
     public partial class DevicePicker : Form
     {

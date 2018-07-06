@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
     /// <summary>
     /// It is tempting to make this an enum, but if we need to change
     /// the Tool ID at run-time that will become a problem.
     /// </summary>
-    static class DeviceId
+    public static class DeviceId
     {
         /// <summary>
         /// OBD2 Device ID for the Powertrain Control Module.
@@ -85,7 +85,7 @@ namespace Flash411
     /// <summary>
     /// Defines various priority byte combinations and puts a name to them
     /// </summary>
-    class Priority
+    public static class Priority
     {
         /* based on information from http://www.fastfieros.com/tech/vpw_communication_protocol.htm
         Bits 7,6 and 5 are priority 0=High, 7=Low
@@ -130,7 +130,7 @@ namespace Flash411
     /// <summary>
     /// Defines Modes
     /// </summary>
-    class Mode
+    public static class Mode
     {
         public const byte Response = 0x40; // added to the Mode by the PCM for it's the response
         public const byte Rejected = 0x75;
@@ -146,7 +146,8 @@ namespace Flash411
         public const byte HighSpeedPrepare = 0xA0;
         public const byte HighSpeed = 0xA1;
     }
-    class SubMode
+
+    public static class SubMode
     {
         public const byte Null = 0x00;
 
@@ -159,7 +160,7 @@ namespace Flash411
         public const byte UploadOK = 0x00;
     }
 
-    class VPWUtils
+    public class VPWUtils
     {
         /// <summary>
         /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array

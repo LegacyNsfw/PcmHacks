@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
     /// <summary>
     /// This class encapsulates all code that is unique to the AVT 852 interface.

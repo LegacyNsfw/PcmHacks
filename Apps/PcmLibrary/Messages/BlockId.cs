@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
-    class BlockId
+    public class BlockId
     {
         public const byte Vin1               = 0x01; // 5 bytes of VIN
         public const byte Vin2               = 0x02; // 6 bytes of VIN

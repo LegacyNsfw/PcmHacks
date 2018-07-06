@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
     /// <summary>
     /// This class is responsible for parsing messages that are received from the PCM.
@@ -15,7 +15,7 @@ namespace Flash411
     /// device sends a CRC byte to the caller, the Device class for that hardware must
     /// remove the CRC byte before the byte array is passed to this class.
     /// </remarks>
-    class MessageParser
+    public class MessageParser
     {
         /// <summary>
         /// Constructor.
@@ -374,7 +374,7 @@ namespace Flash411
         /// <summary>
         /// Parse the response to a request for permission to upload a RAM kernel (or part of a kernel).
         /// </summary>
-        internal Response<bool> ParseUploadPermissionResponse(Message message)
+        public Response<bool> ParseUploadPermissionResponse(Message message)
         {
             return this.DoSimpleValidation(message, 0x6C, 0x34);
         }
@@ -439,7 +439,7 @@ namespace Flash411
         /// <summary>
         /// Determine whether we were able to unlock the PCM.
         /// </summary>
-        internal Response<bool> ParseUnlockResponse(byte[] unlockResponse, out string errorMessage)
+        public Response<bool> ParseUnlockResponse(byte[] unlockResponse, out string errorMessage)
         {
             if (unlockResponse.Length != 6)
             {

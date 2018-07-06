@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
-    class Query<T>
+    public class Query<T>
     {
         private Device device;
         private Func<Message> generator;

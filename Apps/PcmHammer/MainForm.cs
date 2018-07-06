@@ -15,7 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Flash411
+namespace PcmHacking
 {
     public partial class MainForm : Form, ILogger
     {

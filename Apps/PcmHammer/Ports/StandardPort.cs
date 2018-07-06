@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
     /// <summary>
     /// This class is responsible for sending and receiving data over a serial port.
@@ -15,7 +15,7 @@ namespace Flash411
     {
         private string name;
         private SerialPort port;
-        private Action<object, SerialDataReceivedEventArgs> dataReceivedCallback;
+//        private Action<object, SerialDataReceivedEventArgs> dataReceivedCallback;
 
         /// <summary>
         /// Constructor.
@@ -53,11 +53,12 @@ namespace Flash411
             if (config.Timeout == 0) config.Timeout = 1000; // default to 1 second but allow override.
             this.port.ReadTimeout = config.Timeout;
 
-            if (config.DataReceived != null)
+/*            if (config.DataReceived != null)
             {
                 this.dataReceivedCallback = config.DataReceived;
                 this.port.DataReceived += this.DataReceived;
             }
+*/
 
             this.port.Open();
 
@@ -127,7 +128,7 @@ namespace Flash411
         /// </summary>
         private void DataReceived(object sender, SerialDataReceivedEventArgs args)
         {
-            this.dataReceivedCallback(sender, args);
+//            this.dataReceivedCallback(sender, args);
         }
 
         /// <summary>

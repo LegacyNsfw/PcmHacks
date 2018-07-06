@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
     /// <summary>
     /// The IPort implementations encapsulate the differences between serial 
@@ -53,6 +52,5 @@ namespace Flash411
     {
         public int BaudRate { get; set; }
         public int Timeout { get; set; }
-        public Action<object, SerialDataReceivedEventArgs> DataReceived { get; set; }
     }
 }
