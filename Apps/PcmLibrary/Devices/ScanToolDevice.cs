@@ -30,7 +30,7 @@ namespace PcmHacking
             // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
             this.MaxSendSize = 192 + 12;
 
-            // The ScanTool SX will download 512kb in roughly 20 minutes at 500 bytes per read.
+            // The ScanTool SX will download 512kb in roughly 30 minutes at 500 bytes per read.
             // ScanTool reliability suffers at 508 bytes or more, so we're going with a number
             // that's round in base 10 rather than in base 2.
             this.MaxReceiveSize = 500 + 12;   
