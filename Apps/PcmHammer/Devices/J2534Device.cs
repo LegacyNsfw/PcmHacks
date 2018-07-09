@@ -9,7 +9,7 @@ using J2534;
 using Microsoft.Win32;
 using System.Runtime.InteropServices;
 
-namespace Flash411
+namespace PcmHacking
 {
     /// <summary>
     /// This class encapsulates all code that is unique to the AVT 852 interface.

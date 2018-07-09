@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
     /// <summary>
     /// This class provides a way to test most of the app without any interface hardware.
     /// </summary>
-    class MockDevice : Device
+    public class MockDevice : Device
     {
         public const string DeviceType = "Mock Serial Device";
         private IPort port;

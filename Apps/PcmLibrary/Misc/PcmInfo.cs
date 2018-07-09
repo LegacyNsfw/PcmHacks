@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
-    class PcmInfo
+    public class PcmInfo
     {
         public uint OSID { get; private set; }
 

@@ -5,10 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
     public static class Configuration
     {
+        public abstract class ConfigurationAccessor
+        {
+            public abstract string Read(string keyName);
+            public abstract void Write(string keyName, string value);
+        }
+
         public class Constants
         {
             public const string DeviceCategorySetting = "DeviceCategory";
@@ -76,31 +82,21 @@ namespace Flash411
             }
         }
 
+        private static ConfigurationAccessor accessor;
+
+        public static void SetAccessor(ConfigurationAccessor accessor)
+        {
+            Configuration.accessor = accessor;
+        }
+
         public static string Read(string key)
         {
-            var configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            var setting = configuration.AppSettings.Settings[key];
-            if (setting == null)
-            {
-                return string.Empty;
-            }
-
-            return setting.Value;
+            return accessor.Read(key);
         }
 
         public static void Write(string key, string value)
         {
-            var configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            try
-            {
-                configuration.AppSettings.Settings.Remove(key);
-                configuration.AppSettings.Settings.Add(key, value);
-                configuration.Save();
-            }
-            catch (Exception e)
-            {
-                System.Diagnostics.Debug.WriteLine("Could not save configuration: '{0}'", e);
-            }
+            accessor.Write(key, value);
         }
     }
 }

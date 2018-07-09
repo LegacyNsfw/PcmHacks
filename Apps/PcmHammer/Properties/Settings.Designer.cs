@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Flash411.Properties
+namespace PcmHacking.Properties
 {
 
 

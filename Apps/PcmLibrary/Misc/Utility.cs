@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
     public static class Utility
     {

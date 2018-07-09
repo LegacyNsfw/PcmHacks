@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
-    class KeyAlgorithm
+    public class KeyAlgorithm
     {
         /// <summary>
         /// Gets the unlock value for the given key.

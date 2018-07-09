@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
-    class ToolPresentNotifier
+    public class ToolPresentNotifier
     {
         ILogger logger;
         MessageFactory messageFactory;

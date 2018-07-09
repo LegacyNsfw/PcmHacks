@@ -68,15 +68,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration.cs" />
-    <Compile Include="Devices\AvtDevice.cs" />
-    <Compile Include="Devices\Device.cs" />
     <Compile Include="Devices\DeviceFactory.cs" />
-    <Compile Include="Devices\J2534DeviceFinder.cs" />
     <Compile Include="Devices\J2534Device.cs" />
-    <Compile Include="Devices\MockDevice.cs" />
-    <Compile Include="Devices\ScanToolDevice.cs" />
-    <Compile Include="Devices\SerialDevice.cs" />
+    <Compile Include="Devices\J2534DeviceFinder.cs" />
     <Compile Include="DialogBoxes\DevicePicker.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -89,34 +83,18 @@
     <Compile Include="DialogBoxes\VinForm.Designer.cs">
       <DependentUpon>VinForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Messages\BlockId.cs" />
-    <Compile Include="Messages\VPW.cs" />
-    <Compile Include="Messages\Message.cs" />
-    <Compile Include="Messages\MessageFactory.cs" />
-    <Compile Include="Messages\MessageParser.cs" />
-    <Compile Include="Misc\HttpServer.cs" />
-    <Compile Include="Misc\ILogger.cs" />
-    <Compile Include="Misc\MockPcm.cs" />
-    <Compile Include="Misc\PcmInfo.cs" />
-    <Compile Include="Misc\Query.cs" />
-    <Compile Include="Misc\Response.cs" />
-    <Compile Include="Misc\KeyAlgorithm.cs" />
-    <Compile Include="Misc\ToolPresentNotifier.cs" />
-    <Compile Include="Misc\Utility.cs" />
-    <Compile Include="Ports\HttpPort.cs" />
-    <Compile Include="Ports\IPort.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Ports\MockAvt852.cs" />
-    <Compile Include="Ports\MockPort.cs" />
+    <Compile Include="Ports\HttpPort.cs" />
+    <Compile Include="Ports\StandardPort.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Ports\StandardPort.cs" />
     <Compile Include="Vehicle.cs" />
+    <Compile Include="WinFormsConfigurationAccessor.cs" />
     <EmbeddedResource Include="DialogBoxes\DevicePicker.resx">
       <DependentUpon>DevicePicker.cs</DependentUpon>
     </EmbeddedResource>
@@ -160,8 +138,13 @@
       <Install>false</Install>
     </BootstrapperPackage>
     <Content Include="0411_256px.ico" />
-    <Content Include="J2534.dll" />
+    <Content Include="Devices\J2534.dll" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\PcmLibrary\PcmLibrary.csproj">
+      <Project>{0b317c5a-e078-4a96-8e7a-00601bca1429}</Project>
+      <Name>PcmLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
