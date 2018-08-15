@@ -11,6 +11,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -90,9 +91,9 @@ namespace PcmHacking
 
                 // This will be enabled during full reads (but not writes)
                 this.cancelButton.Enabled = false;
-                
+
+                // Load the Help content asynchronously.
                 ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
-                this.LoadLicense();
 
                 await this.ResetDevice();
             }
@@ -103,14 +104,33 @@ namespace PcmHacking
             }
         }
 
+        /// <summary>
+        /// The Help content is loaded after the window appears, so that it doesn't slow down app initialization.
+        /// </summary>
         private void LoadHelp(object unused)
         {
-            this.helpWebBrowser.Invoke((MethodInvoker)delegate ()
+            this.helpWebBrowser.Invoke((MethodInvoker)async delegate ()
             {
                 try
                 {
-                    // TODO: fall back to a local copy of help if not online.
-                    this.helpWebBrowser.Navigate("https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/nsfw/HelpAndLicense/Apps/PcmHammer/help.html");
+                    HttpRequestMessage request = new HttpRequestMessage(
+                        HttpMethod.Get, 
+                        "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/nsfw/HelpAndLicense/Apps/PcmHammer/help.html");
+                    HttpClient client = new HttpClient();
+                    var response = await client.SendAsync(request);
+
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        this.helpWebBrowser.DocumentStream = await response.Content.ReadAsStreamAsync();
+                    }
+                    else
+                    {
+                        var assembly = Assembly.GetExecutingAssembly();
+                        var resourceName = "PcmHacking.help.html";
+
+                        // This will leak the stream, but it will only be invoked once.
+                        this.helpWebBrowser.DocumentStream = assembly.GetManifestResourceStream(resourceName);
+                    }
                 }
                 catch (Exception exception)
                 {
@@ -119,21 +139,7 @@ namespace PcmHacking
                 }
             });
         }
-
-        private void LoadLicense()
-        {
-            this.licenseText.Text =
-@"License And Terms Of Use
-
-This application may be distributed freely as long as it is not modified.
-
-The portion of this software that executes on the PCM is not open source, and may not be redistributed except when contained in this software.
-
-The remainder of this software is open source, and is licensed under the terms of the GNU General Public License, Version 3. 
-
-The open source portions of this software are distributed at https://github.com/LegacyNsfw/PcmHacks and the authors welcome your contributions.";
-        }
-
+        
         /// <summary>
         /// Disable buttons during a long-running operation (like reading or writing the flash).
         /// </summary>

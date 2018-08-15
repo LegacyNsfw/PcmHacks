@@ -51,8 +51,6 @@
             this.releasedAtPcmHacking = new System.Windows.Forms.LinkLabel();
             this.releasedEtc = new System.Windows.Forms.Label();
             this.helpTab = new System.Windows.Forms.TabPage();
-            this.licenseTab = new System.Windows.Forms.TabPage();
-            this.licenseText = new System.Windows.Forms.TextBox();
             this.helpWebBrowser = new System.Windows.Forms.WebBrowser();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
@@ -60,7 +58,6 @@
             this.resultsTab.SuspendLayout();
             this.debugTab.SuspendLayout();
             this.helpTab.SuspendLayout();
-            this.licenseTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // interfaceBox
@@ -185,7 +182,6 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabs.Controls.Add(this.resultsTab);
             this.tabs.Controls.Add(this.helpTab);
-            this.tabs.Controls.Add(this.licenseTab);
             this.tabs.Controls.Add(this.debugTab);
             this.tabs.Location = new System.Drawing.Point(317, 12);
             this.tabs.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -323,26 +319,6 @@
             this.helpTab.Text = "Help";
             this.helpTab.UseVisualStyleBackColor = true;
             // 
-            // licenseTab
-            // 
-            this.licenseTab.Controls.Add(this.licenseText);
-            this.licenseTab.Location = new System.Drawing.Point(4, 25);
-            this.licenseTab.Name = "licenseTab";
-            this.licenseTab.Size = new System.Drawing.Size(761, 467);
-            this.licenseTab.TabIndex = 3;
-            this.licenseTab.Text = "License";
-            this.licenseTab.UseVisualStyleBackColor = true;
-            // 
-            // licenseText
-            // 
-            this.licenseText.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.licenseText.Location = new System.Drawing.Point(0, 0);
-            this.licenseText.Multiline = true;
-            this.licenseText.Name = "licenseText";
-            this.licenseText.ReadOnly = true;
-            this.licenseText.Size = new System.Drawing.Size(761, 467);
-            this.licenseText.TabIndex = 1;
-            // 
             // helpWebBrowser
             // 
             this.helpWebBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -379,8 +355,6 @@
             this.debugTab.ResumeLayout(false);
             this.debugTab.PerformLayout();
             this.helpTab.ResumeLayout(false);
-            this.licenseTab.ResumeLayout(false);
-            this.licenseTab.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -410,8 +384,6 @@
         private System.Windows.Forms.Label releasedEtc;
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.TabPage helpTab;
-        private System.Windows.Forms.TabPage licenseTab;
-        private System.Windows.Forms.TextBox licenseText;
         private System.Windows.Forms.WebBrowser helpWebBrowser;
     }
 }

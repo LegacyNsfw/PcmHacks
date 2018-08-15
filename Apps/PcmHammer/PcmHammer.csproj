@@ -139,6 +139,7 @@
     </BootstrapperPackage>
     <Content Include="0411_256px.ico" />
     <Content Include="Devices\J2534.dll" />
+    <EmbeddedResource Include="help.html" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PcmLibrary\PcmLibrary.csproj">

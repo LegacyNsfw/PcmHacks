@@ -1,6 +1,8 @@
 <html>
 <head>
 <style>
+    * { font-family: sans-serif; }
+    p { font-size: 0.875em; }
 </style>
 
     <base target="_blank"/>
@@ -14,8 +16,11 @@
         <li><a href="#devices">Supported Devices</a>
         <li><a href="#basics">Basic Operations</a>
         <li><a href="#online">Getting Help Online</a>
-    </ol>
+        <li><a href="#licensing">Licensing</a>
+        <li><a href="#contributing">Contributing</a>
+</ol>
 
+    <hr />
     <P id="readfirst"><h3>Read This First</h3>
     <P>There is a known issue that can leave your vehicle temporarily unusable. When you turn the key, the engine will turn over but will not start. If this happens, remove the ignition key, remove the fuse (or fuses) that provide power to the PCM, wait 10 seconds, and replace the fuses. Turn on the ignition, wait another 15 seconds, and your car should start right up.
 
@@ -23,6 +28,7 @@
 
     <P>We expect to have this problem fixed before we release the next version.
 
+    <hr />
     <p id="devices"><h3>Supported Devices</h3>
 
     <p>This app currently supports the following types of devices:
@@ -40,6 +46,7 @@
 
     <p><b>Any J2534-compatible interface that supports J1850 VPW</b> - At least in theory, these should all work. There are a few of those on the market, and we cannot test them all, but if you have one, give it a try. As time goes by we'll list the ones that are proven to work. The genuine GM MDIs are one device which is known to work, though it is not cheap. Over time we hope to confirm that other, less expensive devices will also work.
 
+    <hr />
     <p id="basics"><h3>Basic Operations</h3>
 
     <p>Before you do anything else, you'll need to tell the app what kind of interface device you have, and how it is connected to your computer. 
@@ -65,8 +72,22 @@
 
     <p>If you have questions about the app or how to use it, please head to <a href="https://pcmhacking.net/forums/viewforum.php?f=8">this section of the pcmhacking.net forum</a> to converse with other like-minded users.
 
-    <p>--
-    <p>Pcm Hammer Help Version 1
+    <hr /><p id="licensing"><h3>Licensing</h3>
     
+    <p>The portion of this software that executes on the PCM is <i>not</i> open source, and may not be redistributed except when contained in this software.
+
+    <p>The remainder of this software is open source, and is licensed under the terms of the GNU General Public License, Version 3.
+
+    <hr /><p id="contributing"><h3>Contributing</h3>
+
+    <p>The open source portions of this software are distributed at https://github.com/LegacyNsfw/PcmHacks - and the authors welcome contributions.
+
+    <p>The reflashing kernel is closed source, due to unfortunate events (and unethical behavior) that have happened in the past. 
+        The GitHub repository therefore contains a kernel that can only read from the PCM. However we will create binary 
+        releases with the full-functional kernel whenever there are noteworthy improvements to the app or the kernel.
+
+    <hr />
+    <sub>Help Version 1</sub>
+
 </body>
 </html>
