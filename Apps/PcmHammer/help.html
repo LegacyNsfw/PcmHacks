@@ -2,7 +2,7 @@
 <head>
 <style>
     * { font-family: sans-serif; }
-    p { font-size: 0.875em; }
+    p,li { font-size: 0.875em; }
 </style>
 
     <base target="_blank"/>
@@ -22,7 +22,11 @@
 
     <hr />
     <P id="readfirst"><h3>Read This First</h3>
-    <P>There is a known issue that can leave your vehicle temporarily unusable. When you turn the key, the engine will turn over but will not start. If this happens, remove the ignition key, remove the fuse (or fuses) that provide power to the PCM, wait 10 seconds, and replace the fuses. Turn on the ignition, wait another 15 seconds, and your car should start right up.
+    <P>There is a known issue that can leave your vehicle temporarily unusable. When you turn the key, the engine will turn over but will not start.
+
+    <p>To minimize your chances of running into this problem, allow at least 15 seconds to pass between turning on the ignition and pressing the "Read Full Contents" button.
+
+    <p>If this happens to you, don't panic. Remove the ignition key, remove the fuse (or fuses) that provide power to the PCM, wait 10 seconds, and replace the fuse(s). Turn on the ignition, wait another 15 seconds, and your car should start right up.
 
     <p>You should familiarize yourself with the location of these fuses before you attempt to do a full read or full write of your PCM. That way if you run into this, you'll already know what to do.
 
@@ -33,12 +37,12 @@
 
     <p>This app currently supports the following types of devices:
 
-    <p><b><a href="http://www.obddiag.net/products.html">ObdDiag AllPro</a></b> - Only the USB and dev-board versions are recommended at this time. The AllPro devices are quite inexpensive, and the USB version is likely to be the most popular choice.
+    <p><b><a href="http://www.obddiag.net/products.html">ObdDiag AllPro</a></b> - Only the USB and dev-board versions are recommended at this time. The AllPro devices are quite inexpensive, and the USB version is likely to be the most popular choice.  We don't recommend the Bluetooth version because of the risk of radio interference.
 
     <p>
         ObdDiag has been a great partner in this project, incorporating changes and responding to feedback.
         However this means that AllPro devices purchased before early June 2018 will need a firmware update to version 1.21 or later.
-        Updating the firmware on the AllPro adapter requires the FlashMagic tool. Instructions are <a href="http://www.obddiag.net/allpro_prog.html">here</a> and a link to the firmware can be found <a href="http://www.obddiag.net/allpro.html">here</a>.)
+        Updating the firmware on the AllPro adapter requires the FlashMagic tool. Instructions are on the <a href="http://www.obddiag.net/">ObdDiag.Net web site.</a> and a link to the firmware can be found <a href="http://www.obddiag.net/allpro.html">here</a>.
 
     <p><b><a href="https://www.scantool.net/obdlink-sx/">Scantool SX or MX</a></b> - These are inexpensive and superior to ELM knock-off devices, however they do not support 4x (high speed) mode, so a full read takes a little over 20 minutes. Other devices based on Scantool's interface chip will probably work just as well (and just as slowly) but we have not tested any ourselves.
 
@@ -46,10 +50,14 @@
 
     <p><b>Any J2534-compatible interface that supports J1850 VPW</b> - At least in theory, these should all work. There are a few of those on the market, and we cannot test them all, but if you have one, give it a try. As time goes by we'll list the ones that are proven to work. The genuine GM MDIs are one device which is known to work, though it is not cheap. Over time we hope to confirm that other, less expensive devices will also work.
 
+    <p>Note that ELM-based devices are not supported. But the AllPro
+
     <hr />
     <p id="basics"><h3>Basic Operations</h3>
 
-    <p>Before you do anything else, you'll need to tell the app what kind of interface device you have, and how it is connected to your computer. 
+    <p>Turn the ignition key to the "on" position. The dashboard should light up. Do not start the engine.
+
+    <p><b>Select Device</b> - Before the app can communicate with your PCM, need to tell the app what kind of interface device you have, and how it is connected to your computer. 
         <ol>
             <li>Click the "Select Device" button on the main window - a dialog box will appear.</li>
             <li>Select "Serial Port Device" or "J2534 Device" depending on which type you have. If you don't know which, it's probably a serial port.</li>
@@ -58,15 +66,21 @@
             <li>Either way, check the Results tab in the main window - it will either print an error message or show some informationa about the selected device.</li>
         </ol>
 
-    <p>To read the VIN, serial number, and other properties from the PCM, click the "Read Properties" button. You should generally do this before doing anything else, just to confirm that the device is able to communicate with the PCM.
+    <p><b>Read Properties</b> - To read the VIN, serial number, and other properties from the PCM, just click the "Read Properties" button. You should generally do this before doing anything else, just to confirm that the device is able to communicate with the PCM.
 
-    <p>The "Read Full Contents" button will save the entire contents of the PCM's read-only memory, and it will then ask you where to save that data.
+    <p><B>Read Full Conteents</B> - This button will save the entire contents of the PCM's read-only memory, and it will then ask you where to save that data. You can open the resulting file in Tuner Pro, if you have the definition file (the "XDF") the corresponds to your PCM's operating system.
 
-    <p>To use the "Modify VIN" feature, click the button and enter your vehicle's VIN, then click OK. Note that the change will not take effect until after you turn off the ignition. The PCM will still run on battery power for a few seconds while it stores the new VIN permanently. If you disconnect all power, the PCM will still have the original VIN the next time you turn it on. 
+    <p><mark>Before you click the "Read Full Contents" button, make sure that at least 15 seconds have passed since you turned the ignition on.</mark> Immediately after key-on, the PCM needs some time to boot up, and it may not have enough spare processing power to communicate properly with the app. That can lead to the PCM getting stuck when the app tries to prepare it for the reading process.
+
+    <p>If anything goes wrong during the read process, try turning the key to the off position, wait 10 seconds, and turn it on again.
+
+    <p>If the car doesn't reboot properly (won't start, insists that you need service, etc), you will probably need to pull the PCM fuses for a few seconds to force a cold reboot. Don't panic. It happens. We're working on fixing this problem, please bear with us.
+
+    <p><b>Modify VIN</b> - To use this feature, click the button and enter your vehicle's VIN, then click OK. Note that the change will not take effect until after you turn off the ignition. The PCM will still run on battery power for a few seconds while it stores the new VIN permanently. If you disconnect all power, the PCM will still have the original VIN the next time you turn it on. 
         
     <p>You may find this feature useful if you've purchased a used PCM from a junkyard or online retailer, for example after bricking your PCM with software written by amateurs and downloaded from the internet. (Although, honestly, zero PCMs have been harmed during the development of this app. So far.)
 
-    <p>You may notice that there is a button to write changes to the PCM's read-only memory. No, that button doesn't work yet. Yes, we're working on it.
+    <p><b>Write Full Contents</b> - Yes, there is a button to write changes to the PCM's read-only memory. No, that button doesn't work yet. Yes, we're working on it.
 
     <P id="online"><h3>Getting Help Online</h3>
 
@@ -74,7 +88,7 @@
 
     <hr /><p id="licensing"><h3>Licensing</h3>
     
-    <p>The portion of this software that executes on the PCM is <i>not</i> open source, and may not be redistributed except when contained in this software.
+    <p>The portion of this software that executes on the PCM (the "kernel") is <i>not</i> open source, and may not be redistributed except when contained in this software. 
 
     <p>The remainder of this software is open source, and is licensed under the terms of the GNU General Public License, Version 3.
 
@@ -84,7 +98,7 @@
 
     <p>The reflashing kernel is closed source, due to unfortunate events (and unethical behavior) that have happened in the past. 
         The GitHub repository therefore contains a kernel that can only read from the PCM. However we will create binary 
-        releases with the full-functional kernel whenever there are noteworthy improvements to the app or the kernel.
+        releases with the fully-functional kernel whenever there are noteworthy improvements to the app or the kernel.
 
     <hr />
     <sub>Help Version 1</sub>
