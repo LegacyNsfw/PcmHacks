@@ -119,7 +119,7 @@ namespace PcmHacking
                     HttpClient client = new HttpClient();
                     var response = await client.SendAsync(request);
 
-                    if (response.StatusCode == HttpStatusCode.OK)
+                    if (response.StatusCode == HttpStatusCode.NotFound)
                     {
                         this.helpWebBrowser.DocumentStream = await response.Content.ReadAsStreamAsync();
                     }
