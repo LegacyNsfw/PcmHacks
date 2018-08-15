@@ -10,6 +10,7 @@ using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -89,6 +90,9 @@ namespace PcmHacking
 
                 // This will be enabled during full reads (but not writes)
                 this.cancelButton.Enabled = false;
+                
+                ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
+                this.LoadLicense();
 
                 await this.ResetDevice();
             }
@@ -97,6 +101,37 @@ namespace PcmHacking
                 this.AddUserMessage(exception.Message);
                 this.AddDebugMessage(exception.ToString());
             }
+        }
+
+        private void LoadHelp(object unused)
+        {
+            this.helpWebBrowser.Invoke((MethodInvoker)delegate ()
+            {
+                try
+                {
+                    // TODO: fall back to a local copy of help if not online.
+                    this.helpWebBrowser.Navigate("https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/nsfw/HelpAndLicense/Apps/PcmHammer/help.html");
+                }
+                catch (Exception exception)
+                {
+                    this.AddUserMessage("Unable to load help content: " + exception.Message);
+                    this.AddDebugMessage(exception.ToString());
+                }
+            });
+        }
+
+        private void LoadLicense()
+        {
+            this.licenseText.Text =
+@"License And Terms Of Use
+
+This application may be distributed freely as long as it is not modified.
+
+The portion of this software that executes on the PCM is not open source, and may not be redistributed except when contained in this software.
+
+The remainder of this software is open source, and is licensed under the terms of the GNU General Public License, Version 3. 
+
+The open source portions of this software are distributed at https://github.com/LegacyNsfw/PcmHacks and the authors welcome your contributions.";
         }
 
         /// <summary>
