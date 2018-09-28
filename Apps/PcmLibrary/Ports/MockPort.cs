@@ -70,12 +70,13 @@ namespace PcmHacking
         {
             byte[] responseBuffer = this.pcm.GetResponse();
 
-            for(int index = 0; index < count && index < responseBuffer.Length; index++)
+            int index = 0;
+            for(; index < count && index < responseBuffer.Length; index++)
             {
                 buffer[offset + index] = responseBuffer[index];
             }
 
-            return Task.FromResult(count);
+            return Task.FromResult(index);
         }
 
         /// <summary>

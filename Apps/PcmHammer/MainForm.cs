@@ -552,6 +552,13 @@ namespace PcmHacking
                     return;
                 }
 
+                DelayDialogBox dialogBox = new DelayDialogBox();
+                DialogResult dialogResult = dialogBox.ShowDialog();
+                if (dialogResult == DialogResult.Cancel)
+                {
+                    return;
+                }
+
                 this.AddUserMessage("Querying operating system of current PCM.");
                 Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
                 if (osidResponse.Status != ResponseStatus.Success)
