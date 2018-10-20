@@ -10,6 +10,8 @@ using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -90,6 +92,9 @@ namespace PcmHacking
                 // This will be enabled during full reads (but not writes)
                 this.cancelButton.Enabled = false;
 
+                // Load the Help content asynchronously.
+                ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
+
                 await this.ResetDevice();
             }
             catch (Exception exception)
@@ -99,6 +104,42 @@ namespace PcmHacking
             }
         }
 
+        /// <summary>
+        /// The Help content is loaded after the window appears, so that it doesn't slow down app initialization.
+        /// </summary>
+        private void LoadHelp(object unused)
+        {
+            this.helpWebBrowser.Invoke((MethodInvoker)async delegate ()
+            {
+                try
+                {
+                    HttpRequestMessage request = new HttpRequestMessage(
+                        HttpMethod.Get, 
+                        "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/nsfw/HelpAndLicense/Apps/PcmHammer/help.html");
+                    HttpClient client = new HttpClient();
+                    var response = await client.SendAsync(request);
+
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        this.helpWebBrowser.DocumentStream = await response.Content.ReadAsStreamAsync();
+                    }
+                    else
+                    {
+                        var assembly = Assembly.GetExecutingAssembly();
+                        var resourceName = "PcmHacking.help.html";
+
+                        // This will leak the stream, but it will only be invoked once.
+                        this.helpWebBrowser.DocumentStream = assembly.GetManifestResourceStream(resourceName);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    this.AddUserMessage("Unable to load help content: " + exception.Message);
+                    this.AddDebugMessage(exception.ToString());
+                }
+            });
+        }
+        
         /// <summary>
         /// Disable buttons during a long-running operation (like reading or writing the flash).
         /// </summary>
@@ -508,6 +549,13 @@ namespace PcmHacking
                 {
                     // This shouldn't be possible - it would mean the buttons 
                     // were enabled when they shouldn't be.
+                    return;
+                }
+
+                DelayDialogBox dialogBox = new DelayDialogBox();
+                DialogResult dialogResult = dialogBox.ShowDialog();
+                if (dialogResult == DialogResult.Cancel)
+                {
                     return;
                 }
 

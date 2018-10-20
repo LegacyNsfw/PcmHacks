@@ -99,10 +99,10 @@ namespace PcmHacking
         /// <summary>
         /// Receive a sequence of bytes over the serial port.
         /// </summary>
-        async Task<int> IPort.Receive(byte[] buffer, int offset, int count)
+        Task<int> IPort.Receive(byte[] buffer, int offset, int count)
         {
             // Using the BaseStream causes data to be lost.
-            return this.port.Read(buffer, offset, count);
+            return Task<int>.FromResult(this.port.Read(buffer, offset, count));
         }
 
         /// <summary>

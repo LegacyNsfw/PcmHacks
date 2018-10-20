@@ -1,3 +1,11 @@
+The portion of this software that executes on the PCM is NOT open 
+source, and may not be redistributed except when contained in official
+releases of this software.
+
+The remainder of this software IS open source, and is licensed under
+the terms of the GNU General Public License, Version 3:
+
+
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 

@@ -48,6 +48,7 @@ namespace PcmHacking
         {
             this.crc = 0xFF;
             this.state = 0;
+            this.payload.Clear();
         }
 
         /// <summary>
@@ -143,7 +144,7 @@ namespace PcmHacking
                 {
                     // TODO: validate the key.
                     // For now we'll just return a 'success' response every time.
-                    this.responseBuffer = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x02, 0x34, 0x4B };
+                    this.responseBuffer = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x02, 0x34 };
                 }
             }
             else if (this.modeByte == 0x3C)

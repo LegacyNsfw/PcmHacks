@@ -75,7 +75,6 @@ namespace PcmHacking
             this.serialPortList.SelectedIndex = 0;
 
             this.serialPortList.Items.Add(MockPort.PortName);
-            this.serialPortList.Items.Add(HttpPort.PortName);
             
             foreach (string name in System.IO.Ports.SerialPort.GetPortNames())
             {
