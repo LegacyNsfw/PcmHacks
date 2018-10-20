@@ -115,7 +115,8 @@ namespace PcmHacking
                 {
                     HttpRequestMessage request = new HttpRequestMessage(
                         HttpMethod.Get, 
-                        "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/nsfw/HelpAndLicense/Apps/PcmHammer/help.html");
+                        "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/Release/001/Apps/PcmHammer/help.html");
+                    request.Headers.Add("Cache-Control", "no-cache");
                     HttpClient client = new HttpClient();
                     var response = await client.SendAsync(request);
 
