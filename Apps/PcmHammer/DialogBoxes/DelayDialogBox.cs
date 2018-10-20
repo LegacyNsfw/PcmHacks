@@ -13,7 +13,7 @@ namespace PcmHacking
     public partial class DelayDialogBox : Form
     {
         private Timer timer;
-        private int secondsRemaining = 15;
+        private int secondsRemaining = 10;
 
         public DelayDialogBox()
         {

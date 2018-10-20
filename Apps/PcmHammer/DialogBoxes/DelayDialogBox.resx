@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="explanation.Text" xml:space="preserve">
-    <value>Has the PCM been powered for at least 15 seconds?
+    <value>Has the PCM been powered for at least 10 seconds?
 
 If not, please wait for it to initialize before continuing. If you skip this step, the read process may be interrupted, and there's a good chance that you will need to temporarily remove the PCM's fuse to get it to work properly again.</value>
   </data>

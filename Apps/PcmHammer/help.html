@@ -55,7 +55,7 @@
     <hr />
     <p id="basics"><h3>Basic Operations</h3>
 
-    <p>Turn the ignition key to the "on" position. The dashboard should light up. Do not start the engine.
+    <p>Turn the ignition key to the "On" position. (The "Acc" position won't work.) The dashboard should light up. Do not start the engine.
 
     <p><b>Select Device</b> - Before the app can communicate with your PCM, need to tell the app what kind of interface device you have, and how it is connected to your computer. 
         <ol>
@@ -70,9 +70,11 @@
 
     <p><B>Read Full Conteents</B> - This button will save the entire contents of the PCM's read-only memory, and it will then ask you where to save that data. You can open the resulting file in Tuner Pro, if you have the definition file (the "XDF") the corresponds to your PCM's operating system.
 
-    <p><mark>Before you click the "Read Full Contents" button, make sure that at least 15 seconds have passed since you turned the ignition on.</mark> Immediately after key-on, the PCM needs some time to boot up, and it may not have enough spare processing power to communicate properly with the app. That can lead to the PCM getting stuck when the app tries to prepare it for the reading process.
+    <p><mark>Before you click the "Read Full Contents" button, make sure that at least 10 seconds have passed since you turned the key to the "On" position.</mark> Immediately after key-on, the PCM needs some time to boot up, and it may not have enough spare processing power to communicate properly with the app. That can lead to the PCM getting stuck when the app tries to prepare it for the reading process.
 
-    <p>If anything goes wrong during the read process, try turning the key to the off position, wait 10 seconds, and turn it on again.
+    <p>If anything goes wrong during the read process, try turning the key to the off position, wait 10 seconds, turn it on again, and wait 10 seconds again.
+
+    <p>When the entire contents of the PCM have been read, you hear the fuel pump run briefly, and you will be asked to choose the location and filename for your new .bin file.</p>
 
     <p>If the car doesn't reboot properly (won't start, insists that you need service, etc), you will probably need to pull the PCM fuses for a few seconds to force a cold reboot. Don't panic. It happens. We're working on fixing this problem, please bear with us.
 
