@@ -12,17 +12,44 @@ using J2534;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// This dialog box allows the user to choose the type of device and (for serial devices) the COM port.
+    /// </summary>
     public partial class DevicePicker : Form
     {
+        /// <summary>
+        /// Indicate which category of device the user has chosen.
+        /// </summary>
         public string DeviceCategory { get; set; }
+
+        /// <summary>
+        /// Indicates the name of the J2534 device that the user has chosen.
+        /// </summary>
         public string J2534DeviceType { get; set; }
+
+        /// <summary>
+        /// Indicates the serial port (COM port) that the user has chosen. Only relevant for serial devices.
+        /// </summary>
         public string SerialPort { get; set; }
+
+        /// <summary>
+        /// Indicates which type of serial device the user has chosen.
+        /// </summary>
         public string SerialPortDeviceType { get; set; }
 
+        /// <summary>
+        /// Prompt to put into drop-down lists to let the user know that they need to make a selection.
+        /// </summary>
         private const string prompt = "Select...";
 
+        /// <summary>
+        /// This allows the dialog box to add messages to the Results pane and Debug pane.
+        /// </summary>
         private ILogger logger;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public DevicePicker(ILogger logger)
         {
             this.logger = logger;
@@ -30,6 +57,9 @@ namespace PcmHacking
             InitializeComponent();
         }
 
+        /// <summary>
+        /// Populate controls with the current selections before displaying the form.
+        /// </summary>
         private void DevicePicker_Load(object sender, EventArgs e)
         {
             this.FillPortList();
@@ -57,6 +87,9 @@ namespace PcmHacking
             SetDefault(this.j2534DeviceList, Configuration.J2534DeviceType);
         }
 
+        /// <summary>
+        /// Set a ComboBox to the given item.
+        /// </summary>
         private static void SetDefault(ComboBox list, string value)
         {
             foreach(object item in list.Items)
@@ -69,6 +102,9 @@ namespace PcmHacking
             }
         }
 
+        /// <summary>
+        /// Fill the list of serial ports with a list of currently available ports.
+        /// </summary>
         private void FillPortList()
         {
             this.serialPortList.Items.Add(prompt);
@@ -82,6 +118,9 @@ namespace PcmHacking
             }
         }
 
+        /// <summary>
+        /// Fill the list of serial devices with the device types that the app supports.
+        /// </summary>
         private void FillSerialDeviceList()
         {
             this.serialDeviceList.Items.Add(prompt);
@@ -92,6 +131,9 @@ namespace PcmHacking
             this.serialDeviceList.Items.Add(ScanToolDevice.DeviceType);
         }
 
+        /// <summary>
+        /// Fill the list of J2534 devices with the devices that the J2534 library has discovered.
+        /// </summary>
         private void FillJ2534DeviceList()
         {
             foreach(J2534.J2534Device device in J2534DeviceFinder.FindInstalledJ2534DLLs(this.logger))
@@ -100,23 +142,35 @@ namespace PcmHacking
             }
         }
 
+        /// <summary>
+        /// In theory we could probably guess correctly 99% of the time...
+        /// </summary>
         private void autoDetectButton_Click(object sender, EventArgs e)
         {
             MessageBox.Show("Not yet implemented.");
         }
 
+        /// <summary>
+        /// Close the form, let the caller know that the user clicked OK.
+        /// </summary>
         private void okButton_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
 
+        /// <summary>
+        /// Close the form, let the caller know that the user clicked Cancel.
+        /// </summary>
         private void cancelButton_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
 
+        /// <summary>
+        /// Enable/disable different groups of controls depending of which device type the user has chosen.
+        /// </summary>
         private void serialRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             if (this.serialRadioButton.Checked)
@@ -127,6 +181,9 @@ namespace PcmHacking
             }
         }
 
+        /// <summary>
+        /// Enable/disable different groups of controls depending of which device type the user has chosen.
+        /// </summary>
         private void j2534DeviceButton_CheckedChanged(object sender, EventArgs e)
         {
             if (this.j2534RadioButton.Checked)
@@ -137,21 +194,33 @@ namespace PcmHacking
             }
         }
 
+        /// <summary>
+        /// Store the name of the newly selected serial port.
+        /// </summary>
         private void serialPortList_SelectedIndexChanged(object sender, EventArgs e)
         {
             this.SerialPort = this.serialPortList.SelectedItem?.ToString();
         }
 
+        /// <summary>
+        /// Store the name of the newly selected serial device type.
+        /// </summary>
         private void serialDeviceList_SelectedIndexChanged(object sender, EventArgs e)
         {
             this.SerialPortDeviceType = this.serialDeviceList.SelectedItem?.ToString();
         }
 
+        /// <summary>
+        /// Store the name of the newly selected J2534 device.
+        /// </summary>
         private void j2534DeviceList_SelectedIndexChanged(object sender, EventArgs e)
         {
             this.J2534DeviceType = this.j2534DeviceList.SelectedItem?.ToString();
         }
 
+        /// <summary>
+        /// Test the user's selections.
+        /// </summary>
         private async void testButton_Click(object sender, EventArgs e)
         {
             Device device;

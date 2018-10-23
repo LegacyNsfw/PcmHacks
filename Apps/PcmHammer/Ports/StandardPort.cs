@@ -15,7 +15,11 @@ namespace PcmHacking
     {
         private string name;
         private SerialPort port;
-//        private Action<object, SerialDataReceivedEventArgs> dataReceivedCallback;
+
+        /// <summary>
+        /// This is an experiment that did not end well the first time, but I still think it should work.
+        /// </summary>
+        // private Action<object, SerialDataReceivedEventArgs> dataReceivedCallback;
 
         /// <summary>
         /// Constructor.
@@ -124,7 +128,7 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Serial data callback.
+        /// Serial data callback. Didn't work the first time, but I still have hopes...
         /// </summary>
         private void DataReceived(object sender, SerialDataReceivedEventArgs args)
         {

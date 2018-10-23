@@ -7,8 +7,14 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// Random bits of code that have no other home.
+    /// </summary>
     public static class Utility
     {
+        /// <summary>
+        /// The space character. Used for calls to string.Join().
+        /// </summary>
         private static readonly char[] space = new char[] { ' ' };
 
         /// <summary>
