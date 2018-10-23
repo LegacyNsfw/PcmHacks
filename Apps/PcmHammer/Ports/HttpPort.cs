@@ -8,21 +8,43 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
-    /// This class is just here to enable testing without any actual interface hardware.
+    /// <summary>
+    /// Early in the development process, we used this to test different types of hardware remotely.
     /// </summary>
     /// <remarks>
-    /// Eventually the Receive method should return simulated VPW responses.
+    /// This never supported anything beyond the get-properties operation, and wasn't
+    /// very reliable, but it helped us get going. 
+    /// 
+    /// The HTTP transaction model works well with send-then-recieve pairs, but not
+    /// with send-receieve-receiveagain, which is needed if an unexpected message appears
+    /// on the bus. So this would need some work to be reliable enough for full content
+    /// reads or writes.
     /// </remarks>
     class HttpPort : IPort
     {
+        /// <summary>
+        /// Port name for the DevicePicker form and internal comparisons.
+        /// </summary>
         public const string PortName = "Http Port";
 
+        /// <summary>
+        /// Access to the Results and Debug panes.
+        /// </summary>
         private ILogger logger;
 
+        /// <summary>
+        /// The URL to connect to.
+        /// </summary>
         private readonly Uri baseUri;
 
+        /// <summary>
+        /// The response message from the latest request.
+        /// </summary>
         private List<byte> responseBytes = new List<byte>();
 
+        /// <summary>
+        /// Used only to synchronize access to non-reentrant code.
+        /// </summary>
         private object sync = new object();
 
         /// <summary>

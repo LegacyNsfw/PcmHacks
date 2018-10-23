@@ -6,13 +6,40 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// Encapsulates the code to send a message and monitor the VPW bus until a response to that message is received.
+    /// </summary>
+    /// <remarks>
+    /// The VPW protocol allows modules to inject messages whenever they want, so
+    /// unexpected messages are common. After sending a message you can't assume
+    /// that the next message on the bus will be the response that you were hoping
+    /// to receive.
+    /// </remarks>
     public class Query<T>
     {
+        /// <summary>
+        /// The device to use to send the message.
+        /// </summary>
         private Device device;
+
+        /// <summary>
+        /// The code that will generate the outgoing message.
+        /// </summary>
         private Func<Message> generator;
+
+        /// <summary>
+        /// Code that will select the response from whatever VPW messages appear on the bus.
+        /// </summary>
         private Func<Message, Response<T>> filter;
+
+        /// <summary>
+        /// Provides access to the Results and Debug panes.
+        /// </summary>
         private ILogger logger;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public Query(Device device, Func<Message> generator, Func<Message, Response<T>> filter, ILogger logger)
         {
             this.device = device;
@@ -21,6 +48,9 @@ namespace PcmHacking
             this.logger = logger;
         }
 
+        /// <summary>
+        /// Send the message, wait for the response.
+        /// </summary>
         public async Task<Response<T>> Execute()
         {
             this.device.ClearMessageQueue();

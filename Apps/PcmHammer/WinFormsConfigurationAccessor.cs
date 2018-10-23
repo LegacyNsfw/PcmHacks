@@ -7,8 +7,14 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// Reads and writes the app.config file, to persist settings between app uses.
+    /// </summary>
     class WinFormsConfigurationAccessor : Configuration.ConfigurationAccessor
     {
+        /// <summary>
+        /// Create a configuration setting.
+        /// </summary>
         public override string Read(string key)
         {
             var configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
@@ -21,6 +27,9 @@ namespace PcmHacking
             return setting.Value;
         }
 
+        /// <summary>
+        /// Write a configuration setting.
+        /// </summary>
         public override void Write(string key, string value)
         {
             var configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);

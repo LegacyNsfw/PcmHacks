@@ -12,10 +12,21 @@ namespace PcmHacking
     /// </summary>
     public class ScanToolDevice : SerialDevice
     {
+        /// <summary>
+        /// Device type for use in the Device Picker dialog box, and for internal comparisons.
+        /// </summary>
         public const string DeviceType = "ObdLink or AllPro";
 
+        /// <summary>
+        /// Timeout periods vary depending on the current usage scenario.
+        /// This indicates which scenariow was configured most recently.
+        /// </summary>
         private TimeoutScenario currentTimeout = TimeoutScenario.Undefined;
 
+        /// <summary>
+        /// The device can cache the message header to speed up serial communications. 
+        /// To use that properly, we need to keep track of the cached header.
+        /// </summary>
         private string currentHeader = "unset";
 
         /// <summary>
@@ -132,7 +143,7 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Not yet implemented.
+        /// Set the amount of time that we'll wait for a message to arrive.
         /// </summary>
         public override async Task SetTimeout(TimeoutScenario scenario)
         {
@@ -437,6 +448,9 @@ namespace PcmHacking
             return true;
         }
 
+        /// <summary>
+        /// Discard any messages in the recevied-message queue.
+        /// </summary>
         public override void ClearMessageBuffer()
         {
             this.Port.DiscardBuffers();

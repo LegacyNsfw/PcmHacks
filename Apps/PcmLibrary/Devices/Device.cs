@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// What the code was doing when a timeout happened.
+    /// </summary>
     public enum TimeoutScenario
     {
         Undefined = 0,
@@ -12,10 +15,25 @@ namespace PcmHacking
         ReadMemoryBlock,
     }
 
+    /// <summary>
+    /// VPW can operate at two speeds. It is generally in standard (low speed) mode, but can switch to 4X (high speed).
+    /// </summary>
+    /// <remarks>
+    /// High speed is better whend reading the entire contents of the PCM.
+    /// Transitions to high speed must be negotiated, and any module that doesn't
+    /// want to switch can force the bus to stay at standard speed. Annoying.
+    /// </remarks>
     public enum VpwSpeed
     {
-        Standard, // 10.4 kbps
-        FourX, // 41.2 kbps
+        /// <summary>
+        /// 10.4 kpbs. This is the standard VPW speed.
+        /// </summary>
+        Standard,
+
+        /// <summary>
+        /// 41.2 kbps. This is the high VPW speed.
+        /// </summary>
+        FourX,
     }
 
     /// <summary>
@@ -27,14 +45,29 @@ namespace PcmHacking
     /// </summary>
     public abstract class Device : IDisposable
     {
+        /// <summary>
+        /// Provides access to the Results and Debug panes.
+        /// </summary>
         protected ILogger Logger { get; private set; }
 
+        /// <summary>
+        /// Maximum size of sent messages.
+        /// </summary>
         public int MaxSendSize { get; protected set; }
 
+        /// <summary>
+        /// Maximum size of received messages.
+        /// </summary>
         public int MaxReceiveSize { get; protected set; }
 
+        /// <summary>
+        /// Indicates whether or not the device supports 4X speed.
+        /// </summary>
         public bool Supports4X { get; protected set; }
 
+        /// <summary>
+        /// Number of messages recevied so far.
+        /// </summary>
         public int ReceivedMessageCount { get { return this.queue.Count; } }
 
         /// <summary>

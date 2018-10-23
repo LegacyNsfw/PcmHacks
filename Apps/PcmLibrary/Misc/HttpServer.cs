@@ -8,12 +8,34 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// Exposes a serial port over an HTTP connection.
+    /// </summary>
+    /// <remarks>
+    /// See the HttpPort class for more info.
+    /// This hasn't been used in a while, but it was useful in the beginning.
+    /// Not sure if it should be maintained, revived, or just eliminated.
+    /// </remarks>
     class HttpServer
     {
+        /// <summary>
+        /// Singleton.
+        /// </summary>
         private static HttpServer instance;
 
+        /// <summary>
+        /// Which local serial port to expose remotely.
+        /// </summary>
         private IPort port;
+
+        /// <summary>
+        /// Provides access to the Results and Debug panes.
+        /// </summary>
         private ILogger logger;
+
+        /// <summary>
+        /// Listens on the local HTTP port.
+        /// </summary>
         private HttpListener listener;
 
         /// <summary>

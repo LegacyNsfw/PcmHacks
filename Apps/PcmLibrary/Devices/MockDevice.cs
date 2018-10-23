@@ -12,18 +12,34 @@ namespace PcmHacking
     /// </summary>
     public class MockDevice : Device
     {
+        /// <summary>
+        /// Device ID string to use in the Device Picker form, and in interal device-type comparisons.
+        /// </summary>
         public const string DeviceType = "Mock Serial Device";
+
+        /// <summary>
+        /// The mock port.
+        /// </summary>
         private IPort port;
         
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public MockDevice(IPort port, ILogger logger) : base(logger)
         {
             this.port = port;
         }
 
+        /// <summary>
+        /// Not actually necessary for this device type, but since we need to implement IDisposable...
+        /// </summary>
         protected override void Dispose(bool disposing)
         {    
         }
         
+        /// <summary>
+        /// Initialize the device. It's just a no-op for this device type.
+        /// </summary>
         public override Task<bool> Initialize()
         {
             return Task.FromResult(true);
@@ -87,6 +103,9 @@ namespace PcmHacking
             return Task.FromResult(true);
         }
 
+        /// <summary>
+        /// Purse any messages in the incoming-message buffer.
+        /// </summary>
         public override void ClearMessageBuffer()
         {
             this.port.DiscardBuffers();

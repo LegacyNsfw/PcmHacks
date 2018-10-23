@@ -690,6 +690,9 @@ namespace PcmHacking
             this.device.ClearMessageQueue();
         }
 
+        /// <summary>
+        /// Try to read a block of PCM memory.
+        /// </summary>
         private async Task<bool> TryReadBlock(byte[] image, int length, int startAddress)
         {
             this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, length));
