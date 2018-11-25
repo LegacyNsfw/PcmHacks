@@ -62,29 +62,18 @@ namespace PcmHacking
 
                     logger.AddUserMessage("kernel uploaded to PCM succesfully. Waiting for it to respond...");
                 }
-                
-                await toolPresentNotifier.Notify();
-
-                for (int i = 0; i < 5; i++)
-                {
-                    if (!await this.TryWaitForKernel(5))
-                    {
-                        logger.AddUserMessage("Kernel is running.");
-                        return false;
-                    }
-                }
 
                 await toolPresentNotifier.Notify();
-
-//                if (!await this.TryFlashUnlock())
-                {
-//                    return false;
-                }
 
                 try
                 {
-//                    await toolPresentNotifier.Notify();
-//                    this.WriteLoop();
+                    if (!await this.TryFlashUnlockAndErase())
+                    {
+                        return false;
+                    }
+
+                    //                    await toolPresentNotifier.Notify();
+                    //                    this.WriteLoop();
                 }
                 finally
                 {
@@ -118,14 +107,37 @@ namespace PcmHacking
                 false);
         }
 
-        private async Task<bool> TryFlashUnlock()
+        private async Task<bool> TryFlashUnlockAndErase()
         {
-            return await this.SendMessageValidateResponse(
-                this.messageFactory.CreateFlashUnlockRequest(),
-                this.messageParser.ParseFlashUnlockResponse,
-                "flash unlock request",
-                "Flash memory unlocked.",
-                "Unable to unlock flash memory.");
+            await this.device.SetTimeout(TimeoutScenario.ReadMemoryBlock);
+
+            for (int sendAttempt = 1; sendAttempt <= 5; sendAttempt++)
+            {
+                // These two messages must be sent in quick succession.
+                await this.device.SendMessage(this.messageFactory.CreateFlashUnlockRequest());
+                await this.device.SendMessage(this.messageFactory.CreateCalibrationEraseRequest());
+
+                for (int receiveAttempt = 1; receiveAttempt <= 5; receiveAttempt++)
+                {
+                    Message message = await this.device.ReceiveMessage();
+                    if (message == null)
+                    {
+                        continue;
+                    }
+
+                    Response<bool> response = this.messageParser.ParseFlashKernelSuccessResponse(message);
+                    if (response.Status != ResponseStatus.Success)
+                    {
+                        this.logger.AddDebugMessage("Ignoring message: " + response.Status);
+                        continue;
+                    }
+
+                    this.logger.AddDebugMessage("Found response, " + (response.Value ? "succeeded." : "failed."));
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private async Task<bool> TryFlashLock()
@@ -157,8 +169,6 @@ namespace PcmHacking
             int maxAttempts = 5,
             bool pingKernel = true)
         {
-            // TODO : make a few attempts before giving up.
-            // Disabled retries to investigate / confirm that PCM is rebooting after kernel upload.
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
                 this.logger.AddUserMessage("Sending " + messageDescription);

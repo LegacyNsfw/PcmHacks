@@ -343,6 +343,11 @@ namespace PcmHacking
             return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA1 });
         }
 
+        public Message CreateCalibrationEraseRequest()
+        {
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA4 });
+        }
+
         public Message CreateFlashLockRequest()
         {
             return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA0 });   

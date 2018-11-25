@@ -381,10 +381,10 @@ namespace PcmHacking
 
         public Response<bool> ParseKernelPingResponse(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0);
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x80);
         }
 
-        public Response<bool> ParseFlashUnlockResponse(Message message)
+        public Response<bool> ParseFlashKernelSuccessResponse(Message message)
         {
             return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x60);
         }
