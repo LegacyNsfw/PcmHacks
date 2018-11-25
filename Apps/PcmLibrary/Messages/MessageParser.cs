@@ -381,17 +381,22 @@ namespace PcmHacking
 
         public Response<bool> ParseKernelPingResponse(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6C, 0x76, 0xE0);
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0);
         }
 
         public Response<bool> ParseFlashUnlockResponse(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6C, 0x76, 0xE0, 0x60);
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x60);
         }
 
         public Response<bool> ParseFlashLockResponse(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6C, 0x76, 0xE0, 0x80);
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x80);
+        }
+
+        public Response<bool> ParseWriteKernelResetResponse(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0xAA);
         }
 
         /// <summary>
@@ -410,9 +415,11 @@ namespace PcmHacking
                     for(int index = 0; index < data.Length; index++)
                     {
                         const int headBytes = 4;
-                        if (message.GetBytes().Length > data.Length + headBytes)
+                        int actualLength = actual.Length;
+                        int expectedLength = data.Length + headBytes;
+                        if (actualLength >= expectedLength)
                         {
-                            if (message.GetBytes()[headBytes+index] == data[index])
+                            if (actual[headBytes+index] == data[index])
                             {
                                 continue;
                             }

@@ -13,79 +13,84 @@ namespace PcmHacking
         /// <summary>
         /// Replace the full contents of the PCM.
         /// </summary>
-        public async Task<bool> WriteContents(Stream stream)
+        public async Task<bool> WriteContents(bool kernelRunning, Stream stream)
         {
             try
             {
                 // TODO: pass one in.
                 CancellationToken cancellationToken = new CancellationToken();
 
-                this.device.ClearMessageQueue();
-
                 // This must precede the switch to 4X.
                 ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
                 await toolPresentNotifier.Notify();
 
-                // switch to 4x, if possible. But continue either way.
-                // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
+                this.device.ClearMessageQueue();
+
+                if (!kernelRunning)
                 {
-                    this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
-                    return false;
+                    // switch to 4x, if possible. But continue either way.
+                    // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
+                    if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
+                    {
+                        this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
+                        return false;
+                    }
+
+                    await toolPresentNotifier.Notify();
+
+                    Response<byte[]> response = await LoadKernelFromFile("write-kernel.bin");
+                    if (response.Status != ResponseStatus.Success)
+                    {
+                        logger.AddUserMessage("Failed to load kernel from file.");
+                        return false;
+                    }
+
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return false;
+                    }
+
+                    await toolPresentNotifier.Notify();
+
+                    // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
+                    if (!await PCMExecute(response.Value, 0xFF8300, cancellationToken))
+                    {
+                        logger.AddUserMessage("Failed to upload kernel to PCM");
+
+                        return false;
+                    }
+
+                    logger.AddUserMessage("kernel uploaded to PCM succesfully. Waiting for it to respond...");
                 }
                 
                 await toolPresentNotifier.Notify();
 
-                Response<byte[]> response = await LoadKernelFromFile("write-kernel.bin");
-                if (response.Status != ResponseStatus.Success)
+                for (int i = 0; i < 5; i++)
                 {
-                    logger.AddUserMessage("Failed to load kernel from file.");
-                    return false;
-                }
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return false;
+                    if (!await this.TryWaitForKernel(5))
+                    {
+                        logger.AddUserMessage("Kernel is running.");
+                        return false;
+                    }
                 }
 
                 await toolPresentNotifier.Notify();
 
-                // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
-                if (!await PCMExecute(response.Value, 0xFF9150, cancellationToken))
+//                if (!await this.TryFlashUnlock())
                 {
-                    logger.AddUserMessage("Failed to upload kernel to PCM");
-
-                    return false;
-                }
-
-                logger.AddUserMessage("kernel uploaded to PCM succesfully. Waiting for it to respond...");
-
-                await toolPresentNotifier.Notify();
-
-                if (!await this.TryWaitForKernel())
-                {
-                    logger.AddUserMessage("Kernel did respond in time.");
-                    return false;
-                }
-
-                await toolPresentNotifier.Notify();
-
-                if (!await this.TryFlashUnlock())
-                {
-                    return false;
+//                    return false;
                 }
 
                 try
                 {
-                    await toolPresentNotifier.Notify();
-                    //this.WriteLoop();
+//                    await toolPresentNotifier.Notify();
+//                    this.WriteLoop();
                 }
                 finally
                 {
                     await this.TryFlashLock();
-                }               
-                
-                await this.Cleanup();
+                }
+
                 return true;
             }
             catch (Exception exception)
@@ -96,19 +101,21 @@ namespace PcmHacking
             }
             finally
             {
-                // Sending the exit command at both speeds and revert to 1x.
+                await TryWriteKernelReset();
                 await this.Cleanup();
             }
         }
 
-        private async Task<bool> TryWaitForKernel()
+        public async Task<bool> TryWaitForKernel(int maxAttempts)
         {
             return await this.SendMessageValidateResponse(
                 this.messageFactory.CreateKernelPing(),
                 this.messageParser.ParseKernelPingResponse,
                 "kernel ping",
                 "Kernel is responding.",
-                "No response received from the flash kernel.");
+                "No response received from the flash kernel.",
+                maxAttempts,
+                false);
         }
 
         private async Task<bool> TryFlashUnlock()
@@ -131,30 +138,48 @@ namespace PcmHacking
                 "Unable to lock flash memory.");
         }
 
-
+        private async Task<bool> TryWriteKernelReset()
+        {
+            return await this.SendMessageValidateResponse(
+                this.messageFactory.CreateWriteKernelResetRequest(),
+                this.messageParser.ParseWriteKernelResetResponse,
+                "flash-kernel PCM reset request",
+                "PCM reset.",
+                "Unable to reset the PCM.");
+        }
 
         private async Task<bool> SendMessageValidateResponse(
             Message message,
             Func<Message, Response<bool>> filter,
             string messageDescription,
             string successMessage,
-            string failureMessage)
+            string failureMessage,
+            int maxAttempts = 5,
+            bool pingKernel = true)
         {
             // TODO : make a few attempts before giving up.
             // Disabled retries to investigate / confirm that PCM is rebooting after kernel upload.
-            for (int attempt = 1; attempt <= 1; attempt++)
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
                 this.logger.AddUserMessage("Sending " + messageDescription);
 
-                if (!await this.TrySendMessage(message, messageDescription))
+                if (!await this.TrySendMessage(message, messageDescription, maxAttempts))
                 {
                     this.logger.AddUserMessage("Unable to send " + messageDescription);
+                    if (pingKernel)
+                    {
+                        await this.TryWaitForKernel(1);
+                    }
                     continue;
                 }
 
-                if (!await this.WaitForSuccess(this.messageParser.ParseFlashUnlockResponse, 2))
+                if (!await this.WaitForSuccess(filter, 10))
                 {
-                    this.logger.AddUserMessage("No flash " + messageDescription + " response received.");
+                    this.logger.AddUserMessage("No " + messageDescription + " response received.");
+                    if (pingKernel)
+                    {
+                        await this.TryWaitForKernel(1);
+                    }
                     continue;
                 }
 
@@ -163,10 +188,15 @@ namespace PcmHacking
             }
 
             this.logger.AddUserMessage(failureMessage);
+            if (pingKernel)
+            {
+                await this.TryWaitForKernel(1);
+            }
             return false;
         }
+        
         /*
-        private void WriteLoop()
+        private async void WriteLoop()
         {
                         await this.device.SetTimeout(TimeoutScenario.ReadMemoryBlock);
 

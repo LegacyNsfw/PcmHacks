@@ -347,5 +347,10 @@ namespace PcmHacking
         {
             return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA0 });   
         }
+
+        public Message CreateWriteKernelResetRequest()
+        {
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA3 });
+        }
     }
 }

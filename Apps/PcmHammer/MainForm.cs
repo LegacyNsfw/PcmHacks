@@ -432,7 +432,7 @@ namespace PcmHacking
         private void CancelButton_Click(object sender, EventArgs e)
         {
             this.AddUserMessage("Cancel button clicked.");
-            this.cancellationTokenSource.Cancel();
+            this.cancellationTokenSource?.Cancel();
         }
 
         /// <summary>
@@ -651,29 +651,41 @@ namespace PcmHacking
                     return;
                 }
 
-                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
-                if (osidResponse.Status != ResponseStatus.Success)
+                this.cancellationTokenSource = new CancellationTokenSource();
+
+                bool kernelRunning = false;
+                if (await this.vehicle.TryWaitForKernel(1))
                 {
-                    this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
-                    return;
+                    kernelRunning = true;
                 }
-
-                PcmInfo info = new PcmInfo(osidResponse.Value);
-
-                bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                if (!unlocked)
+                else
                 {
-                    this.AddUserMessage("Unlock was not successful.");
-                    return;
-                }
 
-                this.AddUserMessage("Unlock succeeded.");
+                    Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                    if (osidResponse.Status != ResponseStatus.Success)
+                    {
+                        this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+
+                        return;
+                    }
+
+                    PcmInfo info = new PcmInfo(osidResponse.Value);
+
+                    bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                    if (!unlocked)
+                    {
+                        this.AddUserMessage("Unlock was not successful.");
+                        return;
+                    }
+
+                    this.AddUserMessage("Unlock succeeded.");
+                }
 
                 try
                 {
                     using (Stream stream = File.OpenRead(path))
                     {
-                        await this.vehicle.WriteContents(stream);
+                        await this.vehicle.WriteContents(kernelRunning, stream);
                     }
                 }
                 catch (IOException exception)

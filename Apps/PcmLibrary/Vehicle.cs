@@ -208,9 +208,9 @@ namespace PcmHacking
         /// <summary>
         /// Try to send a message, retrying if necessary.
         /// </summary
-        private async Task<bool> TrySendMessage(Message message, string description)
+        private async Task<bool> TrySendMessage(Message message, string description, int maxAttempts = MaxSendAttempts)
         {
-            for (int attempt = 1; attempt <= MaxSendAttempts; attempt++)
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
                 if (await this.device.SendMessage(message))
                 {

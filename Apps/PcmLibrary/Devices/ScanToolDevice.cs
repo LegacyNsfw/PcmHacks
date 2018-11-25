@@ -111,7 +111,7 @@ namespace PcmHacking
                     this.Logger.AddUserMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
                     this.Logger.AddUserMessage("All Pro firmware: " + await this.SendRequest("AT @1"));          // firmware check
 
-                    this.Supports4X = true;
+//                    this.Supports4X = true;
                     this.MaxSendSize = 2048 + 12;
                     this.MaxReceiveSize = 2048 + 12;
                 }
