@@ -249,9 +249,9 @@ namespace PcmHacking
         /// <summary>
         /// Read messages from the device, ignoring irrelevant messages.
         /// </summary>
-        private async Task<bool> WaitForSuccess(Func<Message, Response<bool>> filter)
+        private async Task<bool> WaitForSuccess(Func<Message, Response<bool>> filter, int attempts = MaxReceiveAttempts)
         {
-            for(int attempt = 1; attempt<=MaxReceiveAttempts; attempt++)
+            for(int attempt = 1; attempt<=attempts; attempt++)
             {
                 Message message = await this.device.ReceiveMessage();
                 if(message == null)

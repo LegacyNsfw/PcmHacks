@@ -140,7 +140,9 @@ namespace PcmHacking
             string successMessage,
             string failureMessage)
         {
-            for (int attempt = 1; attempt <= 5; attempt++)
+            // TODO : make a few attempts before giving up.
+            // Disabled retries to investigate / confirm that PCM is rebooting after kernel upload.
+            for (int attempt = 1; attempt <= 1; attempt++)
             {
                 this.logger.AddUserMessage("Sending " + messageDescription);
 
@@ -150,7 +152,7 @@ namespace PcmHacking
                     continue;
                 }
 
-                if (!await this.WaitForSuccess(this.messageParser.ParseFlashUnlockResponse))
+                if (!await this.WaitForSuccess(this.messageParser.ParseFlashUnlockResponse, 2))
                 {
                     this.logger.AddUserMessage("No flash " + messageDescription + " response received.");
                     continue;
