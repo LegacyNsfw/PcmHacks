@@ -47,7 +47,9 @@ namespace PcmHacking
                 {
                     return false;
                 }
-                
+
+                await toolPresentNotifier.Notify();
+
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
                 if (!await PCMExecute(response.Value, 0xFF9150, cancellationToken))
                 {
@@ -60,7 +62,7 @@ namespace PcmHacking
 
                 await toolPresentNotifier.Notify();
 
-                if (!this.TryWaitForKernel())
+                if (!await this.TryWaitForKernel())
                 {
                     logger.AddUserMessage("Kernel did respond in time.");
                     return false;
@@ -68,7 +70,7 @@ namespace PcmHacking
 
                 await toolPresentNotifier.Notify();
 
-                if (!this.TryFlashUnlock())
+                if (!await this.TryFlashUnlock())
                 {
                     return false;
                 }
@@ -76,11 +78,11 @@ namespace PcmHacking
                 try
                 {
                     await toolPresentNotifier.Notify();
-                    this.WriteLoop();
+                    //this.WriteLoop();
                 }
                 finally
                 {
-                    this.FlashLock();
+                    await this.TryFlashLock();
                 }               
                 
                 await this.Cleanup();
@@ -99,13 +101,74 @@ namespace PcmHacking
             }
         }
 
-        private bool TryWaitForKernel()
+        private async Task<bool> TryWaitForKernel()
         {
-            // kernelStatus(0x80)
+            return await this.SendMessageValidateResponse(
+                this.messageFactory.CreateKernelPing(),
+                this.messageParser.ParseKernelPingResponse,
+                "kernel ping",
+                "Kernel is responding.",
+                "No response received from the flash kernel.");
         }
 
+        private async Task<bool> TryFlashUnlock()
+        {
+            return await this.SendMessageValidateResponse(
+                this.messageFactory.CreateFlashUnlockRequest(),
+                this.messageParser.ParseFlashUnlockResponse,
+                "flash unlock request",
+                "Flash memory unlocked.",
+                "Unable to unlock flash memory.");
+        }
+
+        private async Task<bool> TryFlashLock()
+        {
+            return await this.SendMessageValidateResponse(
+                this.messageFactory.CreateFlashLockRequest(),
+                this.messageParser.ParseFlashLockResponse,
+                "flash lock request",
+                "Flash memory locked.",
+                "Unable to lock flash memory.");
+        }
+
+
+
+        private async Task<bool> SendMessageValidateResponse(
+            Message message,
+            Func<Message, Response<bool>> filter,
+            string messageDescription,
+            string successMessage,
+            string failureMessage)
+        {
+            for (int attempt = 1; attempt <= 5; attempt++)
+            {
+                this.logger.AddUserMessage("Sending " + messageDescription);
+
+                if (!await this.TrySendMessage(message, messageDescription))
+                {
+                    this.logger.AddUserMessage("Unable to send " + messageDescription);
+                    continue;
+                }
+
+                if (!await this.WaitForSuccess(this.messageParser.ParseFlashUnlockResponse))
+                {
+                    this.logger.AddUserMessage("No flash " + messageDescription + " response received.");
+                    continue;
+                }
+
+                this.logger.AddUserMessage(successMessage);
+                return true;
+            }
+
+            this.logger.AddUserMessage(failureMessage);
+            return false;
+        }
+        /*
         private void WriteLoop()
         {
+                        await this.device.SetTimeout(TimeoutScenario.ReadMemoryBlock);
+
+
                     labelstatus1.Text = ("Erasing");
                     log("Erasing Calibration Area");
                     FlashEraseCal();
@@ -175,5 +238,6 @@ namespace PcmHacking
                 log("Turn off ignition to complete the process and reset DTCs");
             }
         }
+        */
     }
 }

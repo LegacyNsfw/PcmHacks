@@ -262,7 +262,7 @@ namespace PcmHacking
                 Response<bool> response = filter(message);
                 if (response.Status != ResponseStatus.Success)
                 {
-                    this.logger.AddDebugMessage("Ignoring unrelated message.");
+                    this.logger.AddDebugMessage("Ignoring message: " + response.Status);
                     continue;
                 }
 
