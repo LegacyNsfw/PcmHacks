@@ -13,6 +13,7 @@ namespace PcmHacking
         ReadProperty,
         SendKernel,
         ReadMemoryBlock,
+        Maximum,
     }
 
     /// <summary>
@@ -236,6 +237,9 @@ namespace PcmHacking
                 case TimeoutScenario.SendKernel:
                     packetSize = this.MaxSendSize + 20;
                     break;
+
+                case TimeoutScenario.Maximum:
+                    return 0xFF * 4; 
 
                 default:
                     throw new NotImplementedException("Unknown timeout scenario " + scenario);

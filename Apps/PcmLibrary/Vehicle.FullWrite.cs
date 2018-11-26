@@ -122,14 +122,15 @@ namespace PcmHacking
 
         private async Task<bool> TryFlashUnlockAndErase()
         {
-            await this.device.SetTimeout(TimeoutScenario.ReadMemoryBlock);
+            await this.device.SetTimeout(TimeoutScenario.Maximum);
 
             // These two messages must be sent in quick succession.
             // The responses may be delayed, which makes acknowledgement hard.
 
-            this.logger.AddUserMessage("Unlocking and erasing calibration.");
+//            this.logger.AddUserMessage("Unlocking and erasing calibration.");
             await this.device.SendMessage(this.messageFactory.CreateFlashUnlockRequest());
             await this.device.SendMessage(this.messageFactory.CreateCalibrationEraseRequest());
+            // await this.device.SendMessage(new Message(System.Text.Encoding.ASCII.GetBytes("AT MA")));
 
             // Just assume success for now?
             return true;
@@ -242,7 +243,7 @@ namespace PcmHacking
 
                 // the kernel doesn't need this message, but it gets the interface ready to hear the data request
                 this.logger.AddUserMessage("Waiting for data request.");
-                await this.device.SendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE2 }));
+                await this.device.SendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36 }));
 
                 Message incoming = await this.device.ReceiveMessage();
                 if (incoming == null)

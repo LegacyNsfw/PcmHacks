@@ -112,8 +112,8 @@ namespace PcmHacking
                     this.Logger.AddUserMessage("All Pro firmware: " + await this.SendRequest("AT @1"));          // firmware check
 
 //                    this.Supports4X = true;
-                    this.MaxSendSize = 2048 + 12;
-                    this.MaxReceiveSize = 2048 + 12;
+//                    this.MaxSendSize = 2048 + 12;
+//                    this.MaxReceiveSize = 2048 + 12;
                 }
 
                 string voltage = await this.SendRequest("AT RV");             // Get Voltage
@@ -153,10 +153,7 @@ namespace PcmHacking
             }
 
             int milliseconds = this.GetVpwTimeoutMilliseconds(scenario);
-
-            // Adding some more just in case...
-            milliseconds += 20;
-
+            
             this.Logger.AddDebugMessage("Setting timeout for " + scenario + ", " + milliseconds.ToString() + " ms.");
 
             // The port timeout needs to be considerably longer than the device timeout,
@@ -171,8 +168,8 @@ namespace PcmHacking
             // I briefly tried hard-coding timeout values for the AT ST command,
             // but that's a recipe for failure. If the port timeout is shorter
             // than the device timeout, reads will consistently fail.
-            int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 99);
-            string value = parameter.ToString("00");
+            int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 255);
+            string value = parameter.ToString("X2");
             await this.SendAndVerify("AT ST " + value, "OK");
         }
 
@@ -230,13 +227,13 @@ namespace PcmHacking
 
                 if (this.ReceivedMessageCount == 0)
                 {
-                    await this.ReceiveViaMonitorMode();
+                   // await this.ReceiveViaMonitorMode();
                 }
             }
             catch (TimeoutException)
             {
                 this.Logger.AddDebugMessage("Timeout during receive.");
-                await this.ReceiveViaMonitorMode();
+                // await this.ReceiveViaMonitorMode();
             }
         }
 
@@ -283,47 +280,41 @@ namespace PcmHacking
                 return true;
             }
 
-            // Probably not a good idea?
-            /*
-            if (rawResponse == "NO DATA")
+            string[] segments = rawResponse.Split('<');
+            foreach (string segment in segments)
             {
-                this.Logger.AddDebugMessage("Received \"NO DATA\"");
-                return true;
-            }
-            */
-
-            if (rawResponse.IsHex())
-            {
-                string[] hexResponses = rawResponse.Split(' ');
-                foreach (string singleHexResponse in hexResponses)
+                if (segment.IsHex())
                 {
-                    byte[] deviceResponseBytes = singleHexResponse.ToBytes();
-                    if (deviceResponseBytes.Length > 0)
+                    string[] hexResponses = segment.Split(' ');
+                    foreach (string singleHexResponse in hexResponses)
                     {
-                        Array.Resize(ref deviceResponseBytes, deviceResponseBytes.Length - 1); // remove checksum byte
+                        byte[] deviceResponseBytes = singleHexResponse.ToBytes();
+                        if (deviceResponseBytes.Length > 0)
+                        {
+                            Array.Resize(ref deviceResponseBytes, deviceResponseBytes.Length - 1); // remove checksum byte
+                        }
+
+                        this.Logger.AddDebugMessage("RX: " + deviceResponseBytes.ToHex());
+
+                        Message response = new Message(deviceResponseBytes);
+                        this.Enqueue(response);
                     }
 
-                    this.Logger.AddDebugMessage("RX: " + deviceResponseBytes.ToHex());
-
-                    Message response = new Message(deviceResponseBytes);
-                    this.Enqueue(response);
+                    return true;
                 }
 
-                return true;
+                if (segment.EndsWith("OK"))
+                {
+                    this.Logger.AddDebugMessage("WTF: Response not valid, but ends with OK.");
+                    return true;
+                }
+
+                this.Logger.AddDebugMessage(
+                    string.Format(
+                        "Unexpected response to {0}: {1}",
+                        context,
+                        segment));
             }
-
-            if (rawResponse.EndsWith("OK"))
-            {
-                this.Logger.AddDebugMessage("WTF: Response not valid, but ends with OK.");
-                return true;
-            }
-
-            this.Logger.AddDebugMessage(
-                string.Format(
-                    "Unexpected response to {0}: {1}",
-                    context,
-                    rawResponse));
-
 
             return false;
         }
