@@ -46,7 +46,7 @@ namespace PcmHacking
         /// This class knows how to parse the messages that come in from the PCM.
         /// </summary>
         private MessageParser messageParser;
-
+        
         /// <summary>
         /// This is how we send user-friendly status messages and developer-oriented debug messages to the UI.
         /// </summary>
@@ -110,6 +110,28 @@ namespace PcmHacking
         public async Task<bool> ResetConnection()
         {
             return await this.device.Initialize();
+        }
+
+        /// <summary>
+        /// Note that this has only been confirmed to work with ObdLink ScanTool devices.
+        /// AllPro doesn't get the reply for some reason.
+        /// Might work with AVT or J-tool, that hasn't been tested.
+        /// </summary>
+        public async Task<bool> IsInRecoveryMode()
+        {
+            await this.TrySendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x62 }), "recovery query");
+            Message response = await this.device.ReceiveMessage();
+            if (response == null)
+            {
+                return false;
+            }
+            
+            if (this.messageParser.ParseRecoveryModeBroadcast(response).Value == true)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

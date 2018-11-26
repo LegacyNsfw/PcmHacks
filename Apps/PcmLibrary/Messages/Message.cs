@@ -75,7 +75,7 @@ namespace PcmHacking
         /// <remarks>
         /// This is the most valuable thing - it makes messages easy to view in the debugger.
         /// </remarks>
-        public string GetString()
+        public override string ToString()
         {
             return string.Join(" ", Array.ConvertAll(message, b => b.ToString("X2")));
         }

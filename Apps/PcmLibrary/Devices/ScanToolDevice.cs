@@ -227,10 +227,41 @@ namespace PcmHacking
             {
                 string response = await this.ReadELMLine();
                 this.ProcessResponse(response, "receive");
+
+                if (this.ReceivedMessageCount == 0)
+                {
+                    await this.ReceiveViaMonitorMode();
+                }
             }
             catch (TimeoutException)
             {
                 this.Logger.AddDebugMessage("Timeout during receive.");
+                await this.ReceiveViaMonitorMode();
+            }
+        }
+
+        private async Task ReceiveViaMonitorMode()
+        {
+            try
+            {
+                // The code below is currently only supported by Scantool (not AllPro).
+                string monitorResponse = await this.SendRequest("AT MA");
+                this.Logger.AddDebugMessage("Response to AT MA 1: " + monitorResponse);
+
+                if (monitorResponse != ">?")
+                {
+                    string response = await this.ReadELMLine();
+                    this.ProcessResponse(monitorResponse, "receive via monitor");
+                }
+            }
+            catch(TimeoutException)
+            {
+                this.Logger.AddDebugMessage("Timeout during receive via monitor mode.");
+            }
+            finally
+            { 
+                string stopMonitorResponse = await this.SendRequest("AT MA");
+                this.Logger.AddDebugMessage("Response to AT MA 2: " + stopMonitorResponse);
             }
         }
 
@@ -267,7 +298,11 @@ namespace PcmHacking
                 foreach (string singleHexResponse in hexResponses)
                 {
                     byte[] deviceResponseBytes = singleHexResponse.ToBytes();
-                    Array.Resize(ref deviceResponseBytes, deviceResponseBytes.Length - 1); // remove checksum byte
+                    if (deviceResponseBytes.Length > 0)
+                    {
+                        Array.Resize(ref deviceResponseBytes, deviceResponseBytes.Length - 1); // remove checksum byte
+                    }
+
                     this.Logger.AddDebugMessage("RX: " + deviceResponseBytes.ToHex());
 
                     Message response = new Message(deviceResponseBytes);

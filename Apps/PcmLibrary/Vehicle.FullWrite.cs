@@ -13,13 +13,18 @@ namespace PcmHacking
         /// <summary>
         /// Replace the full contents of the PCM.
         /// </summary>
-        public async Task<bool> WriteContents(bool kernelRunning, Stream stream)
+        public async Task<bool> WriteContents(bool kernelRunning, bool recoveryMode, CancellationToken cancellationToken, Stream stream)
         {
+            byte[] image = new byte[stream.Length];
+            int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
+            if (bytesRead != stream.Length)
+            {
+                this.logger.AddUserMessage("Unable to read input file.");
+                return false;
+            }
+
             try
             {
-                // TODO: pass one in.
-                CancellationToken cancellationToken = new CancellationToken();
-
                 // This must precede the switch to 4X.
                 ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
                 await toolPresentNotifier.Notify();
@@ -60,24 +65,30 @@ namespace PcmHacking
                         return false;
                     }
 
-                    logger.AddUserMessage("kernel uploaded to PCM succesfully. Waiting for it to respond...");
+                    await toolPresentNotifier.Notify();
+
+                    logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
                 }
-
-                await toolPresentNotifier.Notify();
-
-                try
+                
+                // TryWaitForKernel will log user messages.
+                if (await this.TryWaitForKernel(5))
                 {
-                    if (!await this.TryFlashUnlockAndErase())
+                    await toolPresentNotifier.Notify();
+
+                    try
                     {
-                        return false;
-                    }
+                        if (!await this.TryFlashUnlockAndErase())
+                        {
+                            return false;
+                        }
 
-                    //                    await toolPresentNotifier.Notify();
-                    //                    this.WriteLoop();
-                }
-                finally
-                {
-                    await this.TryFlashLock();
+//                        await toolPresentNotifier.Notify();
+                        await this.WriteLoop(image, toolPresentNotifier, cancellationToken);
+                    }
+                    finally
+                    {
+                        await this.TryFlashLock();
+                    }
                 }
 
                 return true;
@@ -97,6 +108,8 @@ namespace PcmHacking
 
         public async Task<bool> TryWaitForKernel(int maxAttempts)
         {
+            logger.AddUserMessage("Waiting for kernel to respond.");
+
             return await this.SendMessageValidateResponse(
                 this.messageFactory.CreateKernelPing(),
                 this.messageParser.ParseKernelPingResponse,
@@ -111,6 +124,17 @@ namespace PcmHacking
         {
             await this.device.SetTimeout(TimeoutScenario.ReadMemoryBlock);
 
+            // These two messages must be sent in quick succession.
+            // The responses may be delayed, which makes acknowledgement hard.
+
+            this.logger.AddUserMessage("Unlocking and erasing calibration.");
+            await this.device.SendMessage(this.messageFactory.CreateFlashUnlockRequest());
+            await this.device.SendMessage(this.messageFactory.CreateCalibrationEraseRequest());
+
+            // Just assume success for now?
+            return true;
+
+            /*
             for (int sendAttempt = 1; sendAttempt <= 5; sendAttempt++)
             {
                 // These two messages must be sent in quick succession.
@@ -136,8 +160,8 @@ namespace PcmHacking
                     return true;
                 }
             }
+            */
 
-            return false;
         }
 
         private async Task<bool> TryFlashLock()
@@ -204,10 +228,84 @@ namespace PcmHacking
             }
             return false;
         }
-        
-        /*
-        private async void WriteLoop()
+
+
+        private async Task WriteLoop(byte[] image, ToolPresentNotifier toolPresentNotifier, CancellationToken cancellationToken)
         {
+            for (int iterations = 1; iterations < 1000; iterations++)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    this.logger.AddUserMessage("Canceling operation.");
+                    return;
+                }
+
+                // the kernel doesn't need this message, but it gets the interface ready to hear the data request
+                this.logger.AddUserMessage("Waiting for data request.");
+                await this.device.SendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE2 }));
+
+                Message incoming = await this.device.ReceiveMessage();
+                if (incoming == null)
+                {
+                    this.logger.AddDebugMessage("No data request received.");
+                    continue;
+                }
+
+                if (this.messageParser.ParseRecoveryModeBroadcast(incoming).Value == true)
+                {
+                    this.logger.AddUserMessage("PCM has reverted to recovery mode.");
+                    return;
+                }
+
+                Response<bool> completionResponse = this.messageParser.ParseWriteKernelFlashComplete(incoming);
+                if (completionResponse.Value)
+                {
+                    this.logger.AddUserMessage("Flash complete");
+                    return;
+                }
+
+                int length;
+                int address;
+                Response<bool> request = this.messageParser.ParseWriteKernelDataRequest(incoming, out length, out address);
+                if (request.Value != true)
+                {
+                    this.logger.AddDebugMessage("That was not a data request. " + request.Status.ToString());
+                    continue;
+                }
+
+                byte[] bytes = new byte[12 + length];
+                var header = new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE2 };
+                header.CopyTo(bytes, 0);
+                bytes[5] = (byte)(length & 0xFF00 >> 8);
+                bytes[6] = (byte)(length & 0xFF);
+                bytes[7] = (byte)(address & 0xFF0000 >> 16);
+                bytes[8] = (byte)(address & 0xFF00 >> 8);
+                bytes[9] = (byte)(address & 0xFF);
+
+                ushort sum = 0;
+                for (int index = 0; index < length; index++)
+                {
+                    byte b = image[index + address];
+                    bytes[index + 10] = b;
+                    sum += (ushort)b;
+                }
+
+                Message dataResponse = new Message(bytes);
+
+                for (int sendAttempt = 1; sendAttempt <= 5; sendAttempt++)
+                {
+                    if (await this.device.SendMessage(dataResponse))
+                    {
+                        this.logger.AddDebugMessage("Data sent.");
+                        break;
+                    }
+
+                    this.logger.AddDebugMessage("Unable to send data, trying again.");
+                }
+            }
+        }
+
+            /*
                         await this.device.SetTimeout(TimeoutScenario.ReadMemoryBlock);
 
 

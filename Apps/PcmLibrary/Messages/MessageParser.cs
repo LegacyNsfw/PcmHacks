@@ -379,6 +379,11 @@ namespace PcmHacking
             return this.DoSimpleValidation(message, 0x6C, 0x34);
         }
 
+        public Response<bool> ParseRecoveryModeBroadcast(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6C, 0x62, 0x01);
+        }
+
         public Response<bool> ParseKernelPingResponse(Message message)
         {
             return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x80);
@@ -397,6 +402,33 @@ namespace PcmHacking
         public Response<bool> ParseWriteKernelResetResponse(Message message)
         {
             return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0xAA);
+        }
+
+        public Response<bool> ParseWriteKernelDataRequest(Message message, out int length, out int address)
+        {
+            length = 0;
+            address = 0;
+
+            Response<bool> result = this.DoSimpleValidation(message, 0x6C, 0x36, 0xE2);
+
+            if (result.Status != ResponseStatus.Success)
+            {
+                return result;
+            }
+
+            byte[] bytes = message.GetBytes();
+            length = bytes[5] << 8;
+            length |= bytes[6];
+            address = bytes[7] << 16;
+            address |= bytes[8] << 8;
+            address |= bytes[9];
+
+            return Response.Create(ResponseStatus.Success, true);
+        }
+
+        public Response<bool> ParseWriteKernelFlashComplete(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6c, 0x36, 0xE0, 0x68);
         }
 
         /// <summary>

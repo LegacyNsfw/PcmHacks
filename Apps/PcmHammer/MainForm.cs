@@ -514,14 +514,14 @@ namespace PcmHacking
                     this.cancelButton.Enabled = true;
                 });
 
-                this.cancellationTokenSource = new CancellationTokenSource();
-
                 if (this.vehicle == null)
                 {
                     // This shouldn't be possible - it would mean the buttons 
                     // were enabled when they shouldn't be.
                     return;
                 }
+
+                this.cancellationTokenSource = new CancellationTokenSource();
 
                 DelayDialogBox dialogBox = new DelayDialogBox();
                 DialogResult dialogResult = dialogBox.ShowDialog();
@@ -560,7 +560,7 @@ namespace PcmHacking
 
                 this.AddUserMessage("Unlock succeeded.");
 
-                if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                if (cancellationTokenSource.Token.IsCancellationRequested)
                 {
                     return;
                 }
@@ -618,9 +618,7 @@ namespace PcmHacking
                     this.cancelButton.Enabled = false;
                 });
 
-                // This should not get used again. If it does, that would 
-                // indicate a bug, so let's make sure that any attempt to 
-                // use it won't go un-noticed.
+                // The token / token-source can only be cancelled once, so we need to make sure they won't be re-used.
                 this.cancellationTokenSource = null;
             }
         }
@@ -636,6 +634,8 @@ namespace PcmHacking
                     return;
                 }
 
+                this.cancellationTokenSource = new CancellationTokenSource();
+
                 string path = null;
 
                 this.Invoke((MethodInvoker)delegate ()
@@ -650,42 +650,45 @@ namespace PcmHacking
                 {
                     return;
                 }
-
-                this.cancellationTokenSource = new CancellationTokenSource();
-
+                
                 bool kernelRunning = false;
-                if (await this.vehicle.TryWaitForKernel(1))
+                bool recoveryMode = await this.vehicle.IsInRecoveryMode();
+
+                if (!recoveryMode)
                 {
-                    kernelRunning = true;
-                }
-                else
-                {
-
-                    Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
-                    if (osidResponse.Status != ResponseStatus.Success)
+                    if (await this.vehicle.TryWaitForKernel(1))
                     {
-                        this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
-
-                        return;
+                        kernelRunning = true;
                     }
-
-                    PcmInfo info = new PcmInfo(osidResponse.Value);
-
-                    bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                    if (!unlocked)
+                    else
                     {
-                        this.AddUserMessage("Unlock was not successful.");
-                        return;
-                    }
 
-                    this.AddUserMessage("Unlock succeeded.");
+                        Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                        if (osidResponse.Status != ResponseStatus.Success)
+                        {
+                            this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+
+                            return;
+                        }
+
+                        PcmInfo info = new PcmInfo(osidResponse.Value);
+
+                        bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                        if (!unlocked)
+                        {
+                            this.AddUserMessage("Unlock was not successful.");
+                            return;
+                        }
+
+                        this.AddUserMessage("Unlock succeeded.");
+                    }
                 }
 
                 try
                 {
                     using (Stream stream = File.OpenRead(path))
                     {
-                        await this.vehicle.WriteContents(kernelRunning, stream);
+                        await this.vehicle.WriteContents(kernelRunning, recoveryMode, this.cancellationTokenSource.Token, stream);
                     }
                 }
                 catch (IOException exception)
@@ -700,6 +703,9 @@ namespace PcmHacking
                     this.EnableUserInput();
                     this.cancelButton.Enabled = false;
                 });
+
+                // The token / token-source can only be cancelled once, so we need to make sure they won't be re-used.
+                this.cancellationTokenSource = null;
             }
 
         }

@@ -134,6 +134,7 @@ namespace PcmHacking
             this.queue.Clear();
             ClearMessageBuffer();
         }
+
         /// <summary>
         /// Clears Serial port buffer or J2534 api buffer
         /// </summary>
