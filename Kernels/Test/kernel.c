@@ -21,6 +21,7 @@ void ProcessReadRequest();
 void ProcessResetRequest();
 void Reboot();
 
+void SendToolPreset();
 void SendMessage(char* message, int length);
 
 char ResetResponseMessage[] = { 0x00 };
@@ -33,15 +34,15 @@ KernelStart(void)
 	WriteByte(J1850_Command, 3);
 	WriteByte(J1850_TX_FIFO, 0);
 
-	char status;
-	do
-	{
-		ScratchWatchdog();
-		WasteTime();
-		status = ReadByte(J1850_Status);
-	} while ((status & 0xE0) != 0xE0);
+	LongSleepWithWatchdog();
 
-	while (1)
+	SendToolPresent();
+	Reboot();
+}
+
+void RealKernel()
+{
+	for (int i = 0; i < 0x300000; i++)
 	{
 		ReadPacket();
 		switch (inputBuffer[3])
@@ -55,6 +56,8 @@ KernelStart(void)
 			break;
 		}
 	}
+
+	Reboot();
 }
 
 int IsStatusComplete()
@@ -84,6 +87,13 @@ void ReadPacket()
 			inputBuffer[bytesReceived] = ReadByte(J1850_RX_FIFO);
 			bytesReceived++;
 			continue;
+		}
+		else
+		{
+			if (bytesReceived == 0)
+			{
+				continue;
+			}
 		}
 
 		// Read the last byte.
@@ -145,6 +155,12 @@ void Reboot()
 void SendMessage(char* message, int length)
 {
 
+}
+
+void SendToolPresent()
+{
+	char message[] = { 0x8C, 0xFE, 0x10, 0x3F };
+	SendMessage(message, 4);
 }
 
 void WriteByte(int address, char value)
