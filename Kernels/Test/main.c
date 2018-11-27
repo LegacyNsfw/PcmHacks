@@ -1,3 +1,3 @@
-_start(void)
+int _start(void)
 {
 }
