@@ -1,3 +1,4 @@
 a.out
 *.o
 *.S
+kernel.disassembly
