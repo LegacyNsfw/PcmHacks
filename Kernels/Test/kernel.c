@@ -1,16 +1,25 @@
-#define J1850_Config 0xFFF600
-#define J1850_InterruptConfig  0xFFF606
-#define J1850_Command 0xFFF60C
-#define J1850_TX_FIFO 0xFFF60D
-#define J1850_Status 0xFFF60E
-#define J1850_RX_FIFO 0xFFF60F
 #define COP1 0xFFFA27
 #define COP2 0xFFD006
 #define toolid 0xF0
 #define InputBufferSize 20
 
+const int DLC_Configuration = 0xFFF600;
+const int DLC_InterruptConfiguration = 0xFFF606;
+const int DLC_Transmit_Command = 0xFFF60C;
+const int DLC_Transmit_FIFO = 0xFFF60D;
+const int DLC_Receive_Status = 0xFFF60E;
+const int DLC_Receive_FIFO = 0xFFF60F;
+
+asm("asm_DLC_Configuration = 0xFFF600");
+asm("asm_DLC_InterruptConfiguration = 0xFFF606");
+asm("asm_DLC_Transmit_Command = 0xFFF60C");
+asm("asm_DLC_Transmit_FIFO = 0xFFF60D");
+asm("asm_DLC_Receive_Status = 0xFFF60E");
+asm("asm_DLC_Receive_FIFO = 0xFFF60F");
+
+
 void ScratchWatchdog() __attribute__((optimize("-O0")));
-void LongSleepWithWatchdog();
+void LongSleepWithWatchdog(int iterations);
 void WasteTime();
 void WriteByte(int address, char value);
 char ReadByte(int address);
@@ -31,27 +40,47 @@ int
 __attribute__((section(".kernelstart")))
 KernelStart(void)
 {
-	// Ddisable peripheral interrupts
-	asm("ORI #0x0700, %SR"); 
+	// Disable peripheral interrupts
+	asm("ORI #0x700, %SR"); 
 	ScratchWatchdog();
 
 	// Disable DLC interrupts
-	WriteByte(J1850_InterruptConfig, 0);
-	LongSleepWithWatchdog();
+	//WriteByte(DLC_InterruptConfiguration, 0);
+	asm("mov.b 0x00, (asm_DLC_InterruptConfiguration).l");
 
-	// Flush DLC
-	WriteByte(J1850_Command, 3);
-	WriteByte(J1850_TX_FIFO, 0);
-	LongSleepWithWatchdog();
+	//WasteTime();
+	LongSleepWithWatchdog(10);
+	asm("move.b 0x03, (asm_DLC_Transmit_Command).l");
+	asm("move.b 0x00, (asm_DLC_Transmit_FIFO).l");
+
+	
+//	ScratchWatchdog();
+
+//	LongSleepWithWatchdog(1);
+
+		// Flush DLC
+		//WriteByte(J1850_Command, 3);
+		//WriteByte(J1850_Transmit_FIFO, 0);
+//	asm("move.b 0x03, (asm_DLC_Transmit_Command).l");
+//	LongSleepWithWatchdog(1);
 
 	// Just to see if we can send VPW messages and reboot.
+	for(;;)
+	{
+		LongSleepWithWatchdog(10);
+		//WasteTime();
+		//WasteTime();
+		//ScratchWatchdog();
+		//SendToolPresent();
+		//LongSleepWithWatchdog(10);
+	}
+
 	SendToolPresent();
-	LongSleepWithWatchdog();
-	SendToolPresent();
-	LongSleepWithWatchdog();
+	LongSleepWithWatchdog(10);
 	Reboot();
 }
 
+/*
 void RealKernel()
 {
 	for (int i = 0; i < 0x300000; i++)
@@ -74,7 +103,7 @@ void RealKernel()
 
 int IsStatusComplete()
 {
-	char status = ReadByte(J1850_Status);
+	char status = ReadByte(DLC_Receive_Status);
 
 	// Unwrapped to make the assembly easier to follow...
 	// return (status & 0xE0) == 0x40;
@@ -96,7 +125,7 @@ void ReadPacket()
 		ScratchWatchdog();
 		if (IsStatusComplete())
 		{
-			inputBuffer[bytesReceived] = ReadByte(J1850_RX_FIFO);
+			inputBuffer[bytesReceived] = ReadByte(DLC_Receive_FIFO);
 			bytesReceived++;
 			continue;
 		}
@@ -109,7 +138,7 @@ void ReadPacket()
 		}
 
 		// Read the last byte.
-		inputBuffer[bytesReceived] = ReadByte(J1850_RX_FIFO);
+		inputBuffer[bytesReceived] = ReadByte(DLC_Receive_FIFO);
 
 		// If unknown priority, try again.
 		if (inputBuffer[0] != 0x6C)
@@ -149,9 +178,9 @@ void ProcessResetRequest()
 {
 	SendMessage(ResetResponseMessage, 3);
 
-	WriteByte(J1850_Command, 0x40);
-	WriteByte(J1850_TX_FIFO, 0x00);
-	LongSleepWithWatchdog();
+	WriteByte(DLC_Transmit_Command, 0x40);
+	WriteByte(DLC_Transmit_FIFO, 0x00);
+	LongSleepWithWatchdog(16);
 	Reboot();
 }
 
@@ -164,15 +193,68 @@ void Reboot()
 	for (;;) {}
 }
 
+void WriteShort(int address, short value)
+{
+	*((short volatile*)address) = value;
+}
+
 void SendMessage(char* message, int length)
 {
+	short start = 0x1400 + message[0];
+	WriteShort(DLC_Transmit_Command, start);
+	WasteTime();
 
+	for (int index = 1; index < length - 1; index++)
+	{
+		WriteByte(DLC_Transmit_FIFO, message[index]);
+		WasteTime();
+	}
+
+	short end = 0xC000 + message[length - 1];
+	WriteShort(DLC_Transmit_Command, end);
+
+	LongSleepWithWatchdog(16);
 }
 
 void SendToolPresent()
 {
-	char message[] = { 0x8C, 0xFE, 0x10, 0x3F };
-	SendMessage(message, 4);
+	//char message[] = { 0x8C, 0xFE, 0x10, 0x3F };
+	//SendMessage(message, 4);
+
+	asm("CLR %d0");		//	*Clear D0
+	asm("move.w #0x148C, %d0");//		*Load command to send first data byte
+//	asm("add.w 0x006C, D0");//		*Load first byte of message
+	asm("move %d0, (asm_DLC_Transmit_Command).l");	//*save to DLC
+	WasteTime();
+	asm("move.b #0xFE, (asm_DLC_Transmit_FIFO).l");
+	WasteTime();
+	asm("move.b #0x10, (asm_DLC_Transmit_FIFO).l");
+	WasteTime();
+	asm("move.b #0x3F, (asm_DLC_Transmit_FIFO).l");
+	WasteTime();
+
+	asm("move.w 0x0C12, %d0");
+	asm("move %d0, (asm_DLC_Transmit_Command).l");
+	LongSleepWithWatchdog(16);
+
+
+///		BSR LBL_DELAY		*Provide delay
+//		*
+	//	MOVE.B D1, DLCTXFIFO	*Load Target to Tx buffer
+//		BSR LBL_DELAY		*Provide delay
+//		*
+//		MOVE.B #$10, DLCTXFIFO	*Load source to Tx buffer
+//		BSR LBL_DELAY		*Provide delay
+//		*
+//		MOVE.B #$7F, DLCTXFIFO	*Load mode to Tx buffer
+//		BSR LBL_DELAY		*Provide delay
+//		*
+//		CLR D0			*Clear D0
+//		MOVE #$0C00, D0		*Load command for last byte to xmit
+//		ADD #$0012, D0		*Load with last byte
+//		MOVE D0, DLCTXCMD	*Send last byte and command byte to DLC
+//		MOVE #10, D1		*Load D1 with # of cycles to wait
+//		BSR LBL_LONGDELAY	*Long dela
 }
 
 void WriteByte(int address, char value)
@@ -185,19 +267,22 @@ char ReadByte(int address)
 {
 	return *((char volatile *)address);
 }
-
+*/
 void ScratchWatchdog() 
 {
-	*((char*)COP1) = 0x55;
-	*((char*)COP1) = 0xAA;
+	//*((char*)COP1) = 0x55;
+	//*((char*)COP1) = 0xAA;
+	asm("move.b 0x55, (0xFFFA27).l");
+	asm("move.b 0xAA, (0xFFFA27).l");
 
 	// No sure how to use the COP2 preprocessor symbol here, but that would be cleaner
-	asm("bclr #7, (0xFFD006).l");
 	asm("bset #7, (0xFFD006).l");
+	asm("bclr #7, (0xFFD006).l");
 }
 
-void LongSleepWithWatchdog()
+void LongSleepWithWatchdog(int time)
 {
+	/*
 	for (int i = 0; i < 10 * 1000; i++)
 	{
 		ScratchWatchdog();
@@ -206,10 +291,30 @@ void LongSleepWithWatchdog()
 			WasteTime();
 		}
 	}
+	*/
+
+	for (int iterations = 0; iterations < time; iterations++)
+	{
+		for (int i = 0; i < 256; i++)
+		{
+			asm("nop");
+			asm("nop");
+			asm("nop");
+			asm("nop");
+			asm("nop");
+			asm("nop");
+		}
+
+		ScratchWatchdog();
+	}
 }
 
 void WasteTime()
 {
+	asm("nop");
+	asm("nop");
+	asm("nop");
+	asm("nop");
 	asm("nop");
 	asm("nop");
 	asm("nop");

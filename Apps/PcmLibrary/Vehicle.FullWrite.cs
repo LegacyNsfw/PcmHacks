@@ -26,8 +26,8 @@ namespace PcmHacking
             try
             {
                 // This must precede the switch to 4X.
-                ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
-                await toolPresentNotifier.Notify();
+//                ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
+//                await toolPresentNotifier.Notify();
 
                 this.device.ClearMessageQueue();
 
@@ -41,9 +41,9 @@ namespace PcmHacking
                         return false;
                     }
 
-                    await toolPresentNotifier.Notify();
+//                    await toolPresentNotifier.Notify();
 
-                    Response<byte[]> response = await LoadKernelFromFile("write-kernel.bin");
+                    Response<byte[]> response = await LoadKernelFromFile("test-kernel.bin");
                     if (response.Status != ResponseStatus.Success)
                     {
                         logger.AddUserMessage("Failed to load kernel from file.");
@@ -55,17 +55,17 @@ namespace PcmHacking
                         return false;
                     }
 
-                    await toolPresentNotifier.Notify();
+//                    await toolPresentNotifier.Notify();
 
                     // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await PCMExecute(response.Value, 0xFF8300, cancellationToken))
+                    if (!await PCMExecute(response.Value, 0xFF9000, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 
                         return false;
                     }
 
-                    await toolPresentNotifier.Notify();
+//                    await toolPresentNotifier.Notify();
 
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
                 }
@@ -73,7 +73,7 @@ namespace PcmHacking
                 // TryWaitForKernel will log user messages.
                 if (await this.TryWaitForKernel(5))
                 {
-                    await toolPresentNotifier.Notify();
+                    //await toolPresentNotifier.Notify();
 
                     try
                     {
@@ -83,7 +83,7 @@ namespace PcmHacking
                         }
 
 //                        await toolPresentNotifier.Notify();
-                        await this.WriteLoop(image, toolPresentNotifier, cancellationToken);
+//                        await this.WriteLoop(image, toolPresentNotifier, cancellationToken);
                     }
                     finally
                     {
