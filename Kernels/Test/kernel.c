@@ -1,4 +1,5 @@
 #define J1850_Config 0xFFF600
+#define J1850_InterruptConfig  0xFFF606
 #define J1850_Command 0xFFF60C
 #define J1850_TX_FIFO 0xFFF60D
 #define J1850_Status 0xFFF60E
@@ -21,7 +22,7 @@ void ProcessReadRequest();
 void ProcessResetRequest();
 void Reboot();
 
-void SendToolPreset();
+void SendToolPresent();
 void SendMessage(char* message, int length);
 
 char ResetResponseMessage[] = { 0x00 };
@@ -30,13 +31,24 @@ int
 __attribute__((section(".kernelstart")))
 KernelStart(void)
 {
-	WasteTime();
-	WriteByte(J1850_Command, 3);
-	WriteByte(J1850_TX_FIFO, 0);
+	// Ddisable peripheral interrupts
+	asm("ORI #0x0700, %SR"); 
+	ScratchWatchdog();
 
+	// Disable DLC interrupts
+	WriteByte(J1850_InterruptConfig, 0);
 	LongSleepWithWatchdog();
 
+	// Flush DLC
+	WriteByte(J1850_Command, 3);
+	WriteByte(J1850_TX_FIFO, 0);
+	LongSleepWithWatchdog();
+
+	// Just to see if we can send VPW messages and reboot.
 	SendToolPresent();
+	LongSleepWithWatchdog();
+	SendToolPresent();
+	LongSleepWithWatchdog();
 	Reboot();
 }
 

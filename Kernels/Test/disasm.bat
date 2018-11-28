@@ -1,1 +1,1 @@
-C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S %1 > kernel.disassembly
+C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S kernel.o > kernel.disassembly
