@@ -1,4 +1,6 @@
 a.out
 *.o
 *.S
+*.bin
+*.log 
 kernel.disassembly

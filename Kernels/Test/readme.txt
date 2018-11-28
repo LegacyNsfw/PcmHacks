@@ -1,6 +1,6 @@
 The goal here is to create PCM read and write kernels using C rather than assembly.
 
-At this point I'm just trying to create a tooll chain and validate the concept.
+At this point I'm just trying to create a tool chain and validate the concept.
 
 build.bat encapsulates the options needed to convert C code into
 an srecord file that targets a reasonable address in RAM on the PCM.
@@ -10,10 +10,9 @@ moving those options into the build.bat script.
 
 disasm.bat can be run on .o files or a.out to inspect the contents.
 
-A new utility will be needed to create a kernel bin file from the .S file,
-however I already wrote most of the necessary code for an earlier project
-(see my EcuHacks repository) so I'm sure that will be pretty straightforward.
-
+The included SRecordToKernel.exe utility creates a .bin file from
+the .S file produced by GCC. The source code to that utility is in
+the DevTools\SRecordToKernel project in this same repository.
 
 
 The GCC-m68k toolchain for Windows is available here:
