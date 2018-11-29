@@ -540,14 +540,23 @@ namespace PcmHacking
                     osidResponse = await this.vehicle.QueryOperatingSystemId();
                     if (osidResponse.Status != ResponseStatus.Success)
                     {
-                        this.AddUserMessage("Operating system query failed, giving up: " + osidResponse.Status);
-                        return;
+                        this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
                     }
                 }
 
-                // Look up the information about this PCM, based on the OSID;
-                this.AddUserMessage("OSID: " + osidResponse.Value);
-                PcmInfo info = new PcmInfo(osidResponse.Value);
+                PcmInfo info;
+                if (osidResponse.Status == ResponseStatus.Success)
+                {
+                    // Look up the information about this PCM, based on the OSID;
+                    this.AddUserMessage("OSID: " + osidResponse.Value);
+                    info = new PcmInfo(osidResponse.Value);
+                }
+                else
+                {
+                    // TODO: prompt the user - 512kb or 1mb?
+                    this.AddUserMessage("Will assume this is a 512kb PCM in recovery mode.");
+                    info = new PcmInfo(0);
+                }
 
                 await this.vehicle.SuppressChatter();
 

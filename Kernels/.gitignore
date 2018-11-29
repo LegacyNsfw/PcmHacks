@@ -4,3 +4,4 @@ a.out
 *.bin
 *.log 
 *.disassembly
+IDA

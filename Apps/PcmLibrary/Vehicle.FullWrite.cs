@@ -43,7 +43,7 @@ namespace PcmHacking
 
 //                    await toolPresentNotifier.Notify();
 
-                    Response<byte[]> response = await LoadKernelFromFile("test-kernel.bin");
+                    Response<byte[]> response = await LoadKernelFromFile("micro-kernel.bin");
                     if (response.Status != ResponseStatus.Success)
                     {
                         logger.AddUserMessage("Failed to load kernel from file.");

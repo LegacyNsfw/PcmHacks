@@ -9,6 +9,5 @@ SECTIONS
 	{
 		micro-kernel.o (.kernelstart)
 		micro-kernel.o (.text)
-		common.o (.text)
 	}
 }
