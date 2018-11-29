@@ -3,4 +3,4 @@ a.out
 *.S
 *.bin
 *.log 
-kernel.disassembly
+*.disassembly

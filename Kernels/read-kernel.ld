@@ -7,7 +7,8 @@ SECTIONS
 
 	.kernel_ram (0xFF9000) :
 	{
-		kernel.o (.kernelstart)
-		kernel.o (.text)
+		read-kernel.o (.kernelstart)
+		read-kernel.o (.text)
+		common.o
 	}
 }
