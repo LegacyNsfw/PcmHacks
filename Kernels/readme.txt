@@ -2,23 +2,28 @@ The goal here is to create PCM read and write kernels using C rather than assemb
 
 At this point I'm just trying to create a tool chain and validate the concept.
 
-build.bat encapsulates the options needed to convert C code into
-an srecord file that targets a reasonable address in RAM on the PCM.
+build.bat encapsulates the options needed to convert C code into kernel binaries.
+(Perhaps this should use a makefile, but that would require installing make.)
 
 gcc.bat is mostly just for experimenting with gcc options before
 moving those options into the build.bat script.
 
 disasm.bat can be run on .o files or a.out to inspect the contents.
 
-The included SRecordToKernel.exe utility creates a .bin file from
-the .S file produced by GCC. The source code to that utility is in
-the DevTools\SRecordToKernel project in this same repository.
+The build script produces a .S file, and the SRecordToKernel.exe utility 
+uses the .S file to create a .bin file which contains only the kernel, and
+none of the boilerplate code for Windows/Linux executables.
+The source code to the SRecordToKernel utility is in this same repository,
+in the DevTools\SRecordToKernel directory.
 
+--
 
 The GCC-m68k toolchain for Windows is available here:
 http://gnutoolchains.com/m68k-elf/
 
-Might be able to get one for Linux using the instructions
+--
+
+It might be possible to get gcc for m68k for Linux using the instructions
 below, but I haven't tried that approach. They're from here:
 http://daveho.github.io/2012/10/26/m68k-elf-cross-compiler.html
 
