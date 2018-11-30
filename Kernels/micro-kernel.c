@@ -98,13 +98,13 @@ void WriteMessage(const char * const message, int length)
 // This doesn't work yet.
 int ReadMessage()
 {
-	LongSleepWithWatchdog();
+	ScratchWatchdog();
 	char status = *DLC_Status & 0xE0;
-	if (status != 0x40)
+	if (status != 0xE0)
 	{
 		// No message received.
 		// We can abuse the 'tool present' message to send arbitrary data to see what the code is doing...
-		char debug1[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x01, status };
+		char debug1[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x02, status };
 		WriteMessage(debug1, 6);
 		return 0;
 	}
@@ -112,11 +112,21 @@ int ReadMessage()
 	int length;
 	for (length = 0; length < InputBufferSize - 1; length++)
 	{
+		for (int iterations = 0; iterations < 1000; iterations++)
+		{
+			ScratchWatchdog();
+			status = *DLC_Status & 0xE0;
+			if (status != 0x40)
+			{
+				continue;
+			}
+		}
+
 		IncomingMessage[length] = *DLC_Receive_FIFO;
 		ScratchWatchdog();
 
 		status = *DLC_Status & 0xE0;
-		if (status != 0x40)
+		if (status == 0x40)
 		{
 			break;
 		}
