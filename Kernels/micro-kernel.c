@@ -6,28 +6,27 @@
 // After these are proven to work, they'll be moved into common.c and referenced from there.
 // But for now I want to keep this kernel as tiny as possible to simplify debugging.
 
-const int DLC_Configuration = 0xFFF600;
-const int DLC_InterruptConfiguration = 0xFFF606;
-const int DLC_Transmit_Command = 0xFFF60C;
-const int DLC_Transmit_FIFO = 0xFFF60D;
-const int DLC_Receive_Status = 0xFFF60E;
-const int DLC_Receive_FIFO = 0xFFF60F;
-const int Watchdog1 = 0xFFFA27;
-const int Watchdog2 = 0xFFD006;
+char volatile * const DLC_Configuration = (char*)0xFFF600;
+char volatile * const DLC_InterruptConfiguration = (char*)0xFFF606;
+char volatile * const DLC_Transmit_Command = (char*)0xFFF60C;
+char volatile * const DLC_Transmit_FIFO = (char*)0xFFF60D;
+char volatile * const DLC_Receive_Status = (char*)0xFFF60E;
+char volatile * const DLC_Receive_FIFO = (char*)0xFFF60F;
+char volatile * const Watchdog1 = (char*)0xFFFA27;
+char volatile * const Watchdog2 = (char*)0xFFD006;
 asm("asm_Watchdog2 = 0xFFD006");
-
-void WriteByte(int address, char value)
-{
-	*((char volatile *)address) = value;
-}
 
 void ScratchWatchdog()
 {
-	WriteByte(Watchdog1, 0x55);
-	WriteByte(Watchdog1, 0xAA);
+	*Watchdog1 = 0xFF;
+	*Watchdog1 = 0xFF;
+	*Watchdog2 = *Watchdog2 & 0x7F;
+	*Watchdog2 = *Watchdog2 | 0x80;
+//	WriteByte(Watchdog1, 0x55);
+//	WriteByte(Watchdog1, 0xAA);
 
-	asm("bclr #7, (asm_Watchdog2).l");
-	asm("bset #7, (asm_Watchdog2).l");
+//	asm("bclr #7, (asm_Watchdog2).l");
+//	asm("bset #7, (asm_Watchdog2).l");
 }
 
 int WasteTime()
@@ -60,8 +59,10 @@ KernelStart(void)
 	ScratchWatchdog();
 
 	// Flush the DLC
-	WriteByte(DLC_Transmit_Command, 0x03);
-	WriteByte(DLC_Transmit_FIFO, 0x00);
+	//WriteByte(DLC_Transmit_Command, 0x03);
+	//WriteByte(DLC_Transmit_FIFO, 0x00);
+	*DLC_Transmit_Command = 0x03;
+	*DLC_Transmit_FIFO = 0x00;
 
 	// Bare minimum functionality: just don't reboot.
 	for(;;)
