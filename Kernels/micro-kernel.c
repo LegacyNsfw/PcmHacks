@@ -10,7 +10,7 @@ char volatile * const DLC_Configuration = (char*)0xFFF600;
 char volatile * const DLC_InterruptConfiguration = (char*)0xFFF606;
 char volatile * const DLC_Transmit_Command = (char*)0xFFF60C;
 char volatile * const DLC_Transmit_FIFO = (char*)0xFFF60D;
-char volatile * const DLC_Receive_Status = (char*)0xFFF60E;
+char volatile * const DLC_Status = (char*)0xFFF60E;
 char volatile * const DLC_Receive_FIFO = (char*)0xFFF60F;
 char volatile * const Watchdog1 = (char*)0xFFFA27;
 char volatile * const Watchdog2 = (char*)0xFFD006;
@@ -18,15 +18,10 @@ asm("asm_Watchdog2 = 0xFFD006");
 
 void ScratchWatchdog()
 {
-	*Watchdog1 = 0xFF;
-	*Watchdog1 = 0xFF;
+	*Watchdog1 = 0x55;
+	*Watchdog1 = 0xAA;
 	*Watchdog2 = *Watchdog2 & 0x7F;
 	*Watchdog2 = *Watchdog2 | 0x80;
-//	WriteByte(Watchdog1, 0x55);
-//	WriteByte(Watchdog1, 0xAA);
-
-//	asm("bclr #7, (asm_Watchdog2).l");
-//	asm("bset #7, (asm_Watchdog2).l");
 }
 
 int WasteTime()
@@ -49,6 +44,40 @@ int LongSleepWithWatchdog()
 	}
 }
 
+void SendMessage(const char * const message, int length)
+{
+	ScratchWatchdog();
+	*DLC_Transmit_Command = 0x14;
+
+	// Send message
+	for (int index = 0; index < length - 1; index++)
+	{
+		*DLC_Transmit_FIFO = message[index];
+		WasteTime();
+	}
+
+	// Send last byte
+	*DLC_Transmit_Command = 0x0C;
+	*DLC_Transmit_FIFO = message[length - 1];
+	WasteTime();
+
+	*DLC_Transmit_Command = 0x03;
+	*DLC_Transmit_FIFO = 0x00;
+
+	for(int iterations = 0; iterations < length + 10; iterations++)
+	{
+		ScratchWatchdog();
+		WasteTime();
+		char status = *DLC_Status & 0xE0;
+		if (status == 0xE0)
+		{
+			break;
+		}
+	}
+
+
+}
+
 int 
 __attribute__((section(".kernelstart")))
 KernelStart(void)
@@ -59,15 +88,15 @@ KernelStart(void)
 	ScratchWatchdog();
 
 	// Flush the DLC
-	//WriteByte(DLC_Transmit_Command, 0x03);
-	//WriteByte(DLC_Transmit_FIFO, 0x00);
 	*DLC_Transmit_Command = 0x03;
 	*DLC_Transmit_FIFO = 0x00;
 
-	// Bare minimum functionality: just don't reboot.
+	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x2C };
+
 	for(;;)
 	{
 		LongSleepWithWatchdog();
+		SendMessage(toolPresent, 5);
 	}
 }
 
