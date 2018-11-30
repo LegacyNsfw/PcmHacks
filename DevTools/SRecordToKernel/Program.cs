@@ -43,7 +43,7 @@ namespace SRecordToKernel
                         continue;
                     }
 
-                    if (record.Address > 0xFFFFFF)
+                    if (record.Address >= 0xFFC000)
                     {
                         Console.WriteLine("Skipping, address too high.");
                         continue;
