@@ -151,6 +151,7 @@ KernelStart(void)
 		{
 			// No message received, so send a heartbeat message and listen again.
 			// Note that without this call to LongSleepWithWatchdog, the WriteMessage call will fail.
+			// That's probably related to the fact that the ReadMessage function sends a debug message before returning.
 			// Should try experimenting with different delay lengths to see just how long we need to wait.
 			LongSleepWithWatchdog();
 			WriteMessage(toolPresent, 4);
