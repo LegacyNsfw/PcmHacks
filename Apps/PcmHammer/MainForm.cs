@@ -646,7 +646,7 @@ namespace PcmHacking
                 this.cancellationTokenSource = new CancellationTokenSource();
 
                 string path = null;
-
+/*
                 this.Invoke((MethodInvoker)delegate ()
                 {
                     this.DisableUserInput();
@@ -659,7 +659,7 @@ namespace PcmHacking
                 {
                     return;
                 }
-                
+*/                
                 bool kernelRunning = false;
                 bool recoveryMode = await this.vehicle.IsInRecoveryMode();
 
@@ -695,8 +695,9 @@ namespace PcmHacking
 
                 try
                 {
-                    using (Stream stream = File.OpenRead(path))
+//                    using (Stream stream = File.OpenRead(path))
                     {
+                        Stream stream = null;
                         await this.vehicle.WriteContents(kernelRunning, recoveryMode, this.cancellationTokenSource.Token, stream);
                     }
                 }

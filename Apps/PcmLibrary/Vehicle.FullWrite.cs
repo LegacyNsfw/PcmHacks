@@ -15,13 +15,13 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> WriteContents(bool kernelRunning, bool recoveryMode, CancellationToken cancellationToken, Stream stream)
         {
-            byte[] image = new byte[stream.Length];
-            int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
-            if (bytesRead != stream.Length)
-            {
-                this.logger.AddUserMessage("Unable to read input file.");
-                return false;
-            }
+            byte[] image = new byte[0];// stream.Length];
+//            int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
+//            if (bytesRead != stream.Length)
+//            {
+ //               this.logger.AddUserMessage("Unable to read input file.");
+  //              return false;
+   //         }
 
             try
             {
@@ -101,8 +101,8 @@ namespace PcmHacking
             }
             finally
             {
-                await TryWriteKernelReset();
-                await this.Cleanup();
+//                await TryWriteKernelReset();
+//                await this.Cleanup();
             }
         }
 
