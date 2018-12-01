@@ -50,7 +50,7 @@ namespace PcmHacking
                     }
 
                     // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await PCMExecute(response.Value, 0xFF9106, cancellationToken))
+                    if (!await PCMExecute(response.Value, 0xFF81FE, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -103,7 +103,7 @@ namespace PcmHacking
             }
             
             byte chunkSize = 192;
-            byte[] header = new byte[] { 0x6C, 0x10, 0x0F0, 0x3C, 0x00, 0x00, chunkSize, 0xFF, 0xA0, 0x00 };
+            byte[] header = new byte[] { 0x6D, 0x10, 0x0F0, 0x36, 0x00, 0x00, chunkSize, 0xFF, 0xA0, 0x00 };
             byte[] messageBytes = new byte[header.Length + chunkSize + 2];
             Buffer.BlockCopy(header, 0, messageBytes, 0, header.Length);
             for (int bytesSent = 0; bytesSent < stream.Length; bytesSent += chunkSize)

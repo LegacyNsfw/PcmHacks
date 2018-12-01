@@ -258,7 +258,7 @@ namespace PcmHacking
                 if (response == null)
                 {
                     this.logger.AddDebugMessage("No response to read request yet.");
-                    await Task.Delay(10);
+                    await Task.Delay(40);
                     continue;
                 }
 
