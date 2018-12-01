@@ -79,6 +79,44 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Show the save-as dialog box (after a full read has completed).
+        /// </summary>
+        private string ShowSaveAsDialog()
+        {
+            SaveFileDialog dialog = new SaveFileDialog();
+            dialog.DefaultExt = ".bin";
+            dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
+            dialog.FilterIndex = 0;
+            dialog.OverwritePrompt = true;
+            dialog.ValidateNames = true;
+            DialogResult result = dialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                return dialog.FileName;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Show the file-open dialog box, so the user can choose the file to write to the flash.
+        /// </summary>
+        private string ShowOpenDialog()
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.DefaultExt = ".bin";
+            dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
+            dialog.FilterIndex = 0;
+            DialogResult result = dialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                return dialog.FileName;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Called when the main window is being created.
         /// </summary>
         private async void MainForm_Load(object sender, EventArgs e)
@@ -154,7 +192,9 @@ namespace PcmHacking
             this.readPropertiesButton.Enabled = false;
             this.readFullContentsButton.Enabled = false;
             this.modifyVinButton.Enabled = false;
+            this.writeCalibrationButton.Enabled = false;
             this.writeFullContentsButton.Enabled = false;
+            this.testKernelButton.Enabled = false;
             this.reinitializeButton.Enabled = false;
         }
 
@@ -171,8 +211,130 @@ namespace PcmHacking
             this.readPropertiesButton.Invoke((MethodInvoker)delegate () { this.readPropertiesButton.Enabled = true; });
             this.readFullContentsButton.Invoke((MethodInvoker)delegate () { this.readFullContentsButton.Enabled = true; });
             this.modifyVinButton.Invoke((MethodInvoker)delegate () { this.modifyVinButton.Enabled = true; });
+            this.writeCalibrationButton.Invoke((MethodInvoker)delegate () { this.writeCalibrationButton.Enabled = true; });
             this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true; });
+            this.testKernelButton.Invoke((MethodInvoker)delegate () { this.testKernelButton.Enabled = true; });
             this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true; });
+        }
+
+        /// <summary>
+        /// Select which interface device to use. This opens the Device-Picker dialog box.
+        /// </summary>
+        private async void selectButton_Click(object sender, EventArgs e)
+        {
+            if (this.vehicle != null)
+            {
+                this.vehicle.Dispose();
+                this.vehicle = null;
+            }
+
+            DevicePicker picker = new DevicePicker(this);
+            DialogResult result = picker.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                Configuration.DeviceCategory = picker.DeviceCategory;
+                Configuration.J2534DeviceType = picker.J2534DeviceType;
+                Configuration.SerialPort = picker.SerialPort;
+                Configuration.SerialPortDeviceType = picker.SerialPortDeviceType;
+            }
+
+            await this.ResetDevice();
+        }
+
+        /// <summary>
+        /// Reset the current interface device.
+        /// </summary>
+        private async void reinitializeButton_Click(object sender, EventArgs e)
+        {
+            await this.InitializeCurrentDevice();
+        }
+        
+        /// <summary>
+        /// Close the old interface device and open a new one.
+        /// </summary>
+        private async Task ResetDevice()
+        {
+            if (this.vehicle != null)
+            {
+                this.vehicle.Dispose();
+                this.vehicle = null;
+            }
+
+            Device device = DeviceFactory.CreateDeviceFromConfigurationSettings(this);
+            if (device == null)
+            {
+                this.deviceDescription.Text = "None selected.";
+                return;
+            }
+
+            this.deviceDescription.Text = device.ToString();
+
+            this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), this);
+            await this.InitializeCurrentDevice();
+        }
+
+        /// <summary>
+        /// Initialize the current device.
+        /// </summary>
+        private async Task<bool> InitializeCurrentDevice()
+        {
+            this.DisableUserInput();
+
+            if (this.vehicle == null)
+            {
+                this.interfaceBox.Enabled = true;
+                return false;
+            }
+
+            this.debugLog.Clear();
+            this.userLog.Clear();
+
+            try
+            {
+                // TODO: this should not return a boolean, it should just throw 
+                // an exception if it is not able to initialize the device.
+                bool initialized = await this.vehicle.ResetConnection();
+                if (!initialized)
+                {
+                    this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
+                    this.interfaceBox.Enabled = true;
+                    this.reinitializeButton.Enabled = true;
+                    return false;
+                }
+            }
+            catch (Exception exception)
+            {
+                this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
+                this.AddDebugMessage(exception.ToString());
+                this.interfaceBox.Enabled = true;
+                this.reinitializeButton.Enabled = true;
+                return false;
+            }
+
+            this.EnableUserInput();
+            return true;
+        }
+
+        /// <summary>
+        /// Set the HTTP server. This hasn't worked for a while, might just remove it rather than fixing it...
+        /// </summary>
+        private void startServerButton_Click(object sender, EventArgs e)
+        {
+            /*
+            this.DisableUserInput();
+            this.startServerButton.Enabled = false;
+
+            // It doesn't count if the user selected the prompt.
+            if (selectedPort == null)
+            {
+                this.AddUserMessage("You must select an actual port before starting the server.");
+                return;
+            }
+
+            this.AddUserMessage("There is no way to exit the HTTP server. Just close the app when you're done.");
+
+            HttpServer.StartWebServer(selectedPort, this);
+            */
         }
 
         /// <summary>
@@ -253,101 +415,7 @@ namespace PcmHacking
                 this.EnableUserInput();
             }
         }
-
-        /// <summary>
-        /// Reset the current interface device.
-        /// </summary>
-        private async void reinitializeButton_Click(object sender, EventArgs e)
-        {
-            await this.InitializeCurrentDevice();
-        }
-
-        /// <summary>
-        /// Set the HTTP server. This hasn't worked for a while, might just removing it rather than fixing it...
-        /// </summary>
-        private void startServerButton_Click(object sender, EventArgs e)
-        {
-            /*
-            this.DisableUserInput();
-            this.startServerButton.Enabled = false;
-
-            // It doesn't count if the user selected the prompt.
-            if (selectedPort == null)
-            {
-                this.AddUserMessage("You must select an actual port before starting the server.");
-                return;
-            }
-
-            this.AddUserMessage("There is no way to exit the HTTP server. Just close the app when you're done.");
-
-            HttpServer.StartWebServer(selectedPort, this);
-            */
-        }
-
-        /// <summary>
-        /// Read the entire contents of the flash.
-        /// </summary>
-        private void readFullContentsButton_Click(object sender, EventArgs e)
-        {
-            if (!BackgroundWorker.IsAlive)
-            {
-                BackgroundWorker = new System.Threading.Thread(() => readFullContents_BackgroundThread());
-                BackgroundWorker.IsBackground = true;
-                BackgroundWorker.Start();
-            }
-        }
-
-        /// <summary>
-        /// Show the save-as dialog box (after a full read has completed).
-        /// </summary>
-        private string ShowSaveAsDialog()
-        {
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.DefaultExt = ".bin";
-            dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
-            dialog.FilterIndex = 0;
-            dialog.OverwritePrompt = true;
-            dialog.ValidateNames = true;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                return dialog.FileName;
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Write the contents of the flash.
-        /// </summary>
-        private void writeFullContentsButton_Click(object sender, EventArgs e)
-        {
-            if (!BackgroundWorker.IsAlive)
-            {
-                BackgroundWorker = new System.Threading.Thread(() => writeFullContents_BackgroundThread());
-                BackgroundWorker.IsBackground = true;
-                BackgroundWorker.Start();
-            }
-        }
-
-        /// <summary>
-        /// Show the file-open dialog box, so the user can choose the file to write to the flash.
-        /// </summary>
-        private string ShowOpenDialog()
-        {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.DefaultExt = ".bin";
-            dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
-            dialog.FilterIndex = 0;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                return dialog.FileName;
-            }
-
-            return null;
-        }
-
+        
         /// <summary>
         /// Update the VIN.
         /// </summary>
@@ -403,27 +471,49 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Select which interface device to use. This opens the Device-Picker dialog box.
+        /// Read the entire contents of the flash.
         /// </summary>
-        private async void selectButton_Click(object sender, EventArgs e)
+        private void readFullContentsButton_Click(object sender, EventArgs e)
         {
-            if (this.vehicle != null)
+            if (!BackgroundWorker.IsAlive)
             {
-                this.vehicle.Dispose();
-                this.vehicle = null;
+                BackgroundWorker = new System.Threading.Thread(() => readFullContents_BackgroundThread());
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
             }
+        }
 
-            DevicePicker picker = new DevicePicker(this);
-            DialogResult result = picker.ShowDialog();
-            if(result == DialogResult.OK)
+        /// <summary>
+        /// Write the contents of the flash.
+        /// </summary>
+        private void writeCalibrationButton_Click(object sender, EventArgs e)
+        {
+            if (!BackgroundWorker.IsAlive)
             {
-                Configuration.DeviceCategory = picker.DeviceCategory;
-                Configuration.J2534DeviceType = picker.J2534DeviceType;
-                Configuration.SerialPort = picker.SerialPort;
-                Configuration.SerialPortDeviceType = picker.SerialPortDeviceType;
+                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(false));
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
             }
+        }
+        
+        private void writeFullContentsButton_Click(object sender, EventArgs e)
+        {
+            if (!BackgroundWorker.IsAlive)
+            {
+                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(true));
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
+            }
+        }
 
-            await this.ResetDevice();
+        private void testKernelButton_Click(object sender, EventArgs e)
+        {
+            if (!BackgroundWorker.IsAlive)
+            {
+                BackgroundWorker = new System.Threading.Thread(() => testKernel_BackgroundThread());
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
+            }
         }
 
         /// <summary>
@@ -434,73 +524,7 @@ namespace PcmHacking
             this.AddUserMessage("Cancel button clicked.");
             this.cancellationTokenSource?.Cancel();
         }
-
-        /// <summary>
-        /// Close the old interface device and open a new one.
-        /// </summary>
-        private async Task ResetDevice()
-        {
-            if (this.vehicle != null)
-            {
-                this.vehicle.Dispose();
-                this.vehicle = null;
-            }
-
-            Device device = DeviceFactory.CreateDeviceFromConfigurationSettings(this);
-            if (device == null)
-            {
-                this.deviceDescription.Text = "None selected.";
-                return;
-            }
-
-            this.deviceDescription.Text = device.ToString();
-
-            this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), this);
-            await this.InitializeCurrentDevice();
-        }
-
-        /// <summary>
-        /// Initialize the current device.
-        /// </summary>
-        private async Task<bool> InitializeCurrentDevice()
-        {
-            this.DisableUserInput();
-
-            if (this.vehicle == null)
-            {
-                this.interfaceBox.Enabled = true;
-                return false;
-            }
-
-            this.debugLog.Clear();
-            this.userLog.Clear();
-
-            try
-            {
-                // TODO: this should not return a boolean, it should just throw 
-                // an exception if it is not able to initialize the device.
-                bool initialized = await this.vehicle.ResetConnection();
-                if (!initialized)
-                {
-                    this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
-                    this.interfaceBox.Enabled = true;
-                    this.reinitializeButton.Enabled = true;
-                    return false;
-                }
-            }
-            catch (Exception exception)
-            {
-                this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
-                this.AddDebugMessage(exception.ToString());
-                this.interfaceBox.Enabled = true;
-                this.reinitializeButton.Enabled = true;
-                return false;
-            }
-
-            this.EnableUserInput();
-            return true;
-        }
-
+        
         /// <summary>
         /// Read the entire contents of the flash.
         /// </summary>
@@ -632,7 +656,7 @@ namespace PcmHacking
             }
         }
 
-        private async void writeFullContents_BackgroundThread()
+        private async void write_BackgroundThread(bool fullWrite)
         {
             try
             {
@@ -646,20 +670,18 @@ namespace PcmHacking
                 this.cancellationTokenSource = new CancellationTokenSource();
 
                 string path = null;
-                /*
-                                this.Invoke((MethodInvoker)delegate ()
-                                {
-                                    this.DisableUserInput();
-                                    this.cancelButton.Enabled = true;
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.DisableUserInput();
+                    this.cancelButton.Enabled = true;
 
-                                    path = this.ShowOpenDialog();
-                                });
+                    path = this.ShowOpenDialog();
+                });
 
-                                if (path == null)
-                                {
-                                    return;
-                                }
-                */
+                if (path == null)
+                {
+                    return;
+                }
                 
                 bool kernelRunning = false;
 
@@ -697,12 +719,87 @@ namespace PcmHacking
                         }
                     }
 
-
-                    //                    using (Stream stream = File.OpenRead(path))
+                    using (Stream stream = File.OpenRead(path))
                     {
-                        Stream stream = null;
-                        await this.vehicle.WriteContents(kernelRunning, recoveryMode, this.cancellationTokenSource.Token, stream);
+                        await this.vehicle.Write(fullWrite, kernelRunning, recoveryMode, this.cancellationTokenSource.Token, stream);
                     }
+                }
+                catch (IOException exception)
+                {
+                    this.AddUserMessage(exception.ToString());
+                }
+            }
+            finally
+            {
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.EnableUserInput();
+                    this.cancelButton.Enabled = false;
+                });
+
+                // The token / token-source can only be cancelled once, so we need to make sure they won't be re-used.
+                this.cancellationTokenSource = null;
+            }
+
+        }
+
+        private async void testKernel_BackgroundThread()
+        {
+            try
+            {
+                if (this.vehicle == null)
+                {
+                    // This shouldn't be possible - it would mean the buttons 
+                    // were enabled when they shouldn't be.
+                    return;
+                }
+
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.DisableUserInput();
+                    this.cancelButton.Enabled = true;
+                });
+
+                this.cancellationTokenSource = new CancellationTokenSource();
+
+                bool kernelRunning = false;
+
+                try
+                {
+                    bool recoveryMode = await this.vehicle.IsInRecoveryMode();
+
+                    if (!recoveryMode)
+                    {
+                        if (await this.vehicle.TryWaitForKernel(1))
+                        {
+                            kernelRunning = true;
+                        }
+                        else
+                        {
+
+                            Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                            if (osidResponse.Status != ResponseStatus.Success)
+                            {
+                                this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+
+                                return;
+                            }
+
+                            PcmInfo info = new PcmInfo(osidResponse.Value);
+
+                            bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                            if (!unlocked)
+                            {
+                                this.AddUserMessage("Unlock was not successful.");
+                                return;
+                            }
+
+                            this.AddUserMessage("Unlock succeeded.");
+                        }
+                    }
+
+
+                    await this.vehicle.TestKernel(kernelRunning, recoveryMode, this.cancellationTokenSource.Token, null);
                 }
                 catch (IOException exception)
                 {

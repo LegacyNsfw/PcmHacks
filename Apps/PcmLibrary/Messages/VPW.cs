@@ -168,7 +168,7 @@ namespace PcmHacking
         /// <remarks>
         /// Caller to provide valid array
         /// </remarks>
-        public UInt16 CalcBlockChecksum(byte[] Block)
+        public static UInt16 CalcBlockChecksum(byte[] Block)
         {
             UInt16 Sum = 0;
             int PayloadLength = (Block[5] << 8) + Block[6];
@@ -185,6 +185,9 @@ namespace PcmHacking
         /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array
         /// </summary>
         /// <remarks>
+        /// 
+        /// TODO: Move this into the Message class.
+        /// 
         /// Appends 2 bytes at the end of the array with the sum
         /// TODO: Throw an error if the input data is not valid?
         /// 
@@ -192,7 +195,7 @@ namespace PcmHacking
         /// 0  1  2  3  4  5  6  7  8  9
         /// 1  2  3  4  5  6  7  8  9  10      11 12
         /// </remarks>
-        public byte[] AddBlockChecksum(byte[] Block)
+        public static byte[] AddBlockChecksum(byte[] Block)
         {
             UInt16 Sum = 0;
             int PayloadLength;
