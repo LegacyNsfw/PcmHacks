@@ -384,14 +384,14 @@ namespace PcmHacking
             return this.DoSimpleValidation(message, 0x6C, 0x62, 0x01);
         }
 
-        public Response<bool> ParseKernelPingResponse(Message message)
+        public Response<bool> ParseStartFullFlashResponse(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x80);
+            return this.DoSimpleValidation(message, 0x6C, 0x3C);
         }
 
-        public Response<bool> ParseFlashKernelSuccessResponse(Message message)
+        public Response<bool> ParseChunkWriteResponse(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x60);
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0x00, 0x73);
         }
 
         public Response<bool> ParseFlashLockResponse(Message message)
@@ -402,6 +402,17 @@ namespace PcmHacking
         public Response<bool> ParseWriteKernelResetResponse(Message message)
         {
             return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0xAA);
+        }
+
+        public Response<bool> ParseFlashKernelSuccessResponse(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x60);
+        }
+
+        // V2 kernel messages
+        public Response<bool> ParseKernelPingResponse(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x80);
         }
 
         public Response<bool> ParseWriteKernelDataRequest(Message message, out int length, out int address)
@@ -434,7 +445,10 @@ namespace PcmHacking
         /// <summary>
         /// Check for an accept/reject message with the given mode byte.
         /// </summary>
-        private Response<bool> DoSimpleValidation(Message message, byte priority, byte mode, params byte[] data)
+        /// <remarks>
+        /// TODO: Make this private, use public methods that are tied to a specific message type.
+        /// </remarks>
+        public Response<bool> DoSimpleValidation(Message message, byte priority, byte mode, params byte[] data)
         {
             byte[] actual = message.GetBytes();
             ResponseStatus status;

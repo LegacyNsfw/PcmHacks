@@ -34,14 +34,18 @@
             this.selectButton = new System.Windows.Forms.Button();
             this.deviceDescription = new System.Windows.Forms.Label();
             this.operationsBox = new System.Windows.Forms.GroupBox();
-            this.cancelButton = new System.Windows.Forms.Button();
+            this.testKernelButton = new System.Windows.Forms.Button();
             this.writeFullContentsButton = new System.Windows.Forms.Button();
+            this.cancelButton = new System.Windows.Forms.Button();
+            this.writeCalibrationButton = new System.Windows.Forms.Button();
             this.readFullContentsButton = new System.Windows.Forms.Button();
             this.modifyVinButton = new System.Windows.Forms.Button();
             this.readPropertiesButton = new System.Windows.Forms.Button();
             this.tabs = new System.Windows.Forms.TabControl();
             this.resultsTab = new System.Windows.Forms.TabPage();
             this.userLog = new System.Windows.Forms.TextBox();
+            this.helpTab = new System.Windows.Forms.TabPage();
+            this.helpWebBrowser = new System.Windows.Forms.WebBrowser();
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
             this.startServerButton = new System.Windows.Forms.Button();
@@ -50,14 +54,12 @@
             this.releasedByAntus = new System.Windows.Forms.Label();
             this.releasedAtPcmHacking = new System.Windows.Forms.LinkLabel();
             this.releasedEtc = new System.Windows.Forms.Label();
-            this.helpTab = new System.Windows.Forms.TabPage();
-            this.helpWebBrowser = new System.Windows.Forms.WebBrowser();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
             this.resultsTab.SuspendLayout();
-            this.debugTab.SuspendLayout();
             this.helpTab.SuspendLayout();
+            this.debugTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // interfaceBox
@@ -65,21 +67,21 @@
             this.interfaceBox.Controls.Add(this.reinitializeButton);
             this.interfaceBox.Controls.Add(this.selectButton);
             this.interfaceBox.Controls.Add(this.deviceDescription);
-            this.interfaceBox.Location = new System.Drawing.Point(12, 12);
-            this.interfaceBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.interfaceBox.Location = new System.Drawing.Point(9, 10);
+            this.interfaceBox.Margin = new System.Windows.Forms.Padding(2);
             this.interfaceBox.Name = "interfaceBox";
-            this.interfaceBox.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.interfaceBox.Size = new System.Drawing.Size(299, 158);
+            this.interfaceBox.Padding = new System.Windows.Forms.Padding(2);
+            this.interfaceBox.Size = new System.Drawing.Size(224, 128);
             this.interfaceBox.TabIndex = 0;
             this.interfaceBox.TabStop = false;
             this.interfaceBox.Text = "Device";
             // 
             // reinitializeButton
             // 
-            this.reinitializeButton.Location = new System.Drawing.Point(8, 118);
-            this.reinitializeButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.reinitializeButton.Location = new System.Drawing.Point(6, 96);
+            this.reinitializeButton.Margin = new System.Windows.Forms.Padding(2);
             this.reinitializeButton.Name = "reinitializeButton";
-            this.reinitializeButton.Size = new System.Drawing.Size(285, 31);
+            this.reinitializeButton.Size = new System.Drawing.Size(214, 25);
             this.reinitializeButton.TabIndex = 2;
             this.reinitializeButton.Text = "Re-&Initialize Device";
             this.reinitializeButton.UseVisualStyleBackColor = true;
@@ -87,10 +89,9 @@
             // 
             // selectButton
             // 
-            this.selectButton.Location = new System.Drawing.Point(7, 84);
-            this.selectButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.selectButton.Location = new System.Drawing.Point(5, 68);
             this.selectButton.Name = "selectButton";
-            this.selectButton.Size = new System.Drawing.Size(285, 28);
+            this.selectButton.Size = new System.Drawing.Size(214, 23);
             this.selectButton.TabIndex = 1;
             this.selectButton.Text = "&Select Device";
             this.selectButton.UseVisualStyleBackColor = true;
@@ -98,56 +99,84 @@
             // 
             // deviceDescription
             // 
-            this.deviceDescription.Location = new System.Drawing.Point(7, 37);
+            this.deviceDescription.Location = new System.Drawing.Point(5, 30);
+            this.deviceDescription.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.deviceDescription.Name = "deviceDescription";
-            this.deviceDescription.Size = new System.Drawing.Size(285, 16);
+            this.deviceDescription.Size = new System.Drawing.Size(214, 13);
             this.deviceDescription.TabIndex = 0;
             this.deviceDescription.Text = "Device name will be displayed here";
             // 
             // operationsBox
             // 
-            this.operationsBox.Controls.Add(this.cancelButton);
+            this.operationsBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.operationsBox.Controls.Add(this.testKernelButton);
             this.operationsBox.Controls.Add(this.writeFullContentsButton);
+            this.operationsBox.Controls.Add(this.cancelButton);
+            this.operationsBox.Controls.Add(this.writeCalibrationButton);
             this.operationsBox.Controls.Add(this.readFullContentsButton);
             this.operationsBox.Controls.Add(this.modifyVinButton);
             this.operationsBox.Controls.Add(this.readPropertiesButton);
-            this.operationsBox.Location = new System.Drawing.Point(12, 188);
-            this.operationsBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.operationsBox.Location = new System.Drawing.Point(9, 153);
+            this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
-            this.operationsBox.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.operationsBox.Size = new System.Drawing.Size(299, 210);
+            this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
+            this.operationsBox.Size = new System.Drawing.Size(224, 315);
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
             // 
+            // testKernelButton
+            // 
+            this.testKernelButton.Location = new System.Drawing.Point(6, 183);
+            this.testKernelButton.Margin = new System.Windows.Forms.Padding(2);
+            this.testKernelButton.Name = "testKernelButton";
+            this.testKernelButton.Size = new System.Drawing.Size(214, 25);
+            this.testKernelButton.TabIndex = 5;
+            this.testKernelButton.Text = "&Test Kernel";
+            this.testKernelButton.UseVisualStyleBackColor = true;
+            this.testKernelButton.Click += new System.EventHandler(this.testKernelButton_Click);
+            // 
+            // writeFullContentsButton
+            // 
+            this.writeFullContentsButton.Location = new System.Drawing.Point(6, 136);
+            this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
+            this.writeFullContentsButton.Name = "writeFullContentsButton";
+            this.writeFullContentsButton.Size = new System.Drawing.Size(214, 25);
+            this.writeFullContentsButton.TabIndex = 4;
+            this.writeFullContentsButton.Text = "Write &Full Contents";
+            this.writeFullContentsButton.UseVisualStyleBackColor = true;
+            this.writeFullContentsButton.Click += new System.EventHandler(this.writeFullContentsButton_Click);
+            // 
             // cancelButton
             // 
-            this.cancelButton.Location = new System.Drawing.Point(7, 169);
-            this.cancelButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cancelButton.Location = new System.Drawing.Point(5, 276);
+            this.cancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(285, 31);
-            this.cancelButton.TabIndex = 4;
+            this.cancelButton.Size = new System.Drawing.Size(214, 25);
+            this.cancelButton.TabIndex = 6;
             this.cancelButton.Text = "&Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
             this.cancelButton.Click += new System.EventHandler(this.CancelButton_Click);
             // 
-            // writeFullContentsButton
+            // writeCalibrationButton
             // 
-            this.writeFullContentsButton.Location = new System.Drawing.Point(7, 133);
-            this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.writeFullContentsButton.Name = "writeFullContentsButton";
-            this.writeFullContentsButton.Size = new System.Drawing.Size(285, 31);
-            this.writeFullContentsButton.TabIndex = 3;
-            this.writeFullContentsButton.Text = "&Write Full Contents";
-            this.writeFullContentsButton.UseVisualStyleBackColor = true;
-            this.writeFullContentsButton.Click += new System.EventHandler(this.writeFullContentsButton_Click);
+            this.writeCalibrationButton.Location = new System.Drawing.Point(5, 107);
+            this.writeCalibrationButton.Margin = new System.Windows.Forms.Padding(2);
+            this.writeCalibrationButton.Name = "writeCalibrationButton";
+            this.writeCalibrationButton.Size = new System.Drawing.Size(214, 25);
+            this.writeCalibrationButton.TabIndex = 3;
+            this.writeCalibrationButton.Text = "&Write Calibration";
+            this.writeCalibrationButton.UseVisualStyleBackColor = true;
+            this.writeCalibrationButton.Click += new System.EventHandler(this.writeCalibrationButton_Click);
             // 
             // readFullContentsButton
             // 
-            this.readFullContentsButton.Location = new System.Drawing.Point(7, 59);
-            this.readFullContentsButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.readFullContentsButton.Location = new System.Drawing.Point(5, 48);
+            this.readFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
             this.readFullContentsButton.Name = "readFullContentsButton";
-            this.readFullContentsButton.Size = new System.Drawing.Size(285, 31);
+            this.readFullContentsButton.Size = new System.Drawing.Size(214, 25);
             this.readFullContentsButton.TabIndex = 1;
             this.readFullContentsButton.Text = "&Read Full Contents";
             this.readFullContentsButton.UseVisualStyleBackColor = true;
@@ -155,10 +184,10 @@
             // 
             // modifyVinButton
             // 
-            this.modifyVinButton.Location = new System.Drawing.Point(7, 96);
-            this.modifyVinButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.modifyVinButton.Location = new System.Drawing.Point(5, 78);
+            this.modifyVinButton.Margin = new System.Windows.Forms.Padding(2);
             this.modifyVinButton.Name = "modifyVinButton";
-            this.modifyVinButton.Size = new System.Drawing.Size(285, 31);
+            this.modifyVinButton.Size = new System.Drawing.Size(214, 25);
             this.modifyVinButton.TabIndex = 2;
             this.modifyVinButton.Text = "Modify &VIN";
             this.modifyVinButton.UseVisualStyleBackColor = true;
@@ -166,10 +195,10 @@
             // 
             // readPropertiesButton
             // 
-            this.readPropertiesButton.Location = new System.Drawing.Point(7, 22);
-            this.readPropertiesButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.readPropertiesButton.Location = new System.Drawing.Point(5, 18);
+            this.readPropertiesButton.Margin = new System.Windows.Forms.Padding(2);
             this.readPropertiesButton.Name = "readPropertiesButton";
-            this.readPropertiesButton.Size = new System.Drawing.Size(285, 31);
+            this.readPropertiesButton.Size = new System.Drawing.Size(214, 25);
             this.readPropertiesButton.TabIndex = 0;
             this.readPropertiesButton.Text = "Read &Properties";
             this.readPropertiesButton.UseVisualStyleBackColor = true;
@@ -183,21 +212,21 @@
             this.tabs.Controls.Add(this.resultsTab);
             this.tabs.Controls.Add(this.helpTab);
             this.tabs.Controls.Add(this.debugTab);
-            this.tabs.Location = new System.Drawing.Point(317, 12);
-            this.tabs.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabs.Location = new System.Drawing.Point(238, 10);
+            this.tabs.Margin = new System.Windows.Forms.Padding(2);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(769, 496);
-            this.tabs.TabIndex = 6;
+            this.tabs.Size = new System.Drawing.Size(577, 539);
+            this.tabs.TabIndex = 3;
             // 
             // resultsTab
             // 
             this.resultsTab.Controls.Add(this.userLog);
-            this.resultsTab.Location = new System.Drawing.Point(4, 25);
-            this.resultsTab.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.resultsTab.Location = new System.Drawing.Point(4, 22);
+            this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
             this.resultsTab.Name = "resultsTab";
-            this.resultsTab.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.resultsTab.Size = new System.Drawing.Size(761, 467);
+            this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
+            this.resultsTab.Size = new System.Drawing.Size(569, 513);
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
@@ -207,23 +236,44 @@
             this.userLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.userLog.Location = new System.Drawing.Point(5, 6);
-            this.userLog.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.userLog.Location = new System.Drawing.Point(4, 5);
+            this.userLog.Margin = new System.Windows.Forms.Padding(2);
             this.userLog.Multiline = true;
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.userLog.Size = new System.Drawing.Size(749, 452);
+            this.userLog.Size = new System.Drawing.Size(563, 504);
             this.userLog.TabIndex = 0;
+            // 
+            // helpTab
+            // 
+            this.helpTab.Controls.Add(this.helpWebBrowser);
+            this.helpTab.Location = new System.Drawing.Point(4, 22);
+            this.helpTab.Margin = new System.Windows.Forms.Padding(2);
+            this.helpTab.Name = "helpTab";
+            this.helpTab.Size = new System.Drawing.Size(569, 513);
+            this.helpTab.TabIndex = 2;
+            this.helpTab.Text = "Help";
+            this.helpTab.UseVisualStyleBackColor = true;
+            // 
+            // helpWebBrowser
+            // 
+            this.helpWebBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.helpWebBrowser.Location = new System.Drawing.Point(0, 0);
+            this.helpWebBrowser.Margin = new System.Windows.Forms.Padding(2);
+            this.helpWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
+            this.helpWebBrowser.Name = "helpWebBrowser";
+            this.helpWebBrowser.Size = new System.Drawing.Size(569, 513);
+            this.helpWebBrowser.TabIndex = 0;
             // 
             // debugTab
             // 
             this.debugTab.Controls.Add(this.debugLog);
-            this.debugTab.Location = new System.Drawing.Point(4, 25);
-            this.debugTab.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.debugTab.Location = new System.Drawing.Point(4, 22);
+            this.debugTab.Margin = new System.Windows.Forms.Padding(2);
             this.debugTab.Name = "debugTab";
-            this.debugTab.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.debugTab.Size = new System.Drawing.Size(761, 467);
+            this.debugTab.Padding = new System.Windows.Forms.Padding(2);
+            this.debugTab.Size = new System.Drawing.Size(569, 513);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -231,21 +281,22 @@
             // debugLog
             // 
             this.debugLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.debugLog.Location = new System.Drawing.Point(3, 2);
-            this.debugLog.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.debugLog.Location = new System.Drawing.Point(2, 2);
+            this.debugLog.Margin = new System.Windows.Forms.Padding(2);
             this.debugLog.Multiline = true;
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.debugLog.Size = new System.Drawing.Size(755, 463);
+            this.debugLog.Size = new System.Drawing.Size(565, 509);
             this.debugLog.TabIndex = 0;
             // 
             // startServerButton
             // 
-            this.startServerButton.Location = new System.Drawing.Point(19, 473);
-            this.startServerButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.startServerButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.startServerButton.Location = new System.Drawing.Point(14, 520);
+            this.startServerButton.Margin = new System.Windows.Forms.Padding(2);
             this.startServerButton.Name = "startServerButton";
-            this.startServerButton.Size = new System.Drawing.Size(285, 31);
+            this.startServerButton.Size = new System.Drawing.Size(214, 25);
             this.startServerButton.TabIndex = 2;
             this.startServerButton.Text = "Enter &HTTP Server Mode";
             this.startServerButton.UseVisualStyleBackColor = true;
@@ -256,22 +307,20 @@
             // 
             this.releasedUnder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedUnder.AutoSize = true;
-            this.releasedUnder.Location = new System.Drawing.Point(8, 519);
-            this.releasedUnder.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.releasedUnder.Location = new System.Drawing.Point(6, 558);
             this.releasedUnder.Name = "releasedUnder";
-            this.releasedUnder.Size = new System.Drawing.Size(220, 17);
-            this.releasedUnder.TabIndex = 7;
+            this.releasedUnder.Size = new System.Drawing.Size(166, 13);
+            this.releasedUnder.TabIndex = 4;
             this.releasedUnder.Text = "Released under GPLv3 license at";
             // 
             // releasedAt
             // 
             this.releasedAt.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedAt.AutoSize = true;
-            this.releasedAt.Location = new System.Drawing.Point(225, 519);
-            this.releasedAt.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.releasedAt.Location = new System.Drawing.Point(169, 558);
             this.releasedAt.Name = "releasedAt";
-            this.releasedAt.Size = new System.Drawing.Size(270, 17);
-            this.releasedAt.TabIndex = 8;
+            this.releasedAt.Size = new System.Drawing.Size(216, 13);
+            this.releasedAt.TabIndex = 5;
             this.releasedAt.TabStop = true;
             this.releasedAt.Text = "https://github.com/LegacyNsfw/PcmHacks";
             // 
@@ -279,22 +328,20 @@
             // 
             this.releasedByAntus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedByAntus.AutoSize = true;
-            this.releasedByAntus.Location = new System.Drawing.Point(509, 519);
-            this.releasedByAntus.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.releasedByAntus.Location = new System.Drawing.Point(382, 558);
             this.releasedByAntus.Name = "releasedByAntus";
-            this.releasedByAntus.Size = new System.Drawing.Size(81, 17);
-            this.releasedByAntus.TabIndex = 9;
+            this.releasedByAntus.Size = new System.Drawing.Size(62, 13);
+            this.releasedByAntus.TabIndex = 6;
             this.releasedByAntus.Text = "By antus @";
             // 
             // releasedAtPcmHacking
             // 
             this.releasedAtPcmHacking.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedAtPcmHacking.AutoSize = true;
-            this.releasedAtPcmHacking.Location = new System.Drawing.Point(592, 519);
-            this.releasedAtPcmHacking.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.releasedAtPcmHacking.Location = new System.Drawing.Point(444, 558);
             this.releasedAtPcmHacking.Name = "releasedAtPcmHacking";
-            this.releasedAtPcmHacking.Size = new System.Drawing.Size(107, 17);
-            this.releasedAtPcmHacking.TabIndex = 1;
+            this.releasedAtPcmHacking.Size = new System.Drawing.Size(83, 13);
+            this.releasedAtPcmHacking.TabIndex = 7;
             this.releasedAtPcmHacking.TabStop = true;
             this.releasedAtPcmHacking.Text = "pcmhacking.net";
             // 
@@ -302,37 +349,17 @@
             // 
             this.releasedEtc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedEtc.AutoSize = true;
-            this.releasedEtc.Location = new System.Drawing.Point(697, 519);
-            this.releasedEtc.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.releasedEtc.Location = new System.Drawing.Point(523, 558);
             this.releasedEtc.Name = "releasedEtc";
-            this.releasedEtc.Size = new System.Drawing.Size(314, 17);
-            this.releasedEtc.TabIndex = 2;
+            this.releasedEtc.Size = new System.Drawing.Size(237, 13);
+            this.releasedEtc.TabIndex = 8;
             this.releasedEtc.Text = "and NSFW. J2534 support by Envyous Customs.";
-            // 
-            // helpTab
-            // 
-            this.helpTab.Controls.Add(this.helpWebBrowser);
-            this.helpTab.Location = new System.Drawing.Point(4, 25);
-            this.helpTab.Name = "helpTab";
-            this.helpTab.Size = new System.Drawing.Size(761, 467);
-            this.helpTab.TabIndex = 2;
-            this.helpTab.Text = "Help";
-            this.helpTab.UseVisualStyleBackColor = true;
-            // 
-            // helpWebBrowser
-            // 
-            this.helpWebBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.helpWebBrowser.Location = new System.Drawing.Point(0, 0);
-            this.helpWebBrowser.MinimumSize = new System.Drawing.Size(20, 20);
-            this.helpWebBrowser.Name = "helpWebBrowser";
-            this.helpWebBrowser.Size = new System.Drawing.Size(761, 467);
-            this.helpWebBrowser.TabIndex = 0;
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1097, 540);
+            this.ClientSize = new System.Drawing.Size(823, 575);
             this.Controls.Add(this.releasedEtc);
             this.Controls.Add(this.releasedAtPcmHacking);
             this.Controls.Add(this.releasedByAntus);
@@ -343,7 +370,7 @@
             this.Controls.Add(this.operationsBox);
             this.Controls.Add(this.interfaceBox);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "MainForm";
             this.Text = "PCM Hammer for GM \'0411";
             this.Load += new System.EventHandler(this.MainForm_Load);
@@ -352,9 +379,9 @@
             this.tabs.ResumeLayout(false);
             this.resultsTab.ResumeLayout(false);
             this.resultsTab.PerformLayout();
+            this.helpTab.ResumeLayout(false);
             this.debugTab.ResumeLayout(false);
             this.debugTab.PerformLayout();
-            this.helpTab.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -364,7 +391,7 @@
 
         private System.Windows.Forms.GroupBox interfaceBox;
         private System.Windows.Forms.GroupBox operationsBox;
-        private System.Windows.Forms.Button writeFullContentsButton;
+        private System.Windows.Forms.Button writeCalibrationButton;
         private System.Windows.Forms.Button readFullContentsButton;
         private System.Windows.Forms.Button modifyVinButton;
         private System.Windows.Forms.Button readPropertiesButton;
@@ -385,6 +412,8 @@
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.TabPage helpTab;
         private System.Windows.Forms.WebBrowser helpWebBrowser;
+        private System.Windows.Forms.Button testKernelButton;
+        private System.Windows.Forms.Button writeFullContentsButton;
     }
 }
 
