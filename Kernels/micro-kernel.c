@@ -60,36 +60,57 @@ int LongSleepWithWatchdog()
 	}
 }
 
+typedef enum 
+{
+	MiddleOfMessageDoesNotWork = 0, // not sure why, but the subsequent call with EndOfMessage will drop the last byte
+	StartOfMessage = 1,
+	EndOfMessage = 2,
+	EntireMessage = StartOfMessage | EndOfMessage,
+} MessageParts;
+
 // Send the given bytes over the VPW bus.
 // The DLC will append the checksum byte, so we don't have to.
-void WriteMessage(const char * const message, int length)
+void WriteMessage(const char * const message, int length, MessageParts  parts)
 {
 	ScratchWatchdog();
-	*DLC_Transmit_Command = 0x14;
 
-	// Send message
-	for (int index = 0; index < length - 1; index++)
+	if ((parts & StartOfMessage) != 0)
+	{
+		*DLC_Transmit_Command = 0x14;
+	}
+
+	int lastIndex = ((parts & EndOfMessage) != 0) ?
+		length - 1 :
+		length;
+
+	// Send message (will we need a watchdog call inside this loop for long messages?)
+	for (int index = 0; index < lastIndex; index++)
 	{
 		*DLC_Transmit_FIFO = message[index];
 		WasteTime();
 	}
 
-	// Send last byte
-	*DLC_Transmit_Command = 0x0C;
-	*DLC_Transmit_FIFO = message[length - 1];
-	WasteTime();
-
-	*DLC_Transmit_Command = 0x03;
-	*DLC_Transmit_FIFO = 0x00;
-
-	for(int iterations = 0; iterations < length + 10; iterations++)
+	if ((parts & EndOfMessage) != 0)
 	{
-		ScratchWatchdog();
+		// Send last byte
+		*DLC_Transmit_Command = 0x0C;
+		*DLC_Transmit_FIFO = message[length - 1];
+
+		// Send checksum (?)
 		WasteTime();
-		char status = *DLC_Status & 0xE0;
-		if (status == 0xE0)
+		*DLC_Transmit_Command = 0x03;
+		*DLC_Transmit_FIFO = 0x00;
+
+		// Wait for the message to be flushed.
+		for (int iterations = 0; iterations < length + 10; iterations++)
 		{
-			break;
+			ScratchWatchdog();
+			WasteTime();
+			char status = *DLC_Status & 0xE0;
+			if (status == 0xE0)
+			{
+				break;
+			}
 		}
 	}
 }
@@ -104,8 +125,12 @@ int ReadMessage()
 	{
 		// No message received.
 		// We can abuse the 'tool present' message to send arbitrary data to see what the code is doing...
-		char debug1[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x02, status };
-		WriteMessage(debug1, 6);
+		char debug1[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x04, status };
+		char debug2[] = { 0xFF, 0xFE, 0xFD };
+
+		WriteMessage(debug1, 6, StartOfMessage);
+		WriteMessage(debug2, 3, EndOfMessage);
+
 		return 0;
 	}
 
@@ -164,7 +189,7 @@ KernelStart(void)
 			// That's probably related to the fact that the ReadMessage function sends a debug message before returning.
 			// Should try experimenting with different delay lengths to see just how long we need to wait.
 			LongSleepWithWatchdog();
-			WriteMessage(toolPresent, 4);
+			WriteMessage(toolPresent, 4, EntireMessage);
 			continue;
 		}
 
@@ -179,7 +204,7 @@ KernelStart(void)
 			OutgoingMessage[4 + index2] = IncomingMessage[index2];
 		}
 
-		WriteMessage(OutgoingMessage, 4 + length);
+		WriteMessage(OutgoingMessage, 4 + length, EntireMessage);
 	}
 }
 

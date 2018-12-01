@@ -646,56 +646,59 @@ namespace PcmHacking
                 this.cancellationTokenSource = new CancellationTokenSource();
 
                 string path = null;
-/*
-                this.Invoke((MethodInvoker)delegate ()
-                {
-                    this.DisableUserInput();
-                    this.cancelButton.Enabled = true;
+                /*
+                                this.Invoke((MethodInvoker)delegate ()
+                                {
+                                    this.DisableUserInput();
+                                    this.cancelButton.Enabled = true;
 
-                    path = this.ShowOpenDialog();
-                });
+                                    path = this.ShowOpenDialog();
+                                });
 
-                if (path == null)
-                {
-                    return;
-                }
-*/                
+                                if (path == null)
+                                {
+                                    return;
+                                }
+                */
+                
                 bool kernelRunning = false;
-                bool recoveryMode = await this.vehicle.IsInRecoveryMode();
-
-                if (!recoveryMode)
-                {
-                    if (await this.vehicle.TryWaitForKernel(1))
-                    {
-                        kernelRunning = true;
-                    }
-                    else
-                    {
-
-                        Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
-                        if (osidResponse.Status != ResponseStatus.Success)
-                        {
-                            this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
-
-                            return;
-                        }
-
-                        PcmInfo info = new PcmInfo(osidResponse.Value);
-
-                        bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                        if (!unlocked)
-                        {
-                            this.AddUserMessage("Unlock was not successful.");
-                            return;
-                        }
-
-                        this.AddUserMessage("Unlock succeeded.");
-                    }
-                }
 
                 try
                 {
-//                    using (Stream stream = File.OpenRead(path))
+                    bool recoveryMode = await this.vehicle.IsInRecoveryMode();
+
+                    if (!recoveryMode)
+                    {
+                        if (await this.vehicle.TryWaitForKernel(1))
+                        {
+                            kernelRunning = true;
+                        }
+                        else
+                        {
+
+                            Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                            if (osidResponse.Status != ResponseStatus.Success)
+                            {
+                                this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+
+                                return;
+                            }
+
+                            PcmInfo info = new PcmInfo(osidResponse.Value);
+
+                            bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                            if (!unlocked)
+                            {
+                                this.AddUserMessage("Unlock was not successful.");
+                                return;
+                            }
+
+                            this.AddUserMessage("Unlock succeeded.");
+                        }
+                    }
+
+
+                    //                    using (Stream stream = File.OpenRead(path))
                     {
                         Stream stream = null;
                         await this.vehicle.WriteContents(kernelRunning, recoveryMode, this.cancellationTokenSource.Token, stream);
