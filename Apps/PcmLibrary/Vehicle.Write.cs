@@ -50,7 +50,7 @@ namespace PcmHacking
                     }
 
                     // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await PCMExecute(response.Value, 0xFF81FE, cancellationToken))
+                    if (!await PCMExecute(response.Value, 0xFF9106, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -61,7 +61,9 @@ namespace PcmHacking
 
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
                 }
-                
+
+                await this.device.SetTimeout(TimeoutScenario.Maximum);
+
                 if (fullWrite)
                 {
                     await this.FullWrite(cancellationToken, stream);
@@ -88,7 +90,7 @@ namespace PcmHacking
         
         private async Task FullWrite(CancellationToken cancellationToken, Stream stream)
         {
-            Message start = new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3C, 0x00 });
+            Message start = new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3C, 0x01 });
 
             if (!await this.SendMessageValidateResponse(
                 start,
@@ -135,7 +137,7 @@ namespace PcmHacking
             string successMessage,
             string failureMessage,
             int maxAttempts = 5,
-            bool pingKernel = true)
+            bool pingKernel = false)
         {
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
