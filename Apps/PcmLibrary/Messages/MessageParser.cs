@@ -379,10 +379,62 @@ namespace PcmHacking
             return this.DoSimpleValidation(message, 0x6C, 0x34);
         }
 
+        public Response<bool> ParseRecoveryModeBroadcast(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6C, 0x62, 0x01);
+        }
+
+        public Response<bool> ParseKernelPingResponse(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x80);
+        }
+
+        public Response<bool> ParseFlashKernelSuccessResponse(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x60);
+        }
+
+        public Response<bool> ParseFlashLockResponse(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x80);
+        }
+
+        public Response<bool> ParseWriteKernelResetResponse(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0xAA);
+        }
+
+        public Response<bool> ParseWriteKernelDataRequest(Message message, out int length, out int address)
+        {
+            length = 0;
+            address = 0;
+
+            Response<bool> result = this.DoSimpleValidation(message, 0x6C, 0x36, 0xE2);
+
+            if (result.Status != ResponseStatus.Success)
+            {
+                return result;
+            }
+
+            byte[] bytes = message.GetBytes();
+            length = bytes[5] << 8;
+            length |= bytes[6];
+            address = bytes[7] << 16;
+            address |= bytes[8] << 8;
+            address |= bytes[9];
+
+            return Response.Create(ResponseStatus.Success, true);
+        }
+
+        public Response<bool> ParseWriteKernelFlashComplete(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6c, 0x36, 0xE0, 0x68);
+        }
+
         /// <summary>
         /// Check for an accept/reject message with the given mode byte.
         /// </summary>
-        private Response<bool> DoSimpleValidation(Message message, byte priority, byte mode)
+        private Response<bool> DoSimpleValidation(Message message, byte priority, byte mode, params byte[] data)
         {
             byte[] actual = message.GetBytes();
             ResponseStatus status;
@@ -390,13 +442,38 @@ namespace PcmHacking
             byte[] success = new byte[] { priority, DeviceId.Tool, DeviceId.Pcm, (byte)(mode + 0x40), };
             if (this.TryVerifyInitialBytes(actual, success, out status))
             {
+                if (data != null && data.Length > 0)
+                {
+                    for(int index = 0; index < data.Length; index++)
+                    {
+                        const int headBytes = 4;
+                        int actualLength = actual.Length;
+                        int expectedLength = data.Length + headBytes;
+                        if (actualLength >= expectedLength)
+                        {
+                            if (actual[headBytes+index] == data[index])
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                return Response.Create(ResponseStatus.UnexpectedResponse, false);
+                            }
+                        }
+                        else
+                        {
+                            return Response.Create(ResponseStatus.Truncated, false);
+                        }
+                    }
+                }
+
                 return Response.Create(ResponseStatus.Success, true);
             }
 
             byte[] failure = new byte[] { priority, DeviceId.Tool, DeviceId.Pcm, 0x7F, mode };
             if (this.TryVerifyInitialBytes(actual, failure, out status))
             {
-                return Response.Create(ResponseStatus.Success, false);
+                return Response.Create(ResponseStatus.Refused, false);
             }
 
             return Response.Create(ResponseStatus.UnexpectedResponse, false);

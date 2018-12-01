@@ -40,6 +40,11 @@ namespace PcmHacking
         /// The operation was cancelled by the user.
         /// </summary>
         Cancelled = 5,
+
+        /// <summary>
+        /// The request was refused.
+        /// </summary>
+        Refused = 6,
     }
 
     /// <summary>

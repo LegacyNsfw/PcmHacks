@@ -29,6 +29,7 @@ namespace CaptureSerial
                     Console.WriteLine("file-name: name of the file to write to. Optional.");
                     Console.WriteLine("If no file name is provided, a name based on the date and time will be used.");
                     Console.WriteLine("For example, 20171231_235959.txt");
+                    Console.WriteLine("Available ports are: " + string.Join(", ", SerialPort.GetPortNames()));
                     return;
                 }
 
@@ -37,6 +38,8 @@ namespace CaptureSerial
             catch (Exception exception)
             {
                 Console.WriteLine(exception.ToString());
+                Console.WriteLine("Press enter.");
+                Console.ReadLine();
             }
         }
 
@@ -82,22 +85,46 @@ namespace CaptureSerial
             byte[] buffer = new byte[1024 * 64];
             int totalBytes = 0;
 
+            bool useCallback = false;
+
             using (Stream output = File.OpenWrite(fileName))
             using (SerialPort port = new SerialPort(portName, baud, Parity.None, 8, StopBits.One))
-            {
-                port.DataReceived +=
-                    async delegate (object sender, SerialDataReceivedEventArgs e)
-                    {
-                        int bytes = Math.Min(port.BytesToRead, buffer.Length);
-                        totalBytes += bytes;
-                        port.Read(buffer, 0, bytes);
-                        await output.WriteAsync(buffer, 0, bytes);
-                    };
+            { 
+                if (useCallback)
+                {
+                    port.DataReceived +=
+                        async delegate (object sender, SerialDataReceivedEventArgs e)
+                        {
+                            int bytes = Math.Min(port.BytesToRead, buffer.Length);
+                            totalBytes += bytes;
+                            port.Read(buffer, 0, bytes);
+                            await output.WriteAsync(buffer, 0, bytes);
+                        };
+                }
 
+                port.ReadTimeout = 500;
                 port.Open();
+                Console.WriteLine("Port {0} opened at {1} baud.", portName, baud);
 
                 while (!Console.KeyAvailable)
                 {
+                    if (!useCallback)
+                    {
+                        try
+                        {
+                            int bytesReceived = port.Read(buffer, 0, 25);// buffer.Length);
+                            if (bytesReceived > 0)
+                            {
+                                totalBytes += bytesReceived;
+                                output.Write(buffer, 0, bytesReceived);
+                            }
+                        }
+                        catch (TimeoutException)
+                        {
+
+                        }
+                    }
+
                     System.Threading.Thread.Sleep(100);
                     Console.CursorLeft = 0;
                     Console.Write(string.Format("{0} bytes captured.  ", totalBytes));

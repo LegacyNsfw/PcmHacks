@@ -29,7 +29,7 @@ namespace PcmHacking
         /// <summary>
         /// We had to move some operations to a background thread for the J2534 code as the DLL functions do not have an awaiter.
         /// </summary>
-        private System.Threading.Thread BackgroundWorker = new System.Threading.Thread(delegate(){ return; });
+        private System.Threading.Thread BackgroundWorker = new System.Threading.Thread(delegate () { return; });
 
         /// <summary>
         /// This flag will initialized when a long-running operation begins. 
@@ -114,7 +114,7 @@ namespace PcmHacking
                 try
                 {
                     HttpRequestMessage request = new HttpRequestMessage(
-                        HttpMethod.Get, 
+                        HttpMethod.Get,
                         "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/Release/001/Apps/PcmHammer/help.html");
                     request.Headers.Add("Cache-Control", "no-cache");
                     HttpClient client = new HttpClient();
@@ -140,7 +140,7 @@ namespace PcmHacking
                 }
             });
         }
-        
+
         /// <summary>
         /// Disable buttons during a long-running operation (like reading or writing the flash).
         /// </summary>
@@ -164,17 +164,17 @@ namespace PcmHacking
         private void EnableUserInput()
         {
             this.interfaceBox.Invoke((MethodInvoker)delegate () { this.interfaceBox.Enabled = true; });
-            
+
             // The operation buttons have to be enabled/disabled individually
             // (rather than via the parent GroupBox) because we sometimes want
             // to enable the re-initialize operation while the others are disabled.
             this.readPropertiesButton.Invoke((MethodInvoker)delegate () { this.readPropertiesButton.Enabled = true; });
-            this.readFullContentsButton.Invoke((MethodInvoker)delegate () { this.readFullContentsButton.Enabled = true;});
-            this.modifyVinButton.Invoke((MethodInvoker)delegate () { this.modifyVinButton.Enabled = true;});
-            this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true;});
-            this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true;});
+            this.readFullContentsButton.Invoke((MethodInvoker)delegate () { this.readFullContentsButton.Enabled = true; });
+            this.modifyVinButton.Invoke((MethodInvoker)delegate () { this.modifyVinButton.Enabled = true; });
+            this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true; });
+            this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true; });
         }
-        
+
         /// <summary>
         /// Read the VIN, OS, etc.
         /// </summary>
@@ -190,7 +190,7 @@ namespace PcmHacking
             try
             {
                 this.DisableUserInput();
-                
+
                 var vinResponse = await this.vehicle.QueryVin();
                 if (vinResponse.Status != ResponseStatus.Success)
                 {
@@ -243,7 +243,7 @@ namespace PcmHacking
                 }
                 this.AddUserMessage("MEC: " + mecResponse.Value.ToString());
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 this.AddUserMessage(exception.Message);
                 this.AddDebugMessage(exception.ToString());
@@ -261,7 +261,7 @@ namespace PcmHacking
         {
             await this.InitializeCurrentDevice();
         }
-        
+
         /// <summary>
         /// Set the HTTP server. This hasn't worked for a while, might just removing it rather than fixing it...
         /// </summary>
@@ -291,10 +291,10 @@ namespace PcmHacking
         {
             if (!BackgroundWorker.IsAlive)
             {
-                BackgroundWorker = new System.Threading.Thread(() => readFullContents_Routine());
+                BackgroundWorker = new System.Threading.Thread(() => readFullContents_BackgroundThread());
                 BackgroundWorker.IsBackground = true;
                 BackgroundWorker.Start();
-            }          
+            }
         }
 
         /// <summary>
@@ -304,7 +304,7 @@ namespace PcmHacking
         {
             SaveFileDialog dialog = new SaveFileDialog();
             dialog.DefaultExt = ".bin";
-            dialog.Filter = "Binary Files(*.bin) | *.bin | All Files(*.*) | *.*";
+            dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
             dialog.FilterIndex = 0;
             dialog.OverwritePrompt = true;
             dialog.ValidateNames = true;
@@ -320,53 +320,14 @@ namespace PcmHacking
         /// <summary>
         /// Write the contents of the flash.
         /// </summary>
-        private  async void writeFullContentsButton_Click(object sender, EventArgs e)
+        private void writeFullContentsButton_Click(object sender, EventArgs e)
         {
-            if (this.vehicle == null)
+            if (!BackgroundWorker.IsAlive)
             {
-                // This shouldn't be possible - it would mean the buttons 
-                // were enabled when they shouldn't be.
-                return;
+                BackgroundWorker = new System.Threading.Thread(() => writeFullContents_BackgroundThread());
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
             }
-
-            Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
-            if (osidResponse.Status != ResponseStatus.Success)
-            {
-                this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
-                return;
-            }
-
-            PcmInfo info = new PcmInfo(osidResponse.Value);
-
-            bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-            if (!unlocked)
-            {
-                this.AddUserMessage("Unlock was not successful.");
-                return;
-            }
-
-            this.AddUserMessage("Unlock succeeded.");
-
-            string path = this.ShowOpenDialog();
-            if (path == null)
-            {
-                return;
-            }
-
-            this.AddUserMessage("Pretending to update PCM with content from " + path);
-
-            try
-            {
-                using (Stream stream = File.OpenRead(path))
-                {
-                    await this.vehicle.WriteContents(stream);
-                }
-            }
-            catch (IOException exception)
-            {
-                this.AddUserMessage(exception.ToString());
-            }
-
         }
 
         /// <summary>
@@ -376,7 +337,7 @@ namespace PcmHacking
         {
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.DefaultExt = ".bin";
-            dialog.Filter = "Binary Files(*.bin) | *.bin | All Files(*.*) | *.*";
+            dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
             dialog.FilterIndex = 0;
             DialogResult result = dialog.ShowDialog();
             if (result == DialogResult.OK)
@@ -463,8 +424,17 @@ namespace PcmHacking
             }
 
             await this.ResetDevice();
-        }    
-        
+        }
+
+        /// <summary>
+        /// Set the cancelOperation flag, so that an ongoing operation can be aborted.
+        /// </summary>
+        private void CancelButton_Click(object sender, EventArgs e)
+        {
+            this.AddUserMessage("Cancel button clicked.");
+            this.cancellationTokenSource?.Cancel();
+        }
+
         /// <summary>
         /// Close the old interface device and open a new one.
         /// </summary>
@@ -534,7 +504,7 @@ namespace PcmHacking
         /// <summary>
         /// Read the entire contents of the flash.
         /// </summary>
-        private async void readFullContents_Routine()
+        private async void readFullContents_BackgroundThread()
         {
             try
             {
@@ -544,14 +514,14 @@ namespace PcmHacking
                     this.cancelButton.Enabled = true;
                 });
 
-                this.cancellationTokenSource = new CancellationTokenSource();
-
                 if (this.vehicle == null)
                 {
                     // This shouldn't be possible - it would mean the buttons 
                     // were enabled when they shouldn't be.
                     return;
                 }
+
+                this.cancellationTokenSource = new CancellationTokenSource();
 
                 DelayDialogBox dialogBox = new DelayDialogBox();
                 DialogResult dialogResult = dialogBox.ShowDialog();
@@ -570,14 +540,23 @@ namespace PcmHacking
                     osidResponse = await this.vehicle.QueryOperatingSystemId();
                     if (osidResponse.Status != ResponseStatus.Success)
                     {
-                        this.AddUserMessage("Operating system query failed, giving up: " + osidResponse.Status);
-                        return;
+                        this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
                     }
                 }
 
-                // Look up the information about this PCM, based on the OSID;
-                this.AddUserMessage("OSID: " + osidResponse.Value);
-                PcmInfo info = new PcmInfo(osidResponse.Value);
+                PcmInfo info;
+                if (osidResponse.Status == ResponseStatus.Success)
+                {
+                    // Look up the information about this PCM, based on the OSID;
+                    this.AddUserMessage("OSID: " + osidResponse.Value);
+                    info = new PcmInfo(osidResponse.Value);
+                }
+                else
+                {
+                    // TODO: prompt the user - 512kb or 1mb?
+                    this.AddUserMessage("Will assume this is a 512kb PCM in recovery mode.");
+                    info = new PcmInfo(0);
+                }
 
                 await this.vehicle.SuppressChatter();
 
@@ -590,7 +569,7 @@ namespace PcmHacking
 
                 this.AddUserMessage("Unlock succeeded.");
 
-                if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                if (cancellationTokenSource.Token.IsCancellationRequested)
                 {
                     return;
                 }
@@ -648,20 +627,100 @@ namespace PcmHacking
                     this.cancelButton.Enabled = false;
                 });
 
-                // This should not get used again. If it does, that would 
-                // indicate a bug, so let's make sure that any attempt to 
-                // use it won't go un-noticed.
+                // The token / token-source can only be cancelled once, so we need to make sure they won't be re-used.
                 this.cancellationTokenSource = null;
             }
         }
 
-        /// <summary>
-        /// Set the cancelOperation flag, so that an ongoing operation can be aborted.
-        /// </summary>
-        private void CancelButton_Click(object sender, EventArgs e)
+        private async void writeFullContents_BackgroundThread()
         {
-            this.AddUserMessage("Cancel button clicked.");
-            this.cancellationTokenSource.Cancel();
+            try
+            {
+                if (this.vehicle == null)
+                {
+                    // This shouldn't be possible - it would mean the buttons 
+                    // were enabled when they shouldn't be.
+                    return;
+                }
+
+                this.cancellationTokenSource = new CancellationTokenSource();
+
+                string path = null;
+                /*
+                                this.Invoke((MethodInvoker)delegate ()
+                                {
+                                    this.DisableUserInput();
+                                    this.cancelButton.Enabled = true;
+
+                                    path = this.ShowOpenDialog();
+                                });
+
+                                if (path == null)
+                                {
+                                    return;
+                                }
+                */
+                
+                bool kernelRunning = false;
+
+                try
+                {
+                    bool recoveryMode = await this.vehicle.IsInRecoveryMode();
+
+                    if (!recoveryMode)
+                    {
+                        if (await this.vehicle.TryWaitForKernel(1))
+                        {
+                            kernelRunning = true;
+                        }
+                        else
+                        {
+
+                            Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                            if (osidResponse.Status != ResponseStatus.Success)
+                            {
+                                this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+
+                                return;
+                            }
+
+                            PcmInfo info = new PcmInfo(osidResponse.Value);
+
+                            bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                            if (!unlocked)
+                            {
+                                this.AddUserMessage("Unlock was not successful.");
+                                return;
+                            }
+
+                            this.AddUserMessage("Unlock succeeded.");
+                        }
+                    }
+
+
+                    //                    using (Stream stream = File.OpenRead(path))
+                    {
+                        Stream stream = null;
+                        await this.vehicle.WriteContents(kernelRunning, recoveryMode, this.cancellationTokenSource.Token, stream);
+                    }
+                }
+                catch (IOException exception)
+                {
+                    this.AddUserMessage(exception.ToString());
+                }
+            }
+            finally
+            {
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.EnableUserInput();
+                    this.cancelButton.Enabled = false;
+                });
+
+                // The token / token-source can only be cancelled once, so we need to make sure they won't be re-used.
+                this.cancellationTokenSource = null;
+            }
+
         }
     }
 }

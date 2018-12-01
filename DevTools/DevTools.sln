@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bin2Hex", "Bin2Hex\Bin2Hex.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ByteSwap", "ByteSwap\ByteSwap.csproj", "{2E10098D-7AD0-4900-A631-E6906CD6313A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SRecordToKernel", "SRecordToKernel\SRecordToKernel.csproj", "{ED0BB4C6-9099-418B-A761-1A9F7339E10F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{2E10098D-7AD0-4900-A631-E6906CD6313A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E10098D-7AD0-4900-A631-E6906CD6313A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E10098D-7AD0-4900-A631-E6906CD6313A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED0BB4C6-9099-418B-A761-1A9F7339E10F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED0BB4C6-9099-418B-A761-1A9F7339E10F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED0BB4C6-9099-418B-A761-1A9F7339E10F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED0BB4C6-9099-418B-A761-1A9F7339E10F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

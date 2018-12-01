@@ -103,7 +103,7 @@ namespace PcmHacking
             else
             {
                 this.Logger.AddUserMessage("Unable to set AVT device to VPW mode");
-                this.Logger.AddDebugMessage("Expected " + AvtDevice.AVT_VPW.GetString());
+                this.Logger.AddDebugMessage("Expected " + AvtDevice.AVT_VPW.ToString());
                 return false;
             }
 

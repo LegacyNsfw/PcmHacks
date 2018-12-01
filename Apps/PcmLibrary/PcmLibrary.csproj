@@ -5,4 +5,8 @@
     <RootNamespace>PcmHacking</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Module.cs" />
+  </ItemGroup>
+
 </Project>
