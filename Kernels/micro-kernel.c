@@ -62,7 +62,7 @@ int LongSleepWithWatchdog()
 
 typedef enum 
 {
-	MiddleOfMessageDoesNotWork = 0, // not sure why, but the subsequent call with EndOfMessage will drop the last byte
+	MiddleOfMessageDoesNotWork = 0, 
 	StartOfMessage = 1,
 	EndOfMessage = 2,
 	EntireMessage = StartOfMessage | EndOfMessage,
@@ -70,6 +70,14 @@ typedef enum
 
 // Send the given bytes over the VPW bus.
 // The DLC will append the checksum byte, so we don't have to.
+//
+// This has known bugs:
+//
+// If this is called with MiddleOfMessage, the subsequent call with 
+// EndOfMessage will drop the final byte of the final payload.
+//
+// StartOfMessage followed by EndOfMessage sometimes sends just the 
+// EndOfMessage data. 
 void WriteMessage(const char * const message, int length, MessageParts  parts)
 {
 	ScratchWatchdog();
@@ -112,6 +120,8 @@ void WriteMessage(const char * const message, int length, MessageParts  parts)
 				break;
 			}
 		}
+
+		// Consider adding LongSleepWithWatchdog here.
 	}
 }
 
@@ -130,6 +140,7 @@ int ReadMessage()
 
 		WriteMessage(debug1, 6, StartOfMessage);
 		WriteMessage(debug2, 3, EndOfMessage);
+		LongSleepWithWatchdog();
 
 		return 0;
 	}
@@ -179,7 +190,9 @@ KernelStart(void)
 
 	for(;;)
 	{
-		LongSleepWithWatchdog();
+		//LongSleepWithWatchdog();
+		ScratchWatchdog();
+		WasteTime();
 
 		int length = ReadMessage();
 		if (length == 0)
@@ -188,23 +201,16 @@ KernelStart(void)
 			// Note that without this call to LongSleepWithWatchdog, the WriteMessage call will fail.
 			// That's probably related to the fact that the ReadMessage function sends a debug message before returning.
 			// Should try experimenting with different delay lengths to see just how long we need to wait.
-			LongSleepWithWatchdog();
-			WriteMessage(toolPresent, 4, EntireMessage);
+			//LongSleepWithWatchdog();
+			//WriteMessage(toolPresent, 4, EntireMessage);
 			continue;
 		}
 
+		LongSleepWithWatchdog();
+
 		// Echo the received message with a 'tool present' header.
-		for (int index1 = 0; index1 < 4; index1++)
-		{
-			OutgoingMessage[index1] = toolPresent[index1];
-		}
-
-		for (int index2 = 0; index2 < length; index2++)
-		{
-			OutgoingMessage[4 + index2] = IncomingMessage[index2];
-		}
-
-		WriteMessage(OutgoingMessage, 4 + length, EntireMessage);
+		WriteMessage(toolPresent, 4, StartOfMessage);
+		WriteMessage(IncomingMessage, length, EndOfMessage);
 	}
 }
 
