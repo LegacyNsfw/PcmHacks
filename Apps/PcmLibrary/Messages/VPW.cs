@@ -207,12 +207,11 @@ namespace PcmHacking
                 if (Block.Length == PayloadLength + 12) // Correct block size?
                 {
                     Sum = CalcBlockChecksum(Block);
-                    byte[] BlockSum = new byte[PayloadLength + 12];
 
-                    BlockSum[BlockSum.Length - 2] = unchecked((byte)(Sum >> 8));
-                    BlockSum[BlockSum.Length - 1] = unchecked((byte)(Sum & 0xFF));
+                    Block[Block.Length - 2] = unchecked((byte)(Sum >> 8));
+                    Block[Block.Length - 1] = unchecked((byte)(Sum & 0xFF));
 
-                    return BlockSum;
+                    return Block;
                 }
             }
             return Block;
