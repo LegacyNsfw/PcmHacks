@@ -179,35 +179,61 @@ namespace PcmHacking
         public override async Task<bool> SendMessage(Message message)
         {
             byte[] messageBytes = message.GetBytes();
-            string header;
-            string payload;
-            this.ParseMessage(messageBytes, out header, out payload);
+            string sendCommand;
 
-            if (header != this.currentHeader)
+            if (this.Supports4X)
             {
-                string setHeaderResponse = await this.SendRequest("AT SH " + header);
-                this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
+                // AllPro uses AT SH + data bytes
+                string header;
+                string payload;
+                this.ParseMessage(messageBytes, out header, out payload);
 
-                if(setHeaderResponse == "STOPPED")
+                if (header != this.currentHeader)
                 {
-                    // Does it help to retry once?
-                    setHeaderResponse = await this.SendRequest("AT SH " + header);
+                    string setHeaderResponse = await this.SendRequest("AT SH " + header);
                     this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
+
+                    if (setHeaderResponse == "STOPPED")
+                    {
+                        // Does it help to retry once?
+                        setHeaderResponse = await this.SendRequest("AT SH " + header);
+                        this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
+                    }
+
+                    if (!this.ProcessResponse(setHeaderResponse, "set-header command"))
+                    {
+                        return false;
+                    }
+
+                    this.currentHeader = header;
                 }
 
-                if (!this.ProcessResponse(setHeaderResponse, "set-header command"))
+                payload = payload.Replace(" ", "");
+
+                sendCommand = payload + " ";
+            }
+            else
+            {
+                // Scantool uses STPX
+                StringBuilder builder = new StringBuilder();
+                builder.Append("STPX H:");
+                builder.Append(messageBytes[0].ToString("X2"));
+                builder.Append(messageBytes[1].ToString("X2"));
+                builder.Append(messageBytes[2].ToString("X2"));
+                builder.Append(", R:0");
+                builder.Append(", D:");
+                for(int index = 3; index < messageBytes.Length; index++)
                 {
-                    return false;
+                    builder.Append(messageBytes[index].ToString("X2"));
                 }
 
-                this.currentHeader = header;
+                sendCommand = builder.ToString();
             }
 
-            payload = payload.Replace(" ", "");
+            string sendMessageResponse = await this.SendRequest(sendCommand);
 
-            string sendMessageResponse = await this.SendRequest(payload + " ");
-
-            for (int attempt = 0; attempt < 10; attempt++)
+/*
+            for (int attempt = 0; attempt < 1; attempt++)
             {
                 if (string.IsNullOrWhiteSpace(sendMessageResponse))
                 {
@@ -227,7 +253,7 @@ namespace PcmHacking
                     break;
                 }
             }
-
+*/
             if (!this.ProcessResponse(sendMessageResponse, "message content"))
             {
                 return false;
@@ -242,29 +268,34 @@ namespace PcmHacking
         /// <returns></returns>
         protected override async Task Receive()
         {
-            try
+            // This loop is disabled for now, it may be doing more harm than good.
+            for (int attempt = 0; attempt < 1; attempt++)
             {
-                for (int attempt = 0; attempt < 20; attempt++)
+                string response;
+                try
                 {
-                    string response = await this.ReadELMLine();
-                    if (response == "STOPPED")
-                    {
-                        await Task.Delay(100);
-                        continue;
-                    }
-
-                    this.ProcessResponse(response, "receive");
-                    break;
+                    response = await this.ReadELMLine();
+                }
+                catch (TimeoutException)
+                {
+                    this.Logger.AddDebugMessage("Timeout during receive.");
+                    // await this.ReceiveViaMonitorMode();
+                    await Task.Delay(100);
+                    continue;
                 }
 
-                if (this.ReceivedMessageCount == 0)
+                if (response == "STOPPED")
                 {
-                   // await this.ReceiveViaMonitorMode();
+                    await Task.Delay(100);
+                    continue;
                 }
+
+                this.ProcessResponse(response, "receive");
+                break;
             }
-            catch (TimeoutException)
+
+            if (this.ReceivedMessageCount == 0)
             {
-                this.Logger.AddDebugMessage("Timeout during receive.");
                 // await this.ReceiveViaMonitorMode();
             }
         }
@@ -373,7 +404,14 @@ namespace PcmHacking
         private async Task<string> SendRequest(string request)
         {
             this.Logger.AddDebugMessage("TX: " + request);
-            await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
+            if (this.Supports4X)
+            {
+                await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
+            }
+            else
+            {
+                await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r"));
+            }
 
             try
             {
@@ -428,10 +466,15 @@ namespace PcmHacking
                 //this.Logger.AddDebugMessage("Byte: " + b[0].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(b));
                 buffer[i] = b[0];
                 i++;
+
+                if (b[0] == '>')
+                {
+                    // This should be how the loop ends.
+                    this.Logger.AddDebugMessage("Found terminator '>'");
+                    break;
+                }
             } while ((i < buffersize) && (b[0] != '>')); // continue until the next prompt
-
-            //this.Logger.AddDebugMessage("Found terminator '>'");
-
+            
             // count the wanted bytes and replace CR with space
             int wanted = 0;
             int j;
