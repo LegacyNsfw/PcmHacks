@@ -10,17 +10,22 @@ namespace PcmHacking
     /// <summary>
     /// This class encapsulates all code that is unique to the ScanTool MX interface.
     /// </summary>
-    public class ScanToolDevice : ElmDevice
+    public class ScanToolDeviceImplementation : ElmDeviceImplementation
     {
         /// <summary>
         /// Device type for use in the Device Picker dialog box, and for internal comparisons.
         /// </summary>
-        public new const string DeviceType = "ObdLink SX";
+        public const string DeviceType = "ObdLink SX";
         
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ScanToolDevice(IPort port, ILogger logger) : base(port, logger)
+        public ScanToolDeviceImplementation(
+            Action<Message> enqueue,
+            Func<int> getRecievedMessageCount,
+            IPort port, 
+            ILogger logger) : 
+            base(enqueue, getRecievedMessageCount, port, logger)
         {
             // Both of these numbers could be slightly larger, but round numbers are easier to work with,
             // and these are only used with the Scantool SX interface anyhow. If we detect an AllPro
@@ -111,14 +116,14 @@ namespace PcmHacking
         /// <summary>
         /// Try to read an incoming message from the device.
         /// </summary>
-        protected override async Task Receive()
+        public override async Task Receive()
         {
             try
             {
                 string response = await this.ReadELMLine();
                 this.ProcessResponse(response, "receive");
 
-                if (this.ReceivedMessageCount == 0)
+                if (this.getRecievedMessageCount() == 0)
                 {
                    // await this.ReceiveViaMonitorMode();
                 }
@@ -137,7 +142,6 @@ namespace PcmHacking
         {
             try
             {
-                // The code below is currently only supported by Scantool (not AllPro).
                 string monitorResponse = await this.SendRequest("AT MA");
                 this.Logger.AddDebugMessage("Response to AT MA 1: " + monitorResponse);
 

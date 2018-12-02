@@ -10,12 +10,12 @@ namespace PcmHacking
     /// <summary>
     /// This class encapsulates all code that is unique to the AllPro USB interface.
     /// </summary>
-    public class AllProDevice : ElmDevice
+    public class AllProDeviceImplementation : ElmDeviceImplementation
     {
         /// <summary>
         /// Device type for use in the Device Picker dialog box, and for internal comparisons.
         /// </summary>
-        public new const string DeviceType = "AllPro";
+        public const string DeviceType = "AllPro";
         
         /// <summary>
         /// The device can cache the message header to speed up serial communications. 
@@ -26,7 +26,12 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public AllProDevice(IPort port, ILogger logger) : base(port, logger)
+        public AllProDeviceImplementation(
+            Action<Message> enqueue, 
+            Func<int> getRecievedMessageCount, 
+            IPort port, 
+            ILogger logger) : 
+            base(enqueue, getRecievedMessageCount, port, logger)
         {
             // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
             this.MaxSendSize = 2048 + 12;
@@ -141,7 +146,7 @@ namespace PcmHacking
         /// Try to read an incoming message from the device.
         /// </summary>
         /// <returns></returns>
-        protected override async Task Receive()
+        public override async Task Receive()
         {
             try
             {
@@ -152,30 +157,6 @@ namespace PcmHacking
             {
                 this.Logger.AddDebugMessage("Timeout during receive.");
             }
-        }
-
-        /// <summary>
-        /// Set the interface to low (false) or high (true) speed
-        /// </summary>
-        /// <remarks>
-        /// The caller must also tell the PCM to switch speeds
-        /// </remarks>
-        protected override async Task<bool> SetVpwSpeedInternal(VpwSpeed newSpeed)
-        {
-            if (newSpeed == VpwSpeed.Standard)
-            {
-                this.Logger.AddDebugMessage("AllPro setting VPW 1X");
-                if (!await this.SendAndVerify("AT VPW1", "OK"))
-                    return false;
-            }
-            else
-            {
-                this.Logger.AddDebugMessage("AllPro setting VPW 4X");
-                if (!await this.SendAndVerify("AT VPW4", "OK"))
-                    return false;
-            }
-
-            return true;
         }
     }
 }
