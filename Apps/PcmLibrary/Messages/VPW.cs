@@ -173,7 +173,10 @@ namespace PcmHacking
             UInt16 Sum = 0;
             int PayloadLength = (Block[5] << 8) + Block[6];
 
-            for (int i = 4; i < PayloadLength; i++) // skip prio, dest, src, mode
+            int start = 4;
+            int end = Block.Length - 2;
+
+            for (int i = start; i < end; i++) // skip prio, dest, src, mode
             {
                 Sum += Block[i];
             }
