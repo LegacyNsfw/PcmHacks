@@ -28,7 +28,7 @@ namespace PcmHacking
         /// <summary>
         /// This will be initalized after discovering which device is actually connected at the moment.
         /// </summary>
-        private SerialDevice implementation = null;
+        private ElmDevice implementation = null;
 
         /// <summary>
         /// Constructor.
@@ -170,7 +170,7 @@ namespace PcmHacking
         /// <returns></returns>
         protected override async Task Receive()
         {
-            await this.Receive();
+            await this.implementation.Receive();
         }
         
         /// <summary>

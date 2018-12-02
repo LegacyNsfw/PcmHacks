@@ -59,7 +59,7 @@ namespace PcmHacking
                 string stID = await this.SendRequest("ST I");                 // Identify (ScanTool.net)
                 if (stID == "?")
                 {
-                    this.Logger.AddUserMessage("This is not a ScanTool device.");
+                    this.Logger.AddDebugMessage("This is not a ScanTool device.");
                     return false;
                 }
 

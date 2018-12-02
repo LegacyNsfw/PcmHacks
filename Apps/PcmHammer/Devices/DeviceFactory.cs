@@ -55,8 +55,8 @@ namespace PcmHacking
                         device = new MockDevice(port, logger);
                         break;
 
-                    case ScanToolDevice.DeviceType:
-                        device = new ScanToolDevice(port, logger);
+                    case ElmDevice.DeviceType:
+                        device = new ElmDevice(port, logger);
                         break;
 
                     default:

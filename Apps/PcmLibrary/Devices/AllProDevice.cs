@@ -60,7 +60,7 @@ namespace PcmHacking
                 string apID = await this.SendRequest("AT #1");                // Identify (AllPro)
                 if (apID == "?")
                 {
-                    this.Logger.AddUserMessage("This is not an AllPro device.");
+                    this.Logger.AddDebugMessage("This is not an AllPro device.");
                     return false;
                 }
 
