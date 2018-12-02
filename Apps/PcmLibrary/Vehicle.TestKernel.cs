@@ -84,6 +84,7 @@ namespace PcmHacking
             return await this.SendMessageValidateResponse(
                 this.messageFactory.CreateKernelPing(),
                 this.messageParser.ParseKernelPingResponse,
+                null,
                 "kernel ping",
                 "Kernel is responding.",
                 "No response received from the flash kernel.",
@@ -97,6 +98,7 @@ namespace PcmHacking
             return await this.SendMessageValidateResponse(
                 this.messageFactory.CreateWriteKernelResetRequest(),
                 this.messageParser.ParseWriteKernelResetResponse,
+                null,
                 "flash-kernel PCM reset request",
                 "PCM reset.",
                 "Unable to reset the PCM.");
@@ -150,6 +152,7 @@ namespace PcmHacking
             return await this.SendMessageValidateResponse(
                 this.messageFactory.CreateFlashLockRequest(),
                 this.messageParser.ParseFlashLockResponse,
+                null,
                 "flash lock request",
                 "Flash memory locked.",
                 "Unable to lock flash memory.");

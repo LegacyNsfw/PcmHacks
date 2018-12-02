@@ -206,6 +206,28 @@ namespace PcmHacking
             payload = payload.Replace(" ", "");
 
             string sendMessageResponse = await this.SendRequest(payload + " ");
+
+            for (int attempt = 0; attempt < 10; attempt++)
+            {
+                if (string.IsNullOrWhiteSpace(sendMessageResponse))
+                {
+                    this.Logger.AddDebugMessage("No response, waiting...");
+                    await Task.Delay(100);
+                    try
+                    {
+                        sendMessageResponse = await this.ReadELMLine();
+                    }
+                    catch (TimeoutException)
+                    {
+                        this.Logger.AddDebugMessage("Timeout.");
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+
             if (!this.ProcessResponse(sendMessageResponse, "message content"))
             {
                 return false;
@@ -222,8 +244,18 @@ namespace PcmHacking
         {
             try
             {
-                string response = await this.ReadELMLine();
-                this.ProcessResponse(response, "receive");
+                for (int attempt = 0; attempt < 20; attempt++)
+                {
+                    string response = await this.ReadELMLine();
+                    if (response == "STOPPED")
+                    {
+                        await Task.Delay(100);
+                        continue;
+                    }
+
+                    this.ProcessResponse(response, "receive");
+                    break;
+                }
 
                 if (this.ReceivedMessageCount == 0)
                 {

@@ -415,6 +415,12 @@ namespace PcmHacking
             return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x80);
         }
 
+        //  JS kernel sends these when unlocking/erasing the flash chip.
+        public Response<bool> ParseJsKernelProcessingMessage(Message message)
+        {
+            return this.DoSimpleValidation(message, 0x6C, 0xF0, 0x10, 0x36, 0x00, 0x78);
+        }
+
         public Response<bool> ParseWriteKernelDataRequest(Message message, out int length, out int address)
         {
             length = 0;

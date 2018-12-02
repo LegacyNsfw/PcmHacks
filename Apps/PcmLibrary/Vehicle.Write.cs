@@ -87,6 +87,7 @@ namespace PcmHacking
             if (!await this.SendMessageValidateResponse(
                 start,
                 this.messageParser.ParseStartFullFlashResponse,
+                null,
                 "start full flash",
                 "Full flash starting.",
                 "Kernel won't allow a full flash."))
@@ -104,7 +105,8 @@ namespace PcmHacking
                  if (!await this.SendMessageValidateResponse(
                     message,
                     this.messageParser.ParseChunkWriteResponse,
-                    string.Format("data from {0} to {1}", bytesSent, bytesSent + chunkSize),
+                    this.messageParser.ParseJsKernelProcessingMessage,
+                    string.Format("chunk upload ({0} to {1})", bytesSent, bytesSent + chunkSize),
                     "Data chunk sent.",
                     "Unable to send data chunk."))
                 {
@@ -117,10 +119,12 @@ namespace PcmHacking
         {
             return Task.FromResult(0);
         }
+       
         
         private async Task<bool> SendMessageValidateResponse(
             Message message,
-            Func<Message, Response<bool>> filter,
+            Func<Message, Response<bool>> requiredMessageFilter,
+            Func<Message, Response<bool>> expectedMessageFilter,
             string messageDescription,
             string successMessage,
             string failureMessage,
@@ -141,7 +145,7 @@ namespace PcmHacking
                     continue;
                 }
 
-                if (!await this.WaitForSuccess(filter, 10))
+                if (!await this.WaitForSuccess(requiredMessageFilter, expectedMessageFilter, 10))
                 {
                     this.logger.AddUserMessage("No " + messageDescription + " response received.");
                     if (pingKernel)

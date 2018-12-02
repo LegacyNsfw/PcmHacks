@@ -294,5 +294,45 @@ namespace PcmHacking
 
             return false;
         }
+
+        /// <summary>
+        /// Read messages from the device, ignoring irrelevant messages.
+        /// </summary>
+        private async Task<bool> WaitForSuccess(Func<Message, Response<bool>> successFilter, Func<Message, Response<bool>> expectedFilter, int attempts = MaxReceiveAttempts)
+        {
+            for (int attempt = 1; attempt <= attempts; attempt++)
+            {
+                Message message = await this.device.ReceiveMessage();
+                if (message == null)
+                {
+                    continue;
+                }
+
+                Response<bool> successResponse = successFilter(message);
+                if (successResponse.Status != ResponseStatus.Success)
+                {
+                    if (expectedFilter != null)
+                    {
+                        Response<bool> expectedMessageResponse = expectedFilter(message);
+                        if (expectedMessageResponse.Status == ResponseStatus.Success)
+                        {
+                            this.logger.AddDebugMessage("Skipping related message.");
+
+                            // These won't count against the retry limit.
+                            attempts--;
+                            continue;
+                        }
+                    }
+
+                    this.logger.AddDebugMessage("Ignoring message: " + successResponse.Status);
+                    continue;
+                }
+
+                this.logger.AddDebugMessage("Found response, " + (successResponse.Value ? "succeeded." : "failed."));
+                return successResponse.Value;
+            }
+
+            return false;
+        }
     }
 }
