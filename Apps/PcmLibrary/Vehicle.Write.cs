@@ -95,16 +95,13 @@ namespace PcmHacking
             }
             
             byte chunkSize = 192;
-            byte[] header = new byte[] { 0x6D, 0x10, 0x0F0, 0x36, 0x00, 0x00, chunkSize, 0xFF, 0xA0, 0x00 };
-            byte[] messageBytes = new byte[header.Length + chunkSize + 2];
-            Buffer.BlockCopy(header, 0, messageBytes, 0, header.Length);
+            byte[] payload = new byte[chunkSize];
             for (int bytesSent = 0; bytesSent < stream.Length; bytesSent += chunkSize)
             {
-                int bytesRead = stream.Read(messageBytes, header.Length, chunkSize);
-                VPWUtils.AddBlockChecksum(messageBytes); // TODO: Move this function into the Message class.
-                Message message = new Message(messageBytes);
-
-                if (!await this.SendMessageValidateResponse(
+                int bytesRead = stream.Read(payload, 0, chunkSize);
+                Message message = this.messageFactory.CreateBlockMessage(payload, 0, chunkSize, 0xFFA000, false);
+                
+                 if (!await this.SendMessageValidateResponse(
                     message,
                     this.messageParser.ParseChunkWriteResponse,
                     string.Format("data from {0} to {1}", bytesSent, bytesSent + chunkSize),
@@ -120,65 +117,7 @@ namespace PcmHacking
         {
             return Task.FromResult(0);
         }
-
-        /// <summary>
-        /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array
-        /// </summary>
-        /// <remarks>
-        /// This is duplicating the code in MessageFactory. Should get rid of this and just use that.
-        /// </remarks>
-        public static UInt16 CalcBlockChecksum(byte[] Block)
-        {
-            UInt16 Sum = 0;
-            int PayloadLength = (Block[5] << 8) + Block[6];
-
-            int start = 4;
-            int end = Block.Length - 2;
-
-            for (int i = start; i < end; i++) // skip prio, dest, src, mode
-            {
-                Sum += Block[i];
-            }
-
-            return Sum;
-        }
-
-        /// <summary>
-        /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// This is duplicating the code in MessageFactory. Should get rid of this and just use that.
-        /// 
-        /// Appends 2 bytes at the end of the array with the sum
-        /// TODO: Throw an error if the input data is not valid?
-        /// 
-        /// 6C|10|F0|36/80|03 F1|FF 91 50 .... CA CS
-        /// 0  1  2  3  4  5  6  7  8  9
-        /// 1  2  3  4  5  6  7  8  9  10      11 12
-        /// </remarks>
-        public static byte[] AddBlockChecksum(byte[] Block)
-        {
-            UInt16 Sum = 0;
-            int PayloadLength;
-
-            // Only generate the sum and append to the block if the length is right
-            if (Block.Length > 6) // Do we have a length?
-            {
-                PayloadLength = (Block[5] << 8) + Block[6];
-                if (Block.Length == PayloadLength + 12) // Correct block size?
-                {
-                    Sum = CalcBlockChecksum(Block);
-
-                    Block[Block.Length - 2] = unchecked((byte)(Sum >> 8));
-                    Block[Block.Length - 1] = unchecked((byte)(Sum & 0xFF));
-
-                    return Block;
-                }
-            }
-            return Block;
-        }
-
+        
         private async Task<bool> SendMessageValidateResponse(
             Message message,
             Func<Message, Response<bool>> filter,
