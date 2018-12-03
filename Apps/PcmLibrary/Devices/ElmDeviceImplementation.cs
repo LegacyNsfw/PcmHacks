@@ -39,6 +39,12 @@ namespace PcmHacking
             this.getRecievedMessageCount = getRecievedMessageCount;
             this.Port = port;
             this.Logger = logger;
+
+            // These are only relevant for device initialization.
+            // After that, configuration from the derived classes will be used instead.
+            this.MaxReceiveSize = 200;
+            this.MaxSendSize = 200;
+            this.Supports4X = false;
         }
 
         /// <summary>
@@ -106,7 +112,7 @@ namespace PcmHacking
         public async Task<string> SendRequest(string request)
         {
             this.Logger.AddDebugMessage("TX: " + request);
-            await this.Port.Send(Encoding.ASCII.GetBytes(request + "\r\n"));
+            await this.Port.Send(Encoding.ASCII.GetBytes(request + " \r\n"));
 
             try
             {

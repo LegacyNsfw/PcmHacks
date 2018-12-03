@@ -85,32 +85,95 @@ namespace PcmHacking
         /// </summary>
         public override async Task<bool> SendMessage(Message message)
         {
-            byte[] messageBytes = message.GetBytes();
-            
-            StringBuilder builder = new StringBuilder();
-            builder.Append("STPX H:");
-            builder.Append(messageBytes[0].ToString("X2"));
-            builder.Append(messageBytes[1].ToString("X2"));
-            builder.Append(messageBytes[2].ToString("X2"));
-            builder.Append(", R:0");
-            builder.Append(", D:");
+            bool useSTPX = false;
 
-            for (int index = 3; index < messageBytes.Length; index++)
+            if (useSTPX)
             {
-                builder.Append(messageBytes[index].ToString("X2"));
+                byte[] messageBytes = message.GetBytes();
+
+                StringBuilder builder = new StringBuilder();
+                builder.Append("STPX H:");
+                builder.Append(messageBytes[0].ToString("X2"));
+                builder.Append(messageBytes[1].ToString("X2"));
+                builder.Append(messageBytes[2].ToString("X2"));
+                builder.Append(", R:1");
+                builder.Append(", D:");
+
+                for (int index = 3; index < messageBytes.Length; index++)
+                {
+                    builder.Append(messageBytes[index].ToString("X2"));
+                }
+
+                builder.Append("\r");
+
+                string sendCommand = builder.ToString();
+
+                string sendMessageResponse = await this.SendRequest(sendCommand);
+
+                if (string.IsNullOrEmpty(sendMessageResponse))
+                {
+                    sendMessageResponse = await this.ReadELMLine();
+                }
+
+                if (!this.ProcessResponse(sendMessageResponse, "message content"))
+                {
+
+                    return false;
+                }
             }
-
-            builder.Append("\r");
-
-            string sendCommand = builder.ToString();
-
-            string sendMessageResponse = await this.SendRequest(sendCommand);
-            if (!this.ProcessResponse(sendMessageResponse, "message content"))
+            else
             {
-                return false;
+                byte[] messageBytes = message.GetBytes();
+                string header;
+                string payload;
+                this.ParseMessage(messageBytes, out header, out payload);
+
+                if (header != this.currentHeader)
+                {
+                    string setHeaderResponse = await this.SendRequest("AT SH " + header);
+                    this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
+
+                    if (setHeaderResponse == "STOPPED")
+                    {
+                        // Does it help to retry once?
+                        setHeaderResponse = await this.SendRequest("AT SH " + header);
+                        this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
+                    }
+
+                    if (!this.ProcessResponse(setHeaderResponse, "set-header command"))
+                    {
+                        return false;
+                    }
+
+                    this.currentHeader = header;
+                }
+
+                payload = payload.Replace(" ", "");
+
+                string sendMessageResponse = await this.SendRequest(payload + " ");
+                if (!this.ProcessResponse(sendMessageResponse, "message content"))
+                {
+                    return false;
+                }
+
+                return true;
             }
 
             return true;
+        }
+
+        private string currentHeader = "no header specified";
+
+        /// <summary>
+        /// Borrowed from the AllPro class just for testing. Should be removed after STPX is working.
+        /// </summary>
+        private void ParseMessage(byte[] messageBytes, out string header, out string payload)
+        {
+            // The incoming byte array needs to separated into header and payload portions,
+            // which are sent separately.
+            string hexRequest = messageBytes.ToHex();
+            header = hexRequest.Substring(0, 9);
+            payload = hexRequest.Substring(9);
         }
 
         /// <summary>
