@@ -16,7 +16,9 @@ namespace Tests
             // Create the object we're going to test.
             TestLogger logger = new TestLogger();
             TestPort port = new TestPort(logger);
-            ScanToolDevice device = new ScanToolDevice(port, logger);
+            Message response = null;
+            Action<Message> responseSetter = (x) => { response = x; };
+            ScanToolDeviceImplementation device = new ScanToolDeviceImplementation(responseSetter, null, port, logger);
 
             // Specify the sequence of bytes that we would expect to get back from the serial port.
             // Note that the test passes, but the first sequence ends with ">\r\n" and the second ends with "\r\n>"  - this seems suspicious.
@@ -36,8 +38,6 @@ namespace Tests
             Assert.AreEqual("3C 01\r\n", Encoding.ASCII.GetString(port.MessagesSent[1]), "Read block 1 command");
 
             // Confirm that the device interpreted the response as expected.
-            Message response = await device.ReceiveMessage();
-
             Assert.IsNotNull(response, "Response should not be null.");
             Assert.AreEqual("6C F0 10 7C 01 00 31 47 31 59 59", response.GetBytes().ToHex(), "Response message");
         }
