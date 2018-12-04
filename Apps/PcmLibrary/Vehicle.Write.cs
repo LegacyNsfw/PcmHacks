@@ -119,7 +119,7 @@ namespace PcmHacking
                 if (!await this.SendMessageValidateResponse(
                     message,
                     this.messageParser.ParseChunkWriteResponse,
-                    null,
+                    this.messageParser.ParseJsKernelProcessingMessage,
                     string.Format("data from {0} to {1}", bytesSent, bytesSent + chunkSize),
                     "Data chunk sent.",
                     "Unable to send data chunk."))
