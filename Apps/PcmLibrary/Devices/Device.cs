@@ -221,7 +221,7 @@ namespace PcmHacking
             {
                 case TimeoutScenario.ReadProperty:
                     // Approximate number of bytes in a get-VIN or get-OSID response.
-                    packetSize = 20;
+                    packetSize = 50;
                     break;
 
                 case TimeoutScenario.ReadMemoryBlock:
