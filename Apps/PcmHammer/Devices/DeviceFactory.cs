@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
     class DeviceFactory
     {
@@ -55,8 +55,8 @@ namespace Flash411
                         device = new MockDevice(port, logger);
                         break;
 
-                    case ScanToolDevice.DeviceType:
-                        device = new ScanToolDevice(port, logger);
+                    case ElmDevice.DeviceType:
+                        device = new ElmDevice(port, logger);
                         break;
 
                     default:

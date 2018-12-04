@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Flash411
+namespace PcmHacking
 {
     static class Program
     {
@@ -14,6 +14,8 @@ namespace Flash411
         [STAThread]
         static void Main()
         {
+            Configuration.SetAccessor(new WinFormsConfigurationAccessor());
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());

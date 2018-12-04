@@ -9,7 +9,7 @@ using J2534;
 using Microsoft.Win32;
 using System.Runtime.InteropServices;
 
-namespace Flash411
+namespace PcmHacking
 {
     /// <summary>
     /// This class encapsulates all code that is unique to the AVT 852 interface.
@@ -193,7 +193,7 @@ namespace Flash411
         /// <summary>
         /// Read an network packet from the interface, and return a Response/Message
         /// </summary>
-        protected async override Task Receive()
+        protected override Task Receive()
         {
             //this.Logger.AddDebugMessage("Trace: Read Network Packet");
 
@@ -214,7 +214,7 @@ namespace Flash411
                 if (OBDError != J2534Err.STATUS_NOERROR)
                 {
                     this.Logger.AddDebugMessage("ReadMsgs OBDError: " + OBDError);
-                    return;
+                    return Task.FromResult(0);
                 }
 
                 sw.Stop();
@@ -235,17 +235,18 @@ namespace Flash411
             if (OBDError != J2534Err.STATUS_NOERROR || sw.ElapsedMilliseconds > (long)ReadTimeout)
             {
                 this.Logger.AddDebugMessage("ReadMsgs OBDError: " + OBDError);
-                return;
+                return Task.FromResult(0);
             }
 
             this.Logger.AddDebugMessage("RX: " + PassMess.GetBytes().ToHex());
             this.Enqueue(new Message(PassMess.GetBytes(), PassMess.Timestamp, (ulong)OBDError));
+            return Task.FromResult(0);
         }
 
         /// <summary>
         /// Convert a Message to an J2534 formatted transmit, and send to the interface
         /// </summary>
-        private async Task<Response<J2534Err>> SendNetworkMessage(Message message, TxFlag Flags)
+        private Response<J2534Err> SendNetworkMessage(Message message, TxFlag Flags)
         {
             //this.Logger.AddDebugMessage("Trace: Send Network Packet");
 
@@ -271,17 +272,17 @@ namespace Flash411
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
-        public async override Task<bool> SendMessage(Message message)
+        public override Task<bool> SendMessage(Message message)
         {
             //this.Logger.AddDebugMessage("Send request called");
             this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
-            Response<J2534Err> MyError = await SendNetworkMessage(message,TxFlag.NONE);
+            Response<J2534Err> MyError = SendNetworkMessage(message,TxFlag.NONE);
             if (MyError.Status != ResponseStatus.Success)
             {
-                return false;
+                return Task.FromResult(false);
             }
 
-            return true;
+            return Task.FromResult(true);
         }
         
         /// <summary>

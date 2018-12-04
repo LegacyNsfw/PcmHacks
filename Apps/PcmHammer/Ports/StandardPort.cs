@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Flash411
+namespace PcmHacking
 {
     /// <summary>
     /// This class is responsible for sending and receiving data over a serial port.
@@ -15,7 +15,11 @@ namespace Flash411
     {
         private string name;
         private SerialPort port;
-        private Action<object, SerialDataReceivedEventArgs> dataReceivedCallback;
+
+        /// <summary>
+        /// This is an experiment that did not end well the first time, but I still think it should work.
+        /// </summary>
+        // private Action<object, SerialDataReceivedEventArgs> dataReceivedCallback;
 
         /// <summary>
         /// Constructor.
@@ -53,11 +57,12 @@ namespace Flash411
             if (config.Timeout == 0) config.Timeout = 1000; // default to 1 second but allow override.
             this.port.ReadTimeout = config.Timeout;
 
-            if (config.DataReceived != null)
+/*            if (config.DataReceived != null)
             {
                 this.dataReceivedCallback = config.DataReceived;
                 this.port.DataReceived += this.DataReceived;
             }
+*/
 
             this.port.Open();
 
@@ -98,10 +103,10 @@ namespace Flash411
         /// <summary>
         /// Receive a sequence of bytes over the serial port.
         /// </summary>
-        async Task<int> IPort.Receive(byte[] buffer, int offset, int count)
+        Task<int> IPort.Receive(byte[] buffer, int offset, int count)
         {
             // Using the BaseStream causes data to be lost.
-            return this.port.Read(buffer, offset, count);
+            return Task<int>.FromResult(this.port.Read(buffer, offset, count));
         }
 
         /// <summary>
@@ -123,11 +128,11 @@ namespace Flash411
         }
 
         /// <summary>
-        /// Serial data callback.
+        /// Serial data callback. Didn't work the first time, but I still have hopes...
         /// </summary>
         private void DataReceived(object sender, SerialDataReceivedEventArgs args)
         {
-            this.dataReceivedCallback(sender, args);
+//            this.dataReceivedCallback(sender, args);
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿namespace Flash411
+﻿namespace PcmHacking
 {
     partial class MainForm
     {
@@ -34,27 +34,31 @@
             this.selectButton = new System.Windows.Forms.Button();
             this.deviceDescription = new System.Windows.Forms.Label();
             this.operationsBox = new System.Windows.Forms.GroupBox();
-            this.cancelButton = new System.Windows.Forms.Button();
+            this.testKernelButton = new System.Windows.Forms.Button();
             this.writeFullContentsButton = new System.Windows.Forms.Button();
+            this.cancelButton = new System.Windows.Forms.Button();
+            this.writeCalibrationButton = new System.Windows.Forms.Button();
             this.readFullContentsButton = new System.Windows.Forms.Button();
             this.modifyVinButton = new System.Windows.Forms.Button();
             this.readPropertiesButton = new System.Windows.Forms.Button();
             this.tabs = new System.Windows.Forms.TabControl();
             this.resultsTab = new System.Windows.Forms.TabPage();
             this.userLog = new System.Windows.Forms.TextBox();
+            this.helpTab = new System.Windows.Forms.TabPage();
+            this.helpWebBrowser = new System.Windows.Forms.WebBrowser();
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
             this.startServerButton = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
-            this.label2 = new System.Windows.Forms.Label();
-            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
-            this.linkLabel3 = new System.Windows.Forms.LinkLabel();
-            this.label3 = new System.Windows.Forms.Label();
+            this.releasedUnder = new System.Windows.Forms.Label();
+            this.releasedAt = new System.Windows.Forms.LinkLabel();
+            this.releasedByAntus = new System.Windows.Forms.Label();
+            this.releasedAtPcmHacking = new System.Windows.Forms.LinkLabel();
+            this.releasedEtc = new System.Windows.Forms.Label();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
             this.resultsTab.SuspendLayout();
+            this.helpTab.SuspendLayout();
             this.debugTab.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -104,8 +108,12 @@
             // 
             // operationsBox
             // 
-            this.operationsBox.Controls.Add(this.cancelButton);
+            this.operationsBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.operationsBox.Controls.Add(this.testKernelButton);
             this.operationsBox.Controls.Add(this.writeFullContentsButton);
+            this.operationsBox.Controls.Add(this.cancelButton);
+            this.operationsBox.Controls.Add(this.writeCalibrationButton);
             this.operationsBox.Controls.Add(this.readFullContentsButton);
             this.operationsBox.Controls.Add(this.modifyVinButton);
             this.operationsBox.Controls.Add(this.readPropertiesButton);
@@ -113,32 +121,55 @@
             this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
             this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
-            this.operationsBox.Size = new System.Drawing.Size(224, 171);
+            this.operationsBox.Size = new System.Drawing.Size(224, 315);
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
             // 
+            // testKernelButton
+            // 
+            this.testKernelButton.Location = new System.Drawing.Point(6, 183);
+            this.testKernelButton.Margin = new System.Windows.Forms.Padding(2);
+            this.testKernelButton.Name = "testKernelButton";
+            this.testKernelButton.Size = new System.Drawing.Size(214, 25);
+            this.testKernelButton.TabIndex = 5;
+            this.testKernelButton.Text = "&Test Kernel";
+            this.testKernelButton.UseVisualStyleBackColor = true;
+            this.testKernelButton.Click += new System.EventHandler(this.testKernelButton_Click);
+            // 
+            // writeFullContentsButton
+            // 
+            this.writeFullContentsButton.Location = new System.Drawing.Point(6, 136);
+            this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
+            this.writeFullContentsButton.Name = "writeFullContentsButton";
+            this.writeFullContentsButton.Size = new System.Drawing.Size(214, 25);
+            this.writeFullContentsButton.TabIndex = 4;
+            this.writeFullContentsButton.Text = "Write &Full Contents";
+            this.writeFullContentsButton.UseVisualStyleBackColor = true;
+            this.writeFullContentsButton.Click += new System.EventHandler(this.writeFullContentsButton_Click);
+            // 
             // cancelButton
             // 
-            this.cancelButton.Location = new System.Drawing.Point(5, 137);
+            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cancelButton.Location = new System.Drawing.Point(5, 276);
             this.cancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(214, 25);
-            this.cancelButton.TabIndex = 4;
+            this.cancelButton.TabIndex = 6;
             this.cancelButton.Text = "&Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
             this.cancelButton.Click += new System.EventHandler(this.CancelButton_Click);
             // 
-            // writeFullContentsButton
+            // writeCalibrationButton
             // 
-            this.writeFullContentsButton.Location = new System.Drawing.Point(5, 108);
-            this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
-            this.writeFullContentsButton.Name = "writeFullContentsButton";
-            this.writeFullContentsButton.Size = new System.Drawing.Size(214, 25);
-            this.writeFullContentsButton.TabIndex = 3;
-            this.writeFullContentsButton.Text = "&Write Full Contents";
-            this.writeFullContentsButton.UseVisualStyleBackColor = true;
-            this.writeFullContentsButton.Click += new System.EventHandler(this.writeFullContentsButton_Click);
+            this.writeCalibrationButton.Location = new System.Drawing.Point(5, 107);
+            this.writeCalibrationButton.Margin = new System.Windows.Forms.Padding(2);
+            this.writeCalibrationButton.Name = "writeCalibrationButton";
+            this.writeCalibrationButton.Size = new System.Drawing.Size(214, 25);
+            this.writeCalibrationButton.TabIndex = 3;
+            this.writeCalibrationButton.Text = "&Write Calibration";
+            this.writeCalibrationButton.UseVisualStyleBackColor = true;
+            this.writeCalibrationButton.Click += new System.EventHandler(this.writeCalibrationButton_Click);
             // 
             // readFullContentsButton
             // 
@@ -179,13 +210,14 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabs.Controls.Add(this.resultsTab);
+            this.tabs.Controls.Add(this.helpTab);
             this.tabs.Controls.Add(this.debugTab);
             this.tabs.Location = new System.Drawing.Point(238, 10);
             this.tabs.Margin = new System.Windows.Forms.Padding(2);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(577, 403);
-            this.tabs.TabIndex = 6;
+            this.tabs.Size = new System.Drawing.Size(577, 539);
+            this.tabs.TabIndex = 3;
             // 
             // resultsTab
             // 
@@ -194,7 +226,7 @@
             this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
             this.resultsTab.Name = "resultsTab";
             this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
-            this.resultsTab.Size = new System.Drawing.Size(569, 377);
+            this.resultsTab.Size = new System.Drawing.Size(569, 513);
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
@@ -210,8 +242,29 @@
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.userLog.Size = new System.Drawing.Size(563, 368);
+            this.userLog.Size = new System.Drawing.Size(563, 504);
             this.userLog.TabIndex = 0;
+            // 
+            // helpTab
+            // 
+            this.helpTab.Controls.Add(this.helpWebBrowser);
+            this.helpTab.Location = new System.Drawing.Point(4, 22);
+            this.helpTab.Margin = new System.Windows.Forms.Padding(2);
+            this.helpTab.Name = "helpTab";
+            this.helpTab.Size = new System.Drawing.Size(569, 513);
+            this.helpTab.TabIndex = 2;
+            this.helpTab.Text = "Help";
+            this.helpTab.UseVisualStyleBackColor = true;
+            // 
+            // helpWebBrowser
+            // 
+            this.helpWebBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.helpWebBrowser.Location = new System.Drawing.Point(0, 0);
+            this.helpWebBrowser.Margin = new System.Windows.Forms.Padding(2);
+            this.helpWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
+            this.helpWebBrowser.Name = "helpWebBrowser";
+            this.helpWebBrowser.Size = new System.Drawing.Size(569, 513);
+            this.helpWebBrowser.TabIndex = 0;
             // 
             // debugTab
             // 
@@ -220,7 +273,7 @@
             this.debugTab.Margin = new System.Windows.Forms.Padding(2);
             this.debugTab.Name = "debugTab";
             this.debugTab.Padding = new System.Windows.Forms.Padding(2);
-            this.debugTab.Size = new System.Drawing.Size(569, 377);
+            this.debugTab.Size = new System.Drawing.Size(569, 513);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -234,91 +287,84 @@
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.debugLog.Size = new System.Drawing.Size(565, 373);
+            this.debugLog.Size = new System.Drawing.Size(565, 509);
             this.debugLog.TabIndex = 0;
             // 
             // startServerButton
             // 
-            this.startServerButton.Location = new System.Drawing.Point(14, 384);
+            this.startServerButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.startServerButton.Location = new System.Drawing.Point(14, 520);
             this.startServerButton.Margin = new System.Windows.Forms.Padding(2);
             this.startServerButton.Name = "startServerButton";
             this.startServerButton.Size = new System.Drawing.Size(214, 25);
             this.startServerButton.TabIndex = 2;
             this.startServerButton.Text = "Enter &HTTP Server Mode";
             this.startServerButton.UseVisualStyleBackColor = true;
+            this.startServerButton.Visible = false;
             this.startServerButton.Click += new System.EventHandler(this.startServerButton_Click);
             // 
-            // label1
+            // releasedUnder
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 422);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(166, 13);
-            this.label1.TabIndex = 7;
-            this.label1.Text = "Released under GPLv3 license at";
+            this.releasedUnder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.releasedUnder.AutoSize = true;
+            this.releasedUnder.Location = new System.Drawing.Point(6, 558);
+            this.releasedUnder.Name = "releasedUnder";
+            this.releasedUnder.Size = new System.Drawing.Size(166, 13);
+            this.releasedUnder.TabIndex = 4;
+            this.releasedUnder.Text = "Released under GPLv3 license at";
             // 
-            // linkLabel1
+            // releasedAt
             // 
-            this.linkLabel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.linkLabel1.AutoSize = true;
-            this.linkLabel1.Location = new System.Drawing.Point(169, 422);
-            this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.Size = new System.Drawing.Size(216, 13);
-            this.linkLabel1.TabIndex = 8;
-            this.linkLabel1.TabStop = true;
-            this.linkLabel1.Text = "https://github.com/LegacyNsfw/PcmHacks";
+            this.releasedAt.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.releasedAt.AutoSize = true;
+            this.releasedAt.Location = new System.Drawing.Point(169, 558);
+            this.releasedAt.Name = "releasedAt";
+            this.releasedAt.Size = new System.Drawing.Size(216, 13);
+            this.releasedAt.TabIndex = 5;
+            this.releasedAt.TabStop = true;
+            this.releasedAt.Text = "https://github.com/LegacyNsfw/PcmHacks";
             // 
-            // label2
+            // releasedByAntus
             // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(382, 422);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(62, 13);
-            this.label2.TabIndex = 9;
-            this.label2.Text = "By antus @";
+            this.releasedByAntus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.releasedByAntus.AutoSize = true;
+            this.releasedByAntus.Location = new System.Drawing.Point(382, 558);
+            this.releasedByAntus.Name = "releasedByAntus";
+            this.releasedByAntus.Size = new System.Drawing.Size(62, 13);
+            this.releasedByAntus.TabIndex = 6;
+            this.releasedByAntus.Text = "By antus @";
             // 
-            // linkLabel2
+            // releasedAtPcmHacking
             // 
-            this.linkLabel2.AutoSize = true;
-            this.linkLabel2.Location = new System.Drawing.Point(416, 382);
-            this.linkLabel2.Name = "linkLabel2";
-            this.linkLabel2.Size = new System.Drawing.Size(0, 13);
-            this.linkLabel2.TabIndex = 0;
+            this.releasedAtPcmHacking.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.releasedAtPcmHacking.AutoSize = true;
+            this.releasedAtPcmHacking.Location = new System.Drawing.Point(444, 558);
+            this.releasedAtPcmHacking.Name = "releasedAtPcmHacking";
+            this.releasedAtPcmHacking.Size = new System.Drawing.Size(83, 13);
+            this.releasedAtPcmHacking.TabIndex = 7;
+            this.releasedAtPcmHacking.TabStop = true;
+            this.releasedAtPcmHacking.Text = "pcmhacking.net";
             // 
-            // linkLabel3
+            // releasedEtc
             // 
-            this.linkLabel3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.linkLabel3.AutoSize = true;
-            this.linkLabel3.Location = new System.Drawing.Point(444, 422);
-            this.linkLabel3.Name = "linkLabel3";
-            this.linkLabel3.Size = new System.Drawing.Size(83, 13);
-            this.linkLabel3.TabIndex = 1;
-            this.linkLabel3.TabStop = true;
-            this.linkLabel3.Text = "pcmhacking.net";
-            // 
-            // label3
-            // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(523, 422);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(237, 13);
-            this.label3.TabIndex = 2;
-            this.label3.Text = "and NSFW. J2534 support by Envyous Customs.";
+            this.releasedEtc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.releasedEtc.AutoSize = true;
+            this.releasedEtc.Location = new System.Drawing.Point(523, 558);
+            this.releasedEtc.Name = "releasedEtc";
+            this.releasedEtc.Size = new System.Drawing.Size(237, 13);
+            this.releasedEtc.TabIndex = 8;
+            this.releasedEtc.Text = "and NSFW. J2534 support by Envyous Customs.";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(823, 439);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.linkLabel3);
-            this.Controls.Add(this.linkLabel2);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.linkLabel1);
-            this.Controls.Add(this.label1);
+            this.ClientSize = new System.Drawing.Size(823, 575);
+            this.Controls.Add(this.releasedEtc);
+            this.Controls.Add(this.releasedAtPcmHacking);
+            this.Controls.Add(this.releasedByAntus);
+            this.Controls.Add(this.releasedAt);
+            this.Controls.Add(this.releasedUnder);
             this.Controls.Add(this.startServerButton);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.operationsBox);
@@ -333,6 +379,7 @@
             this.tabs.ResumeLayout(false);
             this.resultsTab.ResumeLayout(false);
             this.resultsTab.PerformLayout();
+            this.helpTab.ResumeLayout(false);
             this.debugTab.ResumeLayout(false);
             this.debugTab.PerformLayout();
             this.ResumeLayout(false);
@@ -344,7 +391,7 @@
 
         private System.Windows.Forms.GroupBox interfaceBox;
         private System.Windows.Forms.GroupBox operationsBox;
-        private System.Windows.Forms.Button writeFullContentsButton;
+        private System.Windows.Forms.Button writeCalibrationButton;
         private System.Windows.Forms.Button readFullContentsButton;
         private System.Windows.Forms.Button modifyVinButton;
         private System.Windows.Forms.Button readPropertiesButton;
@@ -357,13 +404,16 @@
         private System.Windows.Forms.Button startServerButton;
         private System.Windows.Forms.Button selectButton;
         private System.Windows.Forms.Label deviceDescription;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.LinkLabel linkLabel1;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.LinkLabel linkLabel2;
-        private System.Windows.Forms.LinkLabel linkLabel3;
-        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label releasedUnder;
+        private System.Windows.Forms.LinkLabel releasedAt;
+        private System.Windows.Forms.Label releasedByAntus;
+        private System.Windows.Forms.LinkLabel releasedAtPcmHacking;
+        private System.Windows.Forms.Label releasedEtc;
         private System.Windows.Forms.Button cancelButton;
+        private System.Windows.Forms.TabPage helpTab;
+        private System.Windows.Forms.WebBrowser helpWebBrowser;
+        private System.Windows.Forms.Button testKernelButton;
+        private System.Windows.Forms.Button writeFullContentsButton;
     }
 }
 

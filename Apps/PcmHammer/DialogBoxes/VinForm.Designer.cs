@@ -1,4 +1,4 @@
-﻿namespace Flash411.DialogBoxes
+﻿namespace PcmHacking.DialogBoxes
 {
     partial class VinForm
     {
