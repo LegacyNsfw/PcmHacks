@@ -25,7 +25,7 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 // because it will just add 8kb of 0x00 bytes to the kernel bin file. 
 //
 // 4096 == 0x1000
-#define InputBufferSize 4096
+#define InputBufferSize 1024
 char __attribute((section(".kerneldata"))) IncomingMessage[InputBufferSize];
 
 // This needs to be called periodically to prevent the PCM from rebooting.
@@ -130,23 +130,25 @@ int ReadMessage()
 {
 	ScratchWatchdog();
 	char status;
-	do
+
+	// 10,000 iterations is about a half-second.
+	for (int polls = 0; polls < 10 * 1000; polls++)
 	{
 		ScratchWatchdog();
 		WasteTime();
 		status = *DLC_Status & 0xE0;
+		if (status == 0xE0)
+		{
+			break;
+		}
 	}
-	while (status != 0xE0);
 
-		// No message received.
-		// We can abuse the 'tool present' message to send arbitrary data to see what the code is doing...
-		char debug1[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x04, status };
-		char debug2[] = { 0xFF, 0xFE, 0xFD };
-
-		WriteMessage(debug1, 6, StartOfMessage);
-		WriteMessage(debug2, 3, EndOfMessage);
-		LongSleepWithWatchdog();
-
+	// If that loop ran out without getting the expected status, just
+	// tell the caller that no message has come in.
+	if (status != 0xE0)
+	{
+		return 0;
+	}
 
 	int length;
 	for (length = 0; length < InputBufferSize - 1; length++)
@@ -155,9 +157,10 @@ int ReadMessage()
 		{
 			ScratchWatchdog();
 			status = *DLC_Status & 0xE0;
-			if (status != 0x40)
+
+			if (status == 0x40)
 			{
-				continue;
+				break;
 			}
 		}
 
@@ -165,7 +168,7 @@ int ReadMessage()
 		ScratchWatchdog();
 
 		status = *DLC_Status & 0xE0;
-		if (status == 0x40)
+		if (status != 0x40)
 		{
 			break;
 		}
@@ -189,7 +192,8 @@ KernelStart(void)
 	*DLC_Transmit_Command = 0x03;
 	*DLC_Transmit_FIFO = 0x00;
 
-	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F };
+	// There's one extra byte here for insight into what's going on inside the kernel.
+	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00 };
 
 	for(;;)
 	{
@@ -204,8 +208,9 @@ KernelStart(void)
 			// Note that without this call to LongSleepWithWatchdog, the WriteMessage call will fail.
 			// That's probably related to the fact that the ReadMessage function sends a debug message before returning.
 			// Should try experimenting with different delay lengths to see just how long we need to wait.
-			//LongSleepWithWatchdog();
-			//WriteMessage(toolPresent, 4, EntireMessage);
+			LongSleepWithWatchdog();
+			toolPresent[4] = *DLC_Status;
+			WriteMessage(toolPresent, 5, EntireMessage);
 			continue;
 		}
 
