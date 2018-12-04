@@ -138,15 +138,6 @@ int ReadMessage()
 	}
 	while (status != 0xE0);
 
-		// No message received.
-		// We can abuse the 'tool present' message to send arbitrary data to see what the code is doing...
-		char debug1[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x04, status };
-		char debug2[] = { 0xFF, 0xFE, 0xFD };
-
-		WriteMessage(debug1, 6, StartOfMessage);
-		WriteMessage(debug2, 3, EndOfMessage);
-		LongSleepWithWatchdog();
-
 
 	int length;
 	for (length = 0; length < InputBufferSize - 1; length++)
@@ -155,9 +146,10 @@ int ReadMessage()
 		{
 			ScratchWatchdog();
 			status = *DLC_Status & 0xE0;
-			if (status != 0x40)
+
+			if (status == 0x40)
 			{
-				continue;
+				break;
 			}
 		}
 
@@ -165,7 +157,7 @@ int ReadMessage()
 		ScratchWatchdog();
 
 		status = *DLC_Status & 0xE0;
-		if (status == 0x40)
+		if (status != 0x40)
 		{
 			break;
 		}
@@ -204,8 +196,8 @@ KernelStart(void)
 			// Note that without this call to LongSleepWithWatchdog, the WriteMessage call will fail.
 			// That's probably related to the fact that the ReadMessage function sends a debug message before returning.
 			// Should try experimenting with different delay lengths to see just how long we need to wait.
-			//LongSleepWithWatchdog();
-			//WriteMessage(toolPresent, 4, EntireMessage);
+			LongSleepWithWatchdog();
+			WriteMessage(toolPresent, 4, EntireMessage);
 			continue;
 		}
 
