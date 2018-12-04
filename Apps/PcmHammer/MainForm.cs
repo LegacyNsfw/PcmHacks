@@ -691,32 +691,24 @@ namespace PcmHacking
 
                     if (!recoveryMode)
                     {
-                        if (await this.vehicle.TryWaitForKernel(1))
+                        Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                        if (osidResponse.Status != ResponseStatus.Success)
                         {
-                            kernelRunning = true;
+                            this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+
+                            return;
                         }
-                        else
+
+                        PcmInfo info = new PcmInfo(osidResponse.Value);
+
+                        bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                        if (!unlocked)
                         {
-
-                            Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
-                            if (osidResponse.Status != ResponseStatus.Success)
-                            {
-                                this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
-
-                                return;
-                            }
-
-                            PcmInfo info = new PcmInfo(osidResponse.Value);
-
-                            bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                            if (!unlocked)
-                            {
-                                this.AddUserMessage("Unlock was not successful.");
-                                return;
-                            }
-
-                            this.AddUserMessage("Unlock succeeded.");
+                            this.AddUserMessage("Unlock was not successful.");
+                            return;
                         }
+
+                        this.AddUserMessage("Unlock succeeded.");
                     }
 
                     using (Stream stream = File.OpenRead(path))
