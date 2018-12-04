@@ -27,7 +27,6 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 // 4096 == 0x1000
 #define InputBufferSize 4096
 char __attribute((section(".kerneldata"))) IncomingMessage[InputBufferSize];
-char __attribute((section(".kerneldata"))) OutgoingMessage[InputBufferSize];
 
 // This needs to be called periodically to prevent the PCM from rebooting.
 void ScratchWatchdog()
@@ -130,9 +129,15 @@ void WriteMessage(const char * const message, int length, MessageParts  parts)
 int ReadMessage()
 {
 	ScratchWatchdog();
-	char status = *DLC_Status & 0xE0;
-	if (status != 0xE0)
+	char status;
+	do
 	{
+		ScratchWatchdog();
+		WasteTime();
+		status = *DLC_Status & 0xE0;
+	}
+	while (status != 0xE0);
+
 		// No message received.
 		// We can abuse the 'tool present' message to send arbitrary data to see what the code is doing...
 		char debug1[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x04, status };
@@ -142,8 +147,6 @@ int ReadMessage()
 		WriteMessage(debug2, 3, EndOfMessage);
 		LongSleepWithWatchdog();
 
-		return 0;
-	}
 
 	int length;
 	for (length = 0; length < InputBufferSize - 1; length++)
