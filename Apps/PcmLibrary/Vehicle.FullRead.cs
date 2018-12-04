@@ -41,7 +41,7 @@ namespace PcmHacking
                 await toolPresentNotifier.Notify();
 
                 // execute read kernel
-                Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
+                Response<byte[]> response = await LoadKernelFromFile("js-read-kernel.bin");
                 if (response.Status != ResponseStatus.Success)
                 {
                     logger.AddUserMessage("Failed to load kernel from file.");
@@ -56,7 +56,7 @@ namespace PcmHacking
                 await toolPresentNotifier.Notify();
 
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
-                if (!await PCMExecute(response.Value, 0xFF9150, cancellationToken))
+                if (!await PCMExecute(response.Value, 0xFF9646, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 

@@ -32,7 +32,9 @@ namespace PcmHacking
             // adapter we'll overwrite these values, see the Initialize method below.
 
             // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
-            this.MaxSendSize = 192 + 12;
+            // 192 works in theory
+            // 160 is needed to support the current kernel
+            this.MaxSendSize = 160 + 12;
 
             // The ScanTool SX will download 512kb in roughly 30 minutes at 500 bytes per read.
             // ScanTool reliability suffers at 508 bytes or more, so we're going with a number

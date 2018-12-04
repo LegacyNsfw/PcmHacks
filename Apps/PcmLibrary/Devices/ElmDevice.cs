@@ -136,24 +136,11 @@ namespace PcmHacking
             }
 
             int milliseconds = this.GetVpwTimeoutMilliseconds(scenario);
-            
-            this.Logger.AddDebugMessage("Setting timeout for " + scenario + ", " + milliseconds.ToString() + " ms.");
 
-            // The port timeout needs to be considerably longer than the device timeout,
-            // otherwise you get "STOPPED" or "NO DATA" somewhat randomly. (I mostly saw
-            // this when sending the tool-present messages, but that might be coincidence.)
-            //
-            // 100 was not enough
-            // 150 seems like enough
-            // Consider 200 if STOPPED / NO DATA is still a problem. 
-            this.Port.SetTimeout(milliseconds + 150);
-
-            // I briefly tried hard-coding timeout values for the AT ST command,
-            // but that's a recipe for failure. If the port timeout is shorter
-            // than the device timeout, reads will consistently fail.
-            int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 255);
-            string value = parameter.ToString("X2");
-            await this.implementation.SendAndVerify("AT ST " + value, "OK");
+            // See master-branch code for a proper implementation.
+            this.Logger.AddDebugMessage("Setting timeout for maximum. This is a temporary hack.");
+            this.Port.SetTimeout(5000);
+            await this.implementation.SendAndVerify("AT ST FF", "OK");
         }
 
         /// <summary>

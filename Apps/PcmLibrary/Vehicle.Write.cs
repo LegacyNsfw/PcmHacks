@@ -29,7 +29,7 @@ namespace PcmHacking
 //                        return false;
 //                    }
 
-                    Response<byte[]> response = await LoadKernelFromFile("write-kernel.bin");
+                    Response<byte[]> response = await LoadKernelFromFile("js-kernel.bin");
                     if (response.Status != ResponseStatus.Success)
                     {
                         logger.AddUserMessage("Failed to load kernel from file.");
@@ -56,13 +56,21 @@ namespace PcmHacking
 
                 await this.device.SetTimeout(TimeoutScenario.Maximum);
 
+                byte[] image = new byte[stream.Length];
+                int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
+                if (bytesRead != stream.Length)
+                {
+                    this.logger.AddUserMessage("Unable to read image file.");
+                    return false;
+                }
+
                 if (fullWrite)
                 {
-                    await this.FullWrite(cancellationToken, stream);
+                    await this.FullWrite(cancellationToken, image);
                 }
                 else
                 {
-                    await this.CalibrationWrite(cancellationToken, stream);
+                    await this.CalibrationWrite(cancellationToken, image);
                 }
 
                 return true;
@@ -80,7 +88,7 @@ namespace PcmHacking
             }
         }
         
-        private async Task FullWrite(CancellationToken cancellationToken, Stream stream)
+        private async Task FullWrite(CancellationToken cancellationToken, byte[] image)
         {
             Message start = new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3C, 0x01 });
 
@@ -94,19 +102,25 @@ namespace PcmHacking
             {
                 return;
             }
-            
-            byte chunkSize = 192;
-            byte[] payload = new byte[chunkSize];
-            for (int bytesSent = 0; bytesSent < stream.Length; bytesSent += chunkSize)
+
+            byte chunkSize = 160 + 12;
+            byte[] header = new byte[] { 0x6C, 0x10, 0x0F0, 0x36, 0x00, 0x00, chunkSize, 0xFF, 0xA0, 0x00 };
+            byte[] messageBytes = new byte[header.Length + chunkSize + 2];
+
+            for (int bytesSent = 0; bytesSent < image.Length; bytesSent += chunkSize)
             {
-                int bytesRead = stream.Read(payload, 0, chunkSize);
-                Message message = this.messageFactory.CreateBlockMessage(payload, 0, chunkSize, 0xFFA000, false);
-                
-                 if (!await this.SendMessageValidateResponse(
+                // TODO: Move this functionality into the Message class.
+                Buffer.BlockCopy(header, 0, messageBytes, 0, header.Length);
+                Buffer.BlockCopy(image, bytesSent, messageBytes, header.Length, chunkSize);
+                Vehicle.AddBlockChecksum(messageBytes); 
+                Message message = new Message(messageBytes);
+
+                this.device.ClearMessageQueue();
+                if (!await this.SendMessageValidateResponse(
                     message,
                     this.messageParser.ParseChunkWriteResponse,
-                    this.messageParser.ParseJsKernelProcessingMessage,
-                    string.Format("chunk upload ({0} to {1})", bytesSent, bytesSent + chunkSize),
+                    null,
+                    string.Format("data from {0} to {1}", bytesSent, bytesSent + chunkSize),
                     "Data chunk sent.",
                     "Unable to send data chunk."))
                 {
@@ -115,12 +129,26 @@ namespace PcmHacking
             }
         }
 
-        private Task CalibrationWrite(CancellationToken cancellationToken, Stream stream)
+        private Task CalibrationWrite(CancellationToken cancellationToken, byte[] image)
         {
             return Task.FromResult(0);
         }
-       
-        
+
+        public static byte[] AddBlockChecksum(byte[] Block)
+        {
+            UInt16 Sum = 0;
+
+            for (int i = 4; i < Block.Length - 2; i++) // skip prio, dest, src, mode
+            {
+                Sum += Block[i];
+            }
+
+            Block[Block.Length - 2] = unchecked((byte)(Sum >> 8));
+            Block[Block.Length - 1] = unchecked((byte)(Sum & 0xFF));
+
+            return Block;
+        }
+
         private async Task<bool> SendMessageValidateResponse(
             Message message,
             Func<Message, Response<bool>> requiredMessageFilter,

@@ -320,6 +320,23 @@ namespace PcmHacking
         /// </summary>
         /// <remarks>
         /// Note that mode 0x34 is only a request. The actual payload is sent as a mode 0x36.
+        /// 
+        /// THIS IS A TEMPORARY HACK.
+        /// 
+        /// This request specifies a very high address in RAM because the current kernel is so large that
+        /// it runs through two memory segments. The kernel is written to RAM from top to bottom, and if
+        /// this request specifies the base address of the kernel, the attempt to write the first chunk
+        /// will be in a different segment than the base address. The PCM will reject that request due to
+        /// being in a different segment than this request.
+        /// 
+        /// So, we lie to the PCM about the target address. We give it a target address high in RAM, start
+        /// writing there, and work our way into the lower addresses. There's a bug in the PCM that allows
+        /// this technique to work.
+        /// 
+        /// Long term, we should either shrink the kernel to fit in one segment, or we should make give the
+        /// PcmExecute function logic to create an upload request with an appropriately bogus address.
+        /// 
+        /// Ignoring both parameters is a hack, not intended for long term use!!!
         /// </remarks>
         public Message CreateUploadRequest(int Size, int Address)
         {
