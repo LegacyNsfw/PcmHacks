@@ -34,12 +34,12 @@ namespace PcmHacking
             // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
             // 192 works in theory
             // 160 is needed to support the current kernel
-            this.MaxSendSize = 160 + 12;
+            this.MaxSendSize = 192 + 12;
 
             // The ScanTool SX will download 512kb in roughly 30 minutes at 500 bytes per read.
             // ScanTool reliability suffers at 508 bytes or more, so we're going with a number
             // that's round in base 10 rather than in base 2.
-            this.MaxReceiveSize = 500 + 12;
+            this.MaxReceiveSize = 512 + 12;
 
             // This would need a firmware upgrade at the very least, and likely isn't even possible 
             // with current hardware.
@@ -87,7 +87,7 @@ namespace PcmHacking
         /// </summary>
         public override async Task<bool> SendMessage(Message message)
         {
-            bool useSTPX = false;
+            bool useSTPX = true;
 
             if (useSTPX)
             {
@@ -105,8 +105,6 @@ namespace PcmHacking
                 {
                     builder.Append(messageBytes[index].ToString("X2"));
                 }
-
-                builder.Append("\r");
 
                 string sendCommand = builder.ToString();
 

@@ -73,6 +73,10 @@ namespace PcmHacking
                     await this.CalibrationWrite(cancellationToken, image);
                 }
 
+                // We only do a reset if the write succeeded.
+                // Otherwise we could reboot into a bricked state.
+                await TryWriteKernelReset();
+                await this.Cleanup();
                 return true;
             }
             catch (Exception exception)
@@ -81,17 +85,13 @@ namespace PcmHacking
                 this.logger.AddDebugMessage(exception.ToString());
                 return false;
             }
-            finally
-            {
-//                await TryWriteKernelReset();
-//                await this.Cleanup();
-            }
         }
         
         private async Task FullWrite(CancellationToken cancellationToken, byte[] image)
         {
             Message start = new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3C, 0x01 });
 
+            // This command begins a full flash.
             if (!await this.SendMessageValidateResponse(
                 start,
                 this.messageParser.ParseStartFullFlashResponse,
@@ -103,16 +103,16 @@ namespace PcmHacking
                 return;
             }
 
-            byte chunkSize = 160 + 12;
+            byte chunkSize = 192;
             byte[] header = new byte[] { 0x6C, 0x10, 0x0F0, 0x36, 0x00, 0x00, chunkSize, 0xFF, 0xA0, 0x00 };
             byte[] messageBytes = new byte[header.Length + chunkSize + 2];
 
-            for (int bytesSent = 0; bytesSent < image.Length; bytesSent += chunkSize)
+            for (int startAt = 0; startAt < image.Length; startAt += chunkSize)
             {
                 // TODO: Move this functionality into the Message class.
                 Buffer.BlockCopy(header, 0, messageBytes, 0, header.Length);
-                Buffer.BlockCopy(image, bytesSent, messageBytes, header.Length, chunkSize);
-                Vehicle.AddBlockChecksum(messageBytes); 
+                Buffer.BlockCopy(image, startAt, messageBytes, header.Length, chunkSize);
+                Vehicle.AddBlockChecksum(messageBytes);
                 Message message = new Message(messageBytes);
 
                 this.device.ClearMessageQueue();
@@ -120,7 +120,7 @@ namespace PcmHacking
                     message,
                     this.messageParser.ParseChunkWriteResponse,
                     this.messageParser.ParseJsKernelProcessingMessage,
-                    string.Format("data from {0} to {1}", bytesSent, bytesSent + chunkSize),
+                    string.Format("data from {0} to {1}", startAt, startAt + chunkSize),
                     "Data chunk sent.",
                     "Unable to send data chunk."))
                 {
@@ -129,11 +129,34 @@ namespace PcmHacking
             }
         }
 
-        private Task CalibrationWrite(CancellationToken cancellationToken, byte[] image)
+        private async Task CalibrationWrite(CancellationToken cancellationToken, byte[] image)
         {
-            return Task.FromResult(0);
-        }
+            byte chunkSize = 192;
+            byte[] header = new byte[] { 0x6C, 0x10, 0x0F0, 0x36, 0x00, 0x00, chunkSize, 0xFF, 0xA0, 0x00 };
+            byte[] messageBytes = new byte[header.Length + chunkSize + 2];
 
+            for (int startAt = 0x8000; startAt < 0x1FFFF; startAt += chunkSize)
+            {
+                // TODO: Move this functionality into the Message class.
+                Buffer.BlockCopy(header, 0, messageBytes, 0, header.Length);
+                Buffer.BlockCopy(image, startAt, messageBytes, header.Length, chunkSize);
+                Vehicle.AddBlockChecksum(messageBytes);
+                Message message = new Message(messageBytes);
+
+                this.device.ClearMessageQueue();
+                if (!await this.SendMessageValidateResponse(
+                    message,
+                    this.messageParser.ParseChunkWriteResponse,
+                    this.messageParser.ParseJsKernelProcessingMessage,
+                    string.Format("data from {0} to {1}", startAt, startAt + chunkSize),
+                    "Data chunk sent.",
+                    "Unable to send data chunk."))
+                {
+                    return;
+                }
+            }
+        }
+        
         public static byte[] AddBlockChecksum(byte[] Block)
         {
             UInt16 Sum = 0;
