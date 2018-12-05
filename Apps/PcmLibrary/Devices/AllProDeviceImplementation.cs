@@ -72,12 +72,6 @@ namespace PcmHacking
                 this.Logger.AddUserMessage("All Pro ID: " + apID);
                 this.Logger.AddUserMessage("All Pro self test result: " + await this.SendRequest("AT #3"));  // self test
                 this.Logger.AddUserMessage("All Pro firmware: " + await this.SendRequest("AT @1"));          // firmware check
-
-                // These devices do support 4x, but not on NSFW's bench setup.
-                // Uncomment this line for testing elsewhere. And definitely uncomment before release.
-//              this.Supports4X = true;
-                this.MaxSendSize = 2048 + 12;
-                this.MaxReceiveSize = 2048 + 12;
             }
             catch (Exception exception)
             {
