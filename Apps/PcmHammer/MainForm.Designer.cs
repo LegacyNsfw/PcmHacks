@@ -48,12 +48,12 @@
             this.helpWebBrowser = new System.Windows.Forms.WebBrowser();
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
-            this.startServerButton = new System.Windows.Forms.Button();
             this.releasedUnder = new System.Windows.Forms.Label();
             this.releasedAt = new System.Windows.Forms.LinkLabel();
             this.releasedByAntus = new System.Windows.Forms.Label();
             this.releasedAtPcmHacking = new System.Windows.Forms.LinkLabel();
             this.releasedEtc = new System.Windows.Forms.Label();
+            this.writeOsAndCalibration = new System.Windows.Forms.Button();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -110,6 +110,7 @@
             // 
             this.operationsBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.operationsBox.Controls.Add(this.writeOsAndCalibration);
             this.operationsBox.Controls.Add(this.testKernelButton);
             this.operationsBox.Controls.Add(this.writeFullContentsButton);
             this.operationsBox.Controls.Add(this.cancelButton);
@@ -121,29 +122,29 @@
             this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
             this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
-            this.operationsBox.Size = new System.Drawing.Size(224, 315);
+            this.operationsBox.Size = new System.Drawing.Size(224, 345);
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
             // 
             // testKernelButton
             // 
-            this.testKernelButton.Location = new System.Drawing.Point(6, 183);
+            this.testKernelButton.Location = new System.Drawing.Point(6, 224);
             this.testKernelButton.Margin = new System.Windows.Forms.Padding(2);
             this.testKernelButton.Name = "testKernelButton";
             this.testKernelButton.Size = new System.Drawing.Size(214, 25);
-            this.testKernelButton.TabIndex = 5;
+            this.testKernelButton.TabIndex = 6;
             this.testKernelButton.Text = "&Test Kernel";
             this.testKernelButton.UseVisualStyleBackColor = true;
             this.testKernelButton.Click += new System.EventHandler(this.testKernelButton_Click);
             // 
             // writeFullContentsButton
             // 
-            this.writeFullContentsButton.Location = new System.Drawing.Point(6, 136);
+            this.writeFullContentsButton.Location = new System.Drawing.Point(6, 165);
             this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
             this.writeFullContentsButton.Name = "writeFullContentsButton";
             this.writeFullContentsButton.Size = new System.Drawing.Size(214, 25);
-            this.writeFullContentsButton.TabIndex = 4;
+            this.writeFullContentsButton.TabIndex = 5;
             this.writeFullContentsButton.Text = "Write &Full Contents";
             this.writeFullContentsButton.UseVisualStyleBackColor = true;
             this.writeFullContentsButton.Click += new System.EventHandler(this.writeFullContentsButton_Click);
@@ -151,11 +152,11 @@
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelButton.Location = new System.Drawing.Point(5, 276);
+            this.cancelButton.Location = new System.Drawing.Point(5, 306);
             this.cancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(214, 25);
-            this.cancelButton.TabIndex = 6;
+            this.cancelButton.TabIndex = 7;
             this.cancelButton.Text = "&Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
             this.cancelButton.Click += new System.EventHandler(this.CancelButton_Click);
@@ -216,8 +217,8 @@
             this.tabs.Margin = new System.Windows.Forms.Padding(2);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(577, 539);
-            this.tabs.TabIndex = 3;
+            this.tabs.Size = new System.Drawing.Size(577, 488);
+            this.tabs.TabIndex = 2;
             // 
             // resultsTab
             // 
@@ -226,7 +227,7 @@
             this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
             this.resultsTab.Name = "resultsTab";
             this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
-            this.resultsTab.Size = new System.Drawing.Size(569, 513);
+            this.resultsTab.Size = new System.Drawing.Size(569, 462);
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
@@ -242,7 +243,7 @@
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.userLog.Size = new System.Drawing.Size(563, 504);
+            this.userLog.Size = new System.Drawing.Size(563, 453);
             this.userLog.TabIndex = 0;
             // 
             // helpTab
@@ -290,37 +291,24 @@
             this.debugLog.Size = new System.Drawing.Size(565, 509);
             this.debugLog.TabIndex = 0;
             // 
-            // startServerButton
-            // 
-            this.startServerButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.startServerButton.Location = new System.Drawing.Point(14, 520);
-            this.startServerButton.Margin = new System.Windows.Forms.Padding(2);
-            this.startServerButton.Name = "startServerButton";
-            this.startServerButton.Size = new System.Drawing.Size(214, 25);
-            this.startServerButton.TabIndex = 2;
-            this.startServerButton.Text = "Enter &HTTP Server Mode";
-            this.startServerButton.UseVisualStyleBackColor = true;
-            this.startServerButton.Visible = false;
-            this.startServerButton.Click += new System.EventHandler(this.startServerButton_Click);
-            // 
             // releasedUnder
             // 
             this.releasedUnder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedUnder.AutoSize = true;
-            this.releasedUnder.Location = new System.Drawing.Point(6, 558);
+            this.releasedUnder.Location = new System.Drawing.Point(6, 507);
             this.releasedUnder.Name = "releasedUnder";
             this.releasedUnder.Size = new System.Drawing.Size(166, 13);
-            this.releasedUnder.TabIndex = 4;
+            this.releasedUnder.TabIndex = 3;
             this.releasedUnder.Text = "Released under GPLv3 license at";
             // 
             // releasedAt
             // 
             this.releasedAt.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedAt.AutoSize = true;
-            this.releasedAt.Location = new System.Drawing.Point(169, 558);
+            this.releasedAt.Location = new System.Drawing.Point(169, 507);
             this.releasedAt.Name = "releasedAt";
             this.releasedAt.Size = new System.Drawing.Size(216, 13);
-            this.releasedAt.TabIndex = 5;
+            this.releasedAt.TabIndex = 4;
             this.releasedAt.TabStop = true;
             this.releasedAt.Text = "https://github.com/LegacyNsfw/PcmHacks";
             // 
@@ -328,20 +316,20 @@
             // 
             this.releasedByAntus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedByAntus.AutoSize = true;
-            this.releasedByAntus.Location = new System.Drawing.Point(382, 558);
+            this.releasedByAntus.Location = new System.Drawing.Point(382, 507);
             this.releasedByAntus.Name = "releasedByAntus";
             this.releasedByAntus.Size = new System.Drawing.Size(62, 13);
-            this.releasedByAntus.TabIndex = 6;
+            this.releasedByAntus.TabIndex = 5;
             this.releasedByAntus.Text = "By antus @";
             // 
             // releasedAtPcmHacking
             // 
             this.releasedAtPcmHacking.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedAtPcmHacking.AutoSize = true;
-            this.releasedAtPcmHacking.Location = new System.Drawing.Point(444, 558);
+            this.releasedAtPcmHacking.Location = new System.Drawing.Point(444, 507);
             this.releasedAtPcmHacking.Name = "releasedAtPcmHacking";
             this.releasedAtPcmHacking.Size = new System.Drawing.Size(83, 13);
-            this.releasedAtPcmHacking.TabIndex = 7;
+            this.releasedAtPcmHacking.TabIndex = 6;
             this.releasedAtPcmHacking.TabStop = true;
             this.releasedAtPcmHacking.Text = "pcmhacking.net";
             // 
@@ -349,23 +337,33 @@
             // 
             this.releasedEtc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedEtc.AutoSize = true;
-            this.releasedEtc.Location = new System.Drawing.Point(523, 558);
+            this.releasedEtc.Location = new System.Drawing.Point(523, 507);
             this.releasedEtc.Name = "releasedEtc";
             this.releasedEtc.Size = new System.Drawing.Size(237, 13);
-            this.releasedEtc.TabIndex = 8;
+            this.releasedEtc.TabIndex = 7;
             this.releasedEtc.Text = "and NSFW. J2534 support by Envyous Customs.";
+            // 
+            // writeOsAndCalibration
+            // 
+            this.writeOsAndCalibration.Location = new System.Drawing.Point(6, 136);
+            this.writeOsAndCalibration.Margin = new System.Windows.Forms.Padding(2);
+            this.writeOsAndCalibration.Name = "writeOsAndCalibration";
+            this.writeOsAndCalibration.Size = new System.Drawing.Size(214, 25);
+            this.writeOsAndCalibration.TabIndex = 4;
+            this.writeOsAndCalibration.Text = "Write &OS && Calibration";
+            this.writeOsAndCalibration.UseVisualStyleBackColor = true;
+            this.writeOsAndCalibration.Click += new System.EventHandler(this.writeOsAndCalibration_Click);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(823, 575);
+            this.ClientSize = new System.Drawing.Size(823, 524);
             this.Controls.Add(this.releasedEtc);
             this.Controls.Add(this.releasedAtPcmHacking);
             this.Controls.Add(this.releasedByAntus);
             this.Controls.Add(this.releasedAt);
             this.Controls.Add(this.releasedUnder);
-            this.Controls.Add(this.startServerButton);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.operationsBox);
             this.Controls.Add(this.interfaceBox);
@@ -401,7 +399,6 @@
         private System.Windows.Forms.TabPage debugTab;
         private System.Windows.Forms.TextBox debugLog;
         private System.Windows.Forms.Button reinitializeButton;
-        private System.Windows.Forms.Button startServerButton;
         private System.Windows.Forms.Button selectButton;
         private System.Windows.Forms.Label deviceDescription;
         private System.Windows.Forms.Label releasedUnder;
@@ -414,6 +411,7 @@
         private System.Windows.Forms.WebBrowser helpWebBrowser;
         private System.Windows.Forms.Button testKernelButton;
         private System.Windows.Forms.Button writeFullContentsButton;
+        private System.Windows.Forms.Button writeOsAndCalibration;
     }
 }
 
