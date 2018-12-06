@@ -107,6 +107,10 @@ namespace PcmHacking
                 {
                     return false;
                 }
+
+                this.MaxSendSize = this.implementation.MaxSendSize;
+                this.MaxReceiveSize = this.implementation.MaxReceiveSize;
+                this.Supports4X = this.implementation.Supports4X;
             }
             catch (Exception exception)
             {

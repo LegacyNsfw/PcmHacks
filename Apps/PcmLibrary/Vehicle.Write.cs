@@ -8,12 +8,23 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// How much of the PCM to erase and rewrite.
+    /// </summary>
+    public enum WriteType
+    {
+        Invalid = 0,
+        Calibration = 1,
+        OsAndCalibration = 2,
+        Full = 3,
+    }
+
     public partial class Vehicle
     {
         /// <summary>
         /// Replace the full contents of the PCM.
         /// </summary>
-        public async Task<bool> Write(bool fullWrite, bool kernelRunning, bool recoveryMode, CancellationToken cancellationToken, Stream stream)
+        public async Task<bool> Write(WriteType writeType, bool kernelRunning, bool recoveryMode, CancellationToken cancellationToken, Stream stream)
         {
             try
             {
@@ -64,17 +75,21 @@ namespace PcmHacking
                     return false;
                 }
 
-                if (fullWrite)
+                switch (writeType)
                 {
-                    await this.FullWrite(cancellationToken, image);
-                }
-                else
-                {
-                    await this.CalibrationWrite(cancellationToken, image);
+                    case WriteType.Calibration:
+                        await this.CalibrationWrite(cancellationToken, image);
+                        break;
+
+                    case WriteType.OsAndCalibration:
+                        await this.OsAndCalibrationWrite(cancellationToken, image);
+                        break;
+
+                    case WriteType.Full:
+                        await this.FullWrite(cancellationToken, image);
+                        break;
                 }
 
-                // We only do a reset if the write succeeded.
-                // Otherwise we could reboot into a bricked state.
                 await TryWriteKernelReset();
                 await this.Cleanup();
                 return true;
@@ -82,11 +97,14 @@ namespace PcmHacking
             catch (Exception exception)
             {
                 this.logger.AddUserMessage("Something went wrong. " + exception.Message);
+                this.logger.AddUserMessage("Do not power off the PCM! Do not exit this program!");
+                this.logger.AddUserMessage("Try flashing again. If errors continue, seek help online.");
+                this.logger.AddUserMessage("https://pcmhacking.net/forums/viewtopic.php?f=3&t=6080");
                 this.logger.AddDebugMessage(exception.ToString());
                 return false;
             }
         }
-        
+
         private async Task FullWrite(CancellationToken cancellationToken, byte[] image)
         {
             Message start = new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3C, 0x01 });
@@ -127,6 +145,11 @@ namespace PcmHacking
                     return;
                 }
             }
+        }
+
+        private async Task OsAndCalibrationWrite(CancellationToken cancellationToken, byte[] image)
+        {
+            await Task.Delay(1);
         }
 
         private async Task CalibrationWrite(CancellationToken cancellationToken, byte[] image)

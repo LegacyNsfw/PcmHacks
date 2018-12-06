@@ -125,7 +125,6 @@ namespace PcmHacking
             {
                 this.interfaceBox.Enabled = true;
                 this.operationsBox.Enabled = true;
-                this.startServerButton.Enabled = false;
 
                 // This will be enabled during full reads (but not writes)
                 this.cancelButton.Enabled = false;
@@ -490,22 +489,89 @@ namespace PcmHacking
         {
             if (!BackgroundWorker.IsAlive)
             {
-                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(false));
-                BackgroundWorker.IsBackground = true;
-                BackgroundWorker.Start();
+                DialogResult result = MessageBox.Show(
+                    "This software is still new, and it is not as reliable as commercial software." + Environment.NewLine +
+                    "The PCM can be rendered unusuable, and special tools may be needed to make the PCM work again." + Environment.NewLine +
+                    "If your PCM stops working, will that make your life difficult?",
+                    "Answer carefully...",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button1);
+
+                if (result == DialogResult.Yes)
+                {
+                    this.AddUserMessage("Please try again with a less important PCM.");
+                }
+                else
+                {
+                    BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Calibration));
+                    BackgroundWorker.IsBackground = true;
+                    BackgroundWorker.Start();
+                }
             }
         }
-        
+
+        /// <summary>
+        /// Write the operating system and calibration.
+        /// </summary>
+        private void writeOsAndCalibration_Click(object sender, EventArgs e)
+        {
+            if (!BackgroundWorker.IsAlive)
+            {
+                DialogResult result = MessageBox.Show(
+                    "Changing the operating system can render the PCM inoperable." + Environment.NewLine +
+                    "Special tools may be needed to make the PCM work again." + Environment.NewLine +
+                    "Are you sure you really want to take that risk?",
+                    "This is dangerous.",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button2);
+
+                if (result == DialogResult.No)
+                {
+                    this.AddUserMessage("You have made a wise choice.");
+                }
+                else
+                {
+                    BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.OsAndCalibration));
+                    BackgroundWorker.IsBackground = true;
+                    BackgroundWorker.Start();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Write the entire flash.
+        /// </summary>
         private void writeFullContentsButton_Click(object sender, EventArgs e)
         {
             if (!BackgroundWorker.IsAlive)
             {
-                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(true));
-                BackgroundWorker.IsBackground = true;
-                BackgroundWorker.Start();
+                DialogResult result = MessageBox.Show(
+                    "Changing the operating system can render the PCM inoperable." + Environment.NewLine +
+                    "Special tools may be needed to make the PCM work again." + Environment.NewLine +
+                    "Are you sure you really want to take that risk?",
+                    "This is dangerous.",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button2);
+
+                if (result == DialogResult.No)
+                {
+                    this.AddUserMessage("You have made a wise choice.");
+                }
+                else
+                {
+                    BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Full));
+                    BackgroundWorker.IsBackground = true;
+                    BackgroundWorker.Start();
+                }
             }
         }
 
+        /// <summary>
+        /// Test something in a kernel.
+        /// </summary>
         private void testKernelButton_Click(object sender, EventArgs e)
         {
             if (!BackgroundWorker.IsAlive)
@@ -656,7 +722,7 @@ namespace PcmHacking
             }
         }
 
-        private async void write_BackgroundThread(bool fullWrite)
+        private async void write_BackgroundThread(WriteType writeType)
         {
             try
             {
@@ -713,7 +779,7 @@ namespace PcmHacking
 
                     using (Stream stream = File.OpenRead(path))
                     {
-                        await this.vehicle.Write(fullWrite, kernelRunning, recoveryMode, this.cancellationTokenSource.Token, stream);
+                        await this.vehicle.Write(writeType, kernelRunning, recoveryMode, this.cancellationTokenSource.Token, stream);
                     }
                 }
                 catch (IOException exception)
@@ -811,6 +877,7 @@ namespace PcmHacking
             }
 
         }
+
     }
 }
  
