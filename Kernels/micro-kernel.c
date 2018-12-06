@@ -156,7 +156,7 @@ int ReadMessage()
 		for (int iterations = 0; iterations < 1000; iterations++)
 		{
 			ScratchWatchdog();
-			status = *DLC_Status & 0xE0;
+			status = *DLC_Status & 0x40;
 
 			if (status == 0x40)
 			{
@@ -167,9 +167,10 @@ int ReadMessage()
 		IncomingMessage[length] = *DLC_Receive_FIFO;
 		ScratchWatchdog();
 
-		status = *DLC_Status & 0xE0;
+		status = *DLC_Status & 0x40;
 		if (status != 0x40)
 		{
+			length++; // Without this, we miss the last byte. With it, we sometimes get too many bytes. 
 			break;
 		}
 	}
@@ -183,9 +184,7 @@ int
 __attribute__((section(".kernelstart")))
 KernelStart(void)
 {
-
 	// Disable peripheral interrupts
-	// Tried with and without this, read doesn't work either way.
 	asm("ORI #0x700, %SR"); 
 
 	ScratchWatchdog();
@@ -196,9 +195,6 @@ KernelStart(void)
 	// Flush the DLC
 	*DLC_Transmit_Command = 0x03;
 	*DLC_Transmit_FIFO = 0x00;
-
-	// Reset DLC
-
 
 	// There's one extra byte here for insight into what's going on inside the kernel.
 	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00 };
