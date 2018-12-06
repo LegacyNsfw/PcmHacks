@@ -23,28 +23,8 @@ http://gnutoolchains.com/m68k-elf/
 
 --
 
-It might be possible to get gcc for m68k for Linux using the instructions
-below, but I haven't tried that approach. They're from here:
-http://daveho.github.io/2012/10/26/m68k-elf-cross-compiler.html
+The gcc toolchain for linux can be built on most linux distros with https://github.com/haarer/toolchain68k
 
-set -e
-export M68KPREFIX=/home/dhovemey/linux/m68k-elf
-export PATH=$M68KPREFIX/bin:$PATH
-mkdir crossgcc
-wget http://ftp.gnu.org/gnu/binutils/binutils-2.23.tar.gz
-gunzip -c binutils-2.23.tar.gz | tar xvf -
-wget http://ftp.gnu.org/gnu/gcc/gcc-4.4.2/gcc-core-4.4.2.tar.bz2
-bunzip2 -c gcc-core-4.4.2.tar.bz2 | tar xvf -
-mkdir build
-cd build
-mkdir binutils
-mkdir gcc
-cd binutils
-../../binutils-2.23/configure --target=m68k-unknown-elf --prefix=$M68KPREFIX
-make -j 3
-make install
-cd ../gcc
-../../gcc-4.4.2/configure --target=m68k-unknown-elf --disable-libssp \
-  --prefix=$M68KPREFIX
-make -j 3
-make install
+You will need to comment out avr in the build scripts then uncomment m68k-elf
+
+You may also want to change the install path to /usr/local/bin/ otherwise update the prefix in the makefile to suit your location
