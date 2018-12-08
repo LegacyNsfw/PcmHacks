@@ -1,5 +1,7 @@
-# Work in progress - untested until I can get a 68k toolchain working. Probably that means https://github.com/haarer/toolchain68k
-PREFIX = ./freescale-coldfire-2011.09/bin/m68k-linux-gnu-
+# Use toolchain from: https://github.com/haarer/toolchain68k
+# Configure for m68k-elf target and install to default location
+# Tested on EL6 and Fedora 28
+PREFIX = /opt/crosschain/bin/m68k-elf-
 
 CC = $(PREFIX)gcc
 LD = $(PREFIX)ld
@@ -19,13 +21,13 @@ all: micro-kernel.bin read-kernel.bin
 %.asm: %.bin
 	$(OBJDUMP) $(DUMPFLAGS) -S $< -o $@
 
-micro-kernel.elf: micro-kernel.o main.o
+micro-kernel.elf: micro-kernel.o main.o common.o
 	$(LD) $(LDFLAGS) -T micro-kernel.ld main.o micro-kernel.o -o $@
 
 micro-kernel.bin: micro-kernel.elf
 	$(OBJCOPY) $(COPYFLAGS) --only-section=.kernel_code --only-section=.rodata micro-kernel.elf micro-kernel.bin
 
-read-kernel.elf: read-kernel.o main.o
+read-kernel.elf: read-kernel.o main.o common.o
 	$(LD) $(LDFLAGS) -T read-kernel.ld main.o read-kernel.o -o $@
 
 read-kernel.bin: read-kernel.elf
