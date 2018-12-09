@@ -92,6 +92,9 @@ void WriteMessage(int length)
 	{
 		ScratchWatchdog();
 		WasteTime();
+		WasteTime();
+		WasteTime();
+		WasteTime();
 		char status = *DLC_Status & 0xE0;
 		if (status == 0xE0)
 		{
@@ -169,7 +172,7 @@ void CopyToMessageBuffer(char* start, int length, int offset)
 	// So instead we copy from back to front:
 	for (int index = length - 1; index >= 0; index--)
 	{
-		MessageBuffer[index + offset] = MessageBuffer[index];
+		MessageBuffer[index + offset] = start[index];
 	}
 }
 
