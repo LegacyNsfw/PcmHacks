@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
-// This is the smallest possible kernel. 
+// This is the smallest possible kernel.
 // It just runs a tight loop that keeps the watchdog happy.
 ///////////////////////////////////////////////////////////////////////////////
 
-// After we have a trivial kernel that can send and received messages, the 
+// After we have a trivial kernel that can send and received messages, the
 // reusable stuff should be moved into common.c and referenced from there.
 //
 // But for now I want to keep this kernel as tiny and as simple as possible,
@@ -21,8 +21,8 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 // The linker needs to put these buffers after the kernel code, but before the
 // system registers that are at the top of the RAM space.
 //
-// The code that extracts the kernel bin needs to exclude that address range, 
-// because it will just add 8kb of 0x00 bytes to the kernel bin file. 
+// The code that extracts the kernel bin needs to exclude that address range,
+// because it will just add 8kb of 0x00 bytes to the kernel bin file.
 //
 // 4096 == 0x1000
 #define InputBufferSize 1024
@@ -59,9 +59,9 @@ int LongSleepWithWatchdog()
 	}
 }
 
-typedef enum 
+typedef enum
 {
-	MiddleOfMessageDoesNotWork = 0, 
+	MiddleOfMessageDoesNotWork = 0,
 	StartOfMessage = 1,
 	EndOfMessage = 2,
 	EntireMessage = StartOfMessage | EndOfMessage,
@@ -72,11 +72,11 @@ typedef enum
 //
 // This has known bugs:
 //
-// If this is called with MiddleOfMessage, the subsequent call with 
+// If this is called with MiddleOfMessage, the subsequent call with
 // EndOfMessage will drop the final byte of the final payload.
 //
-// StartOfMessage followed by EndOfMessage sometimes sends just the 
-// EndOfMessage data. 
+// StartOfMessage followed by EndOfMessage sometimes sends just the
+// EndOfMessage data.
 void WriteMessage(const char * const message, int length, MessageParts  parts)
 {
 	ScratchWatchdog();
@@ -170,7 +170,7 @@ int ReadMessage()
 		status = *DLC_Status & 0x40;
 		if (status != 0x40)
 		{
-			length++; // Without this, we miss the last byte. With it, we sometimes get too many bytes. 
+			length++; // Without this, we miss the last byte. With it, we sometimes get too many bytes.
 			break;
 		}
 	}
@@ -180,12 +180,12 @@ int ReadMessage()
 }
 
 // This is the entry point for the kernel.
-int 
+int
 __attribute__((section(".kernelstart")))
 KernelStart(void)
 {
 	// Disable peripheral interrupts
-	asm("ORI #0x700, %SR"); 
+	asm("ORI #0x700, %SR");
 
 	ScratchWatchdog();
 
@@ -198,6 +198,7 @@ KernelStart(void)
 
 	// There's one extra byte here for insight into what's going on inside the kernel.
 	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00 };
+	char echo[] = { 0x6C, 0xF0, 0x10, 0xAA };
 
 	for(;;)
 	{
@@ -221,9 +222,7 @@ KernelStart(void)
 		LongSleepWithWatchdog();
 
 		// Echo the received message with a 'tool present' header.
-		WriteMessage(toolPresent, 4, StartOfMessage);
+		WriteMessage(echo, 4, StartOfMessage);
 		WriteMessage(IncomingMessage, length, EndOfMessage);
 	}
 }
-
-
