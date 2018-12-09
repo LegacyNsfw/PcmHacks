@@ -47,7 +47,7 @@ namespace PcmHacking
                 }
                 
                 // TryWaitForKernel will log user messages.
-                if (await this.TryWaitForKernel(5))
+//                if (await this.TryWaitForKernel(5))
                 {
                     try
                     {
