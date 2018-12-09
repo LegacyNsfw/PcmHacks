@@ -13,7 +13,7 @@ char volatile * const DLC_Configuration = (char*)0xFFF600;
 char volatile * const DLC_InterruptConfiguration = (char*)0xFFF606;
 char volatile * const DLC_Transmit_Command = (char*)0xFFF60C;
 char volatile * const DLC_Transmit_FIFO = (char*)0xFFF60D;
-char volatile * const DLC_Status = (char*)0xFFF60E;
+char volatile * const DLC_Status = (unsigned char*)0xFFF60E;
 char volatile * const DLC_Receive_FIFO = (char*)0xFFF60F;
 char volatile * const Watchdog1 = (char*)0xFFFA27;
 char volatile * const Watchdog2 = (char*)0xFFD006;
@@ -108,10 +108,10 @@ void WriteMessage(int length)
 // This doesn't work yet.
 int ReadMessage(char *completionCode, char *readState)
 {
-	char status;
+	unsigned char status;
 	int length = 0;
 	int maxIterations = 200 * 1000; // This is just to guarantee that the loop doesn't execute forever. Feel free to suggest a different number.
-	// 1000 * 1000 = about six seconds 
+	// 1000 * 1000 = about six seconds, if LongSleep is used for status 0
 	for (int iterations = 0; iterations < maxIterations; iterations++)
 	{
 		if (length == MessageBufferSize)
@@ -125,29 +125,30 @@ int ReadMessage(char *completionCode, char *readState)
 
 		ScratchWatchdog();
 
-		status = *DLC_Status >> 5;
+		status = *DLC_Status & 0xE0;
 		switch (status)
 		{
 		case 0: // No data to process. It might be better to wait longer here.
-			LongSleepWithWatchdog();
+			WasteTime();
 			break;
 
-		case 1: // Buffer contains data bytes.
-		case 2: // Buffer contains data followed by a completion code.
-		case 4: // Buffer contains just one data byte.
-			MessageBuffer[length++] = *DLC_Receive_FIFO;
+		case 0x20: // Buffer contains data bytes.
+		case 0x40: // Buffer contains data followed by a completion code.
+		case 0x80: // Buffer contains just one data byte.
+			MessageBuffer[length] = *DLC_Receive_FIFO;
+			length++;
 			break;
 
-		case 5: // Buffer contains a completion code, followed by more data bytes.
-		case 6: // Buffer contains a completion code, followed by a full frame.
-		case 7: // Buffer contains a completion code only.
+		case 0xA0: // Buffer contains a completion code, followed by more data bytes.
+		case 0xC0: // Buffer contains a completion code, followed by a full frame.
+		case 0xE0: // Buffer contains a completion code only.
 			*completionCode = *DLC_Receive_FIFO;
 			*readState = 1;
 			return length;
 
-		case 3: // Buffer overflow. What do do here?
+		case 0x60: // Buffer overflow. What do do here?
 			// Just throw the message away and hope the tool sends again?
-			while (*DLC_Status >> 5 == 0x03)
+			while (*DLC_Status & 0xE0 == 0x60)
 			{
 				char unused = *DLC_Receive_FIFO;
 			}
@@ -212,7 +213,7 @@ KernelStart(void)
 	// to allow the app to recover from any failures. 
 	// If we choose to loop forever we need a good story for how to get out of that state.
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
-	for(int iterations = 0; iterations < 40; iterations++)
+	for(int iterations = 0; iterations < 50; iterations++)
 	{
 		//LongSleepWithWatchdog();
 		ScratchWatchdog();
