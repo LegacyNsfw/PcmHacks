@@ -106,39 +106,52 @@ void WriteMessage(int length)
 
 // Read a VPW message into the 'MessageBuffer' buffer.
 // This doesn't work yet.
-int ReadMessage(char *completionCode)
+int ReadMessage(char *completionCode, char *readState)
 {
 	char status;
-	int length;
-	int iterations;
-	int maxIterations = 30 * 1000; // This is just to guarantee that the loop doesn't execute forever. Feel free to suggest a different number.
-	for (length = 0, iterations = 0; 
-		length < MessageBufferSize - 1 && iterations < 10 * 1000; 
-		iterations++)
+	int length = 0;
+	int maxIterations = 200 * 1000; // This is just to guarantee that the loop doesn't execute forever. Feel free to suggest a different number.
+	// 1000 * 1000 = about six seconds 
+	for (int iterations = 0; iterations < maxIterations; iterations++)
 	{
+		if (length == MessageBufferSize)
+		{
+			// Buffer overflow. Pretend no message recieved. 
+			// Note that the next message returned will just be the second half of this one, so it will look like garbage.
+			// That'll be bad if this happens when the following bytes of the payload look like a message...
+			*readState = 4;
+			return 0;
+		}
+
 		ScratchWatchdog();
 
 		status = *DLC_Status >> 5;
 		switch (status)
 		{
-		case 0x00: // No data to process. It might be better to wait longer here.
+		case 0: // No data to process. It might be better to wait longer here.
 			LongSleepWithWatchdog();
 			break;
 
-		case 0x01: // Buffer contains more than one byte.
-		case 0x04: // Buffer contains just one data byte.
+		case 1: // Buffer contains data bytes.
+		case 2: // Buffer contains data followed by a completion code.
+		case 4: // Buffer contains just one data byte.
 			MessageBuffer[length++] = *DLC_Receive_FIFO;
 			break;
 
-		case 0x02: // Buffer contains a completion code.
-		case 0x05: // Buffer contains a completion code, followed by more data bytes.
-		case 0x06: // Buffer contains a completion code, followed by a full frame.
-		case 0x07: // Buffer contains a completion code only.
+		case 5: // Buffer contains a completion code, followed by more data bytes.
+		case 6: // Buffer contains a completion code, followed by a full frame.
+		case 7: // Buffer contains a completion code only.
 			*completionCode = *DLC_Receive_FIFO;
+			*readState = 1;
 			return length;
 
-		case 0x03: // Buffer overflow. What do do here?
+		case 3: // Buffer overflow. What do do here?
 			// Just throw the message away and hope the tool sends again?
+			while (*DLC_Status >> 5 == 0x03)
+			{
+				char unused = *DLC_Receive_FIFO;
+			}
+			*readState = 2;
 			return 0;
 		}
 	}
@@ -149,7 +162,8 @@ int ReadMessage(char *completionCode)
 	// Might be better to return zero and hope the tool sends again.
 	// But for debugging we'll just see what we managed to receive.
 	// This should use a completion code that the DLC will never actually use.
-	*completionCode = 0x00;
+	*completionCode = status;
+	*readState = 3;
 	return length;
 }
 
@@ -190,17 +204,23 @@ KernelStart(void)
 	*DLC_Transmit_FIFO = 0x00;
 
 	// There's one extra byte here for insight into what's going on inside the kernel.
-	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00 };
+	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00, 0x00 };
 	char echo[] = { 0x6C, 0xF0, 0x10, 0xAA };
 
-	for(int iterations = 0; iterations < 50 * 1000; iterations++)
+	// This loop runs out quickly, to force the PCM to reboot, to speed up testing.
+	// The real kernel should probably loop for a much longer time (possibly forever,
+	// to allow the app to recover from any failures. 
+	// If we choose to loop forever we need a good story for how to get out of that state.
+	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
+	for(int iterations = 0; iterations < 40; iterations++)
 	{
 		//LongSleepWithWatchdog();
 		ScratchWatchdog();
 		WasteTime();
 
-		char completionCode;
-		int length = ReadMessage(&completionCode);
+		char completionCode = 0xFF;
+		char readState = 0xFF;
+		int length = ReadMessage(&completionCode, &readState);
 		if (length == 0)
 		{
 			// No message received, so send a heartbeat message and listen again.
@@ -210,8 +230,9 @@ KernelStart(void)
 			LongSleepWithWatchdog();
 			toolPresent[4] = *DLC_Status;
 			toolPresent[5] = completionCode;
-			CopyToMessageBuffer(toolPresent, 6, 0);
-			WriteMessage(5);
+			toolPresent[6] = readState;
+			CopyToMessageBuffer(toolPresent, 7, 0);
+			WriteMessage(7);
 			continue;
 		}
 
@@ -219,7 +240,7 @@ KernelStart(void)
 
 		// Echo the received message with a 'tool present' header.
 		// This copy has to be done back-to-front to avoid overwriting data.
-		int offset = 6;
+		int offset = 7;
 		CopyToMessageBuffer(MessageBuffer, length, offset);
 		MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
@@ -227,6 +248,7 @@ KernelStart(void)
 		MessageBuffer[3] = 0xAA;
 		MessageBuffer[4] = (char)(length & 0xFF);
 		MessageBuffer[5] = completionCode;
+		MessageBuffer[6] = readState;
 		WriteMessage(length + offset);
 	}
 
