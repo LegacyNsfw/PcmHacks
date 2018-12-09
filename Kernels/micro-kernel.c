@@ -25,8 +25,8 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 // because it will just add 8kb of 0x00 bytes to the kernel bin file.
 //
 // 4096 == 0x1000
-#define InputBufferSize 1024
-char __attribute((section(".kerneldata"))) IncomingMessage[InputBufferSize];
+#define MessageBufferSize 1024
+char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
 
 // This needs to be called periodically to prevent the PCM from rebooting.
 void ScratchWatchdog()
@@ -59,72 +59,48 @@ int LongSleepWithWatchdog()
 	}
 }
 
-typedef enum
-{
-	MiddleOfMessageDoesNotWork = 0,
-	StartOfMessage = 1,
-	EndOfMessage = 2,
-	EntireMessage = StartOfMessage | EndOfMessage,
-} MessageParts;
-
 // Send the given bytes over the VPW bus.
 // The DLC will append the checksum byte, so we don't have to.
-//
-// This has known bugs:
-//
-// If this is called with MiddleOfMessage, the subsequent call with
-// EndOfMessage will drop the final byte of the final payload.
-//
-// StartOfMessage followed by EndOfMessage sometimes sends just the
-// EndOfMessage data.
-void WriteMessage(const char * const message, int length, MessageParts  parts)
+// The message must be written into MessageBuffer first.
+// This function will send 'length' bytes from that buffer onto the wire.
+void WriteMessage(int length)
 {
 	ScratchWatchdog();
 
-	if ((parts & StartOfMessage) != 0)
-	{
-		*DLC_Transmit_Command = 0x14;
-	}
-
-	int lastIndex = ((parts & EndOfMessage) != 0) ?
-		length - 1 :
-		length;
+	*DLC_Transmit_Command = 0x14;
+	
+	int lastIndex = length - 1;
 
 	// Send message (will we need a watchdog call inside this loop for long messages?)
 	for (int index = 0; index < lastIndex; index++)
 	{
-		*DLC_Transmit_FIFO = message[index];
+		*DLC_Transmit_FIFO = MessageBuffer[index];
 		WasteTime();
 	}
 
-	if ((parts & EndOfMessage) != 0)
+	// Send last byte
+	*DLC_Transmit_Command = 0x0C;
+	*DLC_Transmit_FIFO = MessageBuffer[length - 1];
+
+	// Send checksum (?)
+	WasteTime();
+	*DLC_Transmit_Command = 0x03;
+	*DLC_Transmit_FIFO = 0x00;
+
+	// Wait for the message to be flushed.
+	for (int iterations = 0; iterations < length + 10; iterations++)
 	{
-		// Send last byte
-		*DLC_Transmit_Command = 0x0C;
-		*DLC_Transmit_FIFO = message[length - 1];
-
-		// Send checksum (?)
+		ScratchWatchdog();
 		WasteTime();
-		*DLC_Transmit_Command = 0x03;
-		*DLC_Transmit_FIFO = 0x00;
-
-		// Wait for the message to be flushed.
-		for (int iterations = 0; iterations < length + 10; iterations++)
+		char status = *DLC_Status & 0xE0;
+		if (status == 0xE0)
 		{
-			ScratchWatchdog();
-			WasteTime();
-			char status = *DLC_Status & 0xE0;
-			if (status == 0xE0)
-			{
-				break;
-			}
+			break;
 		}
-
-		// Consider adding LongSleepWithWatchdog here.
 	}
 }
 
-// Read a VPW message into the 'IncomingMessage' buffer.
+// Read a VPW message into the 'MessageBuffer' buffer.
 // This doesn't work yet.
 int ReadMessage()
 {
@@ -151,7 +127,7 @@ int ReadMessage()
 	}
 
 	int length;
-	for (length = 0; length < InputBufferSize - 1; length++)
+	for (length = 0; length < MessageBufferSize - 1; length++)
 	{
 		for (int iterations = 0; iterations < 1000; iterations++)
 		{
@@ -164,19 +140,37 @@ int ReadMessage()
 			}
 		}
 
-		IncomingMessage[length] = *DLC_Receive_FIFO;
+		MessageBuffer[length] = *DLC_Receive_FIFO;
 		ScratchWatchdog();
 
 		status = *DLC_Status & 0x40;
 		if (status != 0x40)
 		{
-			length++; // Without this, we miss the last byte. With it, we sometimes get too many bytes.
 			break;
 		}
 	}
 
-	IncomingMessage[length] = *DLC_Receive_FIFO;
+	MessageBuffer[length] = *DLC_Receive_FIFO;
 	return length;
+}
+
+void CopyToMessageBuffer(char* start, int length, int offset)
+{
+	// This is the obvious way to do it, but one of the usage scenarios
+	// involves moving data in the buffer to a location further into the
+	// buffer, which would overwrite the data if the offset is shorter
+	// than the message.
+	//
+	// for (int index = 0; index < length; index++)
+	// {
+	//   MessageBuffer[offset + index] = start[index];
+	// }
+	//
+	// So instead we copy from back to front:
+	for (int index = length - 1; index >= 0; index--)
+	{
+		MessageBuffer[index + offset] = MessageBuffer[index];
+	}
 }
 
 // This is the entry point for the kernel.
@@ -215,14 +209,20 @@ KernelStart(void)
 			// Should try experimenting with different delay lengths to see just how long we need to wait.
 			LongSleepWithWatchdog();
 			toolPresent[4] = *DLC_Status;
-			WriteMessage(toolPresent, 5, EntireMessage);
+			CopyToMessageBuffer(toolPresent, 5, 0);
+			WriteMessage(5);
 			continue;
 		}
 
 		LongSleepWithWatchdog();
 
 		// Echo the received message with a 'tool present' header.
-		WriteMessage(echo, 4, StartOfMessage);
-		WriteMessage(IncomingMessage, length, EndOfMessage);
+		// This copy has to be done back-to-front to avoid overwriting data.
+		CopyToMessageBuffer(MessageBuffer, length, 4);
+		MessageBuffer[0] = 0x6C;
+		MessageBuffer[1] = 0xF0;
+		MessageBuffer[2] = 0x10;
+		MessageBuffer[3] = 0xAA;
+		WriteMessage(length + 4);
 	}
 }

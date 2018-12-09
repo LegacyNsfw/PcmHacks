@@ -1,3 +1,4 @@
+@echo off
 : -fomit-frame-pointer = remove the boilerplate linkw/unlk instructions
 : -c    = compile but do not link
 : -O1   = optimization level
