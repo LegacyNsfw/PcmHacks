@@ -192,6 +192,7 @@ namespace PcmHacking
             this.readFullContentsButton.Enabled = false;
             this.modifyVinButton.Enabled = false;
             this.writeCalibrationButton.Enabled = false;
+            this.writeOsAndCalibration.Enabled = false;
             this.writeFullContentsButton.Enabled = false;
             this.testKernelButton.Enabled = false;
             this.reinitializeButton.Enabled = false;
@@ -211,6 +212,7 @@ namespace PcmHacking
             this.readFullContentsButton.Invoke((MethodInvoker)delegate () { this.readFullContentsButton.Enabled = true; });
             this.modifyVinButton.Invoke((MethodInvoker)delegate () { this.modifyVinButton.Enabled = true; });
             this.writeCalibrationButton.Invoke((MethodInvoker)delegate () { this.writeCalibrationButton.Enabled = true; });
+            this.writeOsAndCalibration.Invoke((MethodInvoker)delegate () { this.writeOsAndCalibration.Enabled = true; });
             this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true; });
             this.testKernelButton.Invoke((MethodInvoker)delegate () { this.testKernelButton.Enabled = true; });
             this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true; });
@@ -836,7 +838,7 @@ namespace PcmHacking
 
                     if (!recoveryMode)
                     {
-                        if (await this.vehicle.TryWaitForKernel(1))
+                        if (false) // await this.vehicle.TryWaitForKernel(1))
                         {
                             kernelRunning = true;
                         }
