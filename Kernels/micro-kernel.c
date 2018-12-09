@@ -27,6 +27,7 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 // 4096 == 0x1000
 #define MessageBufferSize 1024
 char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
+//char __attribute((section(".kerneldata"))) MessageCompletionCode;
 
 // This needs to be called periodically to prevent the PCM from rebooting.
 void ScratchWatchdog()
@@ -105,55 +106,50 @@ void WriteMessage(int length)
 
 // Read a VPW message into the 'MessageBuffer' buffer.
 // This doesn't work yet.
-int ReadMessage()
+int ReadMessage(char *completionCode)
 {
-	ScratchWatchdog();
 	char status;
-
-	// 10,000 iterations is about a half-second.
-	for (int polls = 0; polls < 10 * 1000; polls++)
-	{
-		ScratchWatchdog();
-		WasteTime();
-		status = *DLC_Status >> 5;
-		if (status != 0x00)
-		{
-			break;
-		}
-	}
-
-	// If that loop ran out without getting the expected status, just
-	// tell the caller that no message has come in.
-	if (status == 0x00)
-	{
-		return 0;
-	}
-
 	int length;
-	for (length = 0; length < MessageBufferSize - 1; length++)
+	int iterations;
+	int maxIterations = 30 * 1000; // This is just to guarantee that the loop doesn't execute forever. Feel free to suggest a different number.
+	for (length = 0, iterations = 0; 
+		length < MessageBufferSize - 1 && iterations < 10 * 1000; 
+		iterations++)
 	{
-		for (int iterations = 0; iterations < 1000; iterations++)
-		{
-			ScratchWatchdog();
-			status = *DLC_Status & 0x40;
-
-			if (status == 0x40)
-			{
-				break;
-			}
-		}
-
-		MessageBuffer[length] = *DLC_Receive_FIFO;
 		ScratchWatchdog();
 
-		status = *DLC_Status & 0x40;
-		if (status != 0x40)
+		status = *DLC_Status >> 5;
+		switch (status)
 		{
+		case 0x00: // No data to process. It might be better to wait longer here.
+			LongSleepWithWatchdog();
 			break;
+
+		case 0x01: // Buffer contains more than one byte.
+		case 0x04: // Buffer contains just one data byte.
+			MessageBuffer[length++] = *DLC_Receive_FIFO;
+			break;
+
+		case 0x02: // Buffer contains a completion code.
+		case 0x05: // Buffer contains a completion code, followed by more data bytes.
+		case 0x06: // Buffer contains a completion code, followed by a full frame.
+		case 0x07: // Buffer contains a completion code only.
+			*completionCode = *DLC_Receive_FIFO;
+			return length;
+
+		case 0x03: // Buffer overflow. What do do here?
+			// Just throw the message away and hope the tool sends again?
+			return 0;
 		}
 	}
 
-	MessageBuffer[length] = *DLC_Receive_FIFO;
+	// If we reach this point, the loop above probably just hit maxIterations.
+	// Or maybe the tool sent a message bigger than the buffer.
+	// Either way, we have "received" an incomplete message.
+	// Might be better to return zero and hope the tool sends again.
+	// But for debugging we'll just see what we managed to receive.
+	// This should use a completion code that the DLC will never actually use.
+	*completionCode = 0x00;
 	return length;
 }
 
@@ -194,16 +190,17 @@ KernelStart(void)
 	*DLC_Transmit_FIFO = 0x00;
 
 	// There's one extra byte here for insight into what's going on inside the kernel.
-	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00 };
+	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00 };
 	char echo[] = { 0x6C, 0xF0, 0x10, 0xAA };
 
-	for(;;)
+	for(int iterations = 0; iterations < 50 * 1000; iterations++)
 	{
 		//LongSleepWithWatchdog();
 		ScratchWatchdog();
 		WasteTime();
 
-		int length = ReadMessage();
+		char completionCode;
+		int length = ReadMessage(&completionCode);
 		if (length == 0)
 		{
 			// No message received, so send a heartbeat message and listen again.
@@ -212,7 +209,8 @@ KernelStart(void)
 			// Should try experimenting with different delay lengths to see just how long we need to wait.
 			LongSleepWithWatchdog();
 			toolPresent[4] = *DLC_Status;
-			CopyToMessageBuffer(toolPresent, 5, 0);
+			toolPresent[5] = completionCode;
+			CopyToMessageBuffer(toolPresent, 6, 0);
 			WriteMessage(5);
 			continue;
 		}
@@ -221,11 +219,19 @@ KernelStart(void)
 
 		// Echo the received message with a 'tool present' header.
 		// This copy has to be done back-to-front to avoid overwriting data.
-		CopyToMessageBuffer(MessageBuffer, length, 4);
+		int offset = 6;
+		CopyToMessageBuffer(MessageBuffer, length, offset);
 		MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
 		MessageBuffer[2] = 0x10;
 		MessageBuffer[3] = 0xAA;
-		WriteMessage(length + 4);
+		MessageBuffer[4] = (char)(length & 0xFF);
+		MessageBuffer[5] = completionCode;
+		WriteMessage(length + offset);
+	}
+
+	for (;;)
+	{
+		// Wait for the watchdog to reboot the PCM
 	}
 }
