@@ -58,7 +58,7 @@ namespace PcmHacking
                     }
                     finally
                     {
-                        await this.TryFlashLock();
+                        await this.TryFlashLock(cancellationToken);
                     }
                 }
 
@@ -72,12 +72,12 @@ namespace PcmHacking
             }
             finally
             {
-                await TryWriteKernelReset();
+                await TryWriteKernelReset(cancellationToken);
                 await this.Cleanup();
             }
         }
 
-        public async Task<bool> TryWaitForKernel(int maxAttempts)
+        public async Task<bool> TryWaitForKernel(CancellationToken cancellationToken, int maxAttempts)
         {
             logger.AddUserMessage("Waiting for kernel to respond.");
 
@@ -87,19 +87,21 @@ namespace PcmHacking
                 "kernel ping",
                 "Kernel is responding.",
                 "No response received from the flash kernel.",
+                cancellationToken,
                 maxAttempts,
                 false);
         }
        
 
-        private async Task<bool> TryWriteKernelReset()
+        private async Task<bool> TryWriteKernelReset(CancellationToken cancellationToken)
         {
             return await this.SendMessageValidateResponse(
                 this.messageFactory.CreateWriteKernelResetRequest(),
                 this.messageParser.ParseWriteKernelResetResponse,
                 "flash-kernel PCM reset request",
                 "PCM reset.",
-                "Unable to reset the PCM.");
+                "Unable to reset the PCM.",
+                cancellationToken);
         }
 
 
@@ -145,14 +147,15 @@ namespace PcmHacking
 
         }
 
-        private async Task<bool> TryFlashLock()
+        private async Task<bool> TryFlashLock(CancellationToken cancellationToken)
         {
             return await this.SendMessageValidateResponse(
                 this.messageFactory.CreateFlashLockRequest(),
                 this.messageParser.ParseFlashLockResponse,
                 "flash lock request",
                 "Flash memory locked.",
-                "Unable to lock flash memory.");
+                "Unable to lock flash memory.",
+                cancellationToken);
         }
 
         private async Task TestWriteLoop(byte[] image, ToolPresentNotifier toolPresentNotifier, CancellationToken cancellationToken)

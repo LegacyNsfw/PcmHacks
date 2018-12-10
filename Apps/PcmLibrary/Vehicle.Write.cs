@@ -90,7 +90,7 @@ namespace PcmHacking
                         break;
                 }
 
-                await TryWriteKernelReset();
+                await TryWriteKernelReset(cancellationToken);
                 await this.Cleanup();
                 return true;
             }
@@ -124,7 +124,8 @@ namespace PcmHacking
                 this.messageParser.ParseStartFullFlashResponse,
                 "start full flash",
                 "Full flash starting.",
-                "Kernel won't allow a full flash."))
+                "Kernel won't allow a full flash.",
+                cancellationToken))
             {
                 return;
             }
@@ -144,7 +145,8 @@ namespace PcmHacking
                     this.messageParser.ParseChunkWriteResponse,
                     string.Format("data from {0} to {1}", bytesSent, bytesSent + chunkSize),
                     "Data chunk sent.",
-                    "Unable to send data chunk."))
+                    "Unable to send data chunk.",
+                    cancellationToken))
                 {
                     return;
                 }
@@ -157,6 +159,7 @@ namespace PcmHacking
             string messageDescription,
             string successMessage,
             string failureMessage,
+            CancellationToken cancellationToken,
             int maxAttempts = 5,
             bool pingKernel = false)
         {
@@ -169,17 +172,17 @@ namespace PcmHacking
                     this.logger.AddUserMessage("Unable to send " + messageDescription);
                     if (pingKernel)
                     {
-                        await this.TryWaitForKernel(1);
+                        await this.TryWaitForKernel(cancellationToken, 1);
                     }
                     continue;
                 }
 
-                if (!await this.WaitForSuccess(filter, 10))
+                if (!await this.WaitForSuccess(filter, cancellationToken, 10))
                 {
                     this.logger.AddUserMessage("No " + messageDescription + " response received.");
                     if (pingKernel)
                     {
-                        await this.TryWaitForKernel(1);
+                        await this.TryWaitForKernel(cancellationToken, 1);
                     }
                     continue;
                 }
@@ -191,7 +194,7 @@ namespace PcmHacking
             this.logger.AddUserMessage(failureMessage);
             if (pingKernel)
             {
-                await this.TryWaitForKernel(1);
+                await this.TryWaitForKernel(cancellationToken, 1);
             }
             return false;
         }
