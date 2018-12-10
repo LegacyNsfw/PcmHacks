@@ -280,6 +280,11 @@ namespace PcmHacking
         {
             for(int attempt = 1; attempt<=attempts; attempt++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 Message message = await this.device.ReceiveMessage();
                 if(message == null)
                 {

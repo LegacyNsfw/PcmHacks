@@ -165,6 +165,11 @@ namespace PcmHacking
         {
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 this.logger.AddUserMessage("Sending " + messageDescription);
 
                 if (!await this.TrySendMessage(message, messageDescription, maxAttempts))

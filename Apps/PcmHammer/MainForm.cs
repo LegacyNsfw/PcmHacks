@@ -838,24 +838,32 @@ namespace PcmHacking
 
                     if (!recoveryMode)
                     {
-                        Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
-                        if (osidResponse.Status != ResponseStatus.Success)
+                        if (false) // await this.vehicle.TryWaitForKernel(1))
                         {
-                            this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
-
-                            return;
+                            kernelRunning = true;
                         }
-
-                        PcmInfo info = new PcmInfo(osidResponse.Value);
-
-                        bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                        if (!unlocked)
+                        else
                         {
-                            this.AddUserMessage("Unlock was not successful.");
-                            return;
-                        }
 
-                        this.AddUserMessage("Unlock succeeded.");
+                            Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                            if (osidResponse.Status != ResponseStatus.Success)
+                            {
+                                this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+
+                                return;
+                            }
+
+                            PcmInfo info = new PcmInfo(osidResponse.Value);
+
+                            bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
+                            if (!unlocked)
+                            {
+                                this.AddUserMessage("Unlock was not successful.");
+                                return;
+                            }
+
+                            this.AddUserMessage("Unlock succeeded.");
+                        }
                     }
 
 
