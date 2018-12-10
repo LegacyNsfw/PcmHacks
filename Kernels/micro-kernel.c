@@ -2,12 +2,14 @@
 // This is the smallest possible kernel.
 // It just runs a tight loop that keeps the watchdog happy.
 ///////////////////////////////////////////////////////////////////////////////
-
+//
 // After we have a trivial kernel that can send and received messages, the
 // reusable stuff should be moved into common.c and referenced from there.
 //
 // But for now I want to keep this kernel as tiny and as simple as possible,
 // to simplify debugging.
+//
+///////////////////////////////////////////////////////////////////////////////
 
 char volatile * const DLC_Configuration = (char*)0xFFF600;
 char volatile * const DLC_InterruptConfiguration = (char*)0xFFF606;
@@ -18,6 +20,8 @@ char volatile * const DLC_Receive_FIFO = (char*)0xFFF60F;
 char volatile * const Watchdog1 = (char*)0xFFFA27;
 char volatile * const Watchdog2 = (char*)0xFFD006;
 
+///////////////////////////////////////////////////////////////////////////////
+//
 // The linker needs to put these buffers after the kernel code, but before the
 // system registers that are at the top of the RAM space.
 //
@@ -26,12 +30,17 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 //
 // 4096 == 0x1000
 #define MessageBufferSize 1024
-#define BreadcrumbBufferSize 10
+#define BreadcrumbBufferSize 20
 char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
 char __attribute((section(".kerneldata"))) BreadcrumbBuffer[BreadcrumbBufferSize];
-//char __attribute((section(".kerneldata"))) MessageCompletionCode;
 
+// Uncomment one of these to determine which way to use the breadcrumb buffer.
+//#define RECEIVE_BREADCRUMBS
+#define TRANSMIT_BREADCRUMBS
+
+///////////////////////////////////////////////////////////////////////////////
 // This needs to be called periodically to prevent the PCM from rebooting.
+///////////////////////////////////////////////////////////////////////////////
 void ScratchWatchdog()
 {
 	*Watchdog1 = 0x55;
@@ -40,7 +49,9 @@ void ScratchWatchdog()
 	*Watchdog2 = *Watchdog2 | 0x80;
 }
 
+///////////////////////////////////////////////////////////////////////////////
 // Does what it says.
+///////////////////////////////////////////////////////////////////////////////
 int WasteTime()
 {
 	asm("nop");
@@ -49,7 +60,9 @@ int WasteTime()
 	asm("nop");
 }
 
+///////////////////////////////////////////////////////////////////////////////
 // Also does what it says. 10,000 iterations takes a bit less than half a second.
+///////////////////////////////////////////////////////////////////////////////
 int LongSleepWithWatchdog()
 {
 	for (int outerLoop = 0; outerLoop < 10 * 1000; outerLoop++)
@@ -62,6 +75,11 @@ int LongSleepWithWatchdog()
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// All outgoing messages must be written into this buffer. The WriteMessage
+// function will copy from this buffer to the DLC. Resetting the buffer should
+// not really be necessary, but it helps to simplify debugging.
+///////////////////////////////////////////////////////////////////////////////
 void ClearMessageBuffer()
 {
 	for (int index = 0; index < MessageBufferSize; index++)
@@ -70,6 +88,18 @@ void ClearMessageBuffer()
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// The 'breadcrumb' buffer helps give insight into what happened.
+///////////////////////////////////////////////////////////////////////////////
+void ClearBreadcrumbBuffer()
+{
+	for (int index = 0; index < BreadcrumbBufferSize; index++)
+	{
+		BreadcrumbBuffer[index] = 0;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Send the given bytes over the VPW bus.
 // The DLC will append the checksum byte, so we don't have to.
 // The message must be written into MessageBuffer first.
@@ -77,9 +107,18 @@ void ClearMessageBuffer()
 //
 // It works pretty well with messages under 12 bytes long. Not so great with longer messages.
 // I strongly suspect the problems are related to overflowing the FIFO and flushing it at the.
-void WriteMessage(int length)
+///////////////////////////////////////////////////////////////////////////////
+void WriteMessage(int length, int breadcrumbs)
 {
 	ScratchWatchdog();
+
+#ifdef TRANSMIT_BREADCRUMBS
+	if (breadcrumbs)
+	{
+		ClearBreadcrumbBuffer();
+	}
+	int breadcrumbIndex = 0;
+#endif
 
 	*DLC_Transmit_Command = 0x14;
 	
@@ -97,12 +136,21 @@ void WriteMessage(int length)
 		// In that case, pause until there's room in the buffer.
 		status = *DLC_Status & 0x03;
 
-		// TODO: Why doesn't this loop exit?
-		//while (status == 0x02)
-		if (status == 0x02)
+		// TODO: try looping around 0x02 (almost full) rather than 0x03 (full)
+		int loopCount = 0;
+		while (status == 0x03 && loopCount < 250)
 		{
-			LongSleepWithWatchdog();
-			//status = *DLC_Status & 0x03;
+			loopCount++;
+
+			// With iterations < 25, we get some 2s and 3s in the loop counter.
+			for (int iterations = 0; iterations < 25; iterations++)
+			{
+				ScratchWatchdog();
+				WasteTime();
+			}
+
+			ScratchWatchdog();
+			status = *DLC_Status & 0x03;
 		}
 	}
 
@@ -116,21 +164,23 @@ void WriteMessage(int length)
 	*DLC_Transmit_FIFO = 0x00;
 
 	// Wait for the message to be flushed.
-	for (int iterations = 0; iterations < length + 10; iterations++)
+	status = *DLC_Status & 0x03;
+	int loopCount = 0;
+	while (status != 0 && loopCount < 250)
 	{
-		ScratchWatchdog();
-		WasteTime();
-		WasteTime();
-		WasteTime();
-		WasteTime();
+		loopCount++;
 
-		// If this worked right, the long-sleeps below probably wouldn't be necessary.
-		char status = *DLC_Status & 0x03;
-		if (status == 0x00)
+		for (int iterations = 0; iterations < 25; iterations++)
 		{
-			break;
+			ScratchWatchdog();
+			WasteTime();
 		}
+
+		ScratchWatchdog();
+		status = *DLC_Status & 0x03;
 	}
+
+	BreadcrumbBuffer[0] = loopCount;
 
 	// Should be able to remove these if the flush loop works.
 	// But right now, you can't send two messages in a row without these.
@@ -140,21 +190,22 @@ void WriteMessage(int length)
 	ClearMessageBuffer();
 }
 
+///////////////////////////////////////////////////////////////////////////////
 // Read a VPW message into the 'MessageBuffer' buffer.
 // This mostly works but I don't trust it 100% yet.
+///////////////////////////////////////////////////////////////////////////////
 int ReadMessage(char *completionCode, char *readState)
 {
 	ScratchWatchdog();
 	unsigned char status;
 
-	for (int index = 0; index < BreadcrumbBufferSize; index++)
-	{
-		BreadcrumbBuffer[index] = 0;
-	}
+#ifdef RECEIVE_BREADCRUMBS
+	ClearBreadcrumbBuffer();
+#endif
 
 	int length = 0;
 	int breadcrumbIndex = 0;
-	for (int iterations = 0; iterations < 200 * 1000; iterations++)
+	for (int iterations = 0; iterations < 20 * 1000; iterations++)
 	{
 		// Artificial message-length limit for debugging.
 		if (length == 25)
@@ -171,13 +222,15 @@ int ReadMessage(char *completionCode, char *readState)
 		}
 
 		status = (*DLC_Status & 0xE0) >> 5;
+		
+#ifdef RECEIVE_BREADCRUMBS
 		BreadcrumbBuffer[breadcrumbIndex] = status;
 		breadcrumbIndex++;
-
+#endif
 		switch (status)
 		{
 		case 0: // No data to process. It might be better to wait longer here.
-			LongSleepWithWatchdog();
+			WasteTime();
 			break;
 
 		case 1: // Buffer contains data bytes.
@@ -223,12 +276,15 @@ int ReadMessage(char *completionCode, char *readState)
 	return length;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Copy the given buffer into the message buffer.
+///////////////////////////////////////////////////////////////////////////////
 void CopyToMessageBuffer(char* start, int length, int offset)
 {
 	// This is the obvious way to do it, but one of the usage scenarios
 	// involves moving data in the buffer to a location further into the
 	// buffer, which would overwrite the data if the offset is shorter
-	// than the message.
+	// than the message:
 	//
 	// for (int index = 0; index < length; index++)
 	// {
@@ -242,7 +298,9 @@ void CopyToMessageBuffer(char* start, int length, int offset)
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////
 // This is the entry point for the kernel.
+///////////////////////////////////////////////////////////////////////////////
 int
 __attribute__((section(".kernelstart")))
 KernelStart(void)
@@ -292,7 +350,9 @@ KernelStart(void)
 			toolPresent[6] = readState;
 			CopyToMessageBuffer(toolPresent, 7, 0);
 			
-			WriteMessage(7);
+			WriteMessage(7, 0);
+			ClearMessageBuffer();
+
 
 			if (0)
 			{
@@ -303,7 +363,9 @@ KernelStart(void)
 				MessageBuffer[4] = readState;
 				CopyToMessageBuffer(BreadcrumbBuffer, BreadcrumbBufferSize, 5);
 
-				WriteMessage(BreadcrumbBufferSize + 5);
+				WriteMessage(BreadcrumbBufferSize + 5, 0);
+				ClearMessageBuffer();
+
 			}
 
 			continue;
@@ -312,19 +374,21 @@ KernelStart(void)
 		LongSleepWithWatchdog();
 
 		// Echo the received message with a 'tool present' header.
-		int offset = 4; // Can make this 7 and include 3 more bytes, but WriteMessage doesn't do well with more than 12 bytes.
+		int offset = 7; // Can make this 7 and include 3 more bytes, but WriteMessage doesn't do well with more than 12 bytes.
 		CopyToMessageBuffer(MessageBuffer, length, offset);
 		MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
 		MessageBuffer[2] = 0x10;
 		MessageBuffer[3] = 0xAA;
-//		MessageBuffer[4] = (char)(length & 0xFF);
-//		MessageBuffer[5] = completionCode;
-//		MessageBuffer[6] = readState;
+		MessageBuffer[4] = (char)(length & 0xFF);
+		MessageBuffer[5] = completionCode;
+		MessageBuffer[6] = readState;
 
-		WriteMessage(length + offset);
+		WriteMessage(length + offset, 1);
 
-		if (0)
+		ClearMessageBuffer();
+
+		if (1)
 		{
 			MessageBuffer[0] = 0x6C;
 			MessageBuffer[1] = 0xF0;
@@ -332,7 +396,9 @@ KernelStart(void)
 			MessageBuffer[3] = 0xBB;
 			CopyToMessageBuffer(BreadcrumbBuffer, BreadcrumbBufferSize, 4);
 
-			WriteMessage(BreadcrumbBufferSize + 4);
+			WriteMessage(BreadcrumbBufferSize + 4, 0);
+			ClearMessageBuffer();
+
 		}
 	}
 
