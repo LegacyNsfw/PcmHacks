@@ -191,6 +191,9 @@ int ReadMessage(char *completionCode, char *readState)
 		case 6: // Buffer contains a completion code, followed by a full frame.
 		case 7: // Buffer contains a completion code only.
 			*completionCode = *DLC_Receive_FIFO;
+			
+			// If we return here when the length IS zero, we'll never return 
+			// any message data at all. I don't understand why that is.
 			if (length != 0)
 			{
 				*readState = 1;
@@ -291,14 +294,17 @@ KernelStart(void)
 			
 			WriteMessage(7);
 
-			MessageBuffer[0] = 0x6C;
-			MessageBuffer[1] = 0xF0;
-			MessageBuffer[2] = 0x10;
-			MessageBuffer[3] = 0xCC;
-			MessageBuffer[4] = readState;
-			CopyToMessageBuffer(BreadcrumbBuffer, BreadcrumbBufferSize, 5);
-			
-			WriteMessage(BreadcrumbBufferSize + 5);
+			if (0)
+			{
+				MessageBuffer[0] = 0x6C;
+				MessageBuffer[1] = 0xF0;
+				MessageBuffer[2] = 0x10;
+				MessageBuffer[3] = 0xCC;
+				MessageBuffer[4] = readState;
+				CopyToMessageBuffer(BreadcrumbBuffer, BreadcrumbBufferSize, 5);
+
+				WriteMessage(BreadcrumbBufferSize + 5);
+			}
 
 			continue;
 		}
@@ -318,13 +324,16 @@ KernelStart(void)
 
 		WriteMessage(length + offset);
 
-		MessageBuffer[0] = 0x6C;
-		MessageBuffer[1] = 0xF0;
-		MessageBuffer[2] = 0x10;
-		MessageBuffer[3] = 0xBB;
-		CopyToMessageBuffer(BreadcrumbBuffer, BreadcrumbBufferSize, 4);
+		if (0)
+		{
+			MessageBuffer[0] = 0x6C;
+			MessageBuffer[1] = 0xF0;
+			MessageBuffer[2] = 0x10;
+			MessageBuffer[3] = 0xBB;
+			CopyToMessageBuffer(BreadcrumbBuffer, BreadcrumbBufferSize, 4);
 
-		WriteMessage(BreadcrumbBufferSize + 4);
+			WriteMessage(BreadcrumbBufferSize + 4);
+		}
 	}
 
 	for (;;)
