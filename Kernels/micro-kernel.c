@@ -176,15 +176,16 @@ void WriteMessage(int length, int breadcrumbs)
 	*DLC_Transmit_Command = 0x0C;
 	*DLC_Transmit_FIFO = MessageBuffer[length - 1];
 
-	// Send checksum 
+	// Send checksum? 
 	WasteTime();
 	*DLC_Transmit_Command = 0x03;
 	*DLC_Transmit_FIFO = 0x00;
 
 	// Wait for the message to be flushed.
 	//
-	// This seems to work as it should, however it's odd that we get a series of
-	// 0x03 status values (buffer full) and then it immediately goes to zero.
+	// This seems to work as it should, however note that, as per the DLC spec,
+	// we'll get a series of 0x03 status values (buffer full) before the status
+	// changes immediately to zero. There's no 0x02 (almost full) in between.
 	status = *DLC_Status & 0x03;
 	int loopCount = 0;
 	while (status != 0 && loopCount < 250)
@@ -210,11 +211,6 @@ void WriteMessage(int length, int breadcrumbs)
 #endif
 
 	ClearMessageBuffer();
-
-	// This really shouldn't be necessary, but it makes us a lot less likely to 'receive' phantom data.
-	LongSleepWithWatchdog();
-	LongSleepWithWatchdog();
-	LongSleepWithWatchdog();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -274,16 +270,25 @@ int ReadMessage(char *completionCode, char *readState)
 
 			// Not sure if this is necessary - the code works without it, but it seems
 			// like a good idea according to 5.1.3.2. of the DLC data sheet.
-			// *DLC_Transmit_Command = 0x02;
+			*DLC_Transmit_Command = 0x02;
 
-			// If we return here when the length IS zero, we'll never return 
-			// any message data at all. I don't understand why that is.
-			if (length != 0)
+			// If we return here when the length zero, we'll never return 
+			// any message data at all. Not sure why.
+			if (length == 0)
 			{
-				*readState = 1;
-				return length;
+				//  TODO : Breadcrumb
+				break;
 			}
-			break;
+
+			if (*completionCode == 0x30)
+			{
+				//  TODO : Breadcrumb
+				*readState = 2;
+				return 0;
+			}
+
+			*readState = 1;
+			return length;
 
 		case 3:  // Buffer overflow. What do do here?
 			// Just throw the message away and hope the tool sends again?
