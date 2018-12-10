@@ -93,7 +93,7 @@ namespace PcmHacking
         }
        
 
-        private async Task<bool> TryWriteKernelReset()
+        private async Task<bool> TryWriteKernelReset(CancellationToken cancellationToken)
         {
             return await this.SendMessageValidateResponse(
                 this.messageFactory.CreateWriteKernelResetRequest(),
