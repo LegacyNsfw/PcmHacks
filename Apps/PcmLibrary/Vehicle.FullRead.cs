@@ -136,6 +136,11 @@ namespace PcmHacking
             
             for(int sendAttempt = 1; sendAttempt <= MaxSendAttempts; sendAttempt++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 Message message = this.messageFactory.CreateReadRequest(startAddress, length);
 
                 //this.logger.AddDebugMessage("Sending " + message.GetBytes().ToHex());
