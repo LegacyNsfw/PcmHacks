@@ -30,12 +30,12 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 //
 // 4096 == 0x1000
 #define MessageBufferSize 1024
-#define BreadcrumbBufferSize 20
+#define BreadcrumbBufferSize 6
 char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
 char __attribute((section(".kerneldata"))) BreadcrumbBuffer[BreadcrumbBufferSize];
 
 // Uncomment one of these to determine which way to use the breadcrumb buffer.
-//#define RECEIVE_BREADCRUMBS
+#define RECEIVE_BREADCRUMBS
 //#define TRANSMIT_BREADCRUMBS
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -224,11 +224,11 @@ int ReadMessage(char *completionCode, char *readState)
 
 #ifdef RECEIVE_BREADCRUMBS
 	ClearBreadcrumbBuffer();
+	int breadcrumbIndex = 0; 
 #endif
 
 	int length = 0;
-	int breadcrumbIndex = 0;
-	for (int iterations = 0; iterations < 20 * 1000; iterations++)
+	for (int iterations = 0; iterations < 30 * 1000; iterations++)
 	{
 		// Artificial message-length limit for debugging.
 		if (length == 25)
@@ -247,8 +247,8 @@ int ReadMessage(char *completionCode, char *readState)
 		status = (*DLC_Status & 0xE0) >> 5;
 		
 #ifdef RECEIVE_BREADCRUMBS
-		BreadcrumbBuffer[breadcrumbIndex] = status;
-		breadcrumbIndex++;
+//		BreadcrumbBuffer[breadcrumbIndex] = status;
+//		breadcrumbIndex++;
 #endif
 		switch (status)
 		{
@@ -272,17 +272,17 @@ int ReadMessage(char *completionCode, char *readState)
 			// like a good idea according to 5.1.3.2. of the DLC data sheet.
 			*DLC_Transmit_Command = 0x02;
 
-			// If we return here when the length zero, we'll never return 
+			// If we return here when the length is zero, we'll never return 
 			// any message data at all. Not sure why.
 			if (length == 0)
 			{
-				//  TODO : Breadcrumb
+				BreadcrumbBuffer[breadcrumbIndex++] = *completionCode;
 				break;
 			}
 
-			if (*completionCode == 0x30)
+			if ((*completionCode & 0x30) == 0x30)
 			{
-				//  TODO : Breadcrumb
+				//BreadcrumbBuffer[breadcrumbIndex++] = 2;
 				*readState = 2;
 				return 0;
 			}
@@ -374,13 +374,7 @@ KernelStart(void)
 		char readState = 0xFF;
 		int length = ReadMessage(&completionCode, &readState);
 		if (length == 0)
-		{
-			// No message received, so send a heartbeat message and listen again.
-			// Note that without this call to LongSleepWithWatchdog, the WriteMessage call will fail.
-			// That's probably related to the fact that the ReadMessage function sends a debug message before returning.
-			// Should try experimenting with different delay lengths to see just how long we need to wait.
-
-			LongSleepWithWatchdog();
+		{			
 			toolPresent[4] = *DLC_Status;
 			toolPresent[5] = completionCode;
 			toolPresent[6] = readState;
@@ -391,6 +385,9 @@ KernelStart(void)
 
 			if (0)
 			{
+				LongSleepWithWatchdog();
+				LongSleepWithWatchdog();
+
 				MessageBuffer[0] = 0x6C;
 				MessageBuffer[1] = 0xF0;
 				MessageBuffer[2] = 0x10;
@@ -407,6 +404,12 @@ KernelStart(void)
 		}
 
 		LongSleepWithWatchdog();
+
+		if ((completionCode & 0x30) != 0x00)
+		{
+			// This is a transmit error. Just ignore it and wait for the tool to retry.
+			continue;
+		}
 
 		// Echo the received message with a 'tool present' header.
 		int offset = 7; // Can make this 7 and include 3 more bytes, but WriteMessage doesn't do well with more than 12 bytes.
@@ -425,6 +428,9 @@ KernelStart(void)
 
 		if (0)
 		{
+			LongSleepWithWatchdog();
+			LongSleepWithWatchdog();
+
 			MessageBuffer[0] = 0x6C;
 			MessageBuffer[1] = 0xF0;
 			MessageBuffer[2] = 0x10;
@@ -433,7 +439,6 @@ KernelStart(void)
 
 			WriteMessage(BreadcrumbBufferSize + 4, 0);
 			ClearMessageBuffer();
-
 		}
 	}
 
