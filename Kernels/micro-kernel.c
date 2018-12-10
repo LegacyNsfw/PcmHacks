@@ -36,7 +36,7 @@ char __attribute((section(".kerneldata"))) BreadcrumbBuffer[BreadcrumbBufferSize
 
 // Uncomment one of these to determine which way to use the breadcrumb buffer.
 //#define RECEIVE_BREADCRUMBS
-#define TRANSMIT_BREADCRUMBS
+//#define TRANSMIT_BREADCRUMBS
 
 ///////////////////////////////////////////////////////////////////////////////
 // This needs to be called periodically to prevent the PCM from rebooting.
@@ -104,9 +104,6 @@ void ClearBreadcrumbBuffer()
 // The DLC will append the checksum byte, so we don't have to.
 // The message must be written into MessageBuffer first.
 // This function will send 'length' bytes from that buffer onto the wire.
-//
-// It works pretty well with messages under 12 bytes long. Not so great with longer messages.
-// I strongly suspect the problems are related to overflowing the FIFO and flushing it at the.
 ///////////////////////////////////////////////////////////////////////////////
 void WriteMessage(int length, int breadcrumbs)
 {
@@ -117,7 +114,7 @@ void WriteMessage(int length, int breadcrumbs)
 	{
 		ClearBreadcrumbBuffer();
 	}
-	int breadcrumbIndex = 0;
+	int breadcrumbIndex = 2;
 #endif
 
 	*DLC_Transmit_Command = 0x14;
@@ -125,6 +122,9 @@ void WriteMessage(int length, int breadcrumbs)
 	int lastIndex = length - 1;
 
 	unsigned char status;
+
+	int useBreadcrumbsForBufferLimit = 1;
+	int stopUsing = 0;
 
 	// Send message
 	for (int index = 0; index < lastIndex; index++)
@@ -138,12 +138,21 @@ void WriteMessage(int length, int breadcrumbs)
 
 		// TODO: try looping around 0x02 (almost full) rather than 0x03 (full)
 		int loopCount = 0;
-		while (status == 0x03 && loopCount < 250)
+		while ((status == 0x02 || status == 0x03) && loopCount < 250)
 		{
 			loopCount++;
 
-			// With iterations < 25, we get some 2s and 3s in the loop counter.
-			for (int iterations = 0; iterations < 25; iterations++)
+
+#ifdef TRANSMIT_BREADCRUMBS
+			if (useBreadcrumbsForBufferLimit)
+			{
+				BreadcrumbBuffer[breadcrumbIndex++] = status;
+				stopUsing = 1;
+			}
+#endif
+
+			// With max iterations at 25, we get some 2s and 3s in the loop counter.
+			for (int iterations = 0; iterations < 50; iterations++)
 			{
 				ScratchWatchdog();
 				WasteTime();
@@ -152,6 +161,15 @@ void WriteMessage(int length, int breadcrumbs)
 			ScratchWatchdog();
 			status = *DLC_Status & 0x03;
 		}
+
+
+#ifdef TRANSMIT_BREADCRUMBS
+		if (stopUsing)
+		{
+			BreadcrumbBuffer[1] = loopCount;
+			useBreadcrumbsForBufferLimit = 0;
+		}
+#endif
 	}
 
 	// Send last byte
@@ -164,12 +182,18 @@ void WriteMessage(int length, int breadcrumbs)
 	*DLC_Transmit_FIFO = 0x00;
 
 	// Wait for the message to be flushed.
+	//
+	// This seems to work as it should, however it's odd that we get a series of
+	// 0x03 status values (buffer full) and then it immediately goes to zero.
 	status = *DLC_Status & 0x03;
 	int loopCount = 0;
 	while (status != 0 && loopCount < 250)
 	{
 		loopCount++;
 
+		// Set the max iterations in the following loop to 100 if you uncomment this line.
+		// BreadcrumbBuffer[breadcrumbIndex++] = status;
+		
 		for (int iterations = 0; iterations < 25; iterations++)
 		{
 			ScratchWatchdog();
@@ -180,14 +204,17 @@ void WriteMessage(int length, int breadcrumbs)
 		status = *DLC_Status & 0x03;
 	}
 
-	BreadcrumbBuffer[0] = loopCount;
 
-	// Should be able to remove these if the flush loop works.
-	// But right now, you can't send two messages in a row without these.
-	LongSleepWithWatchdog();
-	LongSleepWithWatchdog();
-	LongSleepWithWatchdog();
+#ifdef TRANSMIT_BREADCRUMBS
+	BreadcrumbBuffer[0] = loopCount;
+#endif
+
 	ClearMessageBuffer();
+
+	// This really shouldn't be necessary, but it makes us a lot less likely to 'receive' phantom data.
+	LongSleepWithWatchdog();
+	LongSleepWithWatchdog();
+	LongSleepWithWatchdog();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -244,7 +271,11 @@ int ReadMessage(char *completionCode, char *readState)
 		case 6: // Buffer contains a completion code, followed by a full frame.
 		case 7: // Buffer contains a completion code only.
 			*completionCode = *DLC_Receive_FIFO;
-			
+
+			// Not sure if this is necessary - the code works without it, but it seems
+			// like a good idea according to 5.1.3.2. of the DLC data sheet.
+			// *DLC_Transmit_Command = 0x02;
+
 			// If we return here when the length IS zero, we'll never return 
 			// any message data at all. I don't understand why that is.
 			if (length != 0)
@@ -353,7 +384,6 @@ KernelStart(void)
 			WriteMessage(7, 0);
 			ClearMessageBuffer();
 
-
 			if (0)
 			{
 				MessageBuffer[0] = 0x6C;
@@ -388,7 +418,7 @@ KernelStart(void)
 
 		ClearMessageBuffer();
 
-		if (1)
+		if (0)
 		{
 			MessageBuffer[0] = 0x6C;
 			MessageBuffer[1] = 0xF0;
