@@ -364,7 +364,7 @@ KernelStart(void)
 	// to allow the app to recover from any failures. 
 	// If we choose to loop forever we need a good story for how to get out of that state.
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
-	for(int iterations = 0; iterations < 50; iterations++)
+	for(int iterations = 0; iterations < 150; iterations++)
 	{
 		//LongSleepWithWatchdog();
 		ScratchWatchdog();
@@ -425,6 +425,11 @@ KernelStart(void)
 		WriteMessage(length + offset, 1);
 
 		ClearMessageBuffer();
+
+		if (MessageBuffer[3] == 0x20)
+		{
+			break;
+		}
 
 		if (0)
 		{
