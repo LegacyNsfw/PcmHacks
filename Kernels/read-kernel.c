@@ -31,11 +31,11 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 // 4096 == 0x1000
 #define MessageBufferSize 1024
 #define BreadcrumbBufferSize 6
-char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
+unsigned char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
 
 // Code can add data to this buffer while doing something that doesn't work
 // well, and then dump this buffer later to find out what was going on.
-char __attribute((section(".kerneldata"))) BreadcrumbBuffer[BreadcrumbBufferSize];
+unsigned char __attribute((section(".kerneldata"))) BreadcrumbBuffer[BreadcrumbBufferSize];
 
 // Uncomment one of these to determine which way to use the breadcrumb buffer.
 //#define RECEIVE_BREADCRUMBS
@@ -334,21 +334,76 @@ void CopyToMessageBuffer(char* start, int length, int offset)
 	for (int index = length - 1; index >= 0; index--)
 	{
 		MessageBuffer[index + offset] = start[index];
+
+		if (index % 100 == 0)
+		{
+			ScratchWatchdog();
+		}
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Copy the payload for a read request.
+///////////////////////////////////////////////////////////////////////////////
+void CopyReadPayload(char* start, int length, int offset)
+{
+	ScratchWatchdog();
+
+	for (int index = 0; index < length; index++)
+	{
+		unsigned char value = start[index];
+		MessageBuffer[offset + index] = value;
+
+		if (index % 100 == 0)
+		{
+			ScratchWatchdog();
+		}
+	}
+
+	ScratchWatchdog();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Set the checksum for a data block.
+///////////////////////////////////////////////////////////////////////////////
+void SetBlockChecksum(int length)
+{
+	ScratchWatchdog();
+
+	unsigned short sum = 0;
+
+	for (int index = 0; index < length + 10; index++)
+	{
+		unsigned char value = MessageBuffer[index + 4];
+		sum += value;
+
+		if (index % 100 == 0)
+		{
+			ScratchWatchdog();
+		}
+	}
+
+	MessageBuffer[10 + length] = (unsigned char)((sum & 0xFF00) >> 8);
+	MessageBuffer[11 + length] = (unsigned char)(sum & 0xFF);
+
+	ScratchWatchdog();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Send a message to explain why we're rebooting, then reboot.
 ///////////////////////////////////////////////////////////////////////////////
-void Reboot(unsigned char reason)
+void Reboot(unsigned int value)
 {
 	LongSleepWithWatchdog();
 
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
-	MessageBuffer[3] = reason;
-	WriteMessage(4, 0);
+	MessageBuffer[3] = 0x60;
+	MessageBuffer[4] = (unsigned char)((value & 0xFF0000) >> 16);
+	MessageBuffer[5] = (unsigned char)((value & 0x00FF00) >> 8);
+	MessageBuffer[6] = (unsigned char)((value & 0x0000FF) >> 0);
+	WriteMessage(7, 0);
 
 	LongSleepWithWatchdog();
 
@@ -356,9 +411,40 @@ void Reboot(unsigned char reason)
 	for (;;);
 }
 
+void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3)
+{
+	// There are some extra bytes here for debugging / diagnostics.
+	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00, 0x00 };
+	toolPresent[4] = b1;
+	toolPresent[5] = b2;
+	toolPresent[6] = b3;
+	CopyToMessageBuffer(toolPresent, 7, 0);
+
+	WriteMessage(7, 0);
+	ClearMessageBuffer();
+}
+
 void ReadAndSend(unsigned start, unsigned length)
 {
-	MessageBuffer[0] = 0x6D;
+	// TODO: Validate the start address and length, fail if unreasonable.
+
+	// Optionally print the start address and length, to make sure they were parsed correctly.
+	unsigned char b1 = (char)((start & 0x00FF0000) >> 16);
+	unsigned char b2 = (char)((start & 0x0000FF00) >> 8);
+	unsigned char b3 = (char)(start & 0x000000FF);
+	//	SendToolPresent(b1, b2, b3);
+	//	LongSleepWithWatchdog();
+	//	LongSleepWithWatchdog();
+
+	b1 = 0;
+	b2 = (char)((length & 0x0000FF00) >> 8);
+	b3 = (char)(length & 0x000000FF);
+	//	SendToolPresent(b1, b2, b3);
+	//	LongSleepWithWatchdog();
+	//	LongSleepWithWatchdog();
+
+	// Send the "agree" response.
+	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x75;
@@ -369,7 +455,10 @@ void ReadAndSend(unsigned start, unsigned length)
 	MessageBuffer[7] = 0xF0;
 
 	WriteMessage(8, 0);
+	LongSleepWithWatchdog();
 
+
+	// Send the payload
 	MessageBuffer[0] = 0x6D;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
@@ -377,13 +466,21 @@ void ReadAndSend(unsigned start, unsigned length)
 	MessageBuffer[4] = 0x01;
 	MessageBuffer[5] = (char)(length >> 8);
 	MessageBuffer[6] = (char)length;
-	MessageBuffer[7] = (char)(start >> 24);
-	MessageBuffer[8] = (char)(start >> 16);
+	MessageBuffer[7] = (char)(start >> 16);
+	MessageBuffer[8] = (char)(start >> 8);
 	MessageBuffer[9] = (char)start;
+	
 
-	CopyToMessageBuffer((char*)start, length, 10);
+	// LENGTH IS HARD CODED FOR TESTING FIXFIXFIXFIXFIXFIXFIXFIXFIXFIX
+	CopyReadPayload((char*)start, 500, 10);
+	SetBlockChecksum(500);
 
-	WriteMessage(10 + length, 0);
+	// Did not reach this point.
+	// SendToolPresent(0xAA, 0xAA, 0xAA);
+	//LongSleepWithWatchdog();
+
+	WriteMessage(512, 0);// +length, 0);
+	LongSleepWithWatchdog();;
 }
 
 void ReadMode35()
@@ -392,11 +489,15 @@ void ReadMode35()
 	length <<= 8;
 	length |= MessageBuffer[6];
 
-	unsigned start = MessageBuffer[6];
-	start <<= 8;
-	start |= MessageBuffer[7];
+	//SendToolPresent(0xBB, MessageBuffer[5], MessageBuffer[6]);
+	//LongSleepWithWatchdog();
+	//LongSleepWithWatchdog();
+
+	unsigned start = MessageBuffer[7];
 	start <<= 8;
 	start |= MessageBuffer[8];
+	start <<= 8;
+	start |= MessageBuffer[9];
 
 	ReadAndSend(start, length);
 }
@@ -409,17 +510,20 @@ void ProcessMessage()
 	if (MessageBuffer[1] != 0x10)
 	{
 		// We're not the destination, ignore this message.
+		// SendToolPresent(0xB0, MessageBuffer[1], 0);
 		return;
 	}
 
 	if (MessageBuffer[2] != 0xF0)
 	{
 		// This didn't come from the tool, ignore this message.
+		SendToolPresent(0xB1, MessageBuffer[2], 0);
 		return;
 	}
 
 	if (MessageBuffer[3] == 0x35)
 	{
+		//SendToolPresent(0x00, MessageBuffer[3], 0);
 		ReadMode35();
 		return;
 	}
@@ -427,9 +531,11 @@ void ProcessMessage()
 	if (MessageBuffer[3] == 0x37)
 	{
 		// ReadMode37();
+		SendToolPresent(0xB2, MessageBuffer[3], 0);
 		return;
 	}
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // This is the entry point for the kernel.
@@ -453,17 +559,17 @@ KernelStart(void)
 	ClearMessageBuffer();
 	WasteTime();
 
-	// There are some extra bytes here for debugging / diagnostics.
-	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00, 0x00 };
-	char echo[] = { 0x6C, 0xF0, 0x10, 0xAA };
-
 	// This loop runs out quickly, to force the PCM to reboot, to speed up testing.
 	// The real kernel should probably loop for a much longer time (possibly forever),
 	// to allow the app to recover from any failures. 
 	// If we choose to loop forever we need a good story for how to get out of that state.
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
-	for(int iterations = 0; iterations < 100; iterations++)
+	// for(int iterations = 0; iterations < 100; iterations++)
+	int iterations = 0;
+	for(;;)
 	{
+		iterations++;
+
 		ScratchWatchdog();
 
 		char completionCode = 0xFF;
@@ -473,13 +579,7 @@ KernelStart(void)
 		{
 			// If no message received, sent a tool-present message with a couple
 			// of extra bytes to help us understand what's going on in the DLC.
-			toolPresent[4] = *DLC_Status;
-			toolPresent[5] = completionCode;
-			toolPresent[6] = readState;
-			CopyToMessageBuffer(toolPresent, 7, 0);
-			
-			WriteMessage(7, 0);
-			ClearMessageBuffer();
+			// SendToolPresent(0xAA, completionCode, readState);
 
 			// Enable this for breadcrumb debugging.
 			// It gives insight into the code, but it causes side-effects in the 
@@ -517,11 +617,11 @@ KernelStart(void)
 		if (MessageBuffer[3] == 0x20)
 		{
 			LongSleepWithWatchdog();
-			Reboot(0xEE);
+			Reboot(iterations);
 		}
 
 		ProcessMessage();
 	}
 
-	Reboot(0xFF);
+	Reboot(iterations);
 }
