@@ -23,15 +23,19 @@ all: micro-kernel.bin read-kernel.bin
 
 micro-kernel.elf: micro-kernel.o main.o common.o
 	$(LD) $(LDFLAGS) -T micro-kernel.ld main.o micro-kernel.o -o $@
+	-$(OBJDUMP) $(DUMPFLAGS) $@ > $@.disassembly
 
 micro-kernel.bin: micro-kernel.elf
 	$(OBJCOPY) $(COPYFLAGS) --only-section=.kernel_code --only-section=.rodata micro-kernel.elf micro-kernel.bin
+	cp micro-kernel.bin ../Apps/PcmHammer/bin/Debug/
 
 read-kernel.elf: read-kernel.o main.o common.o
 	$(LD) $(LDFLAGS) -T read-kernel.ld main.o read-kernel.o -o $@
+	-$(OBJDUMP) $(DUMPFLAGS) $@ > $@.disassembly
 
 read-kernel.bin: read-kernel.elf
 	$(OBJCOPY) $(COPYFLAGS) --only-section=.kernel_code --only-section=.rodata read-kernel.elf read-kernel.bin
+	cp read-kernel.bin ../Apps/PcmHammer/bin/Debug/
 
 clean:
 	rm -f *.bin *.o *.elf *.asm
