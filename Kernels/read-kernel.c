@@ -343,53 +343,6 @@ void CopyToMessageBuffer(char* start, int length, int offset)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Copy the payload for a read request.
-///////////////////////////////////////////////////////////////////////////////
-void CopyReadPayload(char* start, int length, int offset)
-{
-	ScratchWatchdog();
-
-	for (int index = 0; index < length; index++)
-	{
-		unsigned char value = start[index];
-		MessageBuffer[offset + index] = value;
-
-		if (index % 100 == 0)
-		{
-			ScratchWatchdog();
-		}
-	}
-
-	ScratchWatchdog();
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Set the checksum for a data block.
-///////////////////////////////////////////////////////////////////////////////
-void SetBlockChecksum(int length)
-{
-	ScratchWatchdog();
-
-	unsigned short sum = 0;
-
-	for (int index = 0; index < length + 10; index++)
-	{
-		unsigned char value = MessageBuffer[index + 4];
-		sum += value;
-
-		if (index % 100 == 0)
-		{
-			ScratchWatchdog();
-		}
-	}
-
-	MessageBuffer[10 + length] = (unsigned char)((sum & 0xFF00) >> 8);
-	MessageBuffer[11 + length] = (unsigned char)(sum & 0xFF);
-
-	ScratchWatchdog();
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Send a message to explain why we're rebooting, then reboot.
 ///////////////////////////////////////////////////////////////////////////////
 void Reboot(unsigned int value)
@@ -411,6 +364,9 @@ void Reboot(unsigned int value)
 	for (;;);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Send a tool-present message with 3 extra data bytes for debugging.
+///////////////////////////////////////////////////////////////////////////////
 void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3)
 {
 	// There are some extra bytes here for debugging / diagnostics.
@@ -424,24 +380,60 @@ void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3)
 	ClearMessageBuffer();
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Comput the checksum for the header of an outgoing message.
+///////////////////////////////////////////////////////////////////////////////
+unsigned short StartChecksum()
+{
+	unsigned short checksum = 0;
+	for (int index = 4; index < 10; index++)
+	{
+		checksum += MessageBuffer[index];
+	}
+
+	return checksum;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Copy the payload for a read request, while updating the checksum.
+///////////////////////////////////////////////////////////////////////////////
+unsigned short CopyReadPayload(char* start, int length, int offset, unsigned short checksum)
+{
+	ScratchWatchdog();
+
+	for (int index = 0; index < length; index++)
+	{
+		unsigned char value = start[index];
+		MessageBuffer[offset + index] = value;
+		checksum += value;
+
+		if (index % 100 == 0)
+		{
+			ScratchWatchdog();
+		}
+	}
+
+	ScratchWatchdog();
+
+	return checksum;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Set the checksum for a data block.
+///////////////////////////////////////////////////////////////////////////////
+void SetBlockChecksum(int length, unsigned short checksum)
+{
+	MessageBuffer[10 + length] = (unsigned char)((checksum & 0xFF00) >> 8);
+	MessageBuffer[11 + length] = (unsigned char)(checksum & 0xFF);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Read the specified address range and send the data to the tool.
+///////////////////////////////////////////////////////////////////////////////
 void ReadAndSend(unsigned start, unsigned length)
 {
 	// TODO: Validate the start address and length, fail if unreasonable.
 
-	// Optionally print the start address and length, to make sure they were parsed correctly.
-	unsigned char b1 = (char)((start & 0x00FF0000) >> 16);
-	unsigned char b2 = (char)((start & 0x0000FF00) >> 8);
-	unsigned char b3 = (char)(start & 0x000000FF);
-	//	SendToolPresent(b1, b2, b3);
-	//	LongSleepWithWatchdog();
-	//	LongSleepWithWatchdog();
-
-	b1 = 0;
-	b2 = (char)((length & 0x0000FF00) >> 8);
-	b3 = (char)(length & 0x000000FF);
-	//	SendToolPresent(b1, b2, b3);
-	//	LongSleepWithWatchdog();
-	//	LongSleepWithWatchdog();
 
 	// Send the "agree" response.
 	MessageBuffer[0] = 0x6C;
@@ -468,12 +460,16 @@ void ReadAndSend(unsigned start, unsigned length)
 	MessageBuffer[8] = (char)(start >> 8);
 	MessageBuffer[9] = (char)start;
 	
-	CopyReadPayload((char*)start, length, 10);
-	SetBlockChecksum(length);
+	unsigned short checksum = StartChecksum();
+	checksum = CopyReadPayload((char*)start, length, 10, checksum);
+	SetBlockChecksum(length, checksum);
 
-	WriteMessage(length + 12, 0);// +length, 0);
+	WriteMessage(length + 12, 0);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// Process a mode-35 read request.
+///////////////////////////////////////////////////////////////////////////////
 void ReadMode35()
 {
 	unsigned length = MessageBuffer[5];
@@ -508,7 +504,7 @@ void ProcessMessage()
 	if (MessageBuffer[2] != 0xF0)
 	{
 		// This didn't come from the tool, ignore this message.
-		SendToolPresent(0xB1, MessageBuffer[2], 0);
+		//SendToolPresent(0xB1, MessageBuffer[2], 0);
 		return;
 	}
 
@@ -557,6 +553,8 @@ KernelStart(void)
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
 	// for(int iterations = 0; iterations < 100; iterations++)
 	int iterations = 0;
+	int timeout = 1000;
+	int lastMessage = iterations - timeout;
 	for(;;)
 	{
 		iterations++;
@@ -568,29 +566,10 @@ KernelStart(void)
 		int length = ReadMessage(&completionCode, &readState);
 		if (length == 0)
 		{
-			// If no message received, sent a tool-present message with a couple
-			// of extra bytes to help us understand what's going on in the DLC.
-			// SendToolPresent(0xAA, completionCode, readState);
-
-			// Enable this for breadcrumb debugging.
-			// It gives insight into the code, but it causes side-effects in the 
-			// tool and in the kernel TX/RX behavior. Partly by keeping the DLC
-			// busy, and partly due to the long sleeps that are needed to make sure
-			// the breadcrumb message gets sent out reliably.
-			if (0)
+			// If no message received for N iterations, reboot.
+			if (iterations > (iterations + timeout))
 			{
-				LongSleepWithWatchdog();
-				LongSleepWithWatchdog();
-
-				MessageBuffer[0] = 0x6C;
-				MessageBuffer[1] = 0xF0;
-				MessageBuffer[2] = 0x10;
-				MessageBuffer[3] = 0xCC;
-				MessageBuffer[4] = readState;
-				CopyToMessageBuffer(BreadcrumbBuffer, BreadcrumbBufferSize, 5);
-
-				WriteMessage(BreadcrumbBufferSize + 5, 0);
-				ClearMessageBuffer();
+				Reboot(0xFFFFFFFF);
 			}
 
 			continue;
@@ -603,6 +582,8 @@ KernelStart(void)
 			// This is a transmit error. Just ignore it and wait for the tool to retry.
 			continue;
 		}
+
+		lastMessage = iterations;
 
 		// Did the tool just request a reboot?
 		if (MessageBuffer[3] == 0x20)
