@@ -56,7 +56,8 @@ namespace PcmHacking
                 await toolPresentNotifier.Notify();
 
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
-                if (!await PCMExecute(response.Value, 0xFF9150, cancellationToken))
+                // TODO: choose kernel at run time? Because now it's FF9000...
+                if (!await PCMExecute(response.Value, 0xFF9000, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -153,6 +154,11 @@ namespace PcmHacking
                 bool sendAgain = false;
                 for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     Message response = await this.ReceiveMessage(cancellationToken);
                     if (response == null)
                     {
@@ -189,7 +195,12 @@ namespace PcmHacking
 
                 this.logger.AddDebugMessage("Read request allowed, expecting for payload...");
                 for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
-                {   
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     Message payloadMessage = await this.device.ReceiveMessage();
                     if (payloadMessage == null)
                     {
