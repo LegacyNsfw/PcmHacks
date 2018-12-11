@@ -31,7 +31,7 @@ read-kernel.elf: read-kernel.o main.o common.o
 	$(LD) $(LDFLAGS) -T read-kernel.ld main.o read-kernel.o -o $@
 
 read-kernel.bin: read-kernel.elf
-	$(OBJCOPY) $(COPYFLAGS) --only-section=.kernel_ram read-kernel.elf read-kernel.bin
+	$(OBJCOPY) $(COPYFLAGS) --only-section=.kernel_code --only-section=.rodata read-kernel.elf read-kernel.bin
 
 clean:
 	rm -f *.bin *.o *.elf *.asm
