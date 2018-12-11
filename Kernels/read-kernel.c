@@ -455,9 +455,7 @@ void ReadAndSend(unsigned start, unsigned length)
 	MessageBuffer[7] = 0xF0;
 
 	WriteMessage(8, 0);
-	LongSleepWithWatchdog();
-
-
+	
 	// Send the payload
 	MessageBuffer[0] = 0x6D;
 	MessageBuffer[1] = 0xF0;
@@ -470,17 +468,10 @@ void ReadAndSend(unsigned start, unsigned length)
 	MessageBuffer[8] = (char)(start >> 8);
 	MessageBuffer[9] = (char)start;
 	
+	CopyReadPayload((char*)start, length, 10);
+	SetBlockChecksum(length);
 
-	// LENGTH IS HARD CODED FOR TESTING FIXFIXFIXFIXFIXFIXFIXFIXFIXFIX
-	CopyReadPayload((char*)start, 500, 10);
-	SetBlockChecksum(500);
-
-	// Did not reach this point.
-	// SendToolPresent(0xAA, 0xAA, 0xAA);
-	//LongSleepWithWatchdog();
-
-	WriteMessage(512, 0);// +length, 0);
-	LongSleepWithWatchdog();;
+	WriteMessage(length + 12, 0);// +length, 0);
 }
 
 void ReadMode35()
