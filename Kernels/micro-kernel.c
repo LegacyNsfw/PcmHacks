@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
-// This is the smallest possible kernel.
-// It just runs a tight loop that keeps the watchdog happy.
+// This is a tiny kernel to validate the ability to read and write messages
+// using the PCM's DLC. It will echo received messages, and reboot on command.
 ///////////////////////////////////////////////////////////////////////////////
 //
 // After we have a trivial kernel that can send and received messages, the
@@ -32,6 +32,9 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 #define MessageBufferSize 1024
 #define BreadcrumbBufferSize 6
 char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
+
+// Code can add data to this buffer while doing something that doesn't work
+// well, and then dump this buffer later to find out what was going on.
 char __attribute((section(".kerneldata"))) BreadcrumbBuffer[BreadcrumbBufferSize];
 
 // Uncomment one of these to determine which way to use the breadcrumb buffer.
@@ -379,7 +382,7 @@ KernelStart(void)
 	char echo[] = { 0x6C, 0xF0, 0x10, 0xAA };
 
 	// This loop runs out quickly, to force the PCM to reboot, to speed up testing.
-	// The real kernel should probably loop for a much longer time (possibly forever,
+	// The real kernel should probably loop for a much longer time (possibly forever),
 	// to allow the app to recover from any failures. 
 	// If we choose to loop forever we need a good story for how to get out of that state.
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
