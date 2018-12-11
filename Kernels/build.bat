@@ -10,9 +10,9 @@ c:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe -T micro-kernel.ld main.o micro-kernel.o 
 c:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe -O binary --only-section=.kernel_code --only-section=.rodata micro-kernel.elf micro-kernel.bin
 C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S micro-kernel.elf > micro-kernel.disassembly
 
-c:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 -O0 main.c common.c read-kernel.c
-c:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe -T read-kernel.ld main.o common.o read-kernel.o -o read-kernel.elf
-c:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe -O binary --only-section=.kernel_ram read-kernel.elf read-kernel.bin
+c:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 -O0 main.c read-kernel.c
+c:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe -T read-kernel.ld main.o read-kernel.o -o read-kernel.elf
+c:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe -O binary --only-section=.kernel_code --only-section=.rodata read-kernel.elf read-kernel.bin
 C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S read-kernel.elf > read-kernel.disassembly
 
 copy *-kernel.bin ..\Apps\PcmHammer\bin\debug

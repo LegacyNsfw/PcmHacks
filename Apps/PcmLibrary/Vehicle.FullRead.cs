@@ -41,7 +41,7 @@ namespace PcmHacking
                 await toolPresentNotifier.Notify();
 
                 // execute read kernel
-                Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
+                Response<byte[]> response = await LoadKernelFromFile("read-kernel.bin");
                 if (response.Status != ResponseStatus.Success)
                 {
                     logger.AddUserMessage("Failed to load kernel from file.");
