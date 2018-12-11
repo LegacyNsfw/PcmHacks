@@ -434,20 +434,6 @@ void ReadAndSend(unsigned start, unsigned length)
 {
 	// TODO: Validate the start address and length, fail if unreasonable.
 
-	// Optionally print the start address and length, to make sure they were parsed correctly.
-	unsigned char b1 = (char)((start & 0x00FF0000) >> 16);
-	unsigned char b2 = (char)((start & 0x0000FF00) >> 8);
-	unsigned char b3 = (char)(start & 0x000000FF);
-	//	SendToolPresent(b1, b2, b3);
-	//	LongSleepWithWatchdog();
-	//	LongSleepWithWatchdog();
-
-	b1 = 0;
-	b2 = (char)((length & 0x0000FF00) >> 8);
-	b3 = (char)(length & 0x000000FF);
-	//	SendToolPresent(b1, b2, b3);
-	//	LongSleepWithWatchdog();
-	//	LongSleepWithWatchdog();
 
 	// Send the "agree" response.
 	MessageBuffer[0] = 0x6C;
@@ -474,9 +460,7 @@ void ReadAndSend(unsigned start, unsigned length)
 	MessageBuffer[8] = (char)(start >> 8);
 	MessageBuffer[9] = (char)start;
 	
-	unsigned int index = 4;
 	unsigned short checksum = StartChecksum();
-
 	checksum = CopyReadPayload((char*)start, length, 10, checksum);
 	SetBlockChecksum(length, checksum);
 
