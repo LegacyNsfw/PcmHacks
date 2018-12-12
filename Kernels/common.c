@@ -295,6 +295,65 @@ int ReadMessage(char *completionCode, char *readState)
 	return length;
 }
 
+typedef enum
+{
+	Silence = 0,
+	MessageData,
+	CompletionCode,
+	Overflow,
+} ReadType;
+
+int TryReadNextByte(unsigned char *data, unsigned char *completionCode, ReadType *type)
+{
+	for (int iterations = 0; iterations < 1000; iterations++)
+	{
+		*status = (*DLC_Status & 0xE0) >> 5;
+
+		switch (*status)
+		{
+		case 0: // No data to process. It might be better to wait longer here.
+			WasteTime();
+			break;
+
+		case 1: // Buffer contains data bytes.
+		case 2: // Buffer contains data followed by a completion code.
+		case 4:  // Buffer contains just one data byte.
+			*data = *DLC_Receive_FIFO;
+			*type = MessageData;
+			return 1;
+
+		case 5: // Buffer contains a completion code, followed by more data bytes.
+		case 6: // Buffer contains a completion code, followed by a full frame.
+		case 7: // Buffer contains a completion code only.
+			*completionCode = *DLC_Receive_FIFO;
+			*type = CompletionCode;
+
+			// Not sure if this is necessary - the code works without it, but it seems
+			// like a good idea according to 5.1.3.2. of the DLC data sheet.
+			*DLC_Transmit_Command = 0x02;
+			return 1;
+
+		case 3:  // Buffer overflow. What do do here?
+			// Just throw the message away and hope the tool sends again?
+			while (*DLC_Status & 0xE0 == 0x60)
+			{
+				char unused = *DLC_Receive_FIFO;
+			}
+			*data = 0;
+			*completionCode = 0;
+			*type = Overflow;
+			return 0;
+		}
+
+		ScratchWatchdog();
+	}
+
+	*data = 0;
+	*completionCode = 0;
+	*type = Silence;
+	return 0;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Copy the given buffer into the message buffer.
 ///////////////////////////////////////////////////////////////////////////////
