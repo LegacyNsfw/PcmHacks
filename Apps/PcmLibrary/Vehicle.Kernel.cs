@@ -72,6 +72,11 @@ namespace PcmHacking
             {
                 using (Stream fileStream = File.OpenRead(path))
                 {
+                    if (fileStream.Length == 0)
+                    {
+                        logger.AddDebugMessage("invalid kernel image (zero bytes). " + path);
+                        return Response.Create(ResponseStatus.Error, file);
+                    }
                     file = new byte[fileStream.Length];
 
                     // In theory we might need a loop here. In practice, I don't think that will be necessary.
