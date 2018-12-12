@@ -213,7 +213,7 @@ int ReadMessage(char *completionCode, char *readState)
 	for (int iterations = 0; iterations < 30 * 1000; iterations++)
 	{
 		// Artificial message-length limit for debugging.
-		if (length == 25)
+		if (length == 5100)
 		{
 			*readState = 0xEE;
 			return length;
@@ -358,6 +358,15 @@ void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3, unsig
 
 	WriteMessage(toolPresent, 8, Complete);
 	ClearMessageBuffer();
+}
+
+void SendToolPresent2(unsigned int value)
+{
+	SendToolPresent(
+		(value & 0xFF000000) >> 24,
+		(value & 0x00FF0000) >> 16,
+		(value & 0x0000FF00) >> 8,
+		(value & 0x000000FF));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

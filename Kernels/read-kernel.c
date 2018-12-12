@@ -14,12 +14,21 @@
 #include "common.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Read the specified address range and send the data to the tool.
+// Process a mode-35 read request.
 ///////////////////////////////////////////////////////////////////////////////
-void ReadAndSend(unsigned start, unsigned length)
+void ReadMode35()
 {
-	// TODO: Validate the start address and length, fail if unreasonable.
+	unsigned length = MessageBuffer[5];
+	length <<= 8;
+	length |= MessageBuffer[6];
 
+	unsigned start = MessageBuffer[7];
+	start <<= 8;
+	start |= MessageBuffer[8];
+	start <<= 8;
+	start |= MessageBuffer[9];
+
+	// TODO: Validate the start address and length, fail if unreasonable.
 
 	// Send the "agree" response.
 	MessageBuffer[0] = 0x6C;
@@ -33,7 +42,7 @@ void ReadAndSend(unsigned start, unsigned length)
 	MessageBuffer[7] = 0xF0;
 
 	WriteMessage(MessageBuffer, 8, Complete);
-	
+
 	// Send the payload
 	MessageBuffer[0] = 0x6D;
 	MessageBuffer[1] = 0xF0;
@@ -50,15 +59,12 @@ void ReadAndSend(unsigned start, unsigned length)
 	unsigned short checksum = StartChecksum();
 	checksum += AddReadPayloadChecksum((char*)start, length);
 
-	WriteMessage((char*) start, length, Middle);
+	WriteMessage((char*)start, length, Middle);
 
 	WriteMessage((char*)&checksum, 2, End);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Process a mode-35 read request.
-///////////////////////////////////////////////////////////////////////////////
-void ReadMode35()
+void UploadRequest()
 {
 	unsigned length = MessageBuffer[5];
 	length <<= 8;
@@ -70,7 +76,72 @@ void ReadMode35()
 	start <<= 8;
 	start |= MessageBuffer[9];
 
-	ReadAndSend(start, length);
+	if ((length > 4096) || (start != 0xFFA000))
+	{
+		MessageBuffer[0] = 0x6C;
+		MessageBuffer[1] = 0xF0;
+		MessageBuffer[2] = 0x10;
+		MessageBuffer[3] = 0x7F;
+		MessageBuffer[4] = 0x34;
+
+		WriteMessage(MessageBuffer, 5, Complete);
+		return;
+	}
+
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x74;
+	MessageBuffer[4] = 0x00;
+	WriteMessage(MessageBuffer, 5, Complete);
+}
+
+typedef void(*EntryPoint)();
+
+void Upload()
+{
+	unsigned char command = MessageBuffer[4];
+
+	unsigned length = MessageBuffer[5];
+	length <<= 8;
+	length |= MessageBuffer[6];
+
+	unsigned start = MessageBuffer[7];
+	start <<= 8;
+	start |= MessageBuffer[8];
+	start <<= 8;
+	start |= MessageBuffer[9];
+
+	if ((length > 4096) || (start < 0xFFA000) || (start > 0xFFB000))
+	{
+		MessageBuffer[0] = 0x6D;
+		MessageBuffer[1] = 0xF0;
+		MessageBuffer[2] = 0x10;
+		MessageBuffer[3] = 0x7F;
+		MessageBuffer[4] = 0x36;
+		WriteMessage(MessageBuffer, 5, Complete);
+		return;
+	}
+
+	unsigned int address = 0;
+	for (int index = 0; index < length; index++)
+	{
+		address = start + index;
+		*((unsigned char*)address) = MessageBuffer[10 + index];
+	}
+
+	MessageBuffer[0] = 0x6D;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x76;
+
+	WriteMessage(MessageBuffer, 4, Complete);
+		
+	if (command == 0x80)
+	{
+		EntryPoint entryPoint = (EntryPoint)start;
+		entryPoint();
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -92,18 +163,27 @@ void ProcessMessage()
 		return;
 	}
 
-	if (MessageBuffer[3] == 0x35)
+	switch (MessageBuffer[3])
 	{
-		//SendToolPresent(0x00, MessageBuffer[3], 0);
-		ReadMode35();
-		return;
-	}
+	case 0x34:
+		UploadRequest();
+		break;
 
-	if (MessageBuffer[3] == 0x37)
-	{
+	case 0x35:
+		ReadMode35();
+		break;
+
+	case 0x36:
+		if (MessageBuffer[0] == 0x6D)
+		{
+			Upload();
+		}
+		break;
+
+	case 0x37:
 		// ReadMode37();
 		SendToolPresent(0xB2, MessageBuffer[3], 0, 0);
-		return;
+		break;
 	}
 }
 

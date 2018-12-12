@@ -101,6 +101,7 @@ void Reboot(unsigned int value);
 // Send a tool-present message with 3 extra data bytes for debugging.
 ///////////////////////////////////////////////////////////////////////////////
 void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3, unsigned char b4);
+void SendToolPresent2(unsigned int value);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Comput the checksum for the header of an outgoing message.
