@@ -27,7 +27,7 @@ namespace VpwDecoder
             if (DeviceId >= 0x80 && DeviceId <= 0x8F) return "Entertainment";
             if (DeviceId >= 0x90 && DeviceId <= 0x97) return "Personal comm.";
             if (DeviceId >= 0x98 && DeviceId <= 0x9F) return "Climate control";
-            if (DeviceId >= 0xA0 && DeviceId <= 0xBF) return "Convinience";
+            if (DeviceId >= 0xA0 && DeviceId <= 0xBF) return "Convenience";
             if (DeviceId >= 0xC0 && DeviceId <= 0xC7) return "Security module";
             if (DeviceId >= 0xC8 && DeviceId <= 0xCB) return "EV energy system";
             if (DeviceId == 0xC8) return "Utility connection";
@@ -74,6 +74,9 @@ namespace VpwDecoder
             return string.Format("{0,-12}", description);
         }
 
+        // Decode the Mode and Submode
+        // Mostly based on information from this page:
+        // http://www.fastfieros.com/tech/vpw_communication_protocol.htm
         public static string DecodeMode(byte mode, byte submode, bool haveSubmode)
         {
             string ack = string.Empty;
@@ -93,12 +96,96 @@ namespace VpwDecoder
                     modeString = "Reject";
                     break;
 
+                case 0x01:
+                    modeString = "Req Diag Data";
+                    break;
+
+                case 0x02:
+                    modeString = "Req Frz Frm";
+                    break;
+
+                case 0x03:
+                    modeString = "Req DTCs";
+                    break;
+
                 case 0x04:
                     modeString = "Clear DTCs";
                     break;
 
+                case 0x05:
+                    modeString = "Req O2 Result";
+                    break;
+
+                case 0x06:
+                    modeString = "Req Mon. Result";
+                    break;
+
+                case 0x07:
+                    modeString = "Req Pending Res";
+                    break;
+
+                case 0x08:
+                    modeString = "Request Control";
+                    break;
+
+                case 0x09:
+                    modeString = "Req. Veh. Info";
+                    break;
+
+                case 0x10:
+                    modeString = "Begin Diagnostic";
+                    break;
+
+                case 0x11:
+                    modeString = "Req Module Reset";
+                    break;
+
+                case 0x12:
+                    modeString = "Req Frz Frm";
+                    break;
+
+                case 0x13:
+                    modeString = "Req DTCs";
+                    break;
+
+                case 0x14:
+                    modeString = "Clear DTCs";
+                    break;
+
+                case 0x17:
+                    modeString = "Req DTC Status";
+                    break;
+
+                case 0x19:
+                    modeString = "Req DTC @ Status";
+                    break;
+
                 case 0x20:
-                    modeString = "Exit Kernel";
+                    modeString = "Return To Normal";
+                    break;
+
+                case 0x21:
+                    modeString = "Req Diag Data";
+                    break;
+
+                case 0x22:
+                    modeString = "Req Data by PID";
+                    break;
+
+                case 0x23:
+                    modeString = "Req Data by mem";
+                    break;
+
+                case 0x24:
+                    modeString = "Req Scale/Offset";
+                    break;
+
+                case 0x25:
+                    modeString = "Cancel Request";
+                    break;
+
+                case 0x26:
+                    modeString = "Req Data Rates";
                     break;
 
                 case 0x27:
@@ -110,17 +197,83 @@ namespace VpwDecoder
                     modeString = "Suppress Chatter";
                     break;
 
-                case 0x3C:
-                    modeString = "Read Block";
+                case 0x29:
+                    modeString = "Reenable Chatter";
                     break;
 
-                case 0x34:
-                    modeString = "Upload Request";
+                case 0x2A:
+                    modeString = "Req Diag Packets";
+                    break;
+
+                case 0x2B:
+                    // Dynamically define data packet by single data offset (WTF?)
+                    modeString = "DynDef Offset";
+                    break;
+
+                case 0x2C:
+                    // Dynamically define diagnostic data packet
+                    modeString = "DynDef Diag Pkt";
+                    break;
+
+                case 0x2F:
+                    // Input / Output control by PID
+                    modeString = "IO by PID";
+                    break;
+
+                case 0x30:
+                    // Input / output control by data value ID
+                    modeString = "IO by Data ID";
+                    break;
+
+                case 0x31:
+                    modeString = "Start Diagnostic";
+                    break;
+
+                case 0x32:
+                    modeString = "Stop Diagnostic";
+                    break;
+
+                case 0x33:
+                    modeString = "Req Diag Result";
+                    break;
+
+                case 0x34: 
+                    // Tool to module
+                    modeString = "Req Download";
+                    break;
+
+                case 0x35:
+                    // Module to tool
+                    modeString = "Req Upload";
                     break;
 
                 case 0x36:
-                    modeString = "Upload Data";
                     submodeString = ((submode == 0) ? "Transfer" : ((submode == 0x80) ? "Execute" : submodeString));
+                    modeString = "Block Transfer";
+                    break;
+
+                case 0x37:
+                    modeString = "Halt Transfer";
+                    break;
+
+                case 0x38:
+                    modeString = "Start Diag @Addr";
+                    break;
+
+                case 0x39:
+                    modeString = "Stop Diag @Addr";
+                    break;
+
+                case 0x3A:
+                    modeString = "Req Diag Result";
+                    break;
+
+                case 0x3B:
+                    modeString = "Write Block";
+                    break;
+
+                case 0x3C:
+                    modeString = "Read Block";
                     break;
 
                 case 0x3F:
@@ -135,6 +288,15 @@ namespace VpwDecoder
                     modeString = "4X Switch";
                     break;
 
+                case 0xA2:
+                    // Programming Prompt
+                    modeString = "Programming";
+                    break;
+
+                case 0xAE:
+                    modeString = "Req Dev Ctrl";
+                    break;
+
                 default:
                     break;
             }
@@ -143,10 +305,10 @@ namespace VpwDecoder
 
             if (haveSubmode)
             {
-                return string.Format("{0:X2} {1, -23} {2:X2} {3,-8}", mode, modeString, submode, submodeString);
+                return string.Format("{0:X2} {1, -17} {2:X2} {3,-8}", mode, modeString, submode, submodeString);
             }
 
-            return string.Format("{0:X2} {1, -23}    {2,-8}", mode, modeString, string.Empty);
+            return string.Format("{0:X2} {1, -17}    {2,-8}", mode, modeString, string.Empty);
         }
     }
 }

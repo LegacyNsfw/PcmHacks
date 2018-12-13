@@ -34,9 +34,14 @@ namespace PcmHacking
             base(enqueue, getRecievedMessageCount, port, logger)
         {
             // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
-            this.MaxSendSize = 2048 + 12;
-            this.MaxReceiveSize = 2048 + 12;   
-            this.Supports4X = true;
+            //this.MaxSendSize = 2048 + 12;
+            //this.MaxReceiveSize = 2048 + 12;   
+            //this.Supports4X = true;
+
+            // Temporarily hobbling the AllPro for the sake of monitoring with the ScanTool.
+            this.MaxSendSize = 512 + 12;
+            this.MaxReceiveSize = 512 + 12;
+            this.Supports4X = false;
         }
 
         /// <summary>

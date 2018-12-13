@@ -61,12 +61,16 @@ namespace VpwDecoder
         private static void DecodeFromSerial(string portName)
         {
             SerialPort port = new SerialPort(portName, 115200, Parity.None, 8, StopBits.One);
+            port.NewLine = "\r";
             port.Open();
+            SendCommand(port, "AT Z"); // reset
             SendCommand(port, "AT AL");
-            SendCommand(port, "AT SP2");
-            SendCommand(port, "AT AR");
-            SendCommand(port, "AT ST 20");
-            SendCommand(port, "AT MA");
+            SendCommand(port, "AT SP2"); // set protocol to VPW
+            SendCommand(port, "AT AR"); 
+            SendCommand(port, "AT ST 20"); // timeout
+            SendCommand(port, "AT H 1"); // show headers
+            SendCommand(port, "AT S 0"); // no spaces
+            SendCommand(port, "AT MA"); // start monitoring
             string line = string.Empty;
             while (line != null)
             {
@@ -77,6 +81,11 @@ namespace VpwDecoder
                     break;
                 }
 
+                if (line == "BUFFER FULL")
+                {
+                    SendCommand(port, "AT MA", false);
+                }
+
                 line = line.Trim();
                 if (line.Length == 0)
                 {
@@ -84,17 +93,21 @@ namespace VpwDecoder
                 }
 
                 line = Program.Decode(line);
-                Console.WriteLine(string.Empty);
+                Console.WriteLine(line);
             }
         }
 
-        private static void SendCommand(SerialPort port, string message)
+        private static void SendCommand(SerialPort port, string message, bool show = true)
         {
             Console.WriteLine(message);
             byte[] buffer = Encoding.ASCII.GetBytes(message + "\r\n");
             port.Write(buffer, 0, buffer.Length);
             string response = ReadElmLine(port);
-            Console.WriteLine(response);
+
+            if (show)
+            {
+                Console.WriteLine(response);
+            }
         }
 
         /// <summary>
