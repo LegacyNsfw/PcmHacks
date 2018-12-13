@@ -51,14 +51,14 @@ namespace PcmHacking
                 {
                     try
                     {
-                        if (!await this.TryFlashUnlockAndErase())
+                        if (!await this.TryFlashUnlockAndErase(cancellationToken))
                         {
                             return false;
                         }
                     }
                     finally
                     {
-                        await this.TryFlashLock();
+                        await this.TryFlashLock(cancellationToken);
                     }
                 }
 
@@ -72,12 +72,12 @@ namespace PcmHacking
             }
             finally
             {
-                await TryWriteKernelReset();
+                await TryWriteKernelReset(cancellationToken);
                 await this.Cleanup();
             }
         }
 
-        public async Task<bool> TryWaitForKernel(int maxAttempts)
+        public async Task<bool> TryWaitForKernel(CancellationToken cancellationToken, int maxAttempts)
         {
             logger.AddUserMessage("Waiting for kernel to respond.");
 
@@ -87,23 +87,25 @@ namespace PcmHacking
                 "kernel ping",
                 "Kernel is responding.",
                 "No response received from the flash kernel.",
+                cancellationToken,
                 maxAttempts,
                 false);
         }
        
 
-        private async Task<bool> TryWriteKernelReset()
+        private async Task<bool> TryWriteKernelReset(CancellationToken cancellationToken)
         {
             return await this.SendMessageValidateResponse(
                 this.messageFactory.CreateWriteKernelResetRequest(),
                 this.messageParser.ParseWriteKernelResetResponse,
                 "flash-kernel PCM reset request",
                 "PCM reset.",
-                "Unable to reset the PCM.");
+                "Unable to reset the PCM.",
+                cancellationToken);
         }
 
 
-        private async Task<bool> TryFlashUnlockAndErase()
+        private async Task<bool> TryFlashUnlockAndErase(CancellationToken cancellationToken)
         {
             await this.device.SetTimeout(TimeoutScenario.Maximum);
 
@@ -145,89 +147,15 @@ namespace PcmHacking
 
         }
 
-        private async Task<bool> TryFlashLock()
+        private async Task<bool> TryFlashLock(CancellationToken cancellationToken)
         {
             return await this.SendMessageValidateResponse(
                 this.messageFactory.CreateFlashLockRequest(),
                 this.messageParser.ParseFlashLockResponse,
                 "flash lock request",
                 "Flash memory locked.",
-                "Unable to lock flash memory.");
-        }
-
-        private async Task TestWriteLoop(byte[] image, ToolPresentNotifier toolPresentNotifier, CancellationToken cancellationToken)
-        {
-            for (int iterations = 1; iterations < 1000; iterations++)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    this.logger.AddUserMessage("Canceling operation.");
-                    return;
-                }
-
-                // the kernel doesn't need this message, but it gets the interface ready to hear the data request
-                this.logger.AddUserMessage("Waiting for data request.");
-                await this.device.SendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36 }));
-
-                Message incoming = await this.device.ReceiveMessage();
-                if (incoming == null)
-                {
-                    this.logger.AddDebugMessage("No data request received.");
-                    continue;
-                }
-
-                if (this.messageParser.ParseRecoveryModeBroadcast(incoming).Value == true)
-                {
-                    this.logger.AddUserMessage("PCM has reverted to recovery mode.");
-                    return;
-                }
-
-                Response<bool> completionResponse = this.messageParser.ParseWriteKernelFlashComplete(incoming);
-                if (completionResponse.Value)
-                {
-                    this.logger.AddUserMessage("Flash complete");
-                    return;
-                }
-
-                int length;
-                int address;
-                Response<bool> request = this.messageParser.ParseWriteKernelDataRequest(incoming, out length, out address);
-                if (request.Value != true)
-                {
-                    this.logger.AddDebugMessage("That was not a data request. " + request.Status.ToString());
-                    continue;
-                }
-
-                byte[] bytes = new byte[12 + length];
-                var header = new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE2 };
-                header.CopyTo(bytes, 0);
-                bytes[5] = (byte)(length & 0xFF00 >> 8);
-                bytes[6] = (byte)(length & 0xFF);
-                bytes[7] = (byte)(address & 0xFF0000 >> 16);
-                bytes[8] = (byte)(address & 0xFF00 >> 8);
-                bytes[9] = (byte)(address & 0xFF);
-
-                ushort sum = 0;
-                for (int index = 0; index < length; index++)
-                {
-                    byte b = image[index + address];
-                    bytes[index + 10] = b;
-                    sum += (ushort)b;
-                }
-
-                Message dataResponse = new Message(bytes);
-
-                for (int sendAttempt = 1; sendAttempt <= 5; sendAttempt++)
-                {
-                    if (await this.device.SendMessage(dataResponse))
-                    {
-                        this.logger.AddDebugMessage("Data sent.");
-                        break;
-                    }
-
-                    this.logger.AddDebugMessage("Unable to send data, trying again.");
-                }
-            }
+                "Unable to lock flash memory.",
+                cancellationToken);
         }
     }
 }

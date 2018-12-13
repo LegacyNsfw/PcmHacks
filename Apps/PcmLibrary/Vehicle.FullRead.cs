@@ -96,7 +96,7 @@ namespace PcmHacking
                         break;
                     }
                     
-                    if (!await TryReadBlock(image, blockSize, startAddress))
+                    if (!await TryReadBlock(image, blockSize, startAddress, cancellationToken))
                     {
                         this.logger.AddUserMessage(
                             string.Format(
@@ -130,12 +130,17 @@ namespace PcmHacking
         /// <summary>
         /// Try to read a block of PCM memory.
         /// </summary>
-        private async Task<bool> TryReadBlock(byte[] image, int length, int startAddress)
+        private async Task<bool> TryReadBlock(byte[] image, int length, int startAddress, CancellationToken cancellationToken)
         {
             this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, length));
             
             for(int sendAttempt = 1; sendAttempt <= MaxSendAttempts; sendAttempt++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 Message message = this.messageFactory.CreateReadRequest(startAddress, length);
 
                 //this.logger.AddDebugMessage("Sending " + message.GetBytes().ToHex());
@@ -148,7 +153,7 @@ namespace PcmHacking
                 bool sendAgain = false;
                 for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
                 {
-                    Message response = await this.ReceiveMessage();
+                    Message response = await this.ReceiveMessage(cancellationToken);
                     if (response == null)
                     {
                         this.logger.AddDebugMessage("Did not receive a response to the read request.");

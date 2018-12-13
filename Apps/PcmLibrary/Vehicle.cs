@@ -248,12 +248,17 @@ namespace PcmHacking
         /// <summary>
         /// Wait for an incoming message.
         /// </summary>
-        private async Task<Message> ReceiveMessage()
+        private async Task<Message> ReceiveMessage(CancellationToken cancellationToken)
         {
             Message response = null;
 
             for (int pause = 0; pause < 10; pause++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return null;
+                }
+
                 response = await this.device.ReceiveMessage();
                 if (response == null)
                 {
@@ -271,10 +276,15 @@ namespace PcmHacking
         /// <summary>
         /// Read messages from the device, ignoring irrelevant messages.
         /// </summary>
-        private async Task<bool> WaitForSuccess(Func<Message, Response<bool>> filter, int attempts = MaxReceiveAttempts)
+        private async Task<bool> WaitForSuccess(Func<Message, Response<bool>> filter, CancellationToken cancellationToken, int attempts = MaxReceiveAttempts)
         {
             for(int attempt = 1; attempt<=attempts; attempt++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 Message message = await this.device.ReceiveMessage();
                 if(message == null)
                 {

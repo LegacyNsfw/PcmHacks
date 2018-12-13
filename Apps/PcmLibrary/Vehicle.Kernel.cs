@@ -179,7 +179,7 @@ namespace PcmHacking
                 return false;
             }
 
-            if (!await this.WaitForSuccess(this.messageParser.ParseUploadPermissionResponse))
+            if (!await this.WaitForSuccess(this.messageParser.ParseUploadPermissionResponse, cancellationToken))
             {
                 logger.AddUserMessage("Permission to upload kernel was denied.");
                 return false;
@@ -217,7 +217,7 @@ namespace PcmHacking
                 address + offset, 
                 remainder == payload.Length);
 
-            Response<bool> uploadResponse = await WriteToRam(remainderMessage);
+            Response<bool> uploadResponse = await WriteToRam(remainderMessage, cancellationToken);
             if (uploadResponse.Status != ResponseStatus.Success)
             {
                 logger.AddDebugMessage("Could not upload kernel to PCM, remainder payload not accepted.");
@@ -248,7 +248,7 @@ namespace PcmHacking
                         startAddress,
                         payloadSize));
 
-                uploadResponse = await WriteToRam(payloadMessage);
+                uploadResponse = await WriteToRam(payloadMessage, cancellationToken);
                 if (uploadResponse.Status != ResponseStatus.Success)
                 {
                     logger.AddDebugMessage("Could not upload kernel to PCM, payload not accepted.");
@@ -383,7 +383,7 @@ namespace PcmHacking
         /// <remarks>
         /// Returns a succsefull Response on the first successful attempt, or the failed Response if we run out of tries.
         /// </remarks>
-        async Task<Response<bool>> WriteToRam(Message message)
+        async Task<Response<bool>> WriteToRam(Message message, CancellationToken cancellationToken)
         {
             for (int i = MaxSendAttempts; i>0; i--)
             {
@@ -393,7 +393,7 @@ namespace PcmHacking
                     continue;
                 }
 
-                if (await this.WaitForSuccess(this.messageParser.ParseUploadResponse))
+                if (await this.WaitForSuccess(this.messageParser.ParseUploadResponse, cancellationToken))
                 {
                     return Response.Create(ResponseStatus.Success, true);
                 }
