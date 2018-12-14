@@ -431,8 +431,6 @@ KernelStart(void)
 			continue;
 		}
 
-		LongSleepWithWatchdog();
-
 		if ((completionCode & 0x30) != 0x00)
 		{
 			// This is a transmit error. Just ignore it and wait for the tool to retry.
@@ -444,6 +442,22 @@ KernelStart(void)
 		{
 			LongSleepWithWatchdog();
 			Reboot(0xEE);
+		}
+
+		// Support the ping message used by Dimented's kernel.
+		if (MessageBuffer[3] == 0x36 && MessageBuffer[4] == 0xE0)
+		{
+			MessageBuffer[0] = 0x6C;
+			MessageBuffer[1] = 0xF0;
+			MessageBuffer[2] = 0x10;
+			MessageBuffer[3] = 0x36;
+			MessageBuffer[4] = 0xE0;
+			MessageBuffer[5] = 0x80;
+
+			WriteMessage(6, 0);
+			LongSleepWithWatchdog();
+			LongSleepWithWatchdog();
+			continue;
 		}
 
 		// Echo the received message 

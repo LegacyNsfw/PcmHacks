@@ -15,15 +15,14 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> TestKernel(bool kernelRunning, bool recoveryMode, CancellationToken cancellationToken, Stream stream)
         {
-            byte[] image = new byte[0];// stream.Length];
-
             try
             {
                 this.device.ClearMessageQueue();
+                Response<byte[]> response;
 
                 if (!kernelRunning)
                 {        
-                    Response<byte[]> response = await LoadKernelFromFile("micro-kernel.bin");
+                    response = await LoadKernelFromFile("read-kernel.bin");
                     if (response.Status != ResponseStatus.Success)
                     {
                         logger.AddUserMessage("Failed to load kernel from file.");
@@ -36,7 +35,7 @@ namespace PcmHacking
                     }
 
                     // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await PCMExecute(response.Value, 0xFF9000, cancellationToken))
+                    if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -45,20 +44,55 @@ namespace PcmHacking
 
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
                 }
-                
-                // TryWaitForKernel will log user messages.
-//                if (await this.TryWaitForKernel(5))
+
+
+
+                // Test the read kernel.
+                byte[] image = new byte[512 * 1024];
+                await this.device.SetTimeout(TimeoutScenario.ReadMemoryBlock);
+                for (int attempts = 0; attempts < 1; attempts++)
                 {
-                    try
+                    if (await TryReadBlock(image, this.device.MaxReceiveSize - 12, 0, cancellationToken))
                     {
-                        if (!await this.TryFlashUnlockAndErase(cancellationToken))
-                        {
-                            return false;
-                        }
+                        this.logger.AddUserMessage("Read a block from ROM");
+                        break;
                     }
-                    finally
+                }
+
+
+
+                // Load the test kernel into RAM.
+                response = await LoadKernelFromFile("micro-kernel.bin");
+                if (response.Status != ResponseStatus.Success)
+                {
+                    logger.AddUserMessage("Failed to load kernel from file.");
+                    return false;
+                }
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return false;
+                }
+
+
+                if (!await PCMExecute(response.Value, 0xFFA000, cancellationToken))
+                {
+                    logger.AddUserMessage("Failed to upload kernel to PCM");
+
+                    return false;
+                }
+
+                logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
+
+
+                // Test the test kernel
+                
+                for (int attempts = 0; attempts < 5; attempts++)
+                {
+                    if (await this.TryWaitForKernel(cancellationToken, 1))
                     {
-                        await this.TryFlashLock(cancellationToken);
+                        this.logger.AddUserMessage("Received ping response.");
+                        break;
                     }
                 }
 

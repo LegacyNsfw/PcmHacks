@@ -262,6 +262,7 @@ namespace VpwDecoder
             List<byte> payload = new List<byte>();
 
             StringBuilder rawBuilder = new StringBuilder();
+            StringBuilder tailBuilder = new StringBuilder();
             StringBuilder descriptionBuilder = new StringBuilder();
     
             byte b = 0;
@@ -288,6 +289,12 @@ namespace VpwDecoder
                 else if (position == 12)
                 {
                     rawBuilder.Append("...");
+                    tailBuilder.Append("  ...");
+                    tailBuilder.Append(b.ToString("X02"));
+                }
+                else
+                {
+                    tailBuilder.Append(b.ToString("X02"));
                 }
 
                 // Skip the last character, it's just the checksum
@@ -295,7 +302,7 @@ namespace VpwDecoder
                 {
                     if (!haveSubmode)
                     {
-                        mode = Data.DecodeMode(modeByte, submodeByte, haveSubmode);
+                        mode = Data.DecodeMode(priorityByte, modeByte, submodeByte, haveSubmode);
                         descriptionBuilder.Append(mode);
                     }
 
@@ -331,7 +338,7 @@ namespace VpwDecoder
                     case 4:
                         submodeByte = b;
                         haveSubmode = true;
-                        mode = Data.DecodeMode(modeByte, submodeByte, haveSubmode);
+                        mode = Data.DecodeMode(priorityByte, modeByte, submodeByte, haveSubmode);
                         descriptionBuilder.Append(string.Format("{0,-22}", mode));
                         break;
 
@@ -398,7 +405,7 @@ namespace VpwDecoder
                 }
             }
 
-            return string.Format("{0,-30} {1}", rawBuilder.ToString(), descriptionBuilder.ToString());
+            return string.Format("{0,-30} {1} {2}", rawBuilder.ToString(), descriptionBuilder.ToString(), tailBuilder.ToString());
         }
 
         private static bool MessageContainsAddressAndLength(byte mode, byte submode)
