@@ -56,8 +56,8 @@ namespace PcmHacking
                 await toolPresentNotifier.Notify();
 
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
-                // TODO: choose kernel at run time? Because now it's FF9000...
-                if (!await PCMExecute(response.Value, 0xFF9000, cancellationToken))
+                // TODO: choose kernel at run time? Because now it's FF8000...
+                if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 

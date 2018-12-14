@@ -184,7 +184,25 @@ void ProcessMessage()
 		// ReadMode37();
 		SendToolPresent(0xB2, MessageBuffer[3], 0, 0);
 		break;
+
+	default:
+		SendToolPresent(
+			0xAA,
+			MessageBuffer[3],
+			MessageBuffer[4],
+			MessageBuffer[5]);
+		break;
 	}
+}
+
+void SendBreadcrumbsReboot(char code, int breadcrumbs)
+{
+	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, code };
+	WriteMessage(toolPresent, 5, Start);
+	WriteMessage(BreadcrumbBuffer, breadcrumbs, End);
+	LongSleepWithWatchdog();
+	LongSleepWithWatchdog();
+	Reboot(code);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -219,8 +237,13 @@ KernelStart(void)
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
 	// for(int iterations = 0; iterations < 100; iterations++)
 	int iterations = 0;
-	int timeout = 100;
-	int lastMessage = iterations - timeout;
+	int timeout = 150;
+	int lastMessage = (iterations - timeout) + 1;
+
+#ifdef MODEBYTE_BREADCRUMBS
+	int breadcrumbIndex = 0;
+#endif
+
 	for(;;)
 	{
 		iterations++;
@@ -247,18 +270,29 @@ KernelStart(void)
 			continue;
 		}
 
+		BreadcrumbBuffer[breadcrumbIndex] = MessageBuffer[3];
+		breadcrumbIndex++;
+
 		lastMessage = iterations;
 
 		// Did the tool just request a reboot?
 		if (MessageBuffer[3] == 0x20)
 		{
 			LongSleepWithWatchdog();
-			Reboot(iterations | 0x0E000000);
+#ifdef MODEBYTE_BREADCRUMBS
+			SendBreadcrumbsReboot(0xEE, breadcrumbIndex);
+#else
+			Reboot(0xCC000000 | iterations);
+#endif
 		}
 
 		ProcessMessage();
 	}
 
 	// This shouldn't happen. But, just in case...
-	Reboot(iterations | 0x0F000000);
+#ifdef MODEBYTE_BREADCRUMBS
+	SendBreadcrumbsReboot(0xFF, breadcrumbIndex);
+#else
+	Reboot(0xFF000000 | iterations);
+#endif
 }

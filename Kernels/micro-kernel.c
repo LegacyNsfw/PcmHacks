@@ -431,8 +431,6 @@ KernelStart(void)
 			continue;
 		}
 
-		LongSleepWithWatchdog();
-
 		if ((completionCode & 0x30) != 0x00)
 		{
 			// This is a transmit error. Just ignore it and wait for the tool to retry.

@@ -392,6 +392,11 @@ namespace PcmHacking
         {
             for (int i = MaxSendAttempts; i>0; i--)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return Response.Create(ResponseStatus.Cancelled, false);
+                }
+
                 if (!await device.SendMessage(message))
                 {
                     this.logger.AddDebugMessage("WriteToRam: Unable to send message.");

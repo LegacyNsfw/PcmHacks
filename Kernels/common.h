@@ -31,6 +31,7 @@ extern unsigned char __attribute((section(".kerneldata"))) BreadcrumbBuffer[];
 // Uncomment one of these to determine which way to use the breadcrumb buffer.
 //#define RECEIVE_BREADCRUMBS
 //#define TRANSMIT_BREADCRUMBS
+#define MODEBYTE_BREADCRUMBS
 
 ///////////////////////////////////////////////////////////////////////////////
 // This needs to be called periodically to prevent the PCM from rebooting.

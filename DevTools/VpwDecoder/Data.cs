@@ -55,6 +55,10 @@ namespace VpwDecoder
                     description = "Type Two";
                     break;
 
+                case 0x8C:
+                    description = "Diagnostic";
+                    break;
+
                 default:
                     string priorityLevel = (priority >> 5).ToString();
                     string addressing = ((priority & 4) == 0) ? "Functional" : "Physical  ";
@@ -77,10 +81,11 @@ namespace VpwDecoder
         // Decode the Mode and Submode
         // Mostly based on information from this page:
         // http://www.fastfieros.com/tech/vpw_communication_protocol.htm
-        public static string DecodeMode(byte mode, byte submode, bool haveSubmode)
+        public static string DecodeMode(byte priorityByte, byte mode, byte submode, bool haveSubmode)
         {
             string ack = string.Empty;
             byte switchMode = mode;
+
             if ((mode & 0x40) != 0)
             {
                 ack = " (ack)";
@@ -90,7 +95,43 @@ namespace VpwDecoder
             string modeString = string.Empty;
             string submodeString = string.Empty;
 
-            switch(switchMode)
+            // Special-case for tool-present messages.
+            if ((priorityByte == 0x8C) && (mode == 0x3F))
+            {
+                modeString = "Tool Present";
+
+                // The 'ack' thing is hacky...
+                ack = string.Empty;
+            }
+            else if (mode == 0x7F)
+            {
+                modeString = "Reject";
+                switchMode = submode;
+                string rejectedMode = string.Empty;
+                string unused = string.Empty;
+                GetMode(submode, 0, ref rejectedMode, ref unused);
+                modeString = rejectedMode;
+                submodeString = "REJECTED";
+            }
+            else
+            {
+                GetMode(switchMode, submode, ref modeString, ref submodeString);
+            }
+
+            modeString = modeString + ack;
+
+            if (haveSubmode)
+            {
+                return string.Format("{0:X2} {1, -22} {2:X2} {3,-8}", mode, modeString, submode, submodeString);
+            }
+
+            return string.Format("{0:X2} {1, -22}    {2,-8}", mode, modeString, string.Empty);
+        }
+
+
+        private static void GetMode(byte mode, byte submode, ref string modeString, ref string submodeString)
+        {
+            switch (mode)
             {
                 case 0x75:
                     modeString = "Reject";
@@ -237,7 +278,7 @@ namespace VpwDecoder
                     modeString = "Req Diag Result";
                     break;
 
-                case 0x34: 
+                case 0x34:
                     // Tool to module
                     modeString = "Req Download";
                     break;
@@ -300,15 +341,6 @@ namespace VpwDecoder
                 default:
                     break;
             }
-
-            modeString = modeString + ack;
-
-            if (haveSubmode)
-            {
-                return string.Format("{0:X2} {1, -17} {2:X2} {3,-8}", mode, modeString, submode, submodeString);
-            }
-
-            return string.Format("{0:X2} {1, -17}    {2,-8}", mode, modeString, string.Empty);
         }
     }
 }

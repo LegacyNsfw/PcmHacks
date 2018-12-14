@@ -22,7 +22,7 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 //
 // 4096 == 0x1000
 #define MessageBufferSize 1024
-#define BreadcrumbBufferSize 6
+#define BreadcrumbBufferSize 100
 unsigned char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
 
 // Code can add data to this buffer while doing something that doesn't work
@@ -126,7 +126,6 @@ void WriteMessage(char* start, int length, Segment segment)
 
 	unsigned char status;
 
-	int useBreadcrumbsForBufferLimit = 1;
 	int stopUsing = 0;
 
 	// Send message
@@ -179,10 +178,7 @@ void WriteMessage(char* start, int length, Segment segment)
 		{
 			loopCount++;
 
-			// Set the max iterations in the following loop to 100 if you uncomment this line.
-			// BreadcrumbBuffer[breadcrumbIndex++] = status;
-
-			for (int iterations = 0; iterations < 25; iterations++)
+			for (int iterations = 0; iterations < 100; iterations++)
 			{
 				ScratchWatchdog();
 				WasteTime();
