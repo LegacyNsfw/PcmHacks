@@ -289,11 +289,12 @@ namespace VpwDecoder
                 else if (position == 12)
                 {
                     rawBuilder.Append("...");
-                    tailBuilder.Append(b);
+                    tailBuilder.Append("  ...");
+                    tailBuilder.Append(b.ToString("X02"));
                 }
                 else
                 {
-                    tailBuilder.Append(b);
+                    tailBuilder.Append(b.ToString("X02"));
                 }
 
                 // Skip the last character, it's just the checksum

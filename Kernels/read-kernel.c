@@ -43,6 +43,9 @@ void ReadMode35()
 
 	WriteMessage(MessageBuffer, 8, Complete);
 
+	// Give the tool time to proces that message (especially the AllPro)
+	LongSleepWithWatchdog();
+
 	// Send the payload
 	MessageBuffer[0] = 0x6D;
 	MessageBuffer[1] = 0xF0;
@@ -64,7 +67,7 @@ void ReadMode35()
 	WriteMessage((char*)&checksum, 2, End);
 }
 
-void UploadRequest()
+void WriteRequest()
 {
 	unsigned length = MessageBuffer[5];
 	length <<= 8;
@@ -98,7 +101,7 @@ void UploadRequest()
 
 typedef void(*EntryPoint)();
 
-void Upload()
+void Write()
 {
 	unsigned char command = MessageBuffer[4];
 
@@ -112,6 +115,7 @@ void Upload()
 	start <<= 8;
 	start |= MessageBuffer[9];
 
+	// Validate range
 	if ((length > 4096) || (start < 0xFFA000) || (start > 0xFFB000))
 	{
 		MessageBuffer[0] = 0x6D;
@@ -123,13 +127,47 @@ void Upload()
 		return;
 	}
 
+	// Compute checksum
+	unsigned short checksum = 0;
+	for (int index = 4; index < length + 10; index++)
+	{
+		if (index % 1024 == 0)
+		{
+			ScratchWatchdog();
+		}
+
+		checksum = checksum + MessageBuffer[index];
+	}
+
+	// Validate checksum
+	unsigned short expected = (MessageBuffer[10 + length] << 8) | MessageBuffer[10 + length + 1];
+	if (checksum != expected)
+	{
+		MessageBuffer[0] = 0x6D;
+		MessageBuffer[1] = 0xF0;
+		MessageBuffer[2] = 0x10;
+		MessageBuffer[3] = 0x7F; 
+		MessageBuffer[4] = 0x36;
+		MessageBuffer[5] = (char)((expected & 0xFF00) >> 8);
+		MessageBuffer[6] = (char)(expected & 0x00FF);
+		WriteMessage(MessageBuffer, 7, Complete);
+		return;
+	}
+
+	// Copy content
 	unsigned int address = 0;
 	for (int index = 0; index < length; index++)
 	{
+		if (index % 50 == 1)
+		{
+			ScratchWatchdog();
+		}
+
 		address = start + index;
 		*((unsigned char*)address) = MessageBuffer[10 + index];
 	}
 
+	// Send response
 	MessageBuffer[0] = 0x6D;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
@@ -137,6 +175,7 @@ void Upload()
 
 	WriteMessage(MessageBuffer, 4, Complete);
 		
+	// Execute
 	if (command == 0x80)
 	{
 		EntryPoint entryPoint = (EntryPoint)start;
@@ -149,24 +188,23 @@ void Upload()
 ///////////////////////////////////////////////////////////////////////////////
 void ProcessMessage()
 {
-	if (MessageBuffer[1] != 0x10)
+	if ((MessageBuffer[1] != 0x10) && (MessageBuffer[1] != 0xFE))
 	{
 		// We're not the destination, ignore this message.
-		// SendToolPresent(0xB0, MessageBuffer[1], 0);
 		return;
 	}
 
 	if (MessageBuffer[2] != 0xF0)
 	{
 		// This didn't come from the tool, ignore this message.
-		//SendToolPresent(0xB1, MessageBuffer[2], 0);
 		return;
 	}
 
 	switch (MessageBuffer[3])
 	{
 	case 0x34:
-		UploadRequest();
+		WriteRequest();
+		ClearBreadcrumbBuffer();
 		break;
 
 	case 0x35:
@@ -176,7 +214,7 @@ void ProcessMessage()
 	case 0x36:
 		if (MessageBuffer[0] == 0x6D)
 		{
-			Upload();
+			Write();
 		}
 		break;
 
@@ -237,7 +275,7 @@ KernelStart(void)
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
 	// for(int iterations = 0; iterations < 100; iterations++)
 	int iterations = 0;
-	int timeout = 150;
+	int timeout = 100;
 	int lastMessage = (iterations - timeout) + 1;
 
 #ifdef MODEBYTE_BREADCRUMBS
@@ -267,6 +305,13 @@ KernelStart(void)
 		if ((completionCode & 0x30) != 0x00)
 		{
 			// This is a transmit error. Just ignore it and wait for the tool to retry.
+			continue;
+		}
+
+		if (readState != 1)
+		{
+			SendToolPresent(0xBB, 0xBB, readState, readState);
+			LongSleepWithWatchdog();
 			continue;
 		}
 

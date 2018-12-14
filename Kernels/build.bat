@@ -16,4 +16,4 @@ c:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe -O binary --only-section=.kernel_cod
 C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S read-kernel.elf > read-kernel.disassembly
 
 copy *-kernel.bin ..\Apps\PcmHammer\bin\debug
-dir *.elf *.bin
+dir *.bin

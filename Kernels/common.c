@@ -230,8 +230,13 @@ int ReadMessage(char *completionCode, char *readState)
 #endif
 		switch (status)
 		{
-		case 0: // No data to process. It might be better to wait longer here.
-			WasteTime();
+		case 0: // No data to process. This wait period may need more tuning.
+
+			for (int waits = 0; waits < 10; waits++)
+			{
+				ScratchWatchdog();
+				WasteTime();
+			}
 			break;
 
 		case 1: // Buffer contains data bytes.
