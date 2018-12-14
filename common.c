@@ -371,6 +371,20 @@ void SendToolPresent2(unsigned int value)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Send the breadcrumb array, then reboot.
+// This is useful in figuring out how the kernel got into a bad state.
+///////////////////////////////////////////////////////////////////////////////
+void SendBreadcrumbsReboot(char code, int breadcrumbs)
+{
+	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, code };
+	WriteMessage(toolPresent, 5, Start);
+	WriteMessage(BreadcrumbBuffer, breadcrumbs, End);
+	LongSleepWithWatchdog();
+	LongSleepWithWatchdog();
+	Reboot(code);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Comput the checksum for the header of an outgoing message.
 ///////////////////////////////////////////////////////////////////////////////
 unsigned short StartChecksum()
