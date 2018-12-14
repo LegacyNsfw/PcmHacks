@@ -148,9 +148,14 @@ void Write()
 		MessageBuffer[2] = 0x10;
 		MessageBuffer[3] = 0x7F; 
 		MessageBuffer[4] = 0x36;
-		MessageBuffer[5] = (char)((expected & 0xFF00) >> 8);
-		MessageBuffer[6] = (char)(expected & 0x00FF);
-		WriteMessage(MessageBuffer, 7, Complete);
+		MessageBuffer[5] = (char)((checksum & 0xFF00) >> 8);
+		MessageBuffer[6] = (char)(checksum & 0x00FF);
+		MessageBuffer[7] = (char)((expected & 0xFF00) >> 8);
+		MessageBuffer[8] = (char)(expected & 0x00FF);
+		MessageBuffer[9] = (char)((length & 0xFF00) >> 8);
+		MessageBuffer[10] = (char)(length & 0x00FF);
+
+		WriteMessage(MessageBuffer, 11, Complete);
 		return;
 	}
 
