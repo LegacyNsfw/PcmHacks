@@ -759,7 +759,7 @@ namespace PcmHacking
 
                     if (!recoveryMode)
                     {
-                        if (await this.vehicle.TryWaitForKernel(cancellationTokenSource.Token, 1))
+                        if (await vehicle.IsKernelRunning())
                         {
                             kernelRunning = true;
                         }

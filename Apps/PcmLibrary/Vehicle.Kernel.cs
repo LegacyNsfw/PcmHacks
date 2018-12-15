@@ -177,7 +177,7 @@ namespace PcmHacking
             logger.AddUserMessage("Uploading kernel to PCM.");
 
             logger.AddDebugMessage("Sending upload request with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
-            Message request = messageFactory.CreateUploadRequest(payload.Length, address);
+            Message request = messageFactory.CreateUploadRequest(address, payload.Length);
 
             if(!await TrySendMessage(request, "upload request"))
             {

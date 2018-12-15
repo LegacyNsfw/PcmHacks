@@ -321,39 +321,94 @@ namespace PcmHacking
         /// <remarks>
         /// Note that mode 0x34 is only a request. The actual payload is sent as a mode 0x36.
         /// </remarks>
-        public Message CreateUploadRequest(int Size, int Address)
+        public Message CreateUploadRequest(int Address, int Size)
         {
-            byte[] requestupload = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, SubMode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
-            requestupload[5] = unchecked((byte)(Size >> 8));
-            requestupload[6] = unchecked((byte)(Size & 0xFF));
-            requestupload[7] = unchecked((byte)(Address >> 16));
-            requestupload[8] = unchecked((byte)(Address >> 8));
-            requestupload[9] = unchecked((byte)(Address & 0xFF));
+            byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, SubMode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            requestBytes[5] = unchecked((byte)(Size >> 8));
+            requestBytes[6] = unchecked((byte)(Size & 0xFF));
+            requestBytes[7] = unchecked((byte)(Address >> 16));
+            requestBytes[8] = unchecked((byte)(Address >> 8));
+            requestBytes[9] = unchecked((byte)(Address & 0xFF));
             
-            return new Message(requestupload);
+            return new Message(requestBytes);
         }
 
-        public Message CreateKernelPing()
+
+        ///////////////////////////////////////////////////////////////////////
+        // Mode 3D was apparently not used for anything, so it's being taken
+        // for flash-chip and CRC queries.
+        ///////////////////////////////////////////////////////////////////////
+
+
+        /// <summary>
+        /// Create a request to identify the flash chip. 
+        /// </summary>
+        public Message CreateFlashMemoryTypeQuery()
+        {
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x00 });
+        }
+
+        /// <summary>
+        /// Create a request to get the CRC of a byte range.
+        /// </summary>
+        public Message CreateCrcQuery(UInt32 Address, UInt32 Size)
+        {
+            byte[] requestBytes = new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            requestBytes[5] = unchecked((byte)(Size >> 8));
+            requestBytes[6] = unchecked((byte)(Size & 0xFF));
+            requestBytes[7] = unchecked((byte)(Address >> 16));
+            requestBytes[8] = unchecked((byte)(Address >> 8));
+            requestBytes[9] = unchecked((byte)(Address & 0xFF));
+            return new Message(requestBytes);
+        }
+
+
+        ///////////////////////////////////////////////////////////////////////
+        // Mode 3E was apparently not used for anything, so it's being taken
+        // for flash-chip lock, unlock, and erase.
+        ///////////////////////////////////////////////////////////////////////
+
+
+        public Message CreateFlashUnlockRequest(byte blockId)
+        {
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3E, 0x00, blockId });
+        }
+
+        public Message CreateFlashLockRequest(byte blockId)
+        {
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3E, 0x01, blockId });
+        }
+
+        public Message CreateFlashEraseRequest(byte blockId)
+        {
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3E, 0x02, blockId });
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // For use with JS kernel.
+        ///////////////////////////////////////////////////////////////////////
+
+        public Message CreateJsKernelPing()
         {
             return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE0 });
         }
 
-        public Message CreateFlashUnlockRequest()
+        public Message CreateJsFlashUnlockRequest()
         {
             return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA1 });
         }
 
-        public Message CreateCalibrationEraseRequest()
+        public Message CreateJSCalibrationEraseRequest()
         {
             return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA4 });
         }
 
-        public Message CreateFlashLockRequest()
+        public Message CreateJsFlashLockRequest()
         {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA0 });   
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA0 });
         }
 
-        public Message CreateWriteKernelResetRequest()
+        public Message CreateJsWriteKernelResetRequest()
         {
             return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA3 });
         }

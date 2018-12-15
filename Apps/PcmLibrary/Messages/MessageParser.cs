@@ -409,7 +409,48 @@ namespace PcmHacking
             return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x60);
         }
 
-        // V2 kernel messages
+        //
+
+        internal Response<UInt32> ParseFlashMemoryType(Message responseMessage)
+        {
+            ResponseStatus status;
+            byte[] expected = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7D, 0x00 };
+            if (!TryVerifyInitialBytes(responseMessage, expected, out status))
+            {
+                return Response.Create(status, (UInt32)0);
+            }
+
+            byte[] responseBytes = responseMessage.GetBytes();
+            int chipId =
+                (responseBytes[5] << 24) |
+                (responseBytes[6] << 16) |
+                (responseBytes[7] << 8) |
+                responseBytes[8];
+
+            return Response.Create(ResponseStatus.Success, (UInt32)chipId);
+        }
+
+
+        internal Response<UInt32> ParseCrc(Message responseMessage)
+        {
+            ResponseStatus status;
+            byte[] expected = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7D, 0x01 };
+            if (!TryVerifyInitialBytes(responseMessage, expected, out status))
+            {
+                return Response.Create(status, (UInt32)0);
+            }
+
+            byte[] responseBytes = responseMessage.GetBytes();
+            int crc =
+                (responseBytes[5] << 24) |
+                (responseBytes[6] << 16) |
+                (responseBytes[7] << 8) |
+                responseBytes[8];
+
+            return Response.Create(ResponseStatus.Success, (UInt32)crc);
+        }
+
+        // JS kernel messages
         public Response<bool> ParseKernelPingResponse(Message message)
         {
             return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x80);

@@ -8,8 +8,32 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
-    public partial class Vehicle
+    /// <summary>
+    /// Describes the flash memory configuration in the PCM.
+    /// </summary>
+    public enum FlashMemoryType
     {
+        Unknown = 0,
+        Intel512,
+        Amd512,
+        Intel1024,
+        Amd1024,
+    };
+
+    public class MemoryRange
+    {
+        public UInt32 Address { get; private set; }
+        public UInt32 Size { get; private set; }
+
+        public MemoryRange(UInt32 address, UInt32 size)
+        {
+            this.Address = address;
+            this.Size = size;
+        }
+    }
+
+    public partial class Vehicle
+    {        
         /// <summary>
         /// For testing prototype kernels. 
         /// </summary>
@@ -45,57 +69,6 @@ namespace PcmHacking
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
                 }
 
-
-
-                // Test the read kernel.
-                byte[] image = new byte[512 * 1024];
-                await this.device.SetTimeout(TimeoutScenario.ReadMemoryBlock);
-                for (int attempts = 0; attempts < 1; attempts++)
-                {
-                    if (await TryReadBlock(image, this.device.MaxReceiveSize - 12, 0, cancellationToken))
-                    {
-                        this.logger.AddUserMessage("Read a block from ROM");
-                        break;
-                    }
-                }
-
-
-
-                // Load the test kernel into RAM.
-                response = await LoadKernelFromFile("micro-kernel.bin");
-                if (response.Status != ResponseStatus.Success)
-                {
-                    logger.AddUserMessage("Failed to load kernel from file.");
-                    return false;
-                }
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return false;
-                }
-
-
-                if (!await PCMExecute(response.Value, 0xFFA000, cancellationToken))
-                {
-                    logger.AddUserMessage("Failed to upload kernel to PCM");
-
-                    return false;
-                }
-
-                logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
-
-
-                // Test the test kernel
-                
-                for (int attempts = 0; attempts < 5; attempts++)
-                {
-                    if (await this.TryWaitForKernel(cancellationToken, 1))
-                    {
-                        this.logger.AddUserMessage("Received ping response.");
-                        break;
-                    }
-                }
-
                 return true;
             }
             catch (Exception exception)
@@ -106,90 +79,8 @@ namespace PcmHacking
             }
             finally
             {
-                await TryWriteKernelReset(cancellationToken);
                 await this.Cleanup();
             }
-        }
-
-        public async Task<bool> TryWaitForKernel(CancellationToken cancellationToken, int maxAttempts)
-        {
-            logger.AddUserMessage("Waiting for kernel to respond.");
-
-            return await this.SendMessageValidateResponse(
-                this.messageFactory.CreateKernelPing(),
-                this.messageParser.ParseKernelPingResponse,
-                "kernel ping",
-                "Kernel is responding.",
-                "No response received from the flash kernel.",
-                cancellationToken,
-                maxAttempts,
-                false);
-        }
-       
-
-        private async Task<bool> TryWriteKernelReset(CancellationToken cancellationToken)
-        {
-            return await this.SendMessageValidateResponse(
-                this.messageFactory.CreateWriteKernelResetRequest(),
-                this.messageParser.ParseWriteKernelResetResponse,
-                "flash-kernel PCM reset request",
-                "PCM reset.",
-                "Unable to reset the PCM.",
-                cancellationToken);
-        }
-
-
-        private async Task<bool> TryFlashUnlockAndErase(CancellationToken cancellationToken)
-        {
-            await this.device.SetTimeout(TimeoutScenario.Maximum);
-
-            // These two messages must be sent in quick succession.
-            // The responses may be delayed, which makes acknowledgement hard.
-
-            //            this.logger.AddUserMessage("Unlocking and erasing calibration.");
-            await this.device.SendMessage(this.messageFactory.CreateFlashUnlockRequest());
-            await this.device.SendMessage(this.messageFactory.CreateCalibrationEraseRequest());
-            // await this.device.SendMessage(new Message(System.Text.Encoding.ASCII.GetBytes("AT MA")));
-
-            // Just assume success for now?
-            return true;
-
-            /*
-            for (int sendAttempt = 1; sendAttempt <= 5; sendAttempt++)
-            {
-                // These two messages must be sent in quick succession.
-                await this.device.SendMessage(this.messageFactory.CreateFlashUnlockRequest());
-                await this.device.SendMessage(this.messageFactory.CreateCalibrationEraseRequest());
-                for (int receiveAttempt = 1; receiveAttempt <= 5; receiveAttempt++)
-                {
-                    Message message = await this.device.ReceiveMessage();
-                    if (message == null)
-                    {
-                        continue;
-                    }
-                    Response<bool> response = this.messageParser.ParseFlashKernelSuccessResponse(message);
-                    if (response.Status != ResponseStatus.Success)
-                    {
-                        this.logger.AddDebugMessage("Ignoring message: " + response.Status);
-                        continue;
-                    }
-                    this.logger.AddDebugMessage("Found response, " + (response.Value ? "succeeded." : "failed."));
-                    return true;
-                }
-            }
-            */
-
-        }
-
-        private async Task<bool> TryFlashLock(CancellationToken cancellationToken)
-        {
-            return await this.SendMessageValidateResponse(
-                this.messageFactory.CreateFlashLockRequest(),
-                this.messageParser.ParseFlashLockResponse,
-                "flash lock request",
-                "Flash memory locked.",
-                "Unable to lock flash memory.",
-                cancellationToken);
         }
     }
 }

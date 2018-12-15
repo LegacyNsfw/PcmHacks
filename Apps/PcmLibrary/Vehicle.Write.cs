@@ -75,22 +75,23 @@ namespace PcmHacking
 
                 await this.device.SetTimeout(TimeoutScenario.Maximum);
 
+                bool success;
                 switch (writeType)
                 {
                     case WriteType.Calibration:
-                        await this.CalibrationWrite(cancellationToken, stream);
+                        success = await this.CalibrationWrite(cancellationToken, stream);
                         break;
 
                     case WriteType.OsAndCalibration:
-                        await this.OsAndCalibrationWrite(cancellationToken, stream);
+                        success = await this.OsAndCalibrationWrite(cancellationToken, stream);
                         break;
 
                     case WriteType.Full:
-                        await this.FullWrite(cancellationToken, stream);
+                        success = await this.FullWrite(cancellationToken, stream);
+                        await TryWriteJsKernelReset(cancellationToken);
                         break;
                 }
 
-                await TryWriteKernelReset(cancellationToken);
                 await this.Cleanup();
                 return true;
             }
@@ -105,21 +106,97 @@ namespace PcmHacking
             }
         }
 
-        private Task CalibrationWrite(CancellationToken cancellationToken, Stream stream)
+        public async Task<bool> IsKernelRunning()
         {
-            return Task.FromResult(0);
+            // (Ab)using a chip-id query to determine whether the C kernel is running.
+            Query<UInt32> chipIdQuery = new Query<uint>(
+                this.device,
+                this.messageFactory.CreateFlashMemoryTypeQuery,
+                this.messageParser.ParseFlashMemoryType,
+                this.logger);
+            Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
+
+            return chipIdResponse.Status == ResponseStatus.Success;
         }
 
-        private Task OsAndCalibrationWrite(CancellationToken cancellationToken, Stream stream)
+        private async Task<bool> CalibrationWrite(CancellationToken cancellationToken, Stream stream)
         {
-            return Task.FromResult(0);
+            // Which flash chip?
+            Query<UInt32> chipIdQuery = new Query<uint>(
+                this.device,
+                this.messageFactory.CreateFlashMemoryTypeQuery,
+                this.messageParser.ParseFlashMemoryType,
+                this.logger);
+            Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
+
+            if (chipIdResponse.Status != ResponseStatus.Success)
+            {
+                logger.AddUserMessage("Unable to determine which flash chip is in this PCM");
+                return false;
+            }
+
+            FlashMemoryType memoryType;
+            switch (chipIdResponse.Value)
+            {
+                case 0x12341234:
+                    memoryType = FlashMemoryType.Intel512;
+                    break;
+
+                default:
+                    this.logger.AddUserMessage("Unsupported flash chip ID " + chipIdResponse.Value + ". " +
+                        Environment.NewLine +
+                        "The flash memory in this PCM is not supported by this version of PCM Hammer." +
+                        Environment.NewLine +
+                        "Please look for a thread about this at pcmhacking.net, or create one if necessary." +
+                        Environment.NewLine +
+                        "We aim to add support for all flash chips over time.");
+                    return false;
+            }
+
+            // Get CRC ranges
+            IList<MemoryRange> ranges = this.GetMemoryRanges(memoryType);
+            if (ranges == null)
+            {
+                this.logger.AddUserMessage("Unsupported flash memory format " + memoryType + ". " +
+                    Environment.NewLine +
+                    "The flash memory in this PCM is not supported by this version of PCM Hammer." +
+                    Environment.NewLine +
+                    "Please look for a thread about this at pcmhacking.net, or create one if necessary." +
+                    Environment.NewLine +
+                    "We aim to add support for all flash chips over time.");
+                return false;
+            }
+
+            foreach (MemoryRange range in ranges)
+            {
+                Query<UInt32> crcQuery = new Query<uint>(
+                    this.device,
+                    () => this.messageFactory.CreateCrcQuery(range.Address, range.Size),
+                    this.messageParser.ParseCrc,
+                    this.logger);
+                Response<UInt32> crcResponse = await chipIdQuery.Execute();
+
+                if (crcResponse.Status != ResponseStatus.Success)
+                {
+                    this.logger.AddUserMessage("Unable to get CRC for memory range " + range.Address.ToString("X8") + " / " + range.Size.ToString("X8"));
+                    return false;
+                }
+            }
+
+            return true;
         }
 
-        private async Task FullWrite(CancellationToken cancellationToken, Stream stream)
+        private async Task<bool> OsAndCalibrationWrite(CancellationToken cancellationToken, Stream stream)
+        {
+            await Task.Delay(0);
+            return true;
+        }
+
+        private async Task<bool> FullWrite(CancellationToken cancellationToken, Stream stream)
         {
             Message start = new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3C, 0x01 });
 
-            if (!await this.SendMessageValidateResponse(
+            if (!await this.JS_SendMessageValidateResponse(
                 start,
                 this.messageParser.ParseStartFullFlashResponse,
                 "start full flash",
@@ -127,7 +204,7 @@ namespace PcmHacking
                 "Kernel won't allow a full flash.",
                 cancellationToken))
             {
-                return;
+                return false;
             }
             
             byte chunkSize = 192;
@@ -140,7 +217,7 @@ namespace PcmHacking
                 VPWUtils.AddBlockChecksum(messageBytes); // TODO: Move this function into the Message class.
                 Message message = new Message(messageBytes);
 
-                if (!await this.SendMessageValidateResponse(
+                if (!await this.JS_SendMessageValidateResponse(
                     message,
                     this.messageParser.ParseChunkWriteResponse,
                     string.Format("data from {0} to {1}", bytesSent, bytesSent + chunkSize),
@@ -148,12 +225,55 @@ namespace PcmHacking
                     "Unable to send data chunk.",
                     cancellationToken))
                 {
-                    return;
+                    return false;
                 }
+            }
+
+            return true;
+        }
+
+        public async Task<bool> TryWaitForJsKernel(CancellationToken cancellationToken, int maxAttempts)
+        {
+            logger.AddUserMessage("Waiting for kernel to respond.");
+
+            return await this.JS_SendMessageValidateResponse(
+                this.messageFactory.CreateJsKernelPing(),
+                this.messageParser.ParseKernelPingResponse,
+                "kernel ping",
+                "Kernel is responding.",
+                "No response received from the flash kernel.",
+                cancellationToken,
+                maxAttempts,
+                false);
+        }
+
+        private async Task<bool> TryWriteJsKernelReset(CancellationToken cancellationToken)
+        {
+            return await this.JS_SendMessageValidateResponse(
+                this.messageFactory.CreateJsWriteKernelResetRequest(),
+                this.messageParser.ParseWriteKernelResetResponse,
+                "flash-kernel PCM reset request",
+                "PCM reset.",
+                "Unable to reset the PCM.",
+                cancellationToken);
+        }
+
+        public IList<MemoryRange> GetMemoryRanges(FlashMemoryType flashMemoryType)
+        {
+            switch (flashMemoryType)
+            {
+                case FlashMemoryType.Intel512:
+                    return new MemoryRange[]
+                    {
+                        new MemoryRange(0,0),
+                    };
+
+                default:
+                    return null;
             }
         }
 
-        private async Task<bool> SendMessageValidateResponse(
+        private async Task<bool> JS_SendMessageValidateResponse(
             Message message,
             Func<Message, Response<bool>> filter,
             string messageDescription,
@@ -177,7 +297,7 @@ namespace PcmHacking
                     this.logger.AddUserMessage("Unable to send " + messageDescription);
                     if (pingKernel)
                     {
-                        await this.TryWaitForKernel(cancellationToken, 1);
+                        await this.TryWaitForJsKernel(cancellationToken, 1);
                     }
                     continue;
                 }
@@ -187,7 +307,7 @@ namespace PcmHacking
                     this.logger.AddUserMessage("No " + messageDescription + " response received.");
                     if (pingKernel)
                     {
-                        await this.TryWaitForKernel(cancellationToken, 1);
+                        await this.TryWaitForJsKernel(cancellationToken, 1);
                     }
                     continue;
                 }
@@ -199,7 +319,7 @@ namespace PcmHacking
             this.logger.AddUserMessage(failureMessage);
             if (pingKernel)
             {
-                await this.TryWaitForKernel(cancellationToken, 1);
+                await this.TryWaitForJsKernel(cancellationToken, 1);
             }
             return false;
         }
