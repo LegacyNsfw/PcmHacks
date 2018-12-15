@@ -175,9 +175,11 @@ namespace PcmHacking
         public async Task<bool> PCMExecute(byte[] payload, int address, CancellationToken cancellationToken)
         {
             logger.AddUserMessage("Uploading kernel to PCM.");
-
             logger.AddDebugMessage("Sending upload request with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
-            Message request = messageFactory.CreateUploadRequest(address, payload.Length);
+
+            // Note that we request an upload of 4k maximum, because the PCM will reject anything bigger.
+            // But you can request a 4k upload and then send up to 16k if you want, and the PCM will not object.
+            Message request = messageFactory.CreateUploadRequest(address, Math.Min(4096, payload.Length));
 
             if(!await TrySendMessage(request, "upload request"))
             {

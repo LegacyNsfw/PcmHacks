@@ -61,7 +61,7 @@ namespace PcmHacking
                     }
 
                     // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await PCMExecute(response.Value, 0xFF9106, cancellationToken))
+                    if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -108,15 +108,37 @@ namespace PcmHacking
 
         public async Task<bool> IsKernelRunning()
         {
-            // (Ab)using a chip-id query to determine whether the C kernel is running.
-            Query<UInt32> chipIdQuery = new Query<uint>(
-                this.device,
-                this.messageFactory.CreateFlashMemoryTypeQuery,
-                this.messageParser.ParseFlashMemoryType,
-                this.logger);
-            Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
+            Message query = this.messageFactory.CreateFlashMemoryTypeQuery();
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                if (!await this.device.SendMessage(query))
+                {
+                    await Task.Delay(250);
+                    continue;
+                }
 
-            return chipIdResponse.Status == ResponseStatus.Success;
+                Message reply = await this.device.ReceiveMessage();
+                if (reply == null)
+                {
+                    await Task.Delay(250);
+                    continue;
+                }
+
+                Response<UInt32> response = this.messageParser.ParseFlashMemoryType(reply);
+                if (response.Status == ResponseStatus.Success)
+                {
+                    return true;
+                }
+
+                if (response.Status == ResponseStatus.Refused)
+                {
+                    return false;
+                }
+
+                await Task.Delay(250);
+            }
+
+            return false;
         }
 
         private async Task<bool> CalibrationWrite(CancellationToken cancellationToken, Stream stream)

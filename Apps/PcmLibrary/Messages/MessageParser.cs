@@ -417,6 +417,12 @@ namespace PcmHacking
             byte[] expected = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7D, 0x00 };
             if (!TryVerifyInitialBytes(responseMessage, expected, out status))
             {
+                byte[] refused = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7F, 0x3D };
+                if (TryVerifyInitialBytes(responseMessage, refused, out status))
+                {
+                    return Response.Create(ResponseStatus.Refused, (UInt32)0);
+                }
+
                 return Response.Create(status, (UInt32)0);
             }
 
