@@ -4,6 +4,55 @@
 
 #include "common.h"
 
+void HandleFlashChipQueryMode3D()
+{
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7D;
+	MessageBuffer[4] = 0x00;
+	MessageBuffer[5] = 0x12;
+	MessageBuffer[6] = 0x34;
+	MessageBuffer[7] = 0x12;
+	MessageBuffer[8] = 0x34;
+	WriteMessage(MessageBuffer, 9, Complete);
+}
+
+void HandleCrcQueryMode3D()
+{
+	unsigned length = MessageBuffer[5];
+	length <<= 8;
+	length |= MessageBuffer[6];
+
+	unsigned start = MessageBuffer[7];
+	start <<= 8;
+	start |= MessageBuffer[8];
+	start <<= 8;
+	start |= MessageBuffer[9];
+
+	//unsigned crc = 0x12345678;
+//	ScratchWatchdog();
+	crcInit();
+//	ScratchWatchdog();
+	unsigned crc = crcFast((char*) start, length);
+
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7D;
+	MessageBuffer[4] = 0x01;
+	MessageBuffer[5] = (char)(length >> 8);
+	MessageBuffer[6] = (char)length;
+	MessageBuffer[7] = (char)(start >> 16);
+	MessageBuffer[8] = (char)(start >> 8);
+	MessageBuffer[9] = (char)start;
+	MessageBuffer[10] = (char)(crc >> 24);
+	MessageBuffer[11] = (char)(crc >> 16);
+	MessageBuffer[12] = (char)(crc >> 8);
+	MessageBuffer[13] = (char)crc;
+	WriteMessage(MessageBuffer, 14, Complete);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Process an incoming message.
 ///////////////////////////////////////////////////////////////////////////////
@@ -42,6 +91,19 @@ void ProcessMessage()
 	case 0x37:
 		// ReadMode37();
 		SendToolPresent(0xB2, MessageBuffer[3], 0, 0);
+		break;
+
+	case 0x3D:
+		switch(MessageBuffer[4])
+		{
+		case 0x00:
+			HandleFlashChipQueryMode3D();
+			break;
+
+		case 0x01:
+			HandleCrcQueryMode3D();
+			break;
+		}
 		break;
 
 	default:
