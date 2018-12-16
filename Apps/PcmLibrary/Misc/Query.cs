@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PcmHacking
@@ -33,6 +34,11 @@ namespace PcmHacking
         private Func<Message, Response<T>> filter;
 
         /// <summary>
+        /// This will indicate when the user has requested cancellation.
+        /// </summary>
+        private CancellationToken cancellationToken;
+
+        /// <summary>
         /// Provides access to the Results and Debug panes.
         /// </summary>
         private ILogger logger;
@@ -40,12 +46,13 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Query(Device device, Func<Message> generator, Func<Message, Response<T>> filter, ILogger logger)
+        public Query(Device device, Func<Message> generator, Func<Message, Response<T>> filter, ILogger logger, CancellationToken cancellationToken)
         {
             this.device = device;
             this.generator = generator;
             this.filter = filter;
             this.logger = logger;
+            this.cancellationToken = cancellationToken;
         }
 
         /// <summary>
@@ -60,6 +67,11 @@ namespace PcmHacking
             bool success = false;
             for (int sendAttempt = 1; sendAttempt <= 5; sendAttempt++)
             {
+                if (this.cancellationToken.IsCancellationRequested)
+                {
+                    return Response.Create(ResponseStatus.Cancelled, default(T));
+                }
+
                 success = await this.device.SendMessage(request);
 
                 if (!success)

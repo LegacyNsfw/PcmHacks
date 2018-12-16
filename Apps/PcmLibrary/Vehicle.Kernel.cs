@@ -179,7 +179,16 @@ namespace PcmHacking
 
             // Note that we request an upload of 4k maximum, because the PCM will reject anything bigger.
             // But you can request a 4k upload and then send up to 16k if you want, and the PCM will not object.
-            Message request = messageFactory.CreateUploadRequest(address, Math.Min(4096, payload.Length));
+            int claimedSize = Math.Min(4096, payload.Length);
+
+            // Since we're going to lie about the size, we need to check for overflow ourselves.
+            if (address + payload.Length > 0xFFCDFF)
+            {
+                logger.AddUserMessage("Base address and size would exceed usable RAM.");
+                return false;
+            }
+
+            Message request = messageFactory.CreateUploadRequest(address, claimedSize);
 
             if(!await TrySendMessage(request, "upload request"))
             {

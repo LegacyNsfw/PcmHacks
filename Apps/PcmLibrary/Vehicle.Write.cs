@@ -30,7 +30,14 @@ namespace PcmHacking
             int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
             if (bytesRead != stream.Length)
             {
-                this.logger.AddUserMessage("Unable to read input file.");
+                // If this happens too much, we should try looping rather than reading the whole file in one shot.
+                this.logger.AddUserMessage("Unable to load file.");
+                return false;
+            }
+
+            if ((bytesRead != 512 * 1024) && (bytesRead != 1024 * 1024))
+            {
+                this.logger.AddUserMessage("This file is not a supported size.");
                 return false;
             }
 
@@ -79,16 +86,15 @@ namespace PcmHacking
                 switch (writeType)
                 {
                     case WriteType.Calibration:
-                        success = await this.CalibrationWrite(cancellationToken, stream);
+                        success = await this.CalibrationWrite(cancellationToken, image);
                         break;
 
                     case WriteType.OsAndCalibration:
-                        success = await this.OsAndCalibrationWrite(cancellationToken, stream);
+                        success = await this.OsAndCalibrationWrite(cancellationToken, image);
                         break;
 
                     case WriteType.Full:
-                        success = await this.FullWrite(cancellationToken, stream);
-                        await TryWriteJsKernelReset(cancellationToken);
+                        success = await this.FullWrite(cancellationToken, image);
                         break;
                 }
 
@@ -141,14 +147,15 @@ namespace PcmHacking
             return false;
         }
 
-        private async Task<bool> CalibrationWrite(CancellationToken cancellationToken, Stream stream)
+        private async Task<bool> CalibrationWrite(CancellationToken cancellationToken, byte[] image)
         {
             // Which flash chip?
             Query<UInt32> chipIdQuery = new Query<uint>(
                 this.device,
                 this.messageFactory.CreateFlashMemoryTypeQuery,
                 this.messageParser.ParseFlashMemoryType,
-                this.logger);
+                this.logger,
+                cancellationToken);
             Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
 
             if (chipIdResponse.Status != ResponseStatus.Success)
@@ -189,95 +196,61 @@ namespace PcmHacking
                 return false;
             }
 
+            // TODO: check tags for each segment, fail if invalid, so we don't flash garbage.
+            logger.AddUserMessage("Computing CRCs from local file...");
+            this.GetCrcFromImage(ranges, image);
+
+            logger.AddUserMessage("Requesting CRCs from PCM...");
             foreach (MemoryRange range in ranges)
             {
                 Query<UInt32> crcQuery = new Query<uint>(
                     this.device,
                     () => this.messageFactory.CreateCrcQuery(range.Address, range.Size),
                     this.messageParser.ParseCrc,
-                    this.logger);
-                Response<UInt32> crcResponse = await chipIdQuery.Execute();
+                    this.logger,
+                    cancellationToken);
+                Response<UInt32> crcResponse = await crcQuery.Execute();
 
                 if (crcResponse.Status != ResponseStatus.Success)
                 {
                     this.logger.AddUserMessage("Unable to get CRC for memory range " + range.Address.ToString("X8") + " / " + range.Size.ToString("X8"));
                     return false;
                 }
-            }
 
+                range.ActualCrc = crcResponse.Value;
+
+                this.logger.AddUserMessage(
+                    string.Format(
+                        "Range {0:X6}-{1:X6} - Local: {2:X8} - PCM: {3:X8} - {4}",
+                        range.Address,
+                        range.Address + (range.Size - 1),
+                        range.DesiredCrc,
+                        range.ActualCrc,
+                        range.DesiredCrc == range.ActualCrc ? "Same" : "Different"));
+            }
+            
             return true;
         }
 
-        private async Task<bool> OsAndCalibrationWrite(CancellationToken cancellationToken, Stream stream)
+        private void GetCrcFromImage(IList<MemoryRange> ranges, byte[] image)
+        {
+            Crc crc = new Crc();
+            foreach (MemoryRange range in ranges)
+            {
+                range.DesiredCrc = crc.GetCrc(image, range.Address, range.Size);
+            }
+        }
+
+        private async Task<bool> OsAndCalibrationWrite(CancellationToken cancellationToken, byte[] image)
         {
             await Task.Delay(0);
             return true;
         }
 
-        private async Task<bool> FullWrite(CancellationToken cancellationToken, Stream stream)
+        private async Task<bool> FullWrite(CancellationToken cancellationToken, byte[] image)
         {
-            Message start = new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3C, 0x01 });
-
-            if (!await this.JS_SendMessageValidateResponse(
-                start,
-                this.messageParser.ParseStartFullFlashResponse,
-                "start full flash",
-                "Full flash starting.",
-                "Kernel won't allow a full flash.",
-                cancellationToken))
-            {
-                return false;
-            }
-            
-            byte chunkSize = 192;
-            byte[] header = new byte[] { 0x6C, 0x10, 0x0F0, 0x3C, 0x00, 0x00, chunkSize, 0xFF, 0xA0, 0x00 };
-            byte[] messageBytes = new byte[header.Length + chunkSize + 2];
-            Buffer.BlockCopy(header, 0, messageBytes, 0, header.Length);
-            for (int bytesSent = 0; bytesSent < stream.Length; bytesSent += chunkSize)
-            {
-                stream.Read(messageBytes, header.Length, chunkSize);
-                VPWUtils.AddBlockChecksum(messageBytes); // TODO: Move this function into the Message class.
-                Message message = new Message(messageBytes);
-
-                if (!await this.JS_SendMessageValidateResponse(
-                    message,
-                    this.messageParser.ParseChunkWriteResponse,
-                    string.Format("data from {0} to {1}", bytesSent, bytesSent + chunkSize),
-                    "Data chunk sent.",
-                    "Unable to send data chunk.",
-                    cancellationToken))
-                {
-                    return false;
-                }
-            }
-
+            await Task.Delay(0);
             return true;
-        }
-
-        public async Task<bool> TryWaitForJsKernel(CancellationToken cancellationToken, int maxAttempts)
-        {
-            logger.AddUserMessage("Waiting for kernel to respond.");
-
-            return await this.JS_SendMessageValidateResponse(
-                this.messageFactory.CreateJsKernelPing(),
-                this.messageParser.ParseKernelPingResponse,
-                "kernel ping",
-                "Kernel is responding.",
-                "No response received from the flash kernel.",
-                cancellationToken,
-                maxAttempts,
-                false);
-        }
-
-        private async Task<bool> TryWriteJsKernelReset(CancellationToken cancellationToken)
-        {
-            return await this.JS_SendMessageValidateResponse(
-                this.messageFactory.CreateJsWriteKernelResetRequest(),
-                this.messageParser.ParseWriteKernelResetResponse,
-                "flash-kernel PCM reset request",
-                "PCM reset.",
-                "Unable to reset the PCM.",
-                cancellationToken);
         }
 
         public IList<MemoryRange> GetMemoryRanges(FlashMemoryType flashMemoryType)
@@ -287,63 +260,14 @@ namespace PcmHacking
                 case FlashMemoryType.Intel512:
                     return new MemoryRange[]
                     {
-                        new MemoryRange(0,0),
+                        new MemoryRange(0,      0x1000),
+                        new MemoryRange(0x1000, 0x1000),
+                        new MemoryRange(0x2000, 0x1000),
                     };
 
                 default:
                     return null;
             }
-        }
-
-        private async Task<bool> JS_SendMessageValidateResponse(
-            Message message,
-            Func<Message, Response<bool>> filter,
-            string messageDescription,
-            string successMessage,
-            string failureMessage,
-            CancellationToken cancellationToken,
-            int maxAttempts = 5,
-            bool pingKernel = false)
-        {
-            for (int attempt = 1; attempt <= maxAttempts; attempt++)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                this.logger.AddUserMessage("Sending " + messageDescription);
-
-                if (!await this.TrySendMessage(message, messageDescription, maxAttempts))
-                {
-                    this.logger.AddUserMessage("Unable to send " + messageDescription);
-                    if (pingKernel)
-                    {
-                        await this.TryWaitForJsKernel(cancellationToken, 1);
-                    }
-                    continue;
-                }
-
-                if (!await this.WaitForSuccess(filter, cancellationToken, 10))
-                {
-                    this.logger.AddUserMessage("No " + messageDescription + " response received.");
-                    if (pingKernel)
-                    {
-                        await this.TryWaitForJsKernel(cancellationToken, 1);
-                    }
-                    continue;
-                }
-
-                this.logger.AddUserMessage(successMessage);
-                return true;
-            }
-
-            this.logger.AddUserMessage(failureMessage);
-            if (pingKernel)
-            {
-                await this.TryWaitForJsKernel(cancellationToken, 1);
-            }
-            return false;
         }
     }
 }

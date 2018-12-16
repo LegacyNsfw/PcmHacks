@@ -34,6 +34,7 @@
             this.selectButton = new System.Windows.Forms.Button();
             this.deviceDescription = new System.Windows.Forms.Label();
             this.operationsBox = new System.Windows.Forms.GroupBox();
+            this.writeOsAndCalibration = new System.Windows.Forms.Button();
             this.testKernelButton = new System.Windows.Forms.Button();
             this.writeFullContentsButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
@@ -53,7 +54,6 @@
             this.releasedByAntus = new System.Windows.Forms.Label();
             this.releasedAtPcmHacking = new System.Windows.Forms.LinkLabel();
             this.releasedEtc = new System.Windows.Forms.Label();
-            this.writeOsAndCalibration = new System.Windows.Forms.Button();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -127,6 +127,18 @@
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
             // 
+            // writeOsAndCalibration
+            // 
+            this.writeOsAndCalibration.Location = new System.Drawing.Point(6, 136);
+            this.writeOsAndCalibration.Margin = new System.Windows.Forms.Padding(2);
+            this.writeOsAndCalibration.Name = "writeOsAndCalibration";
+            this.writeOsAndCalibration.Size = new System.Drawing.Size(214, 25);
+            this.writeOsAndCalibration.TabIndex = 4;
+            this.writeOsAndCalibration.Text = "Write &OS && Calibration";
+            this.writeOsAndCalibration.UseVisualStyleBackColor = true;
+            this.writeOsAndCalibration.Visible = false;
+            this.writeOsAndCalibration.Click += new System.EventHandler(this.writeOsAndCalibration_Click);
+            // 
             // testKernelButton
             // 
             this.testKernelButton.Location = new System.Drawing.Point(6, 224);
@@ -147,6 +159,7 @@
             this.writeFullContentsButton.TabIndex = 5;
             this.writeFullContentsButton.Text = "Write &Full Contents";
             this.writeFullContentsButton.UseVisualStyleBackColor = true;
+            this.writeFullContentsButton.Visible = false;
             this.writeFullContentsButton.Click += new System.EventHandler(this.writeFullContentsButton_Click);
             // 
             // cancelButton
@@ -252,7 +265,7 @@
             this.helpTab.Location = new System.Drawing.Point(4, 22);
             this.helpTab.Margin = new System.Windows.Forms.Padding(2);
             this.helpTab.Name = "helpTab";
-            this.helpTab.Size = new System.Drawing.Size(569, 513);
+            this.helpTab.Size = new System.Drawing.Size(569, 462);
             this.helpTab.TabIndex = 2;
             this.helpTab.Text = "Help";
             this.helpTab.UseVisualStyleBackColor = true;
@@ -264,7 +277,7 @@
             this.helpWebBrowser.Margin = new System.Windows.Forms.Padding(2);
             this.helpWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
             this.helpWebBrowser.Name = "helpWebBrowser";
-            this.helpWebBrowser.Size = new System.Drawing.Size(569, 513);
+            this.helpWebBrowser.Size = new System.Drawing.Size(569, 462);
             this.helpWebBrowser.TabIndex = 0;
             // 
             // debugTab
@@ -274,7 +287,7 @@
             this.debugTab.Margin = new System.Windows.Forms.Padding(2);
             this.debugTab.Name = "debugTab";
             this.debugTab.Padding = new System.Windows.Forms.Padding(2);
-            this.debugTab.Size = new System.Drawing.Size(569, 513);
+            this.debugTab.Size = new System.Drawing.Size(569, 462);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -288,7 +301,7 @@
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.debugLog.Size = new System.Drawing.Size(565, 509);
+            this.debugLog.Size = new System.Drawing.Size(565, 458);
             this.debugLog.TabIndex = 0;
             // 
             // releasedUnder
@@ -342,17 +355,6 @@
             this.releasedEtc.Size = new System.Drawing.Size(237, 13);
             this.releasedEtc.TabIndex = 7;
             this.releasedEtc.Text = "and NSFW. J2534 support by Envyous Customs.";
-            // 
-            // writeOsAndCalibration
-            // 
-            this.writeOsAndCalibration.Location = new System.Drawing.Point(6, 136);
-            this.writeOsAndCalibration.Margin = new System.Windows.Forms.Padding(2);
-            this.writeOsAndCalibration.Name = "writeOsAndCalibration";
-            this.writeOsAndCalibration.Size = new System.Drawing.Size(214, 25);
-            this.writeOsAndCalibration.TabIndex = 4;
-            this.writeOsAndCalibration.Text = "Write &OS && Calibration";
-            this.writeOsAndCalibration.UseVisualStyleBackColor = true;
-            this.writeOsAndCalibration.Click += new System.EventHandler(this.writeOsAndCalibration_Click);
             // 
             // MainForm
             // 

@@ -24,6 +24,8 @@ namespace PcmHacking
     {
         public UInt32 Address { get; private set; }
         public UInt32 Size { get; private set; }
+        public UInt32 DesiredCrc { get; set; }
+        public UInt32 ActualCrc { get; set; }
 
         public MemoryRange(UInt32 address, UInt32 size)
         {
@@ -67,6 +69,40 @@ namespace PcmHacking
                     }
 
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
+
+                    IList<MemoryRange> ranges = this.GetMemoryRanges(FlashMemoryType.Intel512);
+
+                    // ?
+                    await Task.Delay(250);
+
+                    logger.AddUserMessage("Requesting CRCs from PCM...");
+                    foreach (MemoryRange range in ranges)
+                    {
+                        Query<UInt32> crcQuery = new Query<uint>(
+                            this.device,
+                            () => this.messageFactory.CreateCrcQuery(range.Address, range.Size),
+                            this.messageParser.ParseCrc,
+                            this.logger,
+                            cancellationToken);
+                        Response<UInt32> crcResponse = await crcQuery.Execute();
+
+                        if (crcResponse.Status != ResponseStatus.Success)
+                        {
+                            this.logger.AddUserMessage("Unable to get CRC for memory range " + range.Address.ToString("X8") + " / " + range.Size.ToString("X8"));
+                            return false;
+                        }
+
+                        range.ActualCrc = crcResponse.Value;
+
+                        this.logger.AddUserMessage(
+                            string.Format(
+                                "Range {0:X6}-{1:X6} - Local: {2:X8} - PCM: {3:X8} - {4}",
+                                range.Address,
+                                range.Address + (range.Size - 1),
+                                range.DesiredCrc,
+                                range.ActualCrc,
+                                range.DesiredCrc == range.ActualCrc ? "Same" : "Different"));
+                    }
                 }
 
                 return true;
