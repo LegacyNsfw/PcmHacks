@@ -4,17 +4,63 @@
 
 #include "common.h"
 
+#define  SIM_BASE  ((void*)0xfffa00)
+char volatile * const  SIM_MCR      =   SIM_BASE + 0x00; // Module Control register
+char volatile * const  SIM_SYNCR    =   SIM_BASE + 0x04; // Clock synthesiser control register
+char volatile * const  SIM_RSR      =   SIM_BASE + 0x07; // Reset Status
+char volatile * const  SIM_SYPCR    =   SIM_BASE + 0x21; // System Protection
+char volatile * const  SIM_PICR     =   SIM_BASE + 0x22; // Periodic Timer
+char volatile * const  SIM_PITR     =   SIM_BASE + 0x24; //
+char volatile * const  SIM_SWSR     =   SIM_BASE + 0x27; //
+char volatile * const  SIM_CSPAR0   =   SIM_BASE + 0x44; // chip sellect pin assignment
+char volatile * const  SIM_CSPAR1   =   SIM_BASE + 0x46; //
+unsigned short volatile * const  SIM_CSBARBT  =   SIM_BASE + 0x48; // CSRBASEREG, boot chip select, chip select base addr boot ROM reg, 
+                                                                   // must be updated to $0006 on each update of flash CE/WE states
+unsigned short volatile * const  SIM_CSORBT   =   SIM_BASE + 0x4a; // CSROPREG, Chip select option boot ROM reg., $6820 for normal op 
+unsigned short volatile * const  SIM_CSBAR0   =   SIM_BASE + 0x4c; // CSBASEREG, chip selects
+unsigned short volatile * const  SIM_CSOR0    =   SIM_BASE + 0x4e; // CSOPREG, *Chip select option reg., $1060 for normal op, $7060 for accessing flash chip
+char volatile * const  SIM_CSBAR1   =   SIM_BASE + 0x50;
+char volatile * const  SIM_CSOR1    =   SIM_BASE + 0x52;
+char volatile * const  SIM_CSBAR2   =   SIM_BASE + 0x54;
+char volatile * const  SIM_CSOR2    =   SIM_BASE + 0x56;
+char volatile * const  SIM_CSBAR3   =   SIM_BASE + 0x58;
+char volatile * const  SIM_CSOR3    =   SIM_BASE + 0x5a;
+char volatile * const  SIM_CSBAR4   =   SIM_BASE + 0x5c;
+char volatile * const  SIM_CSOR4    =   SIM_BASE + 0x5e;
+char volatile * const  SIM_CSBAR5   =   SIM_BASE + 0x60;
+char volatile * const  SIM_CSOR5    =   SIM_BASE + 0x62;
+char volatile * const  SIM_CSBAR6   =   SIM_BASE + 0x64;
+char volatile * const  SIM_CSOR6    =   SIM_BASE + 0x66;
+
 void HandleFlashChipQueryMode3D()
 {
+	ScratchWatchdog();
+	*SIM_CSBAR0 = 0x0006;
+	*SIM_CSORBT = 0x6820;
+	*SIM_CSOR0 = 0x7060;
+
+	unsigned short signature_command = 0x0090;
+	unsigned short read_array_command = 0x00FF;
+
+	unsigned short volatile * const zeroPointer = (void*)0;
+	unsigned volatile * const wideZeroPointer = (void*)0;
+
+	// This tells the flash chip we want to read the manufacturer and type IDs.
+	*zeroPointer = signature_command;
+	unsigned manufacturerAndType = *wideZeroPointer;
+
+	// This tells the flash chip to operate normally again.
+	*zeroPointer = read_array_command;
+
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7D;
 	MessageBuffer[4] = 0x00;
-	MessageBuffer[5] = 0x12;
-	MessageBuffer[6] = 0x34;
-	MessageBuffer[7] = 0x12;
-	MessageBuffer[8] = 0x34;
+	MessageBuffer[5] = (char)(manufacturerAndType >> 24);
+	MessageBuffer[6] = (char)(manufacturerAndType >> 16);
+	MessageBuffer[7] = (char)(manufacturerAndType >> 8);
+	MessageBuffer[8] = (char)(manufacturerAndType >> 0);
 	WriteMessage(MessageBuffer, 9, Complete);
 }
 
