@@ -9,28 +9,33 @@ using System.Threading.Tasks;
 namespace PcmHacking
 {
     /// <summary>
-    /// Describes the flash memory configuration in the PCM.
+    /// Describes the type of information in a flash block.
     /// </summary>
-    public enum FlashMemoryType
+    [Flags]
+    public enum BlockType
     {
-        Unknown = 0,
-        Intel512,
-        Amd512,
-        Intel1024,
-        Amd1024,
+        Invalid = 0,
+        Boot = 1,
+        Parameter = 2,
+        Calibration = 4,
     };
 
+    /// <summary>
+    /// Defines a block of flash memory.
+    /// </summary>
     public class MemoryRange
     {
         public UInt32 Address { get; private set; }
         public UInt32 Size { get; private set; }
+        public BlockType Type { get; private set; }
         public UInt32 DesiredCrc { get; set; }
         public UInt32 ActualCrc { get; set; }
 
-        public MemoryRange(UInt32 address, UInt32 size)
+        public MemoryRange(UInt32 address, UInt32 size, BlockType type)
         {
             this.Address = address;
             this.Size = size;
+            this.Type = type;
         }
     }
 

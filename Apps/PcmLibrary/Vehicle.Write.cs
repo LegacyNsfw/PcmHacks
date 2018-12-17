@@ -149,6 +149,8 @@ namespace PcmHacking
 
         private async Task<bool> CalibrationWrite(CancellationToken cancellationToken, byte[] image)
         {
+            BlockType relevantBlocks = BlockType.Calibration;
+
             // Which flash chip?
             Query<UInt32> chipIdQuery = new Query<uint>(
                 this.device,
@@ -183,7 +185,7 @@ namespace PcmHacking
             logger.AddUserMessage("Computing CRCs from local file...");
             this.GetCrcFromImage(ranges, image);
 
-            if (await this.CompareRanges(ranges, image, cancellationToken))
+            if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken))
             {
                 this.logger.AddUserMessage("All ranges are identical.");
                 return true;
@@ -195,7 +197,12 @@ namespace PcmHacking
                 {
                     continue;
                 }
-                
+
+                if ((range.Type & relevantBlocks) == 0)
+                {
+                    continue;
+                }
+
                 this.logger.AddUserMessage(
                     string.Format(
                         "Processing range {0:X6}-{1:X6}",
@@ -207,7 +214,7 @@ namespace PcmHacking
                 this.logger.AddUserMessage("Writing");
             }
 
-            if (await this.CompareRanges(ranges, image, cancellationToken))
+            if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken))
             {
                 this.logger.AddUserMessage("Flash successful!");
                 return true;
@@ -221,7 +228,7 @@ namespace PcmHacking
             this.logger.AddUserMessage("In most cases, the second try will succeed.");
             this.logger.AddUserMessage("");
             this.logger.AddUserMessage("If this happens three times in a row, please");
-            this.logger.AddUserMessage("start a new thread a pcmhacking.net, and");
+            this.logger.AddUserMessage("start a new thread at pcmhacking.net, and");
             this.logger.AddUserMessage("include the contents of the debug tab.");
             this.logger.AddUserMessage("");
             this.logger.AddUserMessage("Select that tab, click anywhere in the text,");
@@ -247,11 +254,21 @@ namespace PcmHacking
         /// <summary>
         /// Compare CRCs from the file to CRCs from the PCM.
         /// </summary>
-        private async Task<bool> CompareRanges(IList<MemoryRange> ranges, byte[] image, CancellationToken cancellationToken)
+        private async Task<bool> CompareRanges(IList<MemoryRange> ranges, byte[] image, BlockType blockTypes, CancellationToken cancellationToken)
         {
             logger.AddUserMessage("Requesting CRCs from PCM...");
             foreach (MemoryRange range in ranges)
             {
+                if ((range.Type & blockTypes) == 0)
+                {
+                    this.logger.AddUserMessage(
+                    string.Format(
+                        "Range {0:X6}-{1:X6} - Not needed for this operation.",
+                        range.Address,
+                        range.Address + (range.Size - 1)));
+                    continue;
+                }
+
                 Query<UInt32> crcQuery = new Query<uint>(
                     this.device,
                     () => this.messageFactory.CreateCrcQuery(range.Address, range.Size),
@@ -325,13 +342,13 @@ namespace PcmHacking
                         // Notice that if you convert the hex sizes to decimal, they're all
                         // half as big as the description indicates. That's wrong. It doesn't
                         // work that way in the PCM, so this would only compare 256 kb.
-                        new MemoryRange(0x30000, 0x10000), // 128kb main block
-                        new MemoryRange(0x20000, 0x10000), // 128kb main block
-                        new MemoryRange(0x10000, 0x10000), // 128kb main block
-                        new MemoryRange(0x04000, 0x0C000), //  96kb main block 
-                        new MemoryRange(0x03000, 0x01000), //   8kb parameter block
-                        new MemoryRange(0x02000, 0x01000), //   8kb parameter block
-                        new MemoryRange(0x00000, 0x02000), //  16kb boot block                        
+                        new MemoryRange(0x30000, 0x10000, BlockType.Calibration), // 128kb main block
+                        new MemoryRange(0x20000, 0x10000, BlockType.Calibration), // 128kb main block
+                        new MemoryRange(0x10000, 0x10000, BlockType.Calibration), // 128kb main block
+                        new MemoryRange(0x04000, 0x0C000, BlockType.Calibration), //  96kb main block 
+                        new MemoryRange(0x03000, 0x01000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x02000, 0x01000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x00000, 0x02000, BlockType.Boot), //  16kb boot block                        
                     };
 
                 // Intel 28F400B
@@ -342,13 +359,13 @@ namespace PcmHacking
                         // in the data sheet, because the data sheet table assumes that
                         // "bytes" are 16 bits wide. Which means they're not bytes. But
                         // the data sheet calls them bytes.
-                        new MemoryRange(0x60000, 0x20000), // 128kb main block
-                        new MemoryRange(0x40000, 0x20000), // 128kb main block
-                        new MemoryRange(0x20000, 0x20000), // 128kb main block
-                        new MemoryRange(0x08000, 0x18000), //  96kb main block 
-                        new MemoryRange(0x06000, 0x02000), //   8kb parameter block
-                        new MemoryRange(0x04000, 0x02000), //   8kb parameter block
-                        new MemoryRange(0x00000, 0x04000), //  16kb boot block                        
+                        new MemoryRange(0x60000, 0x20000, BlockType.Calibration), // 128kb main block
+                        new MemoryRange(0x40000, 0x20000, BlockType.Calibration), // 128kb main block
+                        new MemoryRange(0x20000, 0x20000, BlockType.Calibration), // 128kb main block
+                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block 
+                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block                        
                     };
 
                 default:
