@@ -835,10 +835,13 @@ namespace PcmHacking
 
                 try
                 {
+                    this.AddUserMessage("Checking for recovery mode...");
                     bool recoveryMode = await this.vehicle.IsInRecoveryMode();
 
                     if (!recoveryMode)
                     {
+                        this.AddUserMessage("PCM is not in recovery mode.");
+                        this.AddUserMessage("Requesting operating system ID...");
                         Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
                         if (osidResponse.Status != ResponseStatus.Success)
                         {
@@ -849,6 +852,7 @@ namespace PcmHacking
 
                         PcmInfo info = new PcmInfo(osidResponse.Value);
 
+                        this.AddUserMessage("Unlocking PCM...");
                         bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
                         if (!unlocked)
                         {

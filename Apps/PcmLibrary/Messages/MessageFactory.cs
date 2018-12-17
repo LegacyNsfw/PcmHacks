@@ -353,12 +353,13 @@ namespace PcmHacking
         /// </summary>
         public Message CreateCrcQuery(UInt32 Address, UInt32 Size)
         {
-            byte[] requestBytes = new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 };
-            requestBytes[5] = unchecked((byte)(Size >> 8));
-            requestBytes[6] = unchecked((byte)(Size & 0xFF));
-            requestBytes[7] = unchecked((byte)(Address >> 16));
-            requestBytes[8] = unchecked((byte)(Address >> 8));
-            requestBytes[9] = unchecked((byte)(Address & 0xFF));
+            byte[] requestBytes = new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            requestBytes[5] = unchecked((byte)(Size >> 16));
+            requestBytes[6] = unchecked((byte)(Size >> 8));
+            requestBytes[7] = unchecked((byte)Size);
+            requestBytes[8] = unchecked((byte)(Address >> 16));
+            requestBytes[9] = unchecked((byte)(Address >> 8));
+            requestBytes[10] = unchecked((byte)Address);
             return new Message(requestBytes);
         }
 

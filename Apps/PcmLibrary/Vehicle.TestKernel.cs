@@ -48,7 +48,7 @@ namespace PcmHacking
 
                 if (!kernelRunning)
                 {        
-                    response = await LoadKernelFromFile("read-kernel.bin");
+                    response = await LoadKernelFromFile("write-kernel.bin");
                     if (response.Status != ResponseStatus.Success)
                     {
                         logger.AddUserMessage("Failed to load kernel from file.");
@@ -70,39 +70,16 @@ namespace PcmHacking
 
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
 
-                    IList<MemoryRange> ranges = this.GetMemoryRanges(FlashMemoryType.Intel512);
+                    // Which flash chip?
+                    Query<UInt32> chipIdQuery = new Query<uint>(
+                        this.device,
+                        this.messageFactory.CreateFlashMemoryTypeQuery,
+                        this.messageParser.ParseFlashMemoryType,
+                        this.logger,
+                        cancellationToken);
+                    Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
 
-                    // ?
-                    await Task.Delay(250);
-
-                    logger.AddUserMessage("Requesting CRCs from PCM...");
-                    foreach (MemoryRange range in ranges)
-                    {
-                        Query<UInt32> crcQuery = new Query<uint>(
-                            this.device,
-                            () => this.messageFactory.CreateCrcQuery(range.Address, range.Size),
-                            this.messageParser.ParseCrc,
-                            this.logger,
-                            cancellationToken);
-                        Response<UInt32> crcResponse = await crcQuery.Execute();
-
-                        if (crcResponse.Status != ResponseStatus.Success)
-                        {
-                            this.logger.AddUserMessage("Unable to get CRC for memory range " + range.Address.ToString("X8") + " / " + range.Size.ToString("X8"));
-                            return false;
-                        }
-
-                        range.ActualCrc = crcResponse.Value;
-
-                        this.logger.AddUserMessage(
-                            string.Format(
-                                "Range {0:X6}-{1:X6} - Local: {2:X8} - PCM: {3:X8} - {4}",
-                                range.Address,
-                                range.Address + (range.Size - 1),
-                                range.DesiredCrc,
-                                range.ActualCrc,
-                                range.DesiredCrc == range.ActualCrc ? "Same" : "Different"));
-                    }
+                    this.logger.AddUserMessage("Flash chip ID = " + chipIdResponse.Value.ToString("X8"));
                 }
 
                 return true;

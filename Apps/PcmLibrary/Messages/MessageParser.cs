@@ -447,16 +447,16 @@ namespace PcmHacking
             }
 
             byte[] responseBytes = responseMessage.GetBytes();
-            if (responseBytes.Length < 14)
+            if (responseBytes.Length < 15)
             {
                 return Response.Create(ResponseStatus.Truncated, (UInt32)0);
             }
 
             int crc =
-                (responseBytes[10] << 24) |
-                (responseBytes[11] << 16) |
-                (responseBytes[12] << 8) |
-                responseBytes[13];
+                (responseBytes[11] << 24) |
+                (responseBytes[12] << 16) |
+                (responseBytes[13] << 8) |
+                responseBytes[14];
 
             return Response.Create(ResponseStatus.Success, (UInt32)crc);
         }

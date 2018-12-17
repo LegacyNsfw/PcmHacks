@@ -119,7 +119,7 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> IsInRecoveryMode()
         {
-            await this.TrySendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x62 }), "recovery query");
+            await this.TrySendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x62 }), "recovery query", 2);
             Message response = await this.device.ReceiveMessage();
             if (response == null)
             {
