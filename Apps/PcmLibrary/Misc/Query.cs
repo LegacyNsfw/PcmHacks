@@ -48,6 +48,8 @@ namespace PcmHacking
         /// </summary>
         private ILogger logger;
 
+        public int MaxTimeouts { get; set; }
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -59,6 +61,7 @@ namespace PcmHacking
             this.logger = logger;
             this.notifier = notifier;
             this.cancellationToken = cancellationToken;
+            this.MaxTimeouts = 5;
         }
 
         /// <summary>
@@ -91,12 +94,17 @@ namespace PcmHacking
                 int timeouts = 0;
                 for (int receiveAttempt = 1; receiveAttempt <= 50; receiveAttempt++)
                 {
+                    if (this.cancellationToken.IsCancellationRequested)
+                    {
+                        return Response.Create(ResponseStatus.Cancelled, default(T));
+                    }
+
                     Message received = await this.device.ReceiveMessage();
 
                     if (received == null)
                     {
                         timeouts++;
-                        if (timeouts >= 5)
+                        if (timeouts >= this.MaxTimeouts)
                         {
                             // Maybe try sending again if we haven't run out of send attempts.
                             this.logger.AddDebugMessage(

@@ -76,6 +76,9 @@ namespace PcmHacking
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
                 }
 
+                // Give the kernel time to start.
+                await Task.Delay(500);
+
                 // Which kernel?
                 Query<UInt32> versionQuery = new Query<uint>(
                     this.device,
@@ -106,21 +109,35 @@ namespace PcmHacking
                     this.logger,
                     cancellationToken);
                 Response<byte> unlockResponse = await unlockRequest.Execute();
+                
 
                 //await chipIdQuery.Execute();
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
                 await versionQuery.Execute();
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
 
                 Query<byte> lockRequest = new Query<byte>(
                     this.device,

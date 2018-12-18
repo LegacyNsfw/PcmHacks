@@ -532,6 +532,10 @@ namespace PcmHacking
             return ParseByte(message, 0x3D, 0x04);
         }
 
+        internal Response<byte> ParseFlashErase(Message message)
+        {
+            return ParseByte(message, 0x3D, 0x05);
+        }
 
 
         /// <summary>

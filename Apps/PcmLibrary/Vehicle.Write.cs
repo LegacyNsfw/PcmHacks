@@ -161,6 +161,9 @@ namespace PcmHacking
                 return true;
             }
 
+/* Unlocking will probably be done by the kernel automatically. 
+ * But I'm keeping this code here, just commented out, in case that plan changes.
+ * 
             Query<byte> unlockRequest = new Query<byte>(
                 this.device,
                 this.messageFactory.CreateFlashUnlockRequest,
@@ -175,7 +178,7 @@ namespace PcmHacking
                 this.logger.AddUserMessage("The PCM is safe to use, no changes were made.");
                 return true;
             }
-
+*/
 
             foreach (MemoryRange range in ranges)
             {
@@ -196,10 +199,31 @@ namespace PcmHacking
                         range.Address + (range.Size - 1)));
 
                 this.logger.AddUserMessage("Erasing");
+                Query<byte> eraseRequest = new Query<byte>(
+                    this.device,
+                    this.messageFactory.CreateFlashEraseCalibrationRequest,
+                    this.messageParser.ParseFlashErase,
+                    this.logger,
+                    cancellationToken);
+                eraseRequest.MaxTimeouts = 50; // Reduce this when we know how many are likely to be needed.
+                Response<byte> eraseResponse = await eraseRequest.Execute();
+
+                if (eraseResponse.Status != ResponseStatus.Success)
+                {
+                    this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
+                    this.logger.AddUserMessage("This is not an expected condition. The PCM is probably not usable.");
+                    this.logger.AddUserMessage("Please copy the contents of the debug window and save it to a text file.");
+                    this.logger.AddUserMessage("Then, try reflashing again. Save that debug log as well.");
+                    this.logger.AddUserMessage("Please report this on the pcmhacking.net forum - start a thread, and include the debug log so that we can investigate.");
+                    return false;
+                }
+
 
                 this.logger.AddUserMessage("Writing");
             }
 
+ /* See notes above regarding unlock/lock.
+  * 
             Query<byte> lockRequest = new Query<byte>(
                 this.device,
                 this.messageFactory.CreateFlashUnlockRequest,
@@ -215,6 +239,7 @@ namespace PcmHacking
                 this.logger.AddUserMessage("If the changes were not successful, try flashing again.");
                 this.logger.AddUserMessage("Either way, please report this on the pcmhacking.net forum so that we can investigate.");
             }
+*/
 
             if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken, notifier))
             {

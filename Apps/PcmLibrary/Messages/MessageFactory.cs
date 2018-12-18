@@ -395,7 +395,7 @@ namespace PcmHacking
             return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x04 });
         }
 
-        public Message CreateFlashEraseCalibrationRequest(byte blockId)
+        public Message CreateFlashEraseCalibrationRequest()
         {
             return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x05 });
         }
