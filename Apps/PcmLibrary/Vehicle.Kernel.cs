@@ -272,7 +272,7 @@ namespace PcmHacking
                 address + offset, 
                 remainder == payload.Length);
 
-            Response<bool> uploadResponse = await WriteToRam(remainderMessage, cancellationToken);
+            Response<bool> uploadResponse = await WritePayload(remainderMessage, cancellationToken);
             if (uploadResponse.Status != ResponseStatus.Success)
             {
                 logger.AddDebugMessage("Could not upload kernel to PCM, remainder payload not accepted.");
@@ -298,12 +298,12 @@ namespace PcmHacking
 
                 logger.AddDebugMessage(
                     string.Format(
-                        "Sending payload with offset 0x{0:X}, start address 0x{1:X}, length 0x{2:X}.",
+                        "Sending payload with offset 0x{0:X6}, start address 0x{1:X6}, length 0x{2:X4}.",
                         offset,
                         startAddress,
                         payloadSize));
 
-                uploadResponse = await WriteToRam(payloadMessage, cancellationToken);
+                uploadResponse = await WritePayload(payloadMessage, cancellationToken);
                 if (uploadResponse.Status != ResponseStatus.Success)
                 {
                     logger.AddDebugMessage("Could not upload kernel to PCM, payload not accepted.");
@@ -438,7 +438,7 @@ namespace PcmHacking
         /// <remarks>
         /// Returns a succsefull Response on the first successful attempt, or the failed Response if we run out of tries.
         /// </remarks>
-        async Task<Response<bool>> WriteToRam(Message message, CancellationToken cancellationToken)
+        private async Task<Response<bool>> WritePayload(Message message, CancellationToken cancellationToken)
         {
             for (int i = MaxSendAttempts; i>0; i--)
             {
@@ -449,7 +449,7 @@ namespace PcmHacking
 
                 if (!await device.SendMessage(message))
                 {
-                    this.logger.AddDebugMessage("WriteToRam: Unable to send message.");
+                    this.logger.AddDebugMessage("WritePayload: Unable to send message.");
                     continue;
                 }
 
@@ -458,10 +458,10 @@ namespace PcmHacking
                     return Response.Create(ResponseStatus.Success, true);
                 }
 
-                this.logger.AddDebugMessage("WriteToRam: Upload request failed.");
+                this.logger.AddDebugMessage("WritePayload: Upload request failed.");
             }
 
-            this.logger.AddDebugMessage("WriteToRam: Giving up.");
+            this.logger.AddDebugMessage("WritePayload: Giving up.");
             return Response.Create(ResponseStatus.Error, false); // this should be response from the loop but the compiler thinks the response variable isnt in scope here????
         }
     }

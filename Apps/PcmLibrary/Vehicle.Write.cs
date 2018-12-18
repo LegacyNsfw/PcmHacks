@@ -198,7 +198,8 @@ namespace PcmHacking
                         range.Address,
                         range.Address + (range.Size - 1)));
 
-                this.logger.AddUserMessage("Erasing");
+                //this.logger.AddUserMessage("Erasing");
+
                 Query<byte> eraseRequest = new Query<byte>(
                     this.device,
                     this.messageFactory.CreateFlashEraseCalibrationRequest,
@@ -206,20 +207,17 @@ namespace PcmHacking
                     this.logger,
                     cancellationToken);
                 eraseRequest.MaxTimeouts = 50; // Reduce this when we know how many are likely to be needed.
-                Response<byte> eraseResponse = await eraseRequest.Execute();
+                                               //                Response<byte> eraseResponse = await eraseRequest.Execute();
 
-                if (eraseResponse.Status != ResponseStatus.Success)
-                {
-                    this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
-                    this.logger.AddUserMessage("This is not an expected condition. The PCM is probably not usable.");
-                    this.logger.AddUserMessage("Please copy the contents of the debug window and save it to a text file.");
-                    this.logger.AddUserMessage("Then, try reflashing again. Save that debug log as well.");
-                    this.logger.AddUserMessage("Please report this on the pcmhacking.net forum - start a thread, and include the debug log so that we can investigate.");
-                    return false;
-                }
-
+                //                if (eraseResponse.Status != ResponseStatus.Success)
+                //                {
+                //                  this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
+                //                this.RequestDebugLogs();
+                //                    return false;
+                //          }
 
                 this.logger.AddUserMessage("Writing");
+                await WriteMemoryRange(range, image, cancellationToken);
             }
 
  /* See notes above regarding unlock/lock.
@@ -258,10 +256,7 @@ namespace PcmHacking
             this.logger.AddUserMessage("start a new thread at pcmhacking.net, and");
             this.logger.AddUserMessage("include the contents of the debug tab.");
             this.logger.AddUserMessage("");
-            this.logger.AddUserMessage("Select that tab, click anywhere in the text,");
-            this.logger.AddUserMessage("press Ctrl+A to select the text, and Ctrl+C");
-            this.logger.AddUserMessage("to copy the text. Press Ctrl+V to paste that");
-            this.logger.AddUserMessage("content into your forum post.");
+            this.RequestDebugLogs();
 
             return true;
         }
@@ -338,6 +333,52 @@ namespace PcmHacking
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Copy a single memory range to the PCM.
+        /// </summary>
+        private async Task<bool> WriteMemoryRange(MemoryRange range, byte[] image, CancellationToken cancellationToken)
+        {
+            int payloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
+            for (int index = 0; index < range.Size; index += payloadSize)
+            {
+                int thisPayloadSize = Math.Min(payloadSize, (int)range.Size - index);
+                byte[] payload = new byte[payloadSize];
+                Buffer.BlockCopy(image, (int)(range.Address + index), payload, 0, payload.Length);
+
+                int startAddress = (int)(range.Address + index);
+
+                Message payloadMessage = messageFactory.CreateBlockMessage(
+                    payload,
+                    0, // copy from start of payload array
+                    payloadSize,
+                    startAddress,
+                    false); // never execute
+
+                logger.AddUserMessage(
+                    string.Format(
+                        "Sending payload with offset 0x{0:X4}, start address 0x{1:X6}, length 0x{2:X4}.",
+                        index,
+                        startAddress,
+                        payloadSize));
+
+                // await this.WritePayload(payloadMessage, cancellationToken);
+
+                // Not checking the success or failure here.
+                // The debug pane will show if anything goes wrong, and the CRC check at the end will alert the user.
+            }
+
+            return true;
+        }
+
+        private void RequestDebugLogs()
+        {
+            this.logger.AddUserMessage("");
+            this.logger.AddUserMessage("Select the debug tab, click anywhere in the text,");
+            this.logger.AddUserMessage("press Ctrl+A to select the text, and Ctrl+C to");
+            this.logger.AddUserMessage("copy the text. Press Ctrl+V to paste that content");
+            this.logger.AddUserMessage("content into your forum post.");
         }
 
         /// <summary>

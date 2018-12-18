@@ -476,6 +476,13 @@ namespace PcmHacking
         /// </summary>
         private void readFullContentsButton_Click(object sender, EventArgs e)
         {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
             if (!BackgroundWorker.IsAlive)
             {
                 BackgroundWorker = new System.Threading.Thread(() => readFullContents_BackgroundThread());
@@ -489,6 +496,13 @@ namespace PcmHacking
         /// </summary>
         private void writeCalibrationButton_Click(object sender, EventArgs e)
         {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
             if (!BackgroundWorker.IsAlive)
             {
                 DialogResult result = MessageBox.Show(
@@ -518,6 +532,13 @@ namespace PcmHacking
         /// </summary>
         private void writeOsAndCalibration_Click(object sender, EventArgs e)
         {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
             if (!BackgroundWorker.IsAlive)
             {
                 DialogResult result = MessageBox.Show(
@@ -547,6 +568,13 @@ namespace PcmHacking
         /// </summary>
         private void writeFullContentsButton_Click(object sender, EventArgs e)
         {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
             if (!BackgroundWorker.IsAlive)
             {
                 DialogResult result = MessageBox.Show(
@@ -614,13 +642,6 @@ namespace PcmHacking
                 }
 
                 this.cancellationTokenSource = new CancellationTokenSource();
-
-                DelayDialogBox dialogBox = new DelayDialogBox();
-                DialogResult dialogResult = dialogBox.ShowDialog();
-                if (dialogResult == DialogResult.Cancel)
-                {
-                    return;
-                }
 
                 this.AddUserMessage("Querying operating system of current PCM.");
                 Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
@@ -758,7 +779,11 @@ namespace PcmHacking
                     this.AddUserMessage("Checking for recovery mode...");
                     bool recoveryMode = await this.vehicle.IsInRecoveryMode();
 
-                    if (!recoveryMode)
+                    if (recoveryMode)
+                    {
+                        this.AddUserMessage("PCM is in recovery mode.");
+                    }
+                    else
                     {
                         this.AddUserMessage("PCM is not in recovery mode.");
                         if (await vehicle.IsKernelRunning())
@@ -767,7 +792,7 @@ namespace PcmHacking
                         }
                         else
                         {
-                            this.AddUserMessage("Requestiong operating system ID...");
+                            this.AddUserMessage("Requesting operating system ID...");
                             Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
                             if (osidResponse.Status != ResponseStatus.Success)
                             {
