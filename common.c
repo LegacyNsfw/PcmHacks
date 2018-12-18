@@ -42,7 +42,7 @@ void ScratchWatchdog()
 ///////////////////////////////////////////////////////////////////////////////
 // Does what it says.
 ///////////////////////////////////////////////////////////////////////////////
-int WasteTime()
+void WasteTime()
 {
 	asm("nop");
 	asm("nop");
@@ -53,7 +53,7 @@ int WasteTime()
 ///////////////////////////////////////////////////////////////////////////////
 // Also does what it says. 10,000 iterations takes a bit less than half a second.
 ///////////////////////////////////////////////////////////////////////////////
-int LongSleepWithWatchdog()
+void LongSleepWithWatchdog()
 {
 	for (int outerLoop = 0; outerLoop < 10 * 1000; outerLoop++)
 	{
@@ -62,6 +62,31 @@ int LongSleepWithWatchdog()
 		{
 			WasteTime();
 		}
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Sleep for a variable amount of time. This should be close to Dimented24x7's
+// assembly-language implementation.
+///////////////////////////////////////////////////////////////////////////////
+void VariableSleep(int iterations)
+{
+	for (int outer = 0; outer < iterations; outer++)
+	{
+		for (int inner = 0; inner < 250; inner++)
+		{
+			asm("nop");
+			asm("nop");
+			asm("nop");
+			asm("nop");
+
+			asm("nop");
+			asm("nop");
+			asm("nop");
+			asm("nop");
+		}
+
+		ScratchWatchdog();
 	}
 }
 
@@ -156,7 +181,7 @@ void WriteMessage(char* start, int length, Segment segment)
 		// changes immediately to zero. There's no 0x02 (almost full) in between.
 		status = *DLC_Status & 0x03;
 		int loopCount = 0;
-		while (status != 0 && loopCount < 250)
+		while (status != 0 && loopCount < 500)
 		{
 			loopCount++;
 

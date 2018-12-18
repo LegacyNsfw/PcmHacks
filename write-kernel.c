@@ -32,7 +32,68 @@ char volatile * const  SIM_CSOR5    =   SIM_BASE + 0x62;
 char volatile * const  SIM_CSBAR6   =   SIM_BASE + 0x64;
 char volatile * const  SIM_CSOR6    =   SIM_BASE + 0x66;
 
-void HandleFlashChipQueryMode3D()
+unsigned short volatile * const HardwareIO     =  (void*)0xFFFFE2FA; // Hardware I/O reg
+
+// This kernel uses Mode 3D extensively, because apparently nothing else does. Submodes are:
+//
+// 00 - Get kernel version
+// 01 - Query flash chip
+// 02 - Query CRC
+// 03 - unlock flash
+// 04 - lock flash
+// 05 - erase calibration
+// 06 - erase everything? (not until everything else is thoroughly proven)
+// FF - send debug info (because I was curious about the stack address)
+//
+// Writes to flash use mode 35 and mode 36, like writing to RAM.
+
+///////////////////////////////////////////////////////////////////////////////
+// Send a success or failure message.
+///////////////////////////////////////////////////////////////////////////////
+void SendReply(char success, unsigned char submode, unsigned char code)
+{
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+
+	if (success)
+	{
+		MessageBuffer[3] = 0x7D;
+		MessageBuffer[4] = submode;
+		MessageBuffer[5] = code;
+	}
+	else
+	{
+		MessageBuffer[3] = 0x7F;
+		MessageBuffer[4] = 0x3D;
+		MessageBuffer[5] = submode;
+		MessageBuffer[6] = code;
+	}
+
+	WriteMessage(MessageBuffer, success ? 6 : 7, Complete);	
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Get the version of the kernel.
+///////////////////////////////////////////////////////////////////////////////
+void HandleVersionQuery()
+{
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7D;
+	MessageBuffer[4] = 0x00;
+	MessageBuffer[5] = 0x01; // major
+	MessageBuffer[6] = 0x00; // minor
+	MessageBuffer[7] = 0x00; // patch
+	MessageBuffer[8] = 0x00; // TBD
+	WriteMessage(MessageBuffer, 9, Complete);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Get the manufacturer and type of flash chip.
+///////////////////////////////////////////////////////////////////////////////
+void HandleFlashChipQuery()
 {
 	ScratchWatchdog();
 	*SIM_CSBAR0 = 0x0006;
@@ -59,7 +120,7 @@ void HandleFlashChipQueryMode3D()
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7D;
-	MessageBuffer[4] = 0x00;
+	MessageBuffer[4] = 0x01;
 	MessageBuffer[5] = (char)(manufacturerAndType >> 24);
 	MessageBuffer[6] = (char)(manufacturerAndType >> 16);
 	MessageBuffer[7] = (char)(manufacturerAndType >> 8);
@@ -67,7 +128,12 @@ void HandleFlashChipQueryMode3D()
 	WriteMessage(MessageBuffer, 9, Complete);
 }
 
-void HandleCrcQueryMode3D()
+///////////////////////////////////////////////////////////////////////////////
+// The the CRC of a memory range.
+// This takes just long enough for the app to time out. So we pause just long
+// enough for the reply to come back before the second timeout.
+///////////////////////////////////////////////////////////////////////////////
+void HandleCrcQuery()
 {
 	unsigned length = MessageBuffer[5];
 	length <<= 8;
@@ -106,7 +172,7 @@ void HandleCrcQueryMode3D()
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7D;
-	MessageBuffer[4] = 0x01;
+	MessageBuffer[4] = 0x02;
 	MessageBuffer[5] = (char)(length >> 16);
 	MessageBuffer[6] = (char)(length >> 8);
 	MessageBuffer[7] = (char)length;
@@ -120,35 +186,119 @@ void HandleCrcQueryMode3D()
 	WriteMessage(MessageBuffer, 15, Complete);
 }
 
-extern unsigned int *crcTable;
+///////////////////////////////////////////////////////////////////////////////
+// Unlock the flash memory.
+///////////////////////////////////////////////////////////////////////////////
+void HandleFlashUnlockRequest()
+{
+	*SIM_CSBARBT = 0x0006;
+	*SIM_CSORBT = 0x6820;
+	*SIM_CSBAR0 = 0x0006;		
+	*SIM_CSOR0 = 0x7060;
 
-void CheckStack()
+	unsigned short hardwareFlags = *HardwareIO;
+	hardwareFlags |= 0x0001;
+	WasteTime();
+	WasteTime();
+	*HardwareIO = hardwareFlags;
+
+	VariableSleep(0x50);
+
+	// Putting this back to the original value seemed like a good idea, but makes no difference
+	*SIM_CSOR0 = 0x1060;
+
+	SendReply(1, 0x03, 0);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Lock the flash memory.
+///////////////////////////////////////////////////////////////////////////////
+void HandleFlashLockRequest()
+{
+	*SIM_CSBARBT = 0x0006;
+	*SIM_CSORBT = 0x6820;
+	*SIM_CSBAR0 = 0x0006;	
+	*SIM_CSOR0 = 0x1060;
+
+	unsigned short hardwareFlags = *HardwareIO;
+	hardwareFlags &= 0xFFFE;
+	WasteTime();
+	WasteTime();
+	*HardwareIO = hardwareFlags;
+
+	VariableSleep(0x50);
+
+//	hardwareFlags = *HardwareIO;
+//	hardwareFlags &= 0x0001;
+
+//	SendReply(1, 0x04, (char)hardwareFlags);
+
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7D;
+	MessageBuffer[4] = 0x04;
+	MessageBuffer[5] = 0x00; 
+	WriteMessage(MessageBuffer, 6, Complete);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Erase the calibration blocks.
+///////////////////////////////////////////////////////////////////////////////
+void HandleEraseCalibrationRequest()
+{
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Erase everything? Nope, not yet.
+///////////////////////////////////////////////////////////////////////////////
+void HandleEraseEverythingRequest()
+{
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7F;
+	MessageBuffer[4] = 0x3D;
+	MessageBuffer[5] = 0x06;
+	MessageBuffer[6] = 0x00;
+	
+	WriteMessage(MessageBuffer, 7, Complete);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// This is available for arbitrary diagnostic / troubleshooting use.
+///////////////////////////////////////////////////////////////////////////////
+extern unsigned int *crcTable;
+void HandleDebugQuery()
 {
 	char test = 0;
-	unsigned pointer = (unsigned)&test;
+	unsigned value = *SIM_CSBAR0;
+	//(unsigned)&test;
 
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7D;
-	MessageBuffer[4] = 0x02;
-	MessageBuffer[5] = (char)(pointer >> 24);
-	MessageBuffer[6] = (char)(pointer >> 16);
-	MessageBuffer[7] = (char)(pointer >> 8);
-	MessageBuffer[8] = (char)(pointer >> 0);
+	MessageBuffer[4] = 0xFF;
+	MessageBuffer[5] = (char)(value >> 24);
+	MessageBuffer[6] = (char)(value >> 16);
+	MessageBuffer[7] = (char)(value >> 8);
+	MessageBuffer[8] = (char)(value >> 0);
 	WriteMessage(MessageBuffer, 9, Complete);
 
-	pointer = (unsigned)crcTable;
+	value = *SIM_CSOR0;
+	//(unsigned)crcTable;
 
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7D;
-	MessageBuffer[4] = 0x02;
-	MessageBuffer[5] = (char)(pointer >> 24);
-	MessageBuffer[6] = (char)(pointer >> 16);
-	MessageBuffer[7] = (char)(pointer >> 8);
-	MessageBuffer[8] = (char)(pointer >> 0);
+	MessageBuffer[4] = 0xFF;
+	MessageBuffer[5] = (char)(value >> 24);
+	MessageBuffer[6] = (char)(value >> 16);
+	MessageBuffer[7] = (char)(value >> 8);
+	MessageBuffer[8] = (char)(value >> 0);
 	WriteMessage(MessageBuffer, 9, Complete);
 
 }
@@ -197,20 +347,40 @@ void ProcessMessage()
 		switch(MessageBuffer[4])
 		{
 		case 0x00:
-			HandleFlashChipQueryMode3D();
+			HandleVersionQuery();
 			break;
 
 		case 0x01:
-			HandleCrcQueryMode3D();
+			HandleFlashChipQuery();
 			break;
 
 		case 0x02:
-			CheckStack();
+			HandleCrcQuery();
+			break;
+
+		case 0x03:
+			HandleFlashUnlockRequest();
+			break;
+
+		case 0x04:
+			HandleFlashLockRequest();
+			break;
+
+		case 0x05:
+			HandleEraseCalibrationRequest();
+			break;
+			
+		case 0x06:
+			HandleEraseEverythingRequest();
+			break;
+
+		case 0xFF:
+			HandleDebugQuery();
 			break;
 
 		default:
 			SendToolPresent(
-				0xDD,
+				0x3D,
 				MessageBuffer[4],
 				0,
 				0);
@@ -221,9 +391,9 @@ void ProcessMessage()
 	default:
 		SendToolPresent(
 			0xAA,
+			MessageBuffer[2],
 			MessageBuffer[3],
-			MessageBuffer[4],
-			MessageBuffer[5]);
+			MessageBuffer[4]);
 		break;
 	}
 }
