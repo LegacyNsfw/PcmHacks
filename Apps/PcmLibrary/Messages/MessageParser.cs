@@ -409,15 +409,40 @@ namespace PcmHacking
             return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x60);
         }
 
-        //
 
-        internal Response<UInt32> ParseFlashMemoryType(Message responseMessage)
+        internal Response<byte> ParseByte(Message responseMessage, byte mode, byte submode)
         {
             ResponseStatus status;
-            byte[] expected = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7D, 0x00 };
+            byte[] expected = { 0x6C, DeviceId.Tool, DeviceId.Pcm, (byte)(mode | 0x40), submode };
             if (!TryVerifyInitialBytes(responseMessage, expected, out status))
             {
-                byte[] refused = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7F, 0x3D };
+                byte[] refused = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7F, mode, submode };
+                if (TryVerifyInitialBytes(responseMessage, refused, out status))
+                {
+                    return Response.Create(ResponseStatus.Refused, (byte)0);
+                }
+
+                return Response.Create(status, (byte)0);
+            }
+
+            byte[] responseBytes = responseMessage.GetBytes();
+            if (responseBytes.Length < 6)
+            {
+                return Response.Create(ResponseStatus.Truncated, (byte)0);
+            }
+
+            int value = responseBytes[5];
+
+            return Response.Create(ResponseStatus.Success, (byte)value);
+        }
+
+        internal Response<UInt32> ParseUInt32(Message responseMessage, byte mode, byte submode)
+        {
+            ResponseStatus status;
+            byte[] expected = { 0x6C, DeviceId.Tool, DeviceId.Pcm, (byte)(mode | 0x40), submode };
+            if (!TryVerifyInitialBytes(responseMessage, expected, out status))
+            {
+                byte[] refused = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7F, mode, submode };
                 if (TryVerifyInitialBytes(responseMessage, refused, out status))
                 {
                     return Response.Create(ResponseStatus.Refused, (UInt32)0);
@@ -427,15 +452,30 @@ namespace PcmHacking
             }
 
             byte[] responseBytes = responseMessage.GetBytes();
-            int chipId =
+
+            if (responseBytes.Length < 9)
+            {
+                return Response.Create(ResponseStatus.Truncated, (UInt32)0);
+            }
+
+            int value =
                 (responseBytes[5] << 24) |
                 (responseBytes[6] << 16) |
                 (responseBytes[7] << 8) |
                 responseBytes[8];
 
-            return Response.Create(ResponseStatus.Success, (UInt32)chipId);
+            return Response.Create(ResponseStatus.Success, (UInt32)value);
         }
 
+        internal Response<UInt32> ParseKernelVersion(Message responseMessage)
+        {
+            return ParseUInt32(responseMessage, 0x3D, 0x00);
+        }
+
+        internal Response<UInt32> ParseFlashMemoryType(Message responseMessage)
+        {
+            return ParseUInt32(responseMessage, 0x3D, 0x01);
+        }
 
         internal Response<UInt32> ParseCrc(Message responseMessage, UInt32 address, UInt32 size)
         {
@@ -447,7 +487,7 @@ namespace PcmHacking
                 DeviceId.Tool,
                 DeviceId.Pcm,
                 0x7D,
-                0x01,
+                0x02,
                 unchecked((byte)(size >> 16)),
                 unchecked((byte)(size >> 8)),
                 unchecked((byte)size),
@@ -458,6 +498,12 @@ namespace PcmHacking
 
             if (!TryVerifyInitialBytes(responseMessage, expected, out status))
             {
+                byte[] refused = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7F, 0x3D, 0x02 };
+                if (TryVerifyInitialBytes(responseMessage, refused, out status))
+                {
+                    return Response.Create(ResponseStatus.Refused, (UInt32)0);
+                }
+
                 return Response.Create(status, (UInt32)0);
             }
 
@@ -476,38 +522,17 @@ namespace PcmHacking
             return Response.Create(ResponseStatus.Success, (UInt32)crc);
         }
 
-        // JS kernel messages
-        public Response<bool> ParseKernelPingResponse(Message message)
+        internal Response<byte> ParseFlashUnlock(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6C, 0x36, 0xE0, 0x80);
+            return ParseByte(message, 0x3D, 0x03);
         }
 
-        public Response<bool> ParseWriteKernelDataRequest(Message message, out int length, out int address)
+        internal Response<byte> ParseFlashLock(Message message)
         {
-            length = 0;
-            address = 0;
-
-            Response<bool> result = this.DoSimpleValidation(message, 0x6C, 0x36, 0xE2);
-
-            if (result.Status != ResponseStatus.Success)
-            {
-                return result;
-            }
-
-            byte[] bytes = message.GetBytes();
-            length = bytes[5] << 8;
-            length |= bytes[6];
-            address = bytes[7] << 16;
-            address |= bytes[8] << 8;
-            address |= bytes[9];
-
-            return Response.Create(ResponseStatus.Success, true);
+            return ParseByte(message, 0x3D, 0x04);
         }
 
-        public Response<bool> ParseWriteKernelFlashComplete(Message message)
-        {
-            return this.DoSimpleValidation(message, 0x6c, 0x36, 0xE0, 0x68);
-        }
+
 
         /// <summary>
         /// Check for an accept/reject message with the given mode byte.

@@ -76,6 +76,17 @@ namespace PcmHacking
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
                 }
 
+                // Which kernel?
+                Query<UInt32> versionQuery = new Query<uint>(
+                    this.device,
+                    this.messageFactory.CreateKernelVersionQuery,
+                    this.messageParser.ParseKernelVersion,
+                    this.logger,
+                    cancellationToken);
+                Response<UInt32> versionResponse = await versionQuery.Execute();
+
+                this.logger.AddUserMessage("Version = " + versionResponse.Value.ToString("X8"));
+/*
                 // Which flash chip?
                 Query<UInt32> chipIdQuery = new Query<uint>(
                     this.device,
@@ -86,21 +97,43 @@ namespace PcmHacking
                 Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
 
                 this.logger.AddUserMessage("Flash chip ID = " + chipIdResponse.Value.ToString("X8"));
+                */
 
-                await this.device.SendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x02 }));
+                Query<byte> unlockRequest = new Query<byte>(
+                    this.device,
+                    this.messageFactory.CreateFlashUnlockRequest,
+                    this.messageParser.ParseFlashUnlock,
+                    this.logger,
+                    cancellationToken);
+                Response<byte> unlockResponse = await unlockRequest.Execute();
 
-                await Task.Delay(100);
+                //await chipIdQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
+                await versionQuery.Execute();
 
-                for(int i = 1; i < 20; i++)
-                {
-                    Message rx;
-                    while ((rx = await this.device.ReceiveMessage()) != null)
-                    {
-                        this.logger.AddUserMessage(rx.ToString());
-                    }
+                Query<byte> lockRequest = new Query<byte>(
+                    this.device,
+                    this.messageFactory.CreateFlashLockRequest,
+                    this.messageParser.ParseFlashLock,
+                    this.logger,
+                    cancellationToken);
+                Response<byte> lockResponse = await lockRequest.Execute();
 
-                    await Task.Delay(100);
-                }
+                await versionQuery.Execute();
+
+                Message message = this.messageFactory.CreateDebugQuery();
+                await this.device.SendMessage(message);
 
                 return true;
             }

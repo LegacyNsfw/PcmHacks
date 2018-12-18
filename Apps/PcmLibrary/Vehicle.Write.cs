@@ -161,6 +161,22 @@ namespace PcmHacking
                 return true;
             }
 
+            Query<byte> unlockRequest = new Query<byte>(
+                this.device,
+                this.messageFactory.CreateFlashUnlockRequest,
+                this.messageParser.ParseFlashUnlock,
+                this.logger,
+                cancellationToken);
+            Response<byte> unlockResponse = await unlockRequest.Execute();
+
+            if (unlockResponse.Status != ResponseStatus.Success)
+            {
+                this.logger.AddUserMessage("Unable to unlock flash memory. Code: " + unlockResponse.Value.ToString("X2"));
+                this.logger.AddUserMessage("The PCM is safe to use, no changes were made.");
+                return true;
+            }
+
+
             foreach (MemoryRange range in ranges)
             {
                 if (range.ActualCrc == range.DesiredCrc)
@@ -182,6 +198,22 @@ namespace PcmHacking
                 this.logger.AddUserMessage("Erasing");
 
                 this.logger.AddUserMessage("Writing");
+            }
+
+            Query<byte> lockRequest = new Query<byte>(
+                this.device,
+                this.messageFactory.CreateFlashUnlockRequest,
+                this.messageParser.ParseFlashUnlock,
+                this.logger,
+                cancellationToken);
+            Response<byte> lockResponse = await unlockRequest.Execute();
+
+            if (lockResponse.Status != ResponseStatus.Success)
+            {
+                this.logger.AddUserMessage("Unable to lock flash memory. Code: " + unlockResponse.Value.ToString("X2"));
+                this.logger.AddUserMessage("If the changes were successful (see below), you should probably power-cycle the PCM before continuing.");
+                this.logger.AddUserMessage("If the changes were not successful, try flashing again.");
+                this.logger.AddUserMessage("Either way, please report this on the pcmhacking.net forum so that we can investigate.");
             }
 
             if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken, notifier))

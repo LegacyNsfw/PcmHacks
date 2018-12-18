@@ -341,11 +341,19 @@ namespace PcmHacking
 
 
         /// <summary>
+        /// Create a request for the kernel version.
+        /// </summary>
+        public Message CreateKernelVersionQuery()
+        {
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x00 });
+        }
+
+        /// <summary>
         /// Create a request to identify the flash chip. 
         /// </summary>
         public Message CreateFlashMemoryTypeQuery()
         {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x00 });
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x01 });
         }
 
         /// <summary>
@@ -353,7 +361,7 @@ namespace PcmHacking
         /// </summary>
         public Message CreateCrcQuery(UInt32 address, UInt32 size)
         {
-            byte[] requestBytes = new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            byte[] requestBytes = new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
             requestBytes[5] = unchecked((byte)(size >> 16));
             requestBytes[6] = unchecked((byte)(size >> 8));
             requestBytes[7] = unchecked((byte)size);
@@ -363,6 +371,13 @@ namespace PcmHacking
             return new Message(requestBytes);
         }
 
+        /// <summary>
+        /// Create a request for implementation details... for development use only.
+        /// </summary>
+        public Message CreateDebugQuery()
+        {
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0xFF });
+        }
 
         ///////////////////////////////////////////////////////////////////////
         // Mode 3E was apparently not used for anything, so it's being taken
@@ -370,19 +385,19 @@ namespace PcmHacking
         ///////////////////////////////////////////////////////////////////////
 
 
-        public Message CreateFlashUnlockRequest(byte blockId)
+        public Message CreateFlashUnlockRequest()
         {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3E, 0x00, blockId });
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x03 });
         }
 
-        public Message CreateFlashLockRequest(byte blockId)
+        public Message CreateFlashLockRequest()
         {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3E, 0x01, blockId });
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x04 });
         }
 
-        public Message CreateFlashEraseRequest(byte blockId)
+        public Message CreateFlashEraseCalibrationRequest(byte blockId)
         {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3E, 0x02, blockId });
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x05 });
         }
 
         ///////////////////////////////////////////////////////////////////////
