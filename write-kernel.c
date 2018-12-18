@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-#define  SIM_BASE  ((void*)0xfffa00)
+#define  SIM_BASE  ((void*)0xffffFA00)
 char volatile * const  SIM_MCR      =   SIM_BASE + 0x00; // Module Control register
 char volatile * const  SIM_SYNCR    =   SIM_BASE + 0x04; // Clock synthesiser control register
 char volatile * const  SIM_RSR      =   SIM_BASE + 0x07; // Reset Status
@@ -87,6 +87,11 @@ void HandleVersionQuery()
 	MessageBuffer[6] = 0x00; // minor
 	MessageBuffer[7] = 0x00; // patch
 	MessageBuffer[8] = 0x00; // TBD
+
+	// The AllPro and ScanTool devices need a short delay to switch from 
+	// sending to receiving. Otherwise they'll miss the response.
+	VariableSleep(2);
+
 	WriteMessage(MessageBuffer, 9, Complete);
 }
 
@@ -115,6 +120,10 @@ void HandleFlashChipQuery()
 
 	// Not sure if this is necessary.
 	*SIM_CSOR0 = 0x1060;
+
+	// The AllPro and ScanTool devices need a short delay to switch from 
+	// sending to receiving. Otherwise they'll miss the response.
+	VariableSleep(1);
 
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
@@ -188,8 +197,18 @@ void HandleCrcQuery()
 
 ///////////////////////////////////////////////////////////////////////////////
 // Unlock the flash memory.
+//
+// We tried having separate commands for lock and unlock, however the PCM's
+// VPW signal becomes noisy while the flash is unlocked. The AVT was able to
+// deal with that, but the ScanTool and AllPro interfaces couldn't read the
+// signal at all.
+//
+// So instead of VPW commands to unlock and re-lock, we just unlock during the
+// erase and write operations, and re-lock when the operation is complete.
+// 
+// These commands remain supported, just in case we find a way to use them.
 ///////////////////////////////////////////////////////////////////////////////
-void HandleFlashUnlockRequest()
+void UnlockFlash()
 {
 	*SIM_CSBARBT = 0x0006;
 	*SIM_CSORBT = 0x6820;
@@ -203,17 +222,22 @@ void HandleFlashUnlockRequest()
 	*HardwareIO = hardwareFlags;
 
 	VariableSleep(0x50);
+}
 
-	// Putting this back to the original value seemed like a good idea, but makes no difference
-	*SIM_CSOR0 = 0x1060;
-
-	SendReply(1, 0x03, 0);
+void HandleFlashUnlockRequest()
+{
+	UnlockFlash();
+	
+	// No delay necessary, the UnlockFlash function already takes a long time.
+	SendReply(1, 0x03, 0x00);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Lock the flash memory.
+//
+// See notes above.
 ///////////////////////////////////////////////////////////////////////////////
-void HandleFlashLockRequest()
+void LockFlash()
 {
 	*SIM_CSBARBT = 0x0006;
 	*SIM_CSORBT = 0x6820;
@@ -227,19 +251,14 @@ void HandleFlashLockRequest()
 	*HardwareIO = hardwareFlags;
 
 	VariableSleep(0x50);
+}
 
-//	hardwareFlags = *HardwareIO;
-//	hardwareFlags &= 0x0001;
-
-//	SendReply(1, 0x04, (char)hardwareFlags);
-
-	MessageBuffer[0] = 0x6C;
-	MessageBuffer[1] = 0xF0;
-	MessageBuffer[2] = 0x10;
-	MessageBuffer[3] = 0x7D;
-	MessageBuffer[4] = 0x04;
-	MessageBuffer[5] = 0x00; 
-	WriteMessage(MessageBuffer, 6, Complete);
+void HandleFlashLockRequest()
+{
+	LockFlash();
+	
+	// No delay necessary, the UnlockFlash function already takes a long time.
+	SendReply(1, 0x04, 0x00);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -247,8 +266,86 @@ void HandleFlashLockRequest()
 ///////////////////////////////////////////////////////////////////////////////
 void HandleEraseCalibrationRequest()
 {
+	UnlockFlash();
 
+	unsigned short *flashBase = (void*)0x8000;
+	*flashBase = 0x5050;
+	*flashBase = 0x2020;
+	*flashBase = 0xD0D0;
+
+	WasteTime();
+	WasteTime();
+
+	*flashBase = 0x7070;
+
+	unsigned short status = 0;
+	unsigned success = 0;
+
+	for (int iterations = 0; iterations < 0x640000; iterations++)
+	{
+		ScratchWatchdog();
+		WasteTime();
+		WasteTime();
+		status = *flashBase;
+		if ((status & 0x80) != 0)
+		{
+			break;
+		}
+	}
+
+	status &= 0x00E8;
+	if (status == 0x0080)
+	{
+		success = 1;
+	}
+
+	*flashBase == 0xFFFF;
+	*flashBase == 0xFFFF;
+
+	LockFlash();
+
+	// The AllPro and ScanTool devices need a short delay to switch from 
+	// sending to receiving. Otherwise they'll miss the response.
+	// Also, give the lock-flash operation time to take full effect, because
+	// the signal quality is degraded and the AllPro and ScanTool can't read
+	// messages when the PCM is in that state.
+	VariableSleep(2);
+
+	SendReply(success, 0x05, (char)status);
 }
+	/*
+MOVE.L #$640000,D2	*# of cycles to wait for flash erase to be complete
+		MOVE #$5050,(A0)	*Clear status register
+		MOVE #$2020,(A0)	*Set up for erase
+		MOVE #$D0D0,(A0)	*Confirm and resume erase
+		BSR LBL_DELAY		*Delay
+*
+		MOVE #$7070,(A0)	*Read status reg	
+*
+LBL_ERASE02:	BSR LBL_RESETCOP	*Do COP
+*
+		BSR LBL_DELAY		*Delay
+*
+		MOVE (A0),D1		*Load status reg
+		BTST #7,D1		*Test b7, flash ready
+		BNE LBL_ERASE01		*Bra if !=0, flash ready
+*
+		SUBQ.L #1,D2		*-1 from counter
+		BNE LBL_ERASE02		*Bra if !=, continue to wait
+*
+LBL_ERASE01:	ANDI #$00E8,D1		*Mask out status bits
+		CMPI #$0080,D1		*Compare to flash chip ready w/o errors
+		BEQ LBL_ERASE03		*Bra if ==, return
+*
+		MOVE.B #1,D0		*Signal erase failure
+*
+LBL_ERASE03:
+    	MOVE #$FFFF,(A0)	*Restore read array mode
+		MOVE #$FFFF,(A0)	*Confirm
+		MOVEM.L (A7)+,D1-D2	*Restore data regs
+		RTS			*Return
+*	
+	*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // Erase everything? Nope, not yet.
@@ -258,7 +355,7 @@ void HandleEraseEverythingRequest()
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
-	MessageBuffer[3] = 0x7F;
+	MessageBuffer[3] = 0x7F; // Reject
 	MessageBuffer[4] = 0x3D;
 	MessageBuffer[5] = 0x06;
 	MessageBuffer[6] = 0x00;
