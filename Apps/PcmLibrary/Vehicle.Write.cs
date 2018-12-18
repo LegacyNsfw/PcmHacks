@@ -41,6 +41,8 @@ namespace PcmHacking
                 return false;
             }
 
+            ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
+
             try
             {
                 this.device.ClearMessageQueue();
@@ -75,8 +77,6 @@ namespace PcmHacking
                         return false;
                     }
 
-//                    await toolPresentNotifier.Notify();
-
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
                 }
 
@@ -86,7 +86,7 @@ namespace PcmHacking
                 switch (writeType)
                 {
                     case WriteType.Calibration:
-                        success = await this.CalibrationWrite(cancellationToken, image);
+                        success = await this.CalibrationWrite(cancellationToken, image, notifier);
                         break;
 
                     case WriteType.OsAndCalibration:
@@ -112,42 +112,10 @@ namespace PcmHacking
             }
         }
 
-        public async Task<bool> IsKernelRunning()
-        {
-            Message query = this.messageFactory.CreateFlashMemoryTypeQuery();
-            for (int attempt = 0; attempt < 2; attempt++)
-            {
-                if (!await this.device.SendMessage(query))
-                {
-                    await Task.Delay(250);
-                    continue;
-                }
-
-                Message reply = await this.device.ReceiveMessage();
-                if (reply == null)
-                {
-                    await Task.Delay(250);
-                    continue;
-                }
-
-                Response<UInt32> response = this.messageParser.ParseFlashMemoryType(reply);
-                if (response.Status == ResponseStatus.Success)
-                {
-                    return true;
-                }
-
-                if (response.Status == ResponseStatus.Refused)
-                {
-                    return false;
-                }
-
-                await Task.Delay(250);
-            }
-
-            return false;
-        }
-
-        private async Task<bool> CalibrationWrite(CancellationToken cancellationToken, byte[] image)
+        /// <summary>
+        /// Write the calibration blocks.
+        /// </summary>
+        private async Task<bool> CalibrationWrite(CancellationToken cancellationToken, byte[] image, ToolPresentNotifier notifier)
         {
             BlockType relevantBlocks = BlockType.Calibration;
 
@@ -165,6 +133,8 @@ namespace PcmHacking
                 logger.AddUserMessage("Unable to determine which flash chip is in this PCM");
                 return false;
             }
+
+            logger.AddUserMessage("Flash memory type: " + chipIdResponse.Value.ToString("X8"));
 
             IList<MemoryRange> ranges = this.GetMemoryRanges(chipIdResponse.Value);
             if (ranges == null)
@@ -185,7 +155,7 @@ namespace PcmHacking
             logger.AddUserMessage("Computing CRCs from local file...");
             this.GetCrcFromImage(ranges, image);
 
-            if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken))
+            if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken, notifier))
             {
                 this.logger.AddUserMessage("All ranges are identical.");
                 return true;
@@ -214,7 +184,7 @@ namespace PcmHacking
                 this.logger.AddUserMessage("Writing");
             }
 
-            if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken))
+            if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken, notifier))
             {
                 this.logger.AddUserMessage("Flash successful!");
                 return true;
@@ -254,7 +224,7 @@ namespace PcmHacking
         /// <summary>
         /// Compare CRCs from the file to CRCs from the PCM.
         /// </summary>
-        private async Task<bool> CompareRanges(IList<MemoryRange> ranges, byte[] image, BlockType blockTypes, CancellationToken cancellationToken)
+        private async Task<bool> CompareRanges(IList<MemoryRange> ranges, byte[] image, BlockType blockTypes, CancellationToken cancellationToken, ToolPresentNotifier notifier)
         {
             logger.AddUserMessage("Requesting CRCs from PCM...");
             foreach (MemoryRange range in ranges)
@@ -272,9 +242,11 @@ namespace PcmHacking
                 Query<UInt32> crcQuery = new Query<uint>(
                     this.device,
                     () => this.messageFactory.CreateCrcQuery(range.Address, range.Size),
-                    this.messageParser.ParseCrc,
+                    (message) => this.messageParser.ParseCrc(message, range.Address, range.Size),
                     this.logger,
-                    cancellationToken);
+                    cancellationToken,
+                    notifier);
+
                 Response<UInt32> crcResponse = await crcQuery.Execute();
 
                 if (crcResponse.Status != ResponseStatus.Success)
@@ -297,6 +269,11 @@ namespace PcmHacking
 
             foreach (MemoryRange range in ranges)
             {
+                if ((range.Type & blockTypes) == 0)
+                {
+                    continue;
+                }
+
                 if (range.ActualCrc != range.DesiredCrc)
                 {
                     return false;
@@ -307,7 +284,7 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Not yet implemented.
+        /// Not yet implemented. 
         /// </summary>
         private async Task<bool> OsAndCalibrationWrite(CancellationToken cancellationToken, byte[] image)
         {

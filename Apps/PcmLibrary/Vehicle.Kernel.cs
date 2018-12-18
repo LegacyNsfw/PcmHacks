@@ -170,6 +170,45 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Check for a running kernel. TODO: Add a kernel-version query, so the caller can ask WHICH kernel is running.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> IsKernelRunning()
+        {
+            Message query = this.messageFactory.CreateFlashMemoryTypeQuery();
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                if (!await this.device.SendMessage(query))
+                {
+                    await Task.Delay(250);
+                    continue;
+                }
+
+                Message reply = await this.device.ReceiveMessage();
+                if (reply == null)
+                {
+                    await Task.Delay(250);
+                    continue;
+                }
+
+                Response<UInt32> response = this.messageParser.ParseFlashMemoryType(reply);
+                if (response.Status == ResponseStatus.Success)
+                {
+                    return true;
+                }
+
+                if (response.Status == ResponseStatus.Refused)
+                {
+                    return false;
+                }
+
+                await Task.Delay(250);
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Load the executable payload on the PCM at the supplied address, and execute it.
         /// </summary>
         public async Task<bool> PCMExecute(byte[] payload, int address, CancellationToken cancellationToken)

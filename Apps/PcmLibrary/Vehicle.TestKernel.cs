@@ -74,17 +74,32 @@ namespace PcmHacking
                     }
 
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
+                }
 
-                    // Which flash chip?
-                    Query<UInt32> chipIdQuery = new Query<uint>(
-                        this.device,
-                        this.messageFactory.CreateFlashMemoryTypeQuery,
-                        this.messageParser.ParseFlashMemoryType,
-                        this.logger,
-                        cancellationToken);
-                    Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
+                // Which flash chip?
+                Query<UInt32> chipIdQuery = new Query<uint>(
+                    this.device,
+                    this.messageFactory.CreateFlashMemoryTypeQuery,
+                    this.messageParser.ParseFlashMemoryType,
+                    this.logger,
+                    cancellationToken);
+                Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
 
-                    this.logger.AddUserMessage("Flash chip ID = " + chipIdResponse.Value.ToString("X8"));
+                this.logger.AddUserMessage("Flash chip ID = " + chipIdResponse.Value.ToString("X8"));
+
+                await this.device.SendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x02 }));
+
+                await Task.Delay(100);
+
+                for(int i = 1; i < 20; i++)
+                {
+                    Message rx;
+                    while ((rx = await this.device.ReceiveMessage()) != null)
+                    {
+                        this.logger.AddUserMessage(rx.ToString());
+                    }
+
+                    await Task.Delay(100);
                 }
 
                 return true;

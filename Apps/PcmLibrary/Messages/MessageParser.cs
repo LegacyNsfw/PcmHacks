@@ -437,10 +437,25 @@ namespace PcmHacking
         }
 
 
-        internal Response<UInt32> ParseCrc(Message responseMessage)
+        internal Response<UInt32> ParseCrc(Message responseMessage, UInt32 address, UInt32 size)
         {
             ResponseStatus status;
-            byte[] expected = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7D, 0x01 };
+
+            byte[] expected = new byte[]
+            {
+                0x6C,
+                DeviceId.Tool,
+                DeviceId.Pcm,
+                0x7D,
+                0x01,
+                unchecked((byte)(size >> 16)),
+                unchecked((byte)(size >> 8)),
+                unchecked((byte)size),
+                unchecked((byte)(address >> 16)),
+                unchecked((byte)(address >> 8)),
+                unchecked((byte)address),
+            };
+
             if (!TryVerifyInitialBytes(responseMessage, expected, out status))
             {
                 return Response.Create(status, (UInt32)0);

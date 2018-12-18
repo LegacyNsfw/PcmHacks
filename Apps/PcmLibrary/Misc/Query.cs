@@ -32,11 +32,16 @@ namespace PcmHacking
         /// Code that will select the response from whatever VPW messages appear on the bus.
         /// </summary>
         private Func<Message, Response<T>> filter;
-
+                
         /// <summary>
         /// This will indicate when the user has requested cancellation.
         /// </summary>
         private CancellationToken cancellationToken;
+
+        /// <summary>
+        /// Optionally use tool-present messages as a way of polling for slow responses.
+        /// </summary>
+        private ToolPresentNotifier notifier;
 
         /// <summary>
         /// Provides access to the Results and Debug panes.
@@ -46,12 +51,13 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Query(Device device, Func<Message> generator, Func<Message, Response<T>> filter, ILogger logger, CancellationToken cancellationToken)
+        public Query(Device device, Func<Message> generator, Func<Message, Response<T>> filter, ILogger logger, CancellationToken cancellationToken, ToolPresentNotifier notifier = null)
         {
             this.device = device;
             this.generator = generator;
             this.filter = filter;
             this.logger = logger;
+            this.notifier = notifier;
             this.cancellationToken = cancellationToken;
         }
 
@@ -90,7 +96,7 @@ namespace PcmHacking
                     if (received == null)
                     {
                         timeouts++;
-                        if (timeouts >= 2)
+                        if (timeouts >= 5)
                         {
                             // Maybe try sending again if we haven't run out of send attempts.
                             this.logger.AddDebugMessage(
@@ -99,6 +105,11 @@ namespace PcmHacking
                                     receiveAttempt,
                                     timeouts));
                             break;
+                        }
+
+                        if (this.notifier != null)
+                        {
+                            await this.notifier.ForceNotify();
                         }
 
                         continue;
