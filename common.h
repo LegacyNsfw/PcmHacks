@@ -1,15 +1,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Code that will be useful in different types of kernels.
 ///////////////////////////////////////////////////////////////////////////////
+#ifndef EXTERN
+#define EXTERN extern
+#endif
 
-extern char volatile * const DLC_Configuration;
-extern char volatile * const DLC_InterruptConfiguration;
-extern char volatile * const DLC_Transmit_Command;
-extern char volatile * const DLC_Transmit_FIFO;
-extern char volatile * const DLC_Status;
-extern char volatile * const DLC_Receive_FIFO;
-extern char volatile * const Watchdog1;
-extern char volatile * const Watchdog2;
+EXTERN char volatile * const DLC_Configuration;
+EXTERN char volatile * const DLC_InterruptConfiguration;
+EXTERN char volatile * const DLC_Transmit_Command;
+EXTERN char volatile * const DLC_Transmit_FIFO;
+EXTERN char volatile * const DLC_Status;
+EXTERN char volatile * const DLC_Receive_FIFO;
+EXTERN char volatile * const Watchdog1;
+EXTERN char volatile * const Watchdog2;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -22,11 +25,12 @@ extern char volatile * const Watchdog2;
 // 4096 == 0x1000
 #define MessageBufferSize 1024
 #define BreadcrumbBufferSize 6
-extern unsigned char __attribute((section(".kerneldata"))) MessageBuffer[];
+EXTERN unsigned char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
 
 // Code can add data to this buffer while doing something that doesn't work
 // well, and then dump this buffer later to find out what was going on.
-extern unsigned char __attribute((section(".kerneldata"))) BreadcrumbBuffer[];
+EXTERN unsigned char __attribute((section(".kerneldata"))) BreadcrumbBuffer[BreadcrumbBufferSize];
+EXTERN unsigned __attribute((section(".kerneldata"))) breadcrumbs;
 
 // Uncomment one of these to determine which way to use the breadcrumb buffer.
 //#define RECEIVE_BREADCRUMBS
@@ -111,6 +115,11 @@ void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3, unsig
 void SendToolPresent2(unsigned int value);
 
 ///////////////////////////////////////////////////////////////////////////////
+// Send the breadcrumb array as a payload of a tool-present message.
+///////////////////////////////////////////////////////////////////////////////
+void SendBreadcrumbs(char code);
+
+///////////////////////////////////////////////////////////////////////////////
 // Send the breadcrumb array, then reboot.
 // This is useful in figuring out how the kernel got into a bad state.
 ///////////////////////////////////////////////////////////////////////////////
@@ -135,4 +144,4 @@ void SetBlockChecksum(int length, unsigned short checksum);
 // Utility functions to compute CRC for memory ranges.
 ///////////////////////////////////////////////////////////////////////////////
 void crcInit(void);
-unsigned int crcFast(unsigned char const message[], int nBytes);
+unsigned int crcFast(unsigned char *message, int nBytes);

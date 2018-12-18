@@ -5,7 +5,7 @@ SECTIONS
 		main.o	
 	}
 
-	.kernel_data (0xFFC000) :
+	.kernel_data (0xFFB000) :
 	{
 		write-kernel.o (.kerneldata)
 		common.o (.kerneldata)

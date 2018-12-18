@@ -56,7 +56,7 @@ void crcInit(void)
 
 }   /* crcInit() */
 
-crc crcFast(unsigned char const message[], int nBytes)
+crc crcFast(unsigned char *message, int nBytes)
 {
     uint8_t data;
     crc remainder = 0;

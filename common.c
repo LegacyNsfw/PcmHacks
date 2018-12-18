@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Code that will be useful in different types of kernels.
 ///////////////////////////////////////////////////////////////////////////////
-
+#define EXTERN
+#include "common.h"
 char volatile * const DLC_Configuration = (char*)0xFFF600;
 char volatile * const DLC_InterruptConfiguration = (char*)0xFFF606;
 char volatile * const DLC_Transmit_Command = (char*)0xFFF60C;
@@ -21,17 +22,11 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 // because it will just add 8kb of 0x00 bytes to the kernel bin file.
 //
 // 4096 == 0x1000
-#define MessageBufferSize 1024
-#define BreadcrumbBufferSize 100
 unsigned char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
 
 // Code can add data to this buffer while doing something that doesn't work
 // well, and then dump this buffer later to find out what was going on.
 unsigned char __attribute((section(".kerneldata"))) BreadcrumbBuffer[BreadcrumbBufferSize];
-
-// Uncomment one of these to determine which way to use the breadcrumb buffer.
-//#define RECEIVE_BREADCRUMBS
-//#define TRANSMIT_BREADCRUMBS
 
 ///////////////////////////////////////////////////////////////////////////////
 // This needs to be called periodically to prevent the PCM from rebooting.
@@ -93,19 +88,6 @@ void ClearBreadcrumbBuffer()
 		BreadcrumbBuffer[index] = 0;
 	}
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// Indicates whether the buffer passed to WriteMessage contains the beginning,
-// middle, or end of a message. 
-///////////////////////////////////////////////////////////////////////////////
-typedef enum
-{
-	Invalid = 0,
-	Start = 1,
-	Middle = 2,
-	End = 4,
-	Complete = Start | End,
-} Segment;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Send the given bytes over the VPW bus.
@@ -251,6 +233,9 @@ int ReadMessage(char *completionCode, char *readState)
 		case 7: // Buffer contains a completion code only.
 			*completionCode = *DLC_Receive_FIFO;
 
+#ifdef RECEIVE_BREADCRUMBS
+			BreadcrumbBuffer[breadcrumbIndex++] = *completionCode;
+#endif
 			// Not sure if this is necessary - the code works without it, but it seems
 			// like a good idea according to 5.1.3.2. of the DLC data sheet.
 			*DLC_Transmit_Command = 0x02;
@@ -259,9 +244,6 @@ int ReadMessage(char *completionCode, char *readState)
 			// any message data at all. Not sure why.
 			if (length == 0)
 			{
-#ifdef RECEIVE_BREADCRUMBS
-				BreadcrumbBuffer[breadcrumbIndex++] = *completionCode;
-#endif
 				break;
 			}
 
@@ -351,7 +333,7 @@ void Reboot(unsigned int value)
 ///////////////////////////////////////////////////////////////////////////////
 void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3, unsigned char b4)
 {
-	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00, 0x00 };
+	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00, 0x00, 0x00 };
 	toolPresent[4] = b1;
 	toolPresent[5] = b2;
 	toolPresent[6] = b3;
@@ -370,19 +352,26 @@ void SendToolPresent2(unsigned int value)
 		(value & 0x000000FF));
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Send the breadcrumb array, then reboot.
-// This is useful in figuring out how the kernel got into a bad state.
-///////////////////////////////////////////////////////////////////////////////
-void SendBreadcrumbsReboot(char code, int breadcrumbs)
+#if defined(RECEIVE_BREADCRUMBS) || defined(TRANSMIT_BREADCRUMBS) || defined(MODEBYTE_BREADCRUMBS)
+void SendBreadcrumbs(char code)
 {
 	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, code };
 	WriteMessage(toolPresent, 5, Start);
 	WriteMessage(BreadcrumbBuffer, breadcrumbs, End);
 	LongSleepWithWatchdog();
 	LongSleepWithWatchdog();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Send the breadcrumb array, then reboot.
+// This is useful in figuring out how the kernel got into a bad state.
+///////////////////////////////////////////////////////////////////////////////
+void SendBreadcrumbsReboot(char code, int breadcrumbs)
+{
+	SendBreadcrumbs(code);
 	Reboot(code);
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Comput the checksum for the header of an outgoing message.

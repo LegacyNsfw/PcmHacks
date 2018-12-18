@@ -52,6 +52,9 @@ void HandleFlashChipQueryMode3D()
 	// This tells the flash chip to operate normally again.
 	*zeroPointer = read_array_command;
 
+	// Not sure if this is necessary.
+	*SIM_CSOR0 = 0x1060;
+
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
@@ -69,34 +72,85 @@ void HandleCrcQueryMode3D()
 	unsigned length = MessageBuffer[5];
 	length <<= 8;
 	length |= MessageBuffer[6];
-
-	unsigned start = MessageBuffer[7];
-	start <<= 8;
-	start |= MessageBuffer[8];
+	length <<= 8;
+	length |= MessageBuffer[7];
+	
+	unsigned start = MessageBuffer[8];
 	start <<= 8;
 	start |= MessageBuffer[9];
+	start <<= 8;
+	start |= MessageBuffer[10];
 
-	//unsigned crc = 0x12345678;
-//	ScratchWatchdog();
+#ifdef RECEIVE_BREADCRUMBS
+	SendBreadcrumbs(0x3D);
+#else
+	// I discovered by accident that the app is much better at getting
+	// the CRC responses if the kernel pauses here. That gives the app
+	// time to send a tool-present response, so the slow response to
+	// the CRC request gets processed as a response to the tool-present
+	// message. 
+	//
+	// This is fragile. There has to be a better way. But for now, this
+	// seems to work well enough.
+	LongSleepWithWatchdog();
+	LongSleepWithWatchdog();
+#endif
+
+	ScratchWatchdog();
 	crcInit();
-//	ScratchWatchdog();
-	unsigned crc = crcFast((char*) start, length);
+
+	ScratchWatchdog();
+	unsigned crc = crcFast((unsigned char*) start, length);
 
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7D;
 	MessageBuffer[4] = 0x01;
-	MessageBuffer[5] = (char)(length >> 8);
-	MessageBuffer[6] = (char)length;
-	MessageBuffer[7] = (char)(start >> 16);
-	MessageBuffer[8] = (char)(start >> 8);
-	MessageBuffer[9] = (char)start;
-	MessageBuffer[10] = (char)(crc >> 24);
-	MessageBuffer[11] = (char)(crc >> 16);
-	MessageBuffer[12] = (char)(crc >> 8);
-	MessageBuffer[13] = (char)crc;
-	WriteMessage(MessageBuffer, 14, Complete);
+	MessageBuffer[5] = (char)(length >> 16);
+	MessageBuffer[6] = (char)(length >> 8);
+	MessageBuffer[7] = (char)length;
+	MessageBuffer[8] = (char)(start >> 16);
+	MessageBuffer[9] = (char)(start >> 8);
+	MessageBuffer[10] = (char)start;
+	MessageBuffer[11] = (char)(crc >> 24);
+	MessageBuffer[12] = (char)(crc >> 16);
+	MessageBuffer[13] = (char)(crc >> 8);
+	MessageBuffer[14] = (char)crc;
+	WriteMessage(MessageBuffer, 15, Complete);
+}
+
+extern unsigned int *crcTable;
+
+void CheckStack()
+{
+	char test = 0;
+	unsigned pointer = (unsigned)&test;
+
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7D;
+	MessageBuffer[4] = 0x02;
+	MessageBuffer[5] = (char)(pointer >> 24);
+	MessageBuffer[6] = (char)(pointer >> 16);
+	MessageBuffer[7] = (char)(pointer >> 8);
+	MessageBuffer[8] = (char)(pointer >> 0);
+	WriteMessage(MessageBuffer, 9, Complete);
+
+	pointer = (unsigned)crcTable;
+
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7D;
+	MessageBuffer[4] = 0x02;
+	MessageBuffer[5] = (char)(pointer >> 24);
+	MessageBuffer[6] = (char)(pointer >> 16);
+	MessageBuffer[7] = (char)(pointer >> 8);
+	MessageBuffer[8] = (char)(pointer >> 0);
+	WriteMessage(MessageBuffer, 9, Complete);
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -148,6 +202,18 @@ void ProcessMessage()
 
 		case 0x01:
 			HandleCrcQueryMode3D();
+			break;
+
+		case 0x02:
+			CheckStack();
+			break;
+
+		default:
+			SendToolPresent(
+				0xDD,
+				MessageBuffer[4],
+				0,
+				0);
 			break;
 		}
 		break;
