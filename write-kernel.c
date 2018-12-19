@@ -313,40 +313,7 @@ void HandleEraseCalibrationRequest()
 
 	SendReply(success, 0x05, (char)status);
 }
-	/*
-MOVE.L #$640000,D2	*# of cycles to wait for flash erase to be complete
-		MOVE #$5050,(A0)	*Clear status register
-		MOVE #$2020,(A0)	*Set up for erase
-		MOVE #$D0D0,(A0)	*Confirm and resume erase
-		BSR LBL_DELAY		*Delay
-*
-		MOVE #$7070,(A0)	*Read status reg	
-*
-LBL_ERASE02:	BSR LBL_RESETCOP	*Do COP
-*
-		BSR LBL_DELAY		*Delay
-*
-		MOVE (A0),D1		*Load status reg
-		BTST #7,D1		*Test b7, flash ready
-		BNE LBL_ERASE01		*Bra if !=0, flash ready
-*
-		SUBQ.L #1,D2		*-1 from counter
-		BNE LBL_ERASE02		*Bra if !=, continue to wait
-*
-LBL_ERASE01:	ANDI #$00E8,D1		*Mask out status bits
-		CMPI #$0080,D1		*Compare to flash chip ready w/o errors
-		BEQ LBL_ERASE03		*Bra if ==, return
-*
-		MOVE.B #1,D0		*Signal erase failure
-*
-LBL_ERASE03:
-    	MOVE #$FFFF,(A0)	*Restore read array mode
-		MOVE #$FFFF,(A0)	*Confirm
-		MOVEM.L (A7)+,D1-D2	*Restore data regs
-		RTS			*Return
-*	
-	*/
-
+	
 ///////////////////////////////////////////////////////////////////////////////
 // Erase everything? Nope, not yet.
 ///////////////////////////////////////////////////////////////////////////////
@@ -397,7 +364,70 @@ void HandleDebugQuery()
 	MessageBuffer[7] = (char)(value >> 8);
 	MessageBuffer[8] = (char)(value >> 0);
 	WriteMessage(MessageBuffer, 9, Complete);
+}
 
+///////////////////////////////////////////////////////////////////////////////
+// Write data to flash memory.
+// This is invoked by HandleWriteMode36 in common-readwrite.c
+///////////////////////////////////////////////////////////////////////////////
+unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, unsigned char *data)
+{
+	char errorCode = 0;
+	unsigned short status;
+
+	UnlockFlash();
+
+	for (unsigned index = 0; index < length; index+=2)
+	{
+		unsigned short *address = (unsigned short*) (startAddress + index);		
+		unsigned short value = *((unsigned short*) data + index);
+
+		*address = 0x5050; // Clear status register
+		*address = 0x4040; // Program setup
+		*address = value;  // Program
+		*address = 0x7070; // Prepare to read status register
+
+		char success = 0;
+		for(int iterations = 0; iterations < 0x1000; iterations++)
+		{
+			status = *address;
+
+			ScratchWatchdog();
+//status = 0x80;
+			if (status & 0x80)
+			{
+				success = 1;
+				break;
+			}		
+
+			WasteTime();
+			WasteTime();
+		}
+
+		if (!success)
+		{
+			// Return flash to normal mode and return the error code.
+			errorCode = status;
+			*address = 0xFFFF;
+			*address = 0xFFFF;
+			LockFlash();
+			return errorCode;
+		}
+	}
+
+	// Return flash to normal mode.
+	unsigned short *startAddressPointer = (unsigned short*)startAddress;
+	*startAddressPointer = 0xFFFF;
+	*startAddressPointer = 0xFFFF;
+
+	// Check the last value we got from the status register.
+	if ((status & 0x98) != 0x80)
+	{
+		errorCode = status;
+	}
+
+	LockFlash();
+	return errorCode;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

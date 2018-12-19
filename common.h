@@ -151,3 +151,11 @@ void SetBlockChecksum(int length, unsigned short checksum);
 ///////////////////////////////////////////////////////////////////////////////
 void crcInit(void);
 unsigned int crcFast(unsigned char *message, int nBytes);
+
+///////////////////////////////////////////////////////////////////////////////
+// Write data to flash memory.
+//
+// Return value is 0 on success, or the value of the flash status register if
+// there is a flash error.
+///////////////////////////////////////////////////////////////////////////////
+unsigned char WriteToFlash(const unsigned start, const unsigned length, unsigned char *data);

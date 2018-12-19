@@ -92,11 +92,36 @@ void HandleWriteRequestMode34()
 	WriteMessage(MessageBuffer, 5, Complete);
 }
 
-typedef void(*EntryPoint)();
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Handle a mode-36 write.
 ///////////////////////////////////////////////////////////////////////////////
+void SendWriteSuccess()
+{
+	// Send response
+	MessageBuffer[0] = 0x6D;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x76;
+
+	WriteMessage(MessageBuffer, 4, Complete);
+}
+
+void SendWriteFail(unsigned char callerError, unsigned char flashError)
+{
+	MessageBuffer[0] = 0x6D;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7F;
+	MessageBuffer[4] = 0x36;
+	MessageBuffer[5] = callerError;
+	MessageBuffer[6] = flashError;
+	WriteMessage(MessageBuffer, 7, Complete);
+}
+
+typedef void(*EntryPoint)();
+
 void HandleWriteMode36()
 {
 	unsigned char command = MessageBuffer[4];
@@ -110,18 +135,6 @@ void HandleWriteMode36()
 	start |= MessageBuffer[8];
 	start <<= 8;
 	start |= MessageBuffer[9];
-
-	// Validate range
-	if ((length > 4096) || (start < 0xFFA000) || (start > 0xFFB000))
-	{
-		MessageBuffer[0] = 0x6D;
-		MessageBuffer[1] = 0xF0;
-		MessageBuffer[2] = 0x10;
-		MessageBuffer[3] = 0x7F;
-		MessageBuffer[4] = 0x36;
-		WriteMessage(MessageBuffer, 5, Complete);
-		return;
-	}
 
 	// Compute checksum
 	unsigned short checksum = 0;
@@ -155,31 +168,61 @@ void HandleWriteMode36()
 		return;
 	}
 
-	// Copy content
-	unsigned int address = 0;
-	for (int index = 0; index < length; index++)
-	{
-		if (index % 50 == 1)
-		{
-			ScratchWatchdog();
-		}
+	VariableSleep(2);
 
-		address = start + index;
-		*((unsigned char*)address) = MessageBuffer[10 + index];
+	if (start & 1)
+	{
+		// Misaligned data.
+		SendWriteFail(0xFF, 00);
+		return;
 	}
 
-	// Send response
-	MessageBuffer[0] = 0x6D;
-	MessageBuffer[1] = 0xF0;
-	MessageBuffer[2] = 0x10;
-	MessageBuffer[3] = 0x76;
-
-	WriteMessage(MessageBuffer, 4, Complete);
-		
-	// Execute
-	if (command == 0x80)
+	if ((start >= 0xFF8000) && (start+length <= 0xFFCDFF))
 	{
-		EntryPoint entryPoint = (EntryPoint)start;
-		entryPoint();
+		// Copy content	
+		unsigned int address = 0;
+		for (int index = 0; index < length; index++)
+		{
+			if (index % 50 == 1)
+			{
+				ScratchWatchdog();
+			}
+
+			address = start + index;
+			*((unsigned char*)address) = MessageBuffer[10 + index];
+		}
+
+		// Notify the tool that the write succeeded.
+		SendWriteSuccess();
+
+		// Let the success message flush.
+		LongSleepWithWatchdog();		
+
+		// Execute if requested to do so.
+		if (command == 0x80)
+		{
+			EntryPoint entryPoint = (EntryPoint)start;
+			entryPoint();
+		}
+	}
+	else if ((start >= 0x8000) && ((start+length) < 0x20000))
+	{
+		// Write to flash memory.
+		char flashError = WriteToFlash(length, start, &MessageBuffer[10]);
+
+		// Send success or failure.
+		if (flashError == 0)
+		{
+			SendWriteSuccess();
+		}
+		else
+		{
+			SendWriteFail(0, flashError);
+		}
+	}
+	else
+	{
+		// Bad memory range
+		SendWriteFail(0xEE, 0x00);
 	}
 }
