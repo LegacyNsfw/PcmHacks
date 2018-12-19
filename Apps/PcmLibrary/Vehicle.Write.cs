@@ -161,24 +161,24 @@ namespace PcmHacking
                 return true;
             }
 
-/* Unlocking will probably be done by the kernel automatically. 
- * But I'm keeping this code here, just commented out, in case that plan changes.
- * 
-            Query<byte> unlockRequest = new Query<byte>(
-                this.device,
-                this.messageFactory.CreateFlashUnlockRequest,
-                this.messageParser.ParseFlashUnlock,
-                this.logger,
-                cancellationToken);
-            Response<byte> unlockResponse = await unlockRequest.Execute();
+            /* Unlocking will probably be done by the kernel automatically. 
+             * But I'm keeping this code here, just commented out, in case that plan changes.
+             * 
+                        Query<byte> unlockRequest = new Query<byte>(
+                            this.device,
+                            this.messageFactory.CreateFlashUnlockRequest,
+                            this.messageParser.ParseFlashUnlock,
+                            this.logger,
+                            cancellationToken);
+                        Response<byte> unlockResponse = await unlockRequest.Execute();
 
-            if (unlockResponse.Status != ResponseStatus.Success)
-            {
-                this.logger.AddUserMessage("Unable to unlock flash memory. Code: " + unlockResponse.Value.ToString("X2"));
-                this.logger.AddUserMessage("The PCM is safe to use, no changes were made.");
-                return true;
-            }
-*/
+                        if (unlockResponse.Status != ResponseStatus.Success)
+                        {
+                            this.logger.AddUserMessage("Unable to unlock flash memory. Code: " + unlockResponse.Value.ToString("X2"));
+                            this.logger.AddUserMessage("The PCM is safe to use, no changes were made.");
+                            return true;
+                        }
+            */
 
             foreach (MemoryRange range in ranges)
             {
@@ -198,23 +198,25 @@ namespace PcmHacking
                         range.Address,
                         range.Address + (range.Size - 1)));
 
-                //this.logger.AddUserMessage("Erasing");
+                this.logger.AddUserMessage("Erasing");
 
                 Query<byte> eraseRequest = new Query<byte>(
                     this.device,
                     this.messageFactory.CreateFlashEraseCalibrationRequest,
                     this.messageParser.ParseFlashErase,
                     this.logger,
-                    cancellationToken);
-                eraseRequest.MaxTimeouts = 50; // Reduce this when we know how many are likely to be needed.
-                                               //                Response<byte> eraseResponse = await eraseRequest.Execute();
+                    cancellationToken,
+                    notifier);
 
-                //                if (eraseResponse.Status != ResponseStatus.Success)
-                //                {
-                //                  this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
-                //                this.RequestDebugLogs();
-                //                    return false;
-                //          }
+                eraseRequest.MaxTimeouts = 50; // Reduce this when we know how many are likely to be needed.
+                Response<byte> eraseResponse = await eraseRequest.Execute();
+
+                if (eraseResponse.Status != ResponseStatus.Success)
+                {
+                    this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
+                    this.RequestDebugLogs();
+                    return false;
+                }
 
                 this.logger.AddUserMessage("Writing");
                 await WriteMemoryRange(range, image, cancellationToken);
@@ -343,6 +345,11 @@ namespace PcmHacking
             int payloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
             for (int index = 0; index < range.Size; index += payloadSize)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return false;
+                }
+
                 int thisPayloadSize = Math.Min(payloadSize, (int)range.Size - index);
                 byte[] payload = new byte[payloadSize];
                 Buffer.BlockCopy(image, (int)(range.Address + index), payload, 0, payload.Length);
@@ -363,7 +370,7 @@ namespace PcmHacking
                         startAddress,
                         payloadSize));
 
-                // await this.WritePayload(payloadMessage, cancellationToken);
+                await this.WritePayload(payloadMessage, cancellationToken);
 
                 // Not checking the success or failure here.
                 // The debug pane will show if anything goes wrong, and the CRC check at the end will alert the user.
@@ -406,12 +413,14 @@ namespace PcmHacking
         /// <returns></returns>
         public IList<MemoryRange> GetMemoryRanges(UInt32 chipId)
         {
+            IList<MemoryRange> result = null;
+
             switch (chipId)
             {
                 // This is only here as a warning to anyone adding ranges for another chip.
                 // Please read the comments carefully. See case 0x00894471 for the real deal.
                 case 0xFFFF4471:
-                    return new MemoryRange[]
+                    var unused = new MemoryRange[]
                     {
                         // These numbers and descriptions are straight from the data sheet. 
                         // Notice that if you convert the hex sizes to decimal, they're all
@@ -425,10 +434,11 @@ namespace PcmHacking
                         new MemoryRange(0x02000, 0x01000, BlockType.Parameter), //   8kb parameter block
                         new MemoryRange(0x00000, 0x02000, BlockType.Boot), //  16kb boot block                        
                     };
+                    return null;
 
                 // Intel 28F400B
                 case 0x00894471:
-                    return new MemoryRange[]
+                    result = new MemoryRange[]
                     {
                         // All of these addresses and sizes are all 2x what's listed 
                         // in the data sheet, because the data sheet table assumes that
@@ -442,10 +452,45 @@ namespace PcmHacking
                         new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
                         new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block                        
                     };
+                    break;
 
                 default:
                     return null;
             }
+
+            // Sanity check the memory ranges
+            UInt32 lastStart = UInt32.MaxValue;
+            for(int index = 0; index < result.Count; index++)
+            {
+                if (index == 0)
+                {
+                    UInt32 top = result[index].Address + result[index].Size;
+                    if ((top != 512 * 1024) && (top != 1024 * 1024))
+                    {
+                        throw new InvalidOperationException("Upper end of memory range must be 512k or 1024k.");
+                    }
+                }
+
+                if (index == result.Count - 1)
+                {
+                    if (result[index].Address != 0)
+                    {
+                        throw new InvalidOperationException("Memory ranges must start at zero.");
+                    }
+                }
+
+                if (lastStart != UInt32.MaxValue)
+                {
+                    if (lastStart != result[index].Address + result[index].Size)
+                    {
+                        throw new InvalidDataException("Top of this range must match base of range above.");
+                    }
+                }
+
+                lastStart = result[index].Address;
+            }
+
+            return result;
         }
     }
 }
