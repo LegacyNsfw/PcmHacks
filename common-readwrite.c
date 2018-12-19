@@ -205,7 +205,7 @@ void HandleWriteMode36()
 			entryPoint();
 		}
 	}
-	else if ((start >= 0x8000) && ((start+length) < 0x20000))
+	else if ((start >= 0x8000) && ((start+length) <= 0x20000))
 	{
 		// Write to flash memory.
 		char flashError = WriteToFlash(length, start, &MessageBuffer[10]);
