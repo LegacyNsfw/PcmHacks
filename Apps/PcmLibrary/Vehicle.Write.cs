@@ -180,6 +180,9 @@ namespace PcmHacking
                         }
             */
 
+            // TODO: Put a button for this in the UI.
+            bool justTestWrite = false;
+
             foreach (MemoryRange range in ranges)
             {
                 if (range.ActualCrc == range.DesiredCrc)
@@ -198,28 +201,31 @@ namespace PcmHacking
                         range.Address,
                         range.Address + (range.Size - 1)));
 
-                this.logger.AddUserMessage("Erasing");
-
-                Query<byte> eraseRequest = new Query<byte>(
-                    this.device,
-                    this.messageFactory.CreateFlashEraseCalibrationRequest,
-                    this.messageParser.ParseFlashErase,
-                    this.logger,
-                    cancellationToken,
-                    notifier);
-
-                eraseRequest.MaxTimeouts = 50; // Reduce this when we know how many are likely to be needed.
-                Response<byte> eraseResponse = await eraseRequest.Execute();
-
-                if (eraseResponse.Status != ResponseStatus.Success)
+                if (!justTestWrite)
                 {
-                    this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
-                    this.RequestDebugLogs();
-                    return false;
+                    this.logger.AddUserMessage("Erasing");
+
+                    Query<byte> eraseRequest = new Query<byte>(
+                        this.device,
+                        this.messageFactory.CreateFlashEraseCalibrationRequest,
+                        this.messageParser.ParseFlashErase,
+                        this.logger,
+                        cancellationToken,
+                        notifier);
+
+                    eraseRequest.MaxTimeouts = 50; // Reduce this when we know how many are likely to be needed.
+                    Response<byte> eraseResponse = await eraseRequest.Execute();
+
+                    if (eraseResponse.Status != ResponseStatus.Success)
+                    {
+                        this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
+                        this.RequestDebugLogs();
+                        return false;
+                    }
                 }
 
                 this.logger.AddUserMessage("Writing");
-                await WriteMemoryRange(range, image, cancellationToken);
+                await WriteMemoryRange(range, image, justTestWrite, cancellationToken);
             }
 
  /* See notes above regarding unlock/lock.
@@ -340,7 +346,7 @@ namespace PcmHacking
         /// <summary>
         /// Copy a single memory range to the PCM.
         /// </summary>
-        private async Task<bool> WriteMemoryRange(MemoryRange range, byte[] image, CancellationToken cancellationToken)
+        private async Task<bool> WriteMemoryRange(MemoryRange range, byte[] image, bool justTestWrite, CancellationToken cancellationToken)
         {
             int payloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
             for (int index = 0; index < range.Size; index += payloadSize)
@@ -361,7 +367,7 @@ namespace PcmHacking
                     0, // copy from start of payload array
                     payloadSize,
                     startAddress,
-                    false); // never execute
+                    justTestWrite ? BlockCopyType.TestWrite : BlockCopyType.Copy);
 
                 logger.AddUserMessage(
                     string.Format(

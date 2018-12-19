@@ -6,6 +6,18 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+    public enum BlockCopyType
+    {
+        // Copy to RAM or Flash
+        Copy = 0x00,
+
+        // Execute after copying to RAM
+        Execute = 0x80,
+
+        // Test copy to flash, but do not unlock or actually write.
+        TestWrite = 0x44,    
+    };
+
     /// <summary>
     /// This class is responsible for generating the messages that the app sends to the PCM.
     /// </summary>
@@ -143,14 +155,11 @@ namespace PcmHacking
         /// <summary>
         /// Create a block message from the supplied arguments.
         /// </summary>
-        public Message CreateBlockMessage(byte[] Payload, int Offset, int Length, int Address, bool Execute)
+        public Message CreateBlockMessage (byte[] Payload, int Offset, int Length, int Address, BlockCopyType copyType)
         {
             byte[] Buffer = new byte[10 + Length + 2];
             byte[] Header = new byte[10];
-
-            byte Exec = SubMode.NoExecute;
-            if (Execute == true) Exec = SubMode.Execute;
-
+        
             byte Size1 = unchecked((byte)(Length >> 8));
             byte Size2 = unchecked((byte)(Length & 0xFF));
             byte Addr1 = unchecked((byte)(Address >> 16));
@@ -161,7 +170,7 @@ namespace PcmHacking
             Header[1] = DeviceId.Pcm;
             Header[2] = DeviceId.Tool;
             Header[3] = Mode.PCMUpload;
-            Header[4] = Exec;
+            Header[4] = (byte)copyType;
             Header[5] = Size1;
             Header[6] = Size2;
             Header[7] = Addr1;

@@ -270,7 +270,7 @@ namespace PcmHacking
                 offset, 
                 remainder, 
                 address + offset, 
-                remainder == payload.Length);
+                remainder == payload.Length ? BlockCopyType.Execute : BlockCopyType.Copy);
 
             Response<bool> uploadResponse = await WritePayload(remainderMessage, cancellationToken);
             if (uploadResponse.Status != ResponseStatus.Success)
@@ -294,7 +294,7 @@ namespace PcmHacking
                     offset,
                     payloadSize,
                     startAddress,
-                    offset == 0);
+                    offset == 0 ? BlockCopyType.Execute : BlockCopyType.Copy);
 
                 logger.AddDebugMessage(
                     string.Format(
