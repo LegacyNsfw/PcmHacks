@@ -370,30 +370,43 @@ void HandleDebugQuery()
 // Write data to flash memory.
 // This is invoked by HandleWriteMode36 in common-readwrite.c
 ///////////////////////////////////////////////////////////////////////////////
-unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, unsigned char *data)
+unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, unsigned char *data, int testWrite)
 {
 	char errorCode = 0;
 	unsigned short status;
 
-	UnlockFlash();
+	if (!testWrite)
+	{
+		UnlockFlash();
+	}
 
 	for (unsigned index = 0; index < length; index+=2)
 	{
 		unsigned short *address = (unsigned short*) (startAddress + index);		
 		unsigned short value = *((unsigned short*) data + index);
 
-		*address = 0x5050; // Clear status register
-		*address = 0x4040; // Program setup
-		*address = value;  // Program
-		*address = 0x7070; // Prepare to read status register
+		if (!testWrite)
+		{
+			*address = 0x5050; // Clear status register
+			*address = 0x4040; // Program setup
+			*address = value;  // Program
+			*address = 0x7070; // Prepare to read status register
+		}
 
 		char success = 0;
 		for(int iterations = 0; iterations < 0x1000; iterations++)
 		{
-			status = *address;
+			if  (testWrite)
+			{	
+				status = 0x80;
+			}
+			else
+			{
+				status = *address;
+			}
 
 			ScratchWatchdog();
-//status = 0x80;
+
 			if (status & 0x80)
 			{
 				success = 1;
@@ -408,25 +421,33 @@ unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, u
 		{
 			// Return flash to normal mode and return the error code.
 			errorCode = status;
-			*address = 0xFFFF;
-			*address = 0xFFFF;
-			LockFlash();
+
+			if (!testWrite)
+			{
+				*address = 0xFFFF;
+				*address = 0xFFFF;
+				LockFlash();
+			}
+			
 			return errorCode;
 		}
 	}
 
-	// Return flash to normal mode.
-	unsigned short *startAddressPointer = (unsigned short*)startAddress;
-	*startAddressPointer = 0xFFFF;
-	*startAddressPointer = 0xFFFF;
-
+	if (!testWrite)
+	{
+		// Return flash to normal mode.
+		unsigned short *startAddressPointer = (unsigned short*)startAddress;
+		*startAddressPointer = 0xFFFF;
+		*startAddressPointer = 0xFFFF;
+		LockFlash();
+	}
+	
 	// Check the last value we got from the status register.
 	if ((status & 0x98) != 0x80)
 	{
 		errorCode = status;
 	}
 
-	LockFlash();
 	return errorCode;
 }
 

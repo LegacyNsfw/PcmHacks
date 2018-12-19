@@ -57,7 +57,7 @@ void ProcessMessage()
 ///////////////////////////////////////////////////////////////////////////////
 // This is needed to satisfy the compiler until we publish the secret sauce.
 ///////////////////////////////////////////////////////////////////////////////
-unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, unsigned char *data)
+unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, unsigned char *data, int testWrite)
 {
 	// This space intentionally left blank.
 }

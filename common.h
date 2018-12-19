@@ -19,16 +19,24 @@ EXTERN char volatile * const Watchdog2;
 // The linker needs to put these buffers after the kernel code, but before the
 // system registers that are at the top of the RAM space.
 //
-// The code that extracts the kernel bin needs to exclude that address range,
-// because it will just add 8kb of 0x00 bytes to the kernel bin file.
+// Usable RAM is four 4k blocks starting at FF8000.
+// We reserve 10kb for the kernel, and start global variables at FFA800,
+// leaving room for 6kb of globals. That's a little over 4k for the message
+// buffer, 1k for the CRC table, and a bit less than 1k left over.
 //
-// 4096 == 0x1000
-#define MessageBufferSize 1024
-#define BreadcrumbBufferSize 6
+// If necessary we could probably overlay the CRC buffer atop the message
+// buffer, since we don't need to start computing the CRC until after we
+// process the incoming message that requested the CRC.
+//
+// Message buffer is larger than the max payload size (4k for the AVT) plus
+// message header bytes (10 bytes header, 2 bytes checksum).
+
+#define MessageBufferSize (2048+20)
 EXTERN unsigned char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
 
 // Code can add data to this buffer while doing something that doesn't work
 // well, and then dump this buffer later to find out what was going on.
+#define BreadcrumbBufferSize 100
 EXTERN unsigned char __attribute((section(".kerneldata"))) BreadcrumbBuffer[BreadcrumbBufferSize];
 EXTERN unsigned __attribute((section(".kerneldata"))) breadcrumbs;
 
@@ -158,4 +166,4 @@ unsigned int crcFast(unsigned char *message, int nBytes);
 // Return value is 0 on success, or the value of the flash status register if
 // there is a flash error.
 ///////////////////////////////////////////////////////////////////////////////
-unsigned char WriteToFlash(const unsigned start, const unsigned length, unsigned char *data);
+unsigned char WriteToFlash(const unsigned start, const unsigned length, unsigned char *data, int testWrite);

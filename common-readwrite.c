@@ -208,7 +208,7 @@ void HandleWriteMode36()
 	else if ((start >= 0x8000) && ((start+length) <= 0x20000))
 	{
 		// Write to flash memory.
-		char flashError = WriteToFlash(length, start, &MessageBuffer[10]);
+		char flashError = WriteToFlash(length, start, &MessageBuffer[10], command == 0x44);
 
 		// Send success or failure.
 		if (flashError == 0)
