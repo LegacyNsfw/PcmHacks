@@ -75,7 +75,7 @@ namespace PcmHacking
                 logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
 
 
-
+                await this.InvestigateDataCorruption(cancellationToken);
                 return true;
             }
             catch (Exception exception)
@@ -87,6 +87,50 @@ namespace PcmHacking
             finally
             {
                 await this.Cleanup();
+            }
+        }
+
+        private async Task InvestigateDataCorruption(CancellationToken cancellationToken)
+        {
+            await this.device.SetTimeout(TimeoutScenario.Maximum);
+
+            for (int length = 2010; length < 2055; length += 16)
+            //for (int iterations = 0; iterations < 100; iterations++)
+            {
+                //int length = 2040;
+                byte[] payload = new byte[length];
+                for (int index = 0; index < length; index++)
+                {
+                    payload[index] = 1;
+                }
+
+                Message blockMessage = messageFactory.CreateBlockMessage(
+                    payload,
+                    0,
+                    length,
+                    0xFFB000,
+                    BlockCopyType.Copy);
+
+                for (int i = 3; i > 0; i--)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    if (!await device.SendMessage(blockMessage))
+                    {
+                        this.logger.AddDebugMessage("WritePayload: Unable to send message.");
+                        continue;
+                    }
+
+                    if (await this.WaitForSuccess(this.messageParser.ParseUploadResponse, cancellationToken))
+                    {
+                        break;
+                    }
+
+                    this.logger.AddDebugMessage("WritePayload: Upload request failed.");
+                }
             }
         }
     }

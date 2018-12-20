@@ -170,12 +170,12 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Check for a running kernel. TODO: Add a kernel-version query, so the caller can ask WHICH kernel is running.
+        /// Check for a running kernel.
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> IsKernelRunning()
+        public async Task<UInt32> GetKernelVersion()
         {
-            Message query = this.messageFactory.CreateFlashMemoryTypeQuery();
+            Message query = this.messageFactory.CreateKernelVersionQuery();
             for (int attempt = 0; attempt < 2; attempt++)
             {
                 if (!await this.device.SendMessage(query))
@@ -191,21 +191,21 @@ namespace PcmHacking
                     continue;
                 }
 
-                Response<UInt32> response = this.messageParser.ParseFlashMemoryType(reply);
+                Response<UInt32> response = this.messageParser.ParseKernelVersion(reply);
                 if (response.Status == ResponseStatus.Success)
                 {
-                    return true;
+                    return response.Value;
                 }
 
                 if (response.Status == ResponseStatus.Refused)
                 {
-                    return false;
+                    return 0;
                 }
 
                 await Task.Delay(250);
             }
 
-            return false;
+            return 0;
         }
 
         /// <summary>
@@ -318,6 +318,10 @@ namespace PcmHacking
                         "Kernel upload {0}% complete.",
                         percentDone));
             }
+
+            // Consider: return kernel version rather than boolean?
+            UInt32 kernelVersion = await this.GetKernelVersion();
+            this.logger.AddUserMessage("Kernel Version: " + kernelVersion.ToString("X8"));
 
             return true;
         }

@@ -24,7 +24,7 @@ namespace PcmHacking
         /// <summary>
         /// Replace the full contents of the PCM.
         /// </summary>
-        public async Task<bool> Write(WriteType writeType, bool kernelRunning, bool recoveryMode, CancellationToken cancellationToken, Stream stream)
+        public async Task<bool> Write(WriteType writeType, UInt32 kernelVersion, bool recoveryMode, CancellationToken cancellationToken, Stream stream)
         {
             byte[] image = new byte[stream.Length];
             int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
@@ -41,13 +41,27 @@ namespace PcmHacking
                 return false;
             }
 
+            // Sanity checks
+            if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
+            {
+                this.logger.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
+                return false;
+            }
+
+            if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
+            {
+                this.logger.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
+                return false;
+            }
+
             ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
 
             try
             {
                 this.device.ClearMessageQueue();
 
-                if (!kernelRunning)
+                // TODO: install newer version if available.
+                if (kernelVersion == 0)
                 {
                     // switch to 4x, if possible. But continue either way.
                     // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
@@ -96,10 +110,24 @@ namespace PcmHacking
                     case WriteType.Full:
                         success = await this.FullWrite(cancellationToken, image);
                         break;
+
+                    default:
+                        this.logger.AddUserMessage("Unsupported write operation: " + writeType.ToString());
+                        success = false;
+                        break;
                 }
 
-                await this.Cleanup();
-                return true;
+                // We only do cleanup after a successful write.
+                // If the kernel remains running, the user can try to flash again without rebooting and reloading.
+                // TODO: kernel should send tool-present messages to keep itself in control.
+                // TODO: kernel version should be stored at a fixed location in the bin file.
+                // TODO: app should check kernel version (not just "is present") and reload only if version is lower than version in kernel file.
+                if (success)
+                {
+                    await this.Cleanup();
+                }
+
+                return success;
             }
             catch (Exception exception)
             {
@@ -181,7 +209,7 @@ namespace PcmHacking
             */
 
             // TODO: Put a button for this in the UI.
-            bool justTestWrite = false;
+            bool justTestWrite = true;
 
             foreach (MemoryRange range in ranges)
             {

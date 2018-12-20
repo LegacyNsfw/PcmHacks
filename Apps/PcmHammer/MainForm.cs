@@ -771,8 +771,8 @@ namespace PcmHacking
                 {
                     return;
                 }
-                
-                bool kernelRunning = false;
+
+                UInt32 kernelVersion = 0;
 
                 try
                 {
@@ -786,11 +786,9 @@ namespace PcmHacking
                     else
                     {
                         this.AddUserMessage("PCM is not in recovery mode.");
-                        if (await vehicle.IsKernelRunning())
-                        {
-                            kernelRunning = true;
-                        }
-                        else
+
+                        kernelVersion = await vehicle.GetKernelVersion();
+                        if (kernelVersion == 0)
                         {
                             this.AddUserMessage("Requesting operating system ID...");
                             Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
@@ -815,7 +813,7 @@ namespace PcmHacking
 
                     using (Stream stream = File.OpenRead(path))
                     {
-                        await this.vehicle.Write(writeType, kernelRunning, recoveryMode, this.cancellationTokenSource.Token, stream);
+                        await this.vehicle.Write(writeType, kernelVersion, recoveryMode, this.cancellationTokenSource.Token, stream);
                     }
                 }
                 catch (IOException exception)
