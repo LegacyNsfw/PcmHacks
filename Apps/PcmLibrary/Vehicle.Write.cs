@@ -213,25 +213,25 @@ namespace PcmHacking
 
                 if (!justTestWrite)
                 {
-                    this.logger.AddUserMessage("Erasing");
+                    //this.logger.AddUserMessage("Erasing");
 
-                    Query<byte> eraseRequest = new Query<byte>(
-                        this.device,
-                        this.messageFactory.CreateFlashEraseCalibrationRequest,
-                        this.messageParser.ParseFlashErase,
-                        this.logger,
-                        cancellationToken,
-                        notifier);
+//                    Query<byte> eraseRequest = new Query<byte>(
+  //                      this.device,
+    //                    this.messageFactory.CreateFlashEraseCalibrationRequest,
+      //                  this.messageParser.ParseFlashErase,
+        //                this.logger,
+          //              cancellationToken,
+            //            notifier);
 
-                    eraseRequest.MaxTimeouts = 50; // Reduce this when we know how many are likely to be needed.
-                    Response<byte> eraseResponse = await eraseRequest.Execute();
+              //      eraseRequest.MaxTimeouts = 50; // Reduce this when we know how many are likely to be needed.
+                //    Response<byte> eraseResponse = await eraseRequest.Execute();
 
-                    if (eraseResponse.Status != ResponseStatus.Success)
-                    {
-                        this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
-                        this.RequestDebugLogs(cancellationToken);
-                        return false;
-                    }
+//                    if (eraseResponse.Status != ResponseStatus.Success)
+  //                  {
+    //                    this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
+      //                  this.RequestDebugLogs(cancellationToken);
+        //                return false;
+          //          }
                 }
 
                 this.logger.AddUserMessage("Writing");
@@ -343,24 +343,21 @@ namespace PcmHacking
         /// </summary>
         private async Task<bool> WriteMemoryRange(MemoryRange range, byte[] image, bool justTestWrite, CancellationToken cancellationToken)
         {
-            int payloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
-            for (int index = 0; index < range.Size; index += payloadSize)
+            int devicePayloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
+            for (int index = 0; index < range.Size; index += devicePayloadSize)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return false;
                 }
 
-                int thisPayloadSize = Math.Min(payloadSize, (int)range.Size - index);
-                byte[] payload = new byte[payloadSize];
-                Buffer.BlockCopy(image, (int)(range.Address + index), payload, 0, payload.Length);
-
                 int startAddress = (int)(range.Address + index);
-
+                int thisPayloadSize = Math.Min(devicePayloadSize, (int)range.Size - index);
+                                                
                 Message payloadMessage = messageFactory.CreateBlockMessage(
-                    payload,
-                    0, // copy from start of payload array
-                    payloadSize,
+                    image,
+                    startAddress,
+                    thisPayloadSize,
                     startAddress,
                     justTestWrite ? BlockCopyType.TestWrite : BlockCopyType.Copy);
 
@@ -369,7 +366,7 @@ namespace PcmHacking
                         "Sending payload with offset 0x{0:X4}, start address 0x{1:X6}, length 0x{2:X4}.",
                         index,
                         startAddress,
-                        payloadSize));
+                        thisPayloadSize));
 
                 await this.WritePayload(payloadMessage, cancellationToken);
 
