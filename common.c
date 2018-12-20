@@ -459,10 +459,10 @@ void HandleVersionQuery()
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7D;
 	MessageBuffer[4] = 0x00;
-	MessageBuffer[5] = 0x00; // major
+	MessageBuffer[5] = 0x01; // major
 	MessageBuffer[6] = 0x00; // minor
-	MessageBuffer[7] = 0x04; // patch
-	MessageBuffer[8] = 0xAA; // TBD
+	MessageBuffer[7] = 0x00; // patch
+	MessageBuffer[8] = 0xAA; // quality (AA = alpha, BB = beta, 00 = release)
 
 	// The AllPro and ScanTool devices need a short delay to switch from 
 	// sending to receiving. Otherwise they'll miss the response.

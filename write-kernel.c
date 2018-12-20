@@ -134,9 +134,6 @@ void HandleCrcQuery()
 	start <<= 8;
 	start |= MessageBuffer[10];
 
-#ifdef RECEIVE_BREADCRUMBS
-	SendBreadcrumbs(0x3D);
-#else
 	// I discovered by accident that the app is much better at getting
 	// the CRC responses if the kernel pauses here. That gives the app
 	// time to send a tool-present response, so the slow response to
@@ -145,9 +142,23 @@ void HandleCrcQuery()
 	//
 	// This is fragile. There has to be a better way. But for now, this
 	// seems to work well enough.
-	LongSleepWithWatchdog();
-	LongSleepWithWatchdog();
-#endif
+	switch(length)
+	{
+		case 0x18000:
+		case 0x20000:
+			LongSleepWithWatchdog();
+			LongSleepWithWatchdog();
+			break;
+
+		case 0x2000:
+			LongSleepWithWatchdog();
+			LongSleepWithWatchdog();
+			LongSleepWithWatchdog();
+			LongSleepWithWatchdog();
+			LongSleepWithWatchdog();
+			LongSleepWithWatchdog();
+			break;
+	}
 
 	ScratchWatchdog();
 	crcInit();
@@ -520,6 +531,10 @@ void ProcessMessage()
 				0);
 			break;
 		}
+		break;
+
+	case 0x3F:
+		// Ignore tool-present messages.
 		break;
 
 	default:
