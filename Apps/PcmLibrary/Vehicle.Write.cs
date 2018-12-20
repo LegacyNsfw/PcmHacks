@@ -41,7 +41,10 @@ namespace PcmHacking
                 return false;
             }
 
-            // Sanity checks
+            // Sanity checks. 
+            // TODO: Check OSID as well.
+            // These checks might belong in the UI layer, especially the OSID check since the user 
+            // might by changing operating systems deliberately, especially with a full flash.
             if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
             {
                 this.logger.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
@@ -52,7 +55,7 @@ namespace PcmHacking
             {
                 this.logger.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
                 return false;
-            }
+            }            
 
             ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
 
@@ -178,8 +181,6 @@ namespace PcmHacking
                 return false;
             }
 
-            // TODO: check tags for each segment, fail if invalid, so we don't flash garbage.
-
             logger.AddUserMessage("Computing CRCs from local file...");
             this.GetCrcFromImage(ranges, image);
 
@@ -189,27 +190,8 @@ namespace PcmHacking
                 return true;
             }
 
-            /* Unlocking will probably be done by the kernel automatically. 
-             * But I'm keeping this code here, just commented out, in case that plan changes.
-             * 
-                        Query<byte> unlockRequest = new Query<byte>(
-                            this.device,
-                            this.messageFactory.CreateFlashUnlockRequest,
-                            this.messageParser.ParseFlashUnlock,
-                            this.logger,
-                            cancellationToken);
-                        Response<byte> unlockResponse = await unlockRequest.Execute();
-
-                        if (unlockResponse.Status != ResponseStatus.Success)
-                        {
-                            this.logger.AddUserMessage("Unable to unlock flash memory. Code: " + unlockResponse.Value.ToString("X2"));
-                            this.logger.AddUserMessage("The PCM is safe to use, no changes were made.");
-                            return true;
-                        }
-            */
-
             // TODO: Put a button for this in the UI.
-            bool justTestWrite = true;
+            bool justTestWrite = false;
 
             foreach (MemoryRange range in ranges)
             {
@@ -247,7 +229,7 @@ namespace PcmHacking
                     if (eraseResponse.Status != ResponseStatus.Success)
                     {
                         this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
-                        this.RequestDebugLogs();
+                        this.RequestDebugLogs(cancellationToken);
                         return false;
                     }
                 }
@@ -255,25 +237,6 @@ namespace PcmHacking
                 this.logger.AddUserMessage("Writing");
                 await WriteMemoryRange(range, image, justTestWrite, cancellationToken);
             }
-
- /* See notes above regarding unlock/lock.
-  * 
-            Query<byte> lockRequest = new Query<byte>(
-                this.device,
-                this.messageFactory.CreateFlashUnlockRequest,
-                this.messageParser.ParseFlashUnlock,
-                this.logger,
-                cancellationToken);
-            Response<byte> lockResponse = await unlockRequest.Execute();
-
-            if (lockResponse.Status != ResponseStatus.Success)
-            {
-                this.logger.AddUserMessage("Unable to lock flash memory. Code: " + unlockResponse.Value.ToString("X2"));
-                this.logger.AddUserMessage("If the changes were successful (see below), you should probably power-cycle the PCM before continuing.");
-                this.logger.AddUserMessage("If the changes were not successful, try flashing again.");
-                this.logger.AddUserMessage("Either way, please report this on the pcmhacking.net forum so that we can investigate.");
-            }
-*/
 
             if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken, notifier))
             {
@@ -284,15 +247,19 @@ namespace PcmHacking
             this.logger.AddUserMessage("===============================================");
             this.logger.AddUserMessage("THE CHANGES WERE -NOT- WRITTEN SUCCESSFULLY");
             this.logger.AddUserMessage("===============================================");
-            this.logger.AddUserMessage("Don't panic. Also, don't try to drive this car.");
-            this.logger.AddUserMessage("Please try flashing again. Preferably now.");
-            this.logger.AddUserMessage("In most cases, the second try will succeed.");
-            this.logger.AddUserMessage("");
-            this.logger.AddUserMessage("If this happens three times in a row, please");
-            this.logger.AddUserMessage("start a new thread at pcmhacking.net, and");
-            this.logger.AddUserMessage("include the contents of the debug tab.");
-            this.logger.AddUserMessage("");
-            this.RequestDebugLogs();
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                this.logger.AddUserMessage("Don't panic. Also, don't try to drive this car.");
+                this.logger.AddUserMessage("Please try flashing again. Preferably now.");
+                this.logger.AddUserMessage("In most cases, the second try will succeed.");
+                this.logger.AddUserMessage("");
+                this.logger.AddUserMessage("If this happens three times in a row, please");
+                this.logger.AddUserMessage("start a new thread at pcmhacking.net, and");
+                this.logger.AddUserMessage("include the contents of the debug tab.");
+                this.logger.AddUserMessage("");
+                this.RequestDebugLogs(cancellationToken);
+            }
 
             return true;
         }
@@ -413,13 +380,17 @@ namespace PcmHacking
             return true;
         }
 
-        private void RequestDebugLogs()
+        /// <summary>
+        /// Ask the user for diagnostic information, unless they cancelled.
+        private void RequestDebugLogs(CancellationToken cancellationToken)
         {
-            this.logger.AddUserMessage("");
-            this.logger.AddUserMessage("Select the debug tab, click anywhere in the text,");
-            this.logger.AddUserMessage("press Ctrl+A to select the text, and Ctrl+C to");
-            this.logger.AddUserMessage("copy the text. Press Ctrl+V to paste that content");
-            this.logger.AddUserMessage("content into your forum post.");
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                this.logger.AddUserMessage("Select the debug tab, click anywhere in the text,");
+                this.logger.AddUserMessage("press Ctrl+A to select the text, and Ctrl+C to");
+                this.logger.AddUserMessage("copy the text. Press Ctrl+V to paste that content");
+                this.logger.AddUserMessage("content into your forum post.");
+            }
         }
 
         /// <summary>
