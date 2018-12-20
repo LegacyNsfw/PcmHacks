@@ -74,28 +74,6 @@ void SendReply(char success, unsigned char submode, unsigned char code)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Get the version of the kernel.
-///////////////////////////////////////////////////////////////////////////////
-void HandleVersionQuery()
-{
-	MessageBuffer[0] = 0x6C;
-	MessageBuffer[1] = 0xF0;
-	MessageBuffer[2] = 0x10;
-	MessageBuffer[3] = 0x7D;
-	MessageBuffer[4] = 0x00;
-	MessageBuffer[5] = 0x01; // major
-	MessageBuffer[6] = 0x00; // minor
-	MessageBuffer[7] = 0x00; // patch
-	MessageBuffer[8] = 0x00; // TBD
-
-	// The AllPro and ScanTool devices need a short delay to switch from 
-	// sending to receiving. Otherwise they'll miss the response.
-	VariableSleep(2);
-
-	WriteMessage(MessageBuffer, 9, Complete);
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Get the manufacturer and type of flash chip.
 ///////////////////////////////////////////////////////////////////////////////
 void HandleFlashChipQuery()
@@ -369,6 +347,7 @@ void HandleDebugQuery()
 ///////////////////////////////////////////////////////////////////////////////
 // Write data to flash memory.
 // This is invoked by HandleWriteMode36 in common-readwrite.c
+// read-kernel.c has a stub to keep the compiler happy until this is released.
 ///////////////////////////////////////////////////////////////////////////////
 unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, unsigned char *data, int testWrite)
 {
@@ -428,17 +407,23 @@ unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, u
 				*address = 0xFFFF;
 				LockFlash();
 			}
-			
+
 			return errorCode;
+		}
+
+		if (index == length-2)
+		{
+			if (!testWrite)
+			{
+				// Return flash to normal mode.
+				*address = 0xFFFF;
+				*address = 0xFFFF;
+			}	
 		}
 	}
 
 	if (!testWrite)
 	{
-		// Return flash to normal mode.
-		unsigned short *startAddressPointer = (unsigned short*)startAddress;
-		*startAddressPointer = 0xFFFF;
-		*startAddressPointer = 0xFFFF;
 		LockFlash();
 	}
 	
@@ -447,6 +432,9 @@ unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, u
 	{
 		errorCode = status;
 	}
+
+//	VariableSleep(3);
+//	SendToolPresent(0x99, testWrite, 0x99, testWrite);
 
 	return errorCode;
 }
@@ -568,7 +556,7 @@ KernelStart(void)
 	ClearMessageBuffer();
 	WasteTime();
 
-	SendToolPresent(0, 0, 0, 0);
+	SendToolPresent(1, 2, 3, 4);
 	LongSleepWithWatchdog();
 
 	// This loop runs out quickly, to force the PCM to reboot, to speed up testing.

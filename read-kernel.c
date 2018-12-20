@@ -44,6 +44,21 @@ void ProcessMessage()
 		SendToolPresent(0xB2, MessageBuffer[3], 0, 0);
 		break;
 
+	case 0x3D:
+		if (MessageBuffer[4] == 0x00)
+		{
+			HandleVersionQuery();
+		}
+		else
+		{
+			SendToolPresent(
+				0x3D,
+				MessageBuffer[4],
+				0,
+				0);
+		}
+		break;
+
 	default:
 		SendToolPresent(
 			0xAA,

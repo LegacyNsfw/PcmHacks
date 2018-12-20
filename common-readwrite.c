@@ -97,13 +97,14 @@ void HandleWriteRequestMode34()
 ///////////////////////////////////////////////////////////////////////////////
 // Handle a mode-36 write.
 ///////////////////////////////////////////////////////////////////////////////
-void SendWriteSuccess()
+void SendWriteSuccess(unsigned char code)
 {
 	// Send response
 	MessageBuffer[0] = 0x6D;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x76;
+	MessageBuffer[4] = code;
 
 	WriteMessage(MessageBuffer, 4, Complete);
 }
@@ -168,8 +169,6 @@ void HandleWriteMode36()
 		return;
 	}
 
-	VariableSleep(2);
-
 	if (start & 1)
 	{
 		// Misaligned data.
@@ -193,7 +192,7 @@ void HandleWriteMode36()
 		}
 
 		// Notify the tool that the write succeeded.
-		SendWriteSuccess();
+		SendWriteSuccess(command);
 
 		// Let the success message flush.
 		LongSleepWithWatchdog();		
@@ -206,14 +205,14 @@ void HandleWriteMode36()
 		}
 	}
 	else if ((start >= 0x8000) && ((start+length) <= 0x20000))
-	{
+	{		
 		// Write to flash memory.
 		char flashError = WriteToFlash(length, start, &MessageBuffer[10], command == 0x44);
 
 		// Send success or failure.
 		if (flashError == 0)
 		{
-			SendWriteSuccess();
+			SendWriteSuccess(command);
 		}
 		else
 		{
