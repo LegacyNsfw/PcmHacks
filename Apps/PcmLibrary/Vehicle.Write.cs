@@ -38,11 +38,11 @@ namespace PcmHacking
                 {
                     // switch to 4x, if possible. But continue either way.
                     // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-//                    if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
-//                    {
-//                        this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
-//                        return false;
-//                    }
+                    if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
+                    {
+                        this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
+                        return false;
+                    }
 
                     Response<byte[]> response = await LoadKernelFromFile("write-kernel.bin");
                     if (response.Status != ResponseStatus.Success)
@@ -158,8 +158,12 @@ namespace PcmHacking
                 relevantBlocks, 
                 cancellationToken, notifier))
             {
-                this.logger.AddUserMessage("All ranges are identical.");
-                return true;
+                // Don't stop here if the user just wants to test their cable.
+                if (writeType != WriteType.TestWrite)
+                {
+                    this.logger.AddUserMessage("All ranges are identical.");
+                    return true;
+                }
             }
 
             // Stop now if the user only requested a comparison.
@@ -171,7 +175,7 @@ namespace PcmHacking
             // Erase and rewrite the required memory ranges.
             foreach (MemoryRange range in ranges)
             {
-                if (range.ActualCrc == range.DesiredCrc)
+                if ((range.ActualCrc == range.DesiredCrc) && (writeType != WriteType.TestWrite))
                 {
                     continue;
                 }
@@ -210,7 +214,15 @@ namespace PcmHacking
                     }
                 }
 
-                this.logger.AddUserMessage("Writing");
+                if (writeType == WriteType.TestWrite)
+                {
+                    this.logger.AddUserMessage("Testing...");
+                }
+                else
+                {
+                    this.logger.AddUserMessage("Writing...");
+                }
+
                 await WriteMemoryRange(
                     range, 
                     image, 
@@ -218,17 +230,19 @@ namespace PcmHacking
                     cancellationToken);
             }
 
-            if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken, notifier))
-            {
-                this.logger.AddUserMessage("Flash successful!");
-                return true;
-            }
+            bool match = await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken, notifier);
 
             if (writeType == WriteType.TestWrite)
             {
                 // TODO: the app should know if any errors were encountered. The user shouldn't need to check.
                 this.logger.AddUserMessage("Test complete. Were any errors logged above?");
                 return false;
+            }
+
+            if (match)
+            {
+                this.logger.AddUserMessage("Flash successful!");
+                return true;
             }
 
             this.logger.AddUserMessage("===============================================");
