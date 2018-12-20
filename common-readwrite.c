@@ -31,10 +31,9 @@ void HandleReadMode35()
 	MessageBuffer[6] = 0x6C;
 	MessageBuffer[7] = 0xF0;
 
-	WriteMessage(MessageBuffer, 8, Complete);
-
 	// Give the tool time to proces that message (especially the AllPro)
-	LongSleepWithWatchdog();
+	VariableSleep(8);
+	WriteMessage(MessageBuffer, 8, Complete);
 
 	// Send the payload
 	MessageBuffer[0] = 0x6D;
@@ -52,8 +51,8 @@ void HandleReadMode35()
 	unsigned short checksum = StartChecksum();
 	checksum += AddReadPayloadChecksum((char*)start, length);
 
+	VariableSleep(8);
 	WriteMessage((char*)start, length, Middle);
-
 	WriteMessage((char*)&checksum, 2, End);
 }
 

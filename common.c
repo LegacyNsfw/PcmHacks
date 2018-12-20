@@ -68,6 +68,9 @@ void LongSleepWithWatchdog()
 ///////////////////////////////////////////////////////////////////////////////
 // Sleep for a variable amount of time. This should be close to Dimented24x7's
 // assembly-language implementation.
+// Consider cutting the inner loop down, and increasing the parameter at all
+// call sites. Consecutive messages-sends (e.g. in HandleReadMode35) work fine
+// with an inner loop of 100. Haven't tried 50 yet.
 ///////////////////////////////////////////////////////////////////////////////
 void VariableSleep(int iterations)
 {
@@ -456,9 +459,9 @@ void HandleVersionQuery()
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7D;
 	MessageBuffer[4] = 0x00;
-	MessageBuffer[5] = 0x01; // major
+	MessageBuffer[5] = 0x00; // major
 	MessageBuffer[6] = 0x00; // minor
-	MessageBuffer[7] = 0x03; // patch
+	MessageBuffer[7] = 0x04; // patch
 	MessageBuffer[8] = 0xAA; // TBD
 
 	// The AllPro and ScanTool devices need a short delay to switch from 

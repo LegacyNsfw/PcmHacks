@@ -349,7 +349,7 @@ void HandleDebugQuery()
 // This is invoked by HandleWriteMode36 in common-readwrite.c
 // read-kernel.c has a stub to keep the compiler happy until this is released.
 ///////////////////////////////////////////////////////////////////////////////
-unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, unsigned char *data, int testWrite)
+unsigned char WriteToFlash(const unsigned int payloadLengthInBytes, const unsigned int startAddress, unsigned char *payloadBytes, int testWrite)
 {
 	char errorCode = 0;
 	unsigned short status;
@@ -359,10 +359,13 @@ unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, u
 		UnlockFlash();
 	}
 
-	for (unsigned index = 0; index < length; index+=2)
+	unsigned short* payloadArray = (unsigned short*) payloadBytes;
+	unsigned short* flashArray = (unsigned short*) startAddress; 
+
+	for (unsigned index = 0; index < payloadLengthInBytes / 2; index++)
 	{
-		unsigned short *address = (unsigned short*) (startAddress + index);		
-		unsigned short value = *((unsigned short*) data + index);
+		unsigned short *address = &(flashArray[index]);
+		unsigned short value = payloadArray[index];
 
 		if (!testWrite)
 		{
@@ -411,19 +414,14 @@ unsigned char WriteToFlash(const unsigned length, const unsigned startAddress, u
 			return errorCode;
 		}
 
-		if (index == length-2)
-		{
-			if (!testWrite)
-			{
-				// Return flash to normal mode.
-				*address = 0xFFFF;
-				*address = 0xFFFF;
-			}	
-		}
 	}
 
 	if (!testWrite)
 	{
+				// Return flash to normal mode.
+				unsigned short* address = (unsigned short*)startAddress;
+				*address = 0xFFFF;
+				*address = 0xFFFF;
 		LockFlash();
 	}
 	
