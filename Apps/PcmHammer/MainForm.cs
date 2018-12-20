@@ -191,6 +191,8 @@ namespace PcmHacking
             this.readPropertiesButton.Enabled = false;
             this.readFullContentsButton.Enabled = false;
             this.modifyVinButton.Enabled = false;
+            this.quickComparisonButton.Enabled = false;
+            this.testWriteButton.Enabled = false;
             this.writeCalibrationButton.Enabled = false;
             this.writeOsAndCalibration.Enabled = false;
             this.writeFullContentsButton.Enabled = false;
@@ -211,6 +213,8 @@ namespace PcmHacking
             this.readPropertiesButton.Invoke((MethodInvoker)delegate () { this.readPropertiesButton.Enabled = true; });
             this.readFullContentsButton.Invoke((MethodInvoker)delegate () { this.readFullContentsButton.Enabled = true; });
             this.modifyVinButton.Invoke((MethodInvoker)delegate () { this.modifyVinButton.Enabled = true; });
+            this.quickComparisonButton.Invoke((MethodInvoker)delegate () { this.quickComparisonButton.Enabled = true; });
+            this.testWriteButton.Invoke((MethodInvoker)delegate () { this.testWriteButton.Enabled = true; });
             this.writeCalibrationButton.Invoke((MethodInvoker)delegate () { this.writeCalibrationButton.Enabled = true; });
             this.writeOsAndCalibration.Invoke((MethodInvoker)delegate () { this.writeOsAndCalibration.Enabled = true; });
             this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true; });
@@ -542,7 +546,7 @@ namespace PcmHacking
             if (!BackgroundWorker.IsAlive)
             {
                 DialogResult result = MessageBox.Show(
-                    "Changing the operating system can render the PCM inoperable." + Environment.NewLine +
+                    "Changing the operating system can render the PCM unusable." + Environment.NewLine +
                     "Special tools may be needed to make the PCM work again." + Environment.NewLine +
                     "Are you sure you really want to take that risk?",
                     "This is dangerous.",
@@ -578,7 +582,7 @@ namespace PcmHacking
             if (!BackgroundWorker.IsAlive)
             {
                 DialogResult result = MessageBox.Show(
-                    "Changing the operating system can render the PCM inoperable." + Environment.NewLine +
+                    "Changing the operating system can render the PCM unusable." + Environment.NewLine +
                     "Special tools may be needed to make the PCM work again." + Environment.NewLine +
                     "Are you sure you really want to take that risk?",
                     "This is dangerous.",
@@ -596,6 +600,43 @@ namespace PcmHacking
                     BackgroundWorker.IsBackground = true;
                     BackgroundWorker.Start();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Compare block CRCs of a file and the PCM.
+        /// </summary>
+        private void quickComparisonButton_Click(object sender, EventArgs e)
+        {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            if (!BackgroundWorker.IsAlive)
+            {
+                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Compare));
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
+            }
+        }
+
+        private void testWriteButton_Click(object sender, EventArgs e)
+        {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            if (!BackgroundWorker.IsAlive)
+            {
+                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.TestWrite));
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
             }
         }
 
@@ -813,7 +854,36 @@ namespace PcmHacking
 
                     using (Stream stream = File.OpenRead(path))
                     {
-                        await this.vehicle.Write(writeType, kernelVersion, recoveryMode, this.cancellationTokenSource.Token, stream);
+                        byte[] image = new byte[stream.Length];
+                        int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
+                        if (bytesRead != stream.Length)
+                        {
+                            // If this happens too much, we should try looping rather than reading the whole file in one shot.
+                            this.AddUserMessage("Unable to load file.");
+                            return;
+                        }
+
+                        // Sanity checks. 
+                        // TODO: Check OSID as well, ask user to confirm if it doesn't match.
+                        if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024))
+                        {
+                            this.AddUserMessage("This file is not a supported size.");
+                            return;
+                        }
+
+                        if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
+                        {
+                            this.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
+                            return;
+                        }
+
+                        if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
+                        {
+                            this.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
+                            return;
+                        }
+
+                        await this.vehicle.Write(writeType, kernelVersion, recoveryMode, this.cancellationTokenSource.Token, image);
                     }
                 }
                 catch (IOException exception)
@@ -907,7 +977,6 @@ namespace PcmHacking
             }
 
         }
-
     }
 }
  

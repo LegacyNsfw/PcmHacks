@@ -54,6 +54,8 @@
             this.releasedByAntus = new System.Windows.Forms.Label();
             this.releasedAtPcmHacking = new System.Windows.Forms.LinkLabel();
             this.releasedEtc = new System.Windows.Forms.Label();
+            this.quickComparisonButton = new System.Windows.Forms.Button();
+            this.testWriteButton = new System.Windows.Forms.Button();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -110,6 +112,8 @@
             // 
             this.operationsBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.operationsBox.Controls.Add(this.testWriteButton);
+            this.operationsBox.Controls.Add(this.quickComparisonButton);
             this.operationsBox.Controls.Add(this.writeOsAndCalibration);
             this.operationsBox.Controls.Add(this.testKernelButton);
             this.operationsBox.Controls.Add(this.writeFullContentsButton);
@@ -122,18 +126,18 @@
             this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
             this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
-            this.operationsBox.Size = new System.Drawing.Size(224, 345);
+            this.operationsBox.Size = new System.Drawing.Size(224, 428);
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
             // 
             // writeOsAndCalibration
             // 
-            this.writeOsAndCalibration.Location = new System.Drawing.Point(6, 136);
+            this.writeOsAndCalibration.Location = new System.Drawing.Point(6, 194);
             this.writeOsAndCalibration.Margin = new System.Windows.Forms.Padding(2);
             this.writeOsAndCalibration.Name = "writeOsAndCalibration";
             this.writeOsAndCalibration.Size = new System.Drawing.Size(214, 25);
-            this.writeOsAndCalibration.TabIndex = 4;
+            this.writeOsAndCalibration.TabIndex = 6;
             this.writeOsAndCalibration.Text = "Write &OS && Calibration";
             this.writeOsAndCalibration.UseVisualStyleBackColor = true;
             this.writeOsAndCalibration.Visible = false;
@@ -141,22 +145,22 @@
             // 
             // testKernelButton
             // 
-            this.testKernelButton.Location = new System.Drawing.Point(6, 224);
+            this.testKernelButton.Location = new System.Drawing.Point(6, 301);
             this.testKernelButton.Margin = new System.Windows.Forms.Padding(2);
             this.testKernelButton.Name = "testKernelButton";
             this.testKernelButton.Size = new System.Drawing.Size(214, 25);
-            this.testKernelButton.TabIndex = 6;
-            this.testKernelButton.Text = "&Test Kernel";
+            this.testKernelButton.TabIndex = 8;
+            this.testKernelButton.Text = "Test &Kernel";
             this.testKernelButton.UseVisualStyleBackColor = true;
             this.testKernelButton.Click += new System.EventHandler(this.testKernelButton_Click);
             // 
             // writeFullContentsButton
             // 
-            this.writeFullContentsButton.Location = new System.Drawing.Point(6, 165);
+            this.writeFullContentsButton.Location = new System.Drawing.Point(6, 223);
             this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
             this.writeFullContentsButton.Name = "writeFullContentsButton";
             this.writeFullContentsButton.Size = new System.Drawing.Size(214, 25);
-            this.writeFullContentsButton.TabIndex = 5;
+            this.writeFullContentsButton.TabIndex = 7;
             this.writeFullContentsButton.Text = "Write &Full Contents";
             this.writeFullContentsButton.UseVisualStyleBackColor = true;
             this.writeFullContentsButton.Visible = false;
@@ -165,22 +169,22 @@
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelButton.Location = new System.Drawing.Point(5, 306);
+            this.cancelButton.Location = new System.Drawing.Point(5, 389);
             this.cancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(214, 25);
-            this.cancelButton.TabIndex = 7;
+            this.cancelButton.TabIndex = 9;
             this.cancelButton.Text = "&Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
             this.cancelButton.Click += new System.EventHandler(this.CancelButton_Click);
             // 
             // writeCalibrationButton
             // 
-            this.writeCalibrationButton.Location = new System.Drawing.Point(5, 107);
+            this.writeCalibrationButton.Location = new System.Drawing.Point(6, 165);
             this.writeCalibrationButton.Margin = new System.Windows.Forms.Padding(2);
             this.writeCalibrationButton.Name = "writeCalibrationButton";
             this.writeCalibrationButton.Size = new System.Drawing.Size(214, 25);
-            this.writeCalibrationButton.TabIndex = 3;
+            this.writeCalibrationButton.TabIndex = 5;
             this.writeCalibrationButton.Text = "&Write Calibration";
             this.writeCalibrationButton.UseVisualStyleBackColor = true;
             this.writeCalibrationButton.Click += new System.EventHandler(this.writeCalibrationButton_Click);
@@ -230,7 +234,7 @@
             this.tabs.Margin = new System.Windows.Forms.Padding(2);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(577, 488);
+            this.tabs.Size = new System.Drawing.Size(577, 571);
             this.tabs.TabIndex = 2;
             // 
             // resultsTab
@@ -240,7 +244,7 @@
             this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
             this.resultsTab.Name = "resultsTab";
             this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
-            this.resultsTab.Size = new System.Drawing.Size(569, 462);
+            this.resultsTab.Size = new System.Drawing.Size(569, 545);
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
@@ -256,7 +260,7 @@
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.userLog.Size = new System.Drawing.Size(563, 453);
+            this.userLog.Size = new System.Drawing.Size(563, 536);
             this.userLog.TabIndex = 0;
             // 
             // helpTab
@@ -308,7 +312,7 @@
             // 
             this.releasedUnder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedUnder.AutoSize = true;
-            this.releasedUnder.Location = new System.Drawing.Point(6, 507);
+            this.releasedUnder.Location = new System.Drawing.Point(6, 590);
             this.releasedUnder.Name = "releasedUnder";
             this.releasedUnder.Size = new System.Drawing.Size(166, 13);
             this.releasedUnder.TabIndex = 3;
@@ -318,7 +322,7 @@
             // 
             this.releasedAt.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedAt.AutoSize = true;
-            this.releasedAt.Location = new System.Drawing.Point(169, 507);
+            this.releasedAt.Location = new System.Drawing.Point(169, 590);
             this.releasedAt.Name = "releasedAt";
             this.releasedAt.Size = new System.Drawing.Size(216, 13);
             this.releasedAt.TabIndex = 4;
@@ -329,7 +333,7 @@
             // 
             this.releasedByAntus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedByAntus.AutoSize = true;
-            this.releasedByAntus.Location = new System.Drawing.Point(382, 507);
+            this.releasedByAntus.Location = new System.Drawing.Point(382, 590);
             this.releasedByAntus.Name = "releasedByAntus";
             this.releasedByAntus.Size = new System.Drawing.Size(62, 13);
             this.releasedByAntus.TabIndex = 5;
@@ -339,7 +343,7 @@
             // 
             this.releasedAtPcmHacking.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedAtPcmHacking.AutoSize = true;
-            this.releasedAtPcmHacking.Location = new System.Drawing.Point(444, 507);
+            this.releasedAtPcmHacking.Location = new System.Drawing.Point(444, 590);
             this.releasedAtPcmHacking.Name = "releasedAtPcmHacking";
             this.releasedAtPcmHacking.Size = new System.Drawing.Size(83, 13);
             this.releasedAtPcmHacking.TabIndex = 6;
@@ -350,17 +354,39 @@
             // 
             this.releasedEtc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedEtc.AutoSize = true;
-            this.releasedEtc.Location = new System.Drawing.Point(523, 507);
+            this.releasedEtc.Location = new System.Drawing.Point(523, 590);
             this.releasedEtc.Name = "releasedEtc";
             this.releasedEtc.Size = new System.Drawing.Size(237, 13);
             this.releasedEtc.TabIndex = 7;
             this.releasedEtc.Text = "and NSFW. J2534 support by Envyous Customs.";
             // 
+            // quickComparisonButton
+            // 
+            this.quickComparisonButton.Location = new System.Drawing.Point(6, 107);
+            this.quickComparisonButton.Margin = new System.Windows.Forms.Padding(2);
+            this.quickComparisonButton.Name = "quickComparisonButton";
+            this.quickComparisonButton.Size = new System.Drawing.Size(214, 25);
+            this.quickComparisonButton.TabIndex = 3;
+            this.quickComparisonButton.Text = "&Quick Comparison";
+            this.quickComparisonButton.UseVisualStyleBackColor = true;
+            this.quickComparisonButton.Click += new System.EventHandler(this.quickComparisonButton_Click);
+            // 
+            // testWriteButton
+            // 
+            this.testWriteButton.Location = new System.Drawing.Point(5, 136);
+            this.testWriteButton.Margin = new System.Windows.Forms.Padding(2);
+            this.testWriteButton.Name = "testWriteButton";
+            this.testWriteButton.Size = new System.Drawing.Size(214, 25);
+            this.testWriteButton.TabIndex = 4;
+            this.testWriteButton.Text = "&Test Write";
+            this.testWriteButton.UseVisualStyleBackColor = true;
+            this.testWriteButton.Click += new System.EventHandler(this.testWriteButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(823, 524);
+            this.ClientSize = new System.Drawing.Size(823, 607);
             this.Controls.Add(this.releasedEtc);
             this.Controls.Add(this.releasedAtPcmHacking);
             this.Controls.Add(this.releasedByAntus);
@@ -414,6 +440,8 @@
         private System.Windows.Forms.Button testKernelButton;
         private System.Windows.Forms.Button writeFullContentsButton;
         private System.Windows.Forms.Button writeOsAndCalibration;
+        private System.Windows.Forms.Button testWriteButton;
+        private System.Windows.Forms.Button quickComparisonButton;
     }
 }
 

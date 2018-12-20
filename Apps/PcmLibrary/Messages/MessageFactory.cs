@@ -408,34 +408,5 @@ namespace PcmHacking
         {
             return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x05 });
         }
-
-        ///////////////////////////////////////////////////////////////////////
-        // For use with JS kernel.
-        ///////////////////////////////////////////////////////////////////////
-
-        public Message CreateJsKernelPing()
-        {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE0 });
-        }
-
-        public Message CreateJsFlashUnlockRequest()
-        {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA1 });
-        }
-
-        public Message CreateJSCalibrationEraseRequest()
-        {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA4 });
-        }
-
-        public Message CreateJsFlashLockRequest()
-        {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA0 });
-        }
-
-        public Message CreateJsWriteKernelResetRequest()
-        {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA3 });
-        }
     }
 }

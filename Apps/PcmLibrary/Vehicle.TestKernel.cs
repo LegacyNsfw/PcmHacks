@@ -18,6 +18,8 @@ namespace PcmHacking
         Boot = 1,
         Parameter = 2,
         Calibration = 4,
+        OperatingSystem = 8,
+        All = 15
     };
 
     /// <summary>
@@ -48,9 +50,7 @@ namespace PcmHacking
         {
             try
             {
-                this.device.ClearMessageQueue();
-
-                
+                this.device.ClearMessageQueue();                
 
                 Response<byte[]> response = await LoadKernelFromFile("write-kernel.bin");
                 if (response.Status != ResponseStatus.Success)

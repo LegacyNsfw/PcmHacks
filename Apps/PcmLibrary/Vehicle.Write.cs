@@ -14,9 +14,11 @@ namespace PcmHacking
     public enum WriteType
     {
         Invalid = 0,
-        Calibration = 1,
-        OsAndCalibration = 2,
-        Full = 3,
+        Compare,
+        TestWrite,
+        Calibration,
+        OsAndCalibration,
+        Full,
     }
 
     public partial class Vehicle
@@ -24,43 +26,11 @@ namespace PcmHacking
         /// <summary>
         /// Replace the full contents of the PCM.
         /// </summary>
-        public async Task<bool> Write(WriteType writeType, UInt32 kernelVersion, bool recoveryMode, CancellationToken cancellationToken, Stream stream)
+        public async Task<bool> Write(WriteType writeType, UInt32 kernelVersion, bool recoveryMode, CancellationToken cancellationToken, byte[] image)
         {
-            byte[] image = new byte[stream.Length];
-            int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
-            if (bytesRead != stream.Length)
-            {
-                // If this happens too much, we should try looping rather than reading the whole file in one shot.
-                this.logger.AddUserMessage("Unable to load file.");
-                return false;
-            }
-
-            if ((bytesRead != 512 * 1024) && (bytesRead != 1024 * 1024))
-            {
-                this.logger.AddUserMessage("This file is not a supported size.");
-                return false;
-            }
-
-            // Sanity checks. 
-            // TODO: Check OSID as well.
-            // These checks might belong in the UI layer, especially the OSID check since the user 
-            // might by changing operating systems deliberately, especially with a full flash.
-            if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
-            {
-                this.logger.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
-                return false;
-            }
-
-            if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
-            {
-                this.logger.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
-                return false;
-            }            
-
-            ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
-
             try
             {
+                ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
                 this.device.ClearMessageQueue();
 
                 // TODO: install newer version if available.
@@ -99,26 +69,7 @@ namespace PcmHacking
 
                 await this.device.SetTimeout(TimeoutScenario.Maximum);
 
-                bool success;
-                switch (writeType)
-                {
-                    case WriteType.Calibration:
-                        success = await this.CalibrationWrite(cancellationToken, image, notifier);
-                        break;
-
-                    case WriteType.OsAndCalibration:
-                        success = await this.OsAndCalibrationWrite(cancellationToken, image);
-                        break;
-
-                    case WriteType.Full:
-                        success = await this.FullWrite(cancellationToken, image);
-                        break;
-
-                    default:
-                        this.logger.AddUserMessage("Unsupported write operation: " + writeType.ToString());
-                        success = false;
-                        break;
-                }
+                bool success = await Write(cancellationToken, image, writeType, notifier);
 
                 // We only do cleanup after a successful write.
                 // If the kernel remains running, the user can try to flash again without rebooting and reloading.
@@ -146,9 +97,34 @@ namespace PcmHacking
         /// <summary>
         /// Write the calibration blocks.
         /// </summary>
-        private async Task<bool> CalibrationWrite(CancellationToken cancellationToken, byte[] image, ToolPresentNotifier notifier)
+        private async Task<bool> Write(CancellationToken cancellationToken, byte[] image, WriteType writeType, ToolPresentNotifier notifier)
         {
-            BlockType relevantBlocks = BlockType.Calibration;
+            BlockType relevantBlocks;
+            switch (writeType)
+            {
+                case WriteType.Compare:
+                    relevantBlocks = BlockType.All;
+                    break;
+
+                case WriteType.TestWrite:
+                    relevantBlocks = BlockType.Calibration;
+                    break;
+
+                case WriteType.Calibration:
+                    relevantBlocks = BlockType.Calibration;
+                    break;
+
+                case WriteType.OsAndCalibration:
+                    relevantBlocks = BlockType.Calibration | BlockType.OperatingSystem;
+                    break;
+
+                case WriteType.Full:
+                    relevantBlocks = BlockType.All;
+                    break;
+
+                default:
+                    throw new InvalidDataException("Unsuppported operation type: " + writeType.ToString());
+            }
 
             // Which flash chip?
             Query<UInt32> chipIdQuery = new Query<uint>(
@@ -170,29 +146,29 @@ namespace PcmHacking
             IList<MemoryRange> ranges = this.GetMemoryRanges(chipIdResponse.Value);
             if (ranges == null)
             {
-                this.logger.AddUserMessage(
-                    "Unsupported flash chip ID " + chipIdResponse.Value + ". " +
-                    Environment.NewLine +
-                    "The flash memory in this PCM is not supported by this version of PCM Hammer." +
-                    Environment.NewLine +
-                    "Please look for a thread about this at pcmhacking.net, or create one if necessary." +
-                    Environment.NewLine +
-                    "We do aim to support for all flash chips over time.");
                 return false;
             }
 
             logger.AddUserMessage("Computing CRCs from local file...");
             this.GetCrcFromImage(ranges, image);
 
-            if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken, notifier))
+            if (await this.CompareRanges(
+                ranges, 
+                image, 
+                relevantBlocks, 
+                cancellationToken, notifier))
             {
                 this.logger.AddUserMessage("All ranges are identical.");
                 return true;
             }
 
-            // TODO: Put a button for this in the UI.
-            bool justTestWrite = false;
+            // Stop now if the user only requested a comparison.
+            if (writeType == WriteType.Compare)
+            {
+                return true;
+            }
 
+            // Erase and rewrite the required memory ranges.
             foreach (MemoryRange range in ranges)
             {
                 if (range.ActualCrc == range.DesiredCrc)
@@ -211,31 +187,35 @@ namespace PcmHacking
                         range.Address,
                         range.Address + (range.Size - 1)));
 
-                if (!justTestWrite)
+                if (writeType != WriteType.TestWrite)
                 {
-                    //this.logger.AddUserMessage("Erasing");
+                    this.logger.AddUserMessage("Erasing");
 
-//                    Query<byte> eraseRequest = new Query<byte>(
-  //                      this.device,
-    //                    this.messageFactory.CreateFlashEraseCalibrationRequest,
-      //                  this.messageParser.ParseFlashErase,
-        //                this.logger,
-          //              cancellationToken,
-            //            notifier);
+                    Query<byte> eraseRequest = new Query<byte>(
+                         this.device,
+                         this.messageFactory.CreateFlashEraseCalibrationRequest,
+                         this.messageParser.ParseFlashErase,
+                         this.logger,
+                         cancellationToken,
+                         notifier);
 
-              //      eraseRequest.MaxTimeouts = 50; // Reduce this when we know how many are likely to be needed.
-                //    Response<byte> eraseResponse = await eraseRequest.Execute();
+                    eraseRequest.MaxTimeouts = 50; // Reduce this when we know how many are likely to be needed.
+                    Response<byte> eraseResponse = await eraseRequest.Execute();
 
-//                    if (eraseResponse.Status != ResponseStatus.Success)
-  //                  {
-    //                    this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
-      //                  this.RequestDebugLogs(cancellationToken);
-        //                return false;
-          //          }
+                    if (eraseResponse.Status != ResponseStatus.Success)
+                    {
+                        this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
+                        this.RequestDebugLogs(cancellationToken);
+                        return false;
+                    }
                 }
 
                 this.logger.AddUserMessage("Writing");
-                await WriteMemoryRange(range, image, justTestWrite, cancellationToken);
+                await WriteMemoryRange(
+                    range, 
+                    image, 
+                    writeType == WriteType.TestWrite, 
+                    cancellationToken);
             }
 
             if (await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken, notifier))
@@ -244,11 +224,24 @@ namespace PcmHacking
                 return true;
             }
 
+            if (writeType == WriteType.TestWrite)
+            {
+                // TODO: the app should know if any errors were encountered. The user shouldn't need to check.
+                this.logger.AddUserMessage("Test complete. Were any errors logged above?");
+                return false;
+            }
+
             this.logger.AddUserMessage("===============================================");
             this.logger.AddUserMessage("THE CHANGES WERE -NOT- WRITTEN SUCCESSFULLY");
             this.logger.AddUserMessage("===============================================");
 
-            if (!cancellationToken.IsCancellationRequested)
+            if (cancellationToken.IsCancellationRequested)
+            {
+                this.logger.AddUserMessage("");
+                this.logger.AddUserMessage("The operation was cancelled.");
+                this.logger.AddUserMessage("");
+            }
+            else
             {
                 this.logger.AddUserMessage("Don't panic. Also, don't try to drive this car.");
                 this.logger.AddUserMessage("Please try flashing again. Preferably now.");
@@ -428,9 +421,9 @@ namespace PcmHacking
                         // Notice that if you convert the hex sizes to decimal, they're all
                         // half as big as the description indicates. That's wrong. It doesn't
                         // work that way in the PCM, so this would only compare 256 kb.
-                        new MemoryRange(0x30000, 0x10000, BlockType.Calibration), // 128kb main block
-                        new MemoryRange(0x20000, 0x10000, BlockType.Calibration), // 128kb main block
-                        new MemoryRange(0x10000, 0x10000, BlockType.Calibration), // 128kb main block
+                        new MemoryRange(0x30000, 0x10000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x20000, 0x10000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x10000, 0x10000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x04000, 0x0C000, BlockType.Calibration), //  96kb main block 
                         new MemoryRange(0x03000, 0x01000, BlockType.Parameter), //   8kb parameter block
                         new MemoryRange(0x02000, 0x01000, BlockType.Parameter), //   8kb parameter block
@@ -446,17 +439,25 @@ namespace PcmHacking
                         // in the data sheet, because the data sheet table assumes that
                         // "bytes" are 16 bits wide. Which means they're not bytes. But
                         // the data sheet calls them bytes.
-                        new MemoryRange(0x60000, 0x20000, BlockType.Calibration), // 128kb main block
-                        new MemoryRange(0x40000, 0x20000, BlockType.Calibration), // 128kb main block
-                        new MemoryRange(0x20000, 0x20000, BlockType.Calibration), // 128kb main block
+                        new MemoryRange(0x60000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x40000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x20000, 0x20000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block 
                         new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //   8kb parameter block
                         new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
-                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block                        
+                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
                     };
                     break;
 
                 default:
+                    this.logger.AddUserMessage(
+                        "Unsupported flash chip ID " + chipId.ToString("X8") + ". " +
+                        Environment.NewLine +
+                        "The flash memory in this PCM is not supported by this version of PCM Hammer." +
+                        Environment.NewLine +
+                        "Please look for a thread about this at pcmhacking.net, or create one if necessary." +
+                        Environment.NewLine +
+                        "We do aim to support for all flash chips over time.");
                     return null;
             }
 
