@@ -128,7 +128,7 @@ namespace PcmHacking
         public abstract Task<bool> SendMessage(Message message);
 
         /// <summary>
-        /// Removes any messages that might be waiting in the incoming-message queue.
+        /// Removes any messages that might be waiting in the incoming-message queue. Also clears the buffer.
         /// </summary>
         public void ClearMessageQueue()
         {

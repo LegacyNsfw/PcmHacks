@@ -75,7 +75,9 @@ namespace PcmHacking
                 logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
 
 
-                await this.InvestigateDataCorruption(cancellationToken);
+                //await this.InvestigateDataCorruption(cancellationToken);
+                //await this.InvestigateKernelVersionQueryTiming();
+                await this.InvestigateCrc(cancellationToken);
                 return true;
             }
             catch (Exception exception)
@@ -90,6 +92,111 @@ namespace PcmHacking
             }
         }
 
+        private async Task InvestigateCrc(CancellationToken cancellationToken)
+        {
+            await this.device.SetTimeout(TimeoutScenario.Maximum);
+
+            IList<MemoryRange> ranges = this.GetMemoryRanges(0x00894471);
+
+            logger.AddUserMessage("Requesting CRCs from PCM...");
+            foreach (MemoryRange range in ranges)
+            {
+                this.device.ClearMessageQueue();
+                bool success = false;
+                UInt32 crc = 0;
+                await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+                int retryDelay = 500;
+                Message query = this.messageFactory.CreateCrcQuery(range.Address, range.Size);
+                for (int attempts = 0; attempts < 100; attempts++)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    if (!await this.device.SendMessage(query))
+                    {
+                        await Task.Delay(retryDelay);
+                        continue;
+                    }
+
+                    Message response = await this.device.ReceiveMessage();
+                    if (response == null)
+                    {
+                        await Task.Delay(retryDelay);
+                        continue;
+                    }
+
+                    Response<UInt32> crcResponse = this.messageParser.ParseCrc(response, range.Address, range.Size);
+                    if (crcResponse.Status != ResponseStatus.Success)
+                    {
+                        await Task.Delay(retryDelay);
+                        continue;
+                    }
+
+                    success = true;
+                    crc = crcResponse.Value;
+                    break;
+                }
+
+                this.device.ClearMessageQueue();
+
+                if (!success)
+                {
+                    this.logger.AddUserMessage("Unable to get CRC for memory range " + range.Address.ToString("X8") + " / " + range.Size.ToString("X8"));
+                    continue;
+                }
+
+                range.ActualCrc = crc;
+
+                this.logger.AddUserMessage(
+                    string.Format(
+                        "Range {0:X6}-{1:X6} - Local: {2:X8} - PCM: {3:X8} - {4}",
+                        range.Address,
+                        range.Address + (range.Size - 1),
+                        range.DesiredCrc,
+                        range.ActualCrc,
+                        range.Type));
+            }
+
+        }
+
+        /// <summary>
+        /// This was used to test the delays in the kernel prior to sending a response.
+        /// </summary>
+        /// <returns></returns>
+        private async Task InvestigateKernelVersionQueryTiming()
+        {
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+
+            int successRate = 0;
+            for (int attempts = 0; attempts < 100; attempts++)
+            {
+                Message vq = this.messageFactory.CreateKernelVersionQuery();
+                await this.device.SendMessage(vq);
+                Message vr = await this.device.ReceiveMessage();
+                if (vr != null)
+                {
+                    Response<UInt32> resp = this.messageParser.ParseKernelVersion(vr);
+                    if (resp.Status == ResponseStatus.Success)
+                    {
+                        this.logger.AddDebugMessage("Got Kernel Version");
+                        successRate++;
+                    }
+                }
+
+                await Task.Delay(0);
+                continue;
+            }
+
+            this.logger.AddDebugMessage("Success rate: " + successRate.ToString());
+        }
+
+        /// <summary>
+        /// AllPro was getting data corruption when payloads got close to 2kb. 
+        /// Still not sure what's up with that. 
+        /// Using 1kb payloads until we figure that out.
+        /// </summary>
         private async Task InvestigateDataCorruption(CancellationToken cancellationToken)
         {
             await this.device.SetTimeout(TimeoutScenario.Maximum);

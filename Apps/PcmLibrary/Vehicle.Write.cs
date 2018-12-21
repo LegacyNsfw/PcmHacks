@@ -36,12 +36,15 @@ namespace PcmHacking
                 // TODO: install newer version if available.
                 if (kernelVersion == 0)
                 {
-                    // switch to 4x, if possible. But continue either way.
-                    // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                    if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
+                    if (false)
                     {
-                        this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
-                        return false;
+                        // switch to 4x, if possible. But continue either way.
+                        // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
+                        if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
+                        {
+                            this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
+                            return false;
+                        }
                     }
 
                     Response<byte[]> response = await LoadKernelFromFile("write-kernel.bin");
@@ -301,7 +304,7 @@ namespace PcmHacking
                     continue;
                 }
 
-                Query<UInt32> crcQuery = new Query<uint>(
+                /*Query<UInt32> crcQuery = new Query<uint>(
                     this.device,
                     () => this.messageFactory.CreateCrcQuery(range.Address, range.Size),
                     (message) => this.messageParser.ParseCrc(message, range.Address, range.Size),
@@ -310,22 +313,59 @@ namespace PcmHacking
                     notifier);
 
                 Response<UInt32> crcResponse = await crcQuery.Execute();
+                */
 
-                if (crcResponse.Status != ResponseStatus.Success)
+                this.device.ClearMessageQueue();
+                bool success = false;
+                UInt32 crc = 0;
+                await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+                int retryDelay = 500;
+                Message query = this.messageFactory.CreateCrcQuery(range.Address, range.Size);
+                for(int attempts = 0; attempts < 100; attempts++)
+                {
+                    if (!await this.device.SendMessage(query))
+                    {
+                        await Task.Delay(retryDelay);
+                        continue;
+                    }
+
+                    Message response = await this.device.ReceiveMessage();
+                    if (response == null)
+                    {
+                        await Task.Delay(retryDelay);
+                        continue;
+                    }
+
+                    Response<UInt32> crcResponse = this.messageParser.ParseCrc(response, range.Address, range.Size);
+                    if (crcResponse.Status != ResponseStatus.Success)
+                    {
+                        await Task.Delay(retryDelay);
+                        continue;
+                    }
+
+                    success = true;
+                    crc = crcResponse.Value;
+                    break;
+                }
+
+                this.device.ClearMessageQueue();
+
+                if (!success)
                 {
                     this.logger.AddUserMessage("Unable to get CRC for memory range " + range.Address.ToString("X8") + " / " + range.Size.ToString("X8"));
                     return false;
                 }
 
-                range.ActualCrc = crcResponse.Value;
+                range.ActualCrc = crc;
 
                 this.logger.AddUserMessage(
                     string.Format(
-                        "Range {0:X6}-{1:X6} - Local: {2:X8} - PCM: {3:X8} - {4}",
+                        "Range {0:X6}-{1:X6} - Local: {2:X8} - PCM: {3:X8} - ({4}) - {5}",
                         range.Address,
                         range.Address + (range.Size - 1),
                         range.DesiredCrc,
                         range.ActualCrc,
+                        range.Type,
                         range.DesiredCrc == range.ActualCrc ? "Same" : "Different"));
             }
 
@@ -341,6 +381,8 @@ namespace PcmHacking
                     return false;
                 }
             }
+
+            this.device.ClearMessageQueue();
 
             return true;
         }
