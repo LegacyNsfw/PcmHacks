@@ -107,12 +107,8 @@ KernelStart(void)
 	// A timeout of 10,000 iterations results in a roughly five-second timeout.
 	// That's probably good for release, but longer is better for development.
 	int iterations = 0;
-	int timeout = 10 * 1000;
+	int timeout = 10000 * 1000;
 	int lastMessage = (iterations - timeout) + 1;
-
-#ifdef MODEBYTE_BREADCRUMBS
-	int breadcrumbIndex = 0;
-#endif
 
 	for(;;)
 	{
@@ -126,10 +122,10 @@ KernelStart(void)
 		if (length == 0)
 		{
 			// If no message received for N iterations, reboot.
-			if (iterations > (lastMessage + timeout))
-			{
-				Reboot(0xFFFFFFFF);
-			}
+//			if (iterations > (lastMessage + timeout))
+//			{
+//				Reboot(0xFFFFFFFF);
+//			}
 
 			continue;
 		}

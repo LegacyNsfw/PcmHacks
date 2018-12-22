@@ -5,4 +5,5 @@ a.out
 *.log 
 *.disassembly
 *.elf
+*.exe
 IDA

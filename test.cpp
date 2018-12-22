@@ -1,13 +1,16 @@
-#include <stdio.h>
+//#include <stdio.h>
 //#include "common.h"
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 extern int  crcTable[256];
 
 void __cdecl crcInit(void);
 unsigned __cdecl crcFast(unsigned char *message, int nBytes);
-void __cdecl ScratchWatchdog();
+void ScratchWatchdog();
 
-int main()
+int  main()
 {
     crcInit();
 
@@ -17,14 +20,20 @@ int main()
     //    printf("%08X\r\n", crcTable[i]);
     //}
 
-    FILE *file = fopen("FirstReadFromCorvette.bin", "r");
-    unsigned char* content = new unsigned char[512*1024];
-    int size = fread(content, 8, 512*1024, file);
+    //FILE *file = fopen("FirstReadFromCorvette.bin", "r");
+    ifstream file ("FirstReadFromCorvette.bin", ios::in|ios::binary|ios::ate);
+    streampos size = file.tellg();
+    char* content = new char[512*1024];
+    file.read(content, 512*1024);
+    file.close();
     printf("Read %d bytes\r\n", size);
 
     
-    unsigned crc = crcFast(content, 0x2000);
+    unsigned crc = crcFast((unsigned char*)content, 0x2000);
     printf ("CRC: %08x\r\n", crc);
+
+    delete content;
+    return 0;
 }
 
 void ScratchWatchdog()
