@@ -102,14 +102,12 @@ KernelStart(void)
 	SendToolPresent(0, 0, 0, 0);
 	LongSleepWithWatchdog();
 
-	// This loop runs out quickly, to force the PCM to reboot, to speed up testing.
-	// The real kernel should probably loop for a much longer time (possibly forever),
-	// to allow the app to recover from any failures. 
 	// If we choose to loop forever we need a good story for how to get out of that state.
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
-	// for(int iterations = 0; iterations < 100; iterations++)
+	// A timeout of 10,000 iterations results in a roughly five-second timeout.
+	// That's probably good for release, but longer is better for development.
 	int iterations = 0;
-	int timeout = 100;
+	int timeout = 10 * 1000;
 	int lastMessage = (iterations - timeout) + 1;
 
 #ifdef MODEBYTE_BREADCRUMBS
@@ -149,30 +147,18 @@ KernelStart(void)
 			continue;
 		}
 
-#ifdef MODEBYTE_BREADCRUMBS
-		BreadcrumbBuffer[breadcrumbIndex] = MessageBuffer[3];
-		breadcrumbIndex++;
-#endif
 		lastMessage = iterations;
 
 		// Did the tool just request a reboot?
 		if (MessageBuffer[3] == 0x20)
 		{
 			LongSleepWithWatchdog();
-#ifdef MODEBYTE_BREADCRUMBS
-			SendBreadcrumbsReboot(0xEE, breadcrumbIndex);
-#else
 			Reboot(0xCC000000 | iterations);
-#endif
 		}
 
 		ProcessMessage();
 	}
 
 	// This shouldn't happen. But, just in case...
-#ifdef MODEBYTE_BREADCRUMBS
-	SendBreadcrumbsReboot(0xFF, breadcrumbIndex);
-#else
 	Reboot(0xFF000000 | iterations);
-#endif
 }

@@ -20,7 +20,7 @@ c:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe -T write-kernel.ld main.o write-kernel.o 
 c:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe -O binary --only-section=.kernel_code --only-section=.rodata write-kernel.elf write-kernel.bin
 C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S write-kernel.elf > write-kernel.disassembly
 
-c:\mingw\bin\gcc test.c crc.c
+c:\mingw\bin\g++ -o test.exe test.cpp crc.c
 
 copy *-kernel.bin ..\PcmHacks\Apps\PcmHammer\bin\debug
 dir *.bin
