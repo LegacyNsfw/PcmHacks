@@ -84,7 +84,15 @@ namespace PcmHacking
                         return Response.Create(ResponseStatus.Cancelled, (Stream)null);
                     }
 
-                    await toolPresentNotifier.Notify();
+                    // TODO: Figure out why the AllPro is more reliable if we ALWAYS send a notification here, and then remove this hack.
+                    if (this.device.MaxReceiveSize > 2000)
+                    {
+                        await toolPresentNotifier.ForceNotify();
+                    }
+                    else
+                    {
+                        await toolPresentNotifier.Notify();
+                    }
 
                     if (startAddress + blockSize > endAddress)
                     {
