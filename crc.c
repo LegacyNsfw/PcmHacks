@@ -14,8 +14,19 @@ typedef unsigned char uint8_t;
 
 crc __attribute((section(".kerneldata"))) crcTable[256];
 
+// These are not from the original code, they're used to support background CRC computation.
+uint8_t __attribute((section(".kerneldata"))) *crcStartAddress;
+int __attribute((section(".kerneldata"))) crcLength;
+int __attribute((section(".kerneldata"))) crcIndex;
+crc __attribute((section(".kerneldata"))) crcRemainder;
+
 void crcInit(void)
 {
+    crcStartAddress = 0;
+    crcLength = 0;
+    crcIndex = 0;
+    crcRemainder = 0;
+
     crc  remainder;
 
     /*
@@ -82,3 +93,74 @@ crc crcFast(unsigned char *message, int nBytes)
     return (remainder);
 
 }   /* crcFast() */
+
+///////////////////////////////////////////////////////////////////////////////
+
+int crcIsStarted(unsigned char *message, int nBytes)
+{
+    if (crcStartAddress != message)
+    {
+        return 0;
+    }
+
+    if (crcLength != nBytes)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+int crcIsDone(unsigned char *message, int nBytes)
+{
+    if (!crcIsStarted(message, nBytes))
+    {
+        return 0;
+    }
+
+    if (crcIndex == nBytes)
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+void crcStart(unsigned char *message, int nBytes)
+{
+    crcStartAddress = message;
+    crcLength = nBytes;
+    crcIndex = 0;
+    crcRemainder = 0;
+}
+
+crc crcGetResult()
+{
+    return crcRemainder;
+}
+
+void crcProcessSlice()
+{
+    if (crcLength == 0)
+    {
+        return;
+    }
+
+    int limit = crcLength;
+    int chunkSize = 1024;
+    if ((crcIndex + chunkSize) < limit)
+    {
+        limit = crcIndex + chunkSize;
+    }
+
+    uint8_t data;
+    for( ; crcIndex < limit; crcIndex++)
+    {
+        if (crcIndex % 256 == 0)
+        {
+            ScratchWatchdog();
+        }
+        data = crcStartAddress[crcIndex] ^ (crcRemainder >> (WIDTH - 8));
+        crcRemainder = crcTable[data] * (crcRemainder << 8);
+    }
+}

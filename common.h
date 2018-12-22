@@ -5,6 +5,11 @@
 #define EXTERN extern
 #endif
 
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned uint32_t;
+typedef int int32_t;
+
 EXTERN char volatile * const DLC_Configuration;
 EXTERN char volatile * const DLC_InterruptConfiguration;
 EXTERN char volatile * const DLC_Transmit_Command;
@@ -56,9 +61,16 @@ void ScratchWatchdog();
 void WasteTime();
 
 ///////////////////////////////////////////////////////////////////////////////
-// Also does what it says. 10,000 iterations takes a bit less than half a second.
+// All uses of this should be replaced with ElmSleep or VariableSleep.
 ///////////////////////////////////////////////////////////////////////////////
 void LongSleepWithWatchdog();
+
+///////////////////////////////////////////////////////////////////////////////
+// ELM-based devices need a short pause between transmit and receive, otherwise
+// they will miss the responses from the PCM. This function should be tuned to
+// provide the right delay with AllPro and Scantool devices.
+///////////////////////////////////////////////////////////////////////////////
+void ElmSleep();
 
 ///////////////////////////////////////////////////////////////////////////////
 // Sleep for a variable amount of time. This should be close to Dimented24x7's
@@ -161,9 +173,21 @@ void HandleVersionQuery();
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility functions to compute CRC for memory ranges.
+// TODO: move this into a new crc.h file.
 ///////////////////////////////////////////////////////////////////////////////
+extern int __attribute((section(".kerneldata"))) crcInitialized;
+extern uint8_t __attribute((section(".kerneldata"))) *crcStartAddress;
+extern int __attribute((section(".kerneldata"))) crcLength;
+extern int __attribute((section(".kerneldata"))) crcIndex;
+extern uint32_t __attribute((section(".kerneldata"))) crcRemainder;
+
 void crcInit(void);
-unsigned int crcFast(unsigned char *message, int nBytes);
+
+int crcIsStarted(uint8_t *message, int nBytes);
+int crcIsDone(uint8_t *message, int nBytes);
+void crcStart(uint8_t *message, int nBytes);
+uint32_t crcGetResult();
+void crcProcessSlice();
 
 ///////////////////////////////////////////////////////////////////////////////
 // Write data to flash memory.

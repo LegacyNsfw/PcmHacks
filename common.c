@@ -51,46 +51,62 @@ void WasteTime()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Also does what it says. 10,000 iterations takes a bit less than half a second.
+// Shared sleep code for multiple scenarios
+///////////////////////////////////////////////////////////////////////////////
+void PrivateSleep(int outerLoop, int innerLoop)
+{
+	for (int outer = 0; outer < outerLoop; outer++)
+	{
+		for (int inner = 0; inner < innerLoop; inner++)
+		{
+			asm("nop");
+			asm("nop");
+			asm("nop");
+			asm("nop");
+
+			asm("nop");
+			asm("nop");
+			asm("nop");
+			asm("nop");
+		}
+
+		ScratchWatchdog();
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Pause for about half a second. TODO: remove this, replace with either
+// ElmSleep or VariableSleep, as appropriate.
 ///////////////////////////////////////////////////////////////////////////////
 void LongSleepWithWatchdog()
 {
-	for (int outerLoop = 0; outerLoop < 10 * 1000; outerLoop++)
-	{
-		ScratchWatchdog();
-		for (int innerLoop = 0; innerLoop < 10; innerLoop++)
-		{
-			WasteTime();
-		}
-	}
+	PrivateSleep(10 * 1000, 5);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ELM-based devices need a short pause between transmit and receive, otherwise
+// they will miss the responses from the PCM. This function should be tuned to
+// provide the right delay with AllPro and Scantool devices.
+///////////////////////////////////////////////////////////////////////////////
+void ElmSleep()
+{
+	// 1,25 worked well for a long series of kernel-version requests with both
+	// the AllPro and Scantool at 1x speed. 
+	// CRC responses aren't received by either device. Not sure if timing related.
+	// Have not tested 4x yet. Have not tried smaller delay either.
+	PrivateSleep(1, 100);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Sleep for a variable amount of time. This should be close to Dimented24x7's
 // assembly-language implementation.
 // Consider cutting the inner loop down, and increasing the parameter at all
-// call sites. Consecutive messages-sends (e.g. in HandleReadMode35) work fine
+// call sites. Consecutive message-sends (e.g. in HandleReadMode35) work fine
 // with an inner loop of 100. Haven't tried 50 yet.
 ///////////////////////////////////////////////////////////////////////////////
 void VariableSleep(int iterations)
 {
-	for (int outer = 0; outer < iterations; outer++)
-	{
-		for (int inner = 0; inner < 250; inner++)
-		{
-			asm("nop");
-			asm("nop");
-			asm("nop");
-			asm("nop");
-
-			asm("nop");
-			asm("nop");
-			asm("nop");
-			asm("nop");
-		}
-
-		ScratchWatchdog();
-	}
+	PrivateSleep(iterations, 250);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -215,9 +231,22 @@ int ReadMessage(char *completionCode, char *readState)
 	int breadcrumbIndex = 0; 
 #endif
 
+	int iterations = 0;
+	int timeout = 1000;
+	int lastMessage = (iterations - timeout) + 1;
+
 	int length = 0;
-	for (int iterations = 0; iterations < 30 * 1000; iterations++)
+	for (;;)
 	{
+		ScratchWatchdog();
+		iterations++;
+
+		// If no message received for N iterations, exit.
+		if ((length == 0) && iterations > (lastMessage + timeout))
+		{
+			return 0;
+		}
+
 		// Artificial message-length limit for debugging.
 		if (length == 5100)
 		{
@@ -241,17 +270,14 @@ int ReadMessage(char *completionCode, char *readState)
 		switch (status)
 		{
 		case 0: // No data to process. This wait period may need more tuning.
-
-			for (int waits = 0; waits < 10; waits++)
-			{
-				ScratchWatchdog();
-				WasteTime();
-			}
+			VariableSleep(1);
 			break;
 
 		case 1: // Buffer contains data bytes.
 		case 2: // Buffer contains data followed by a completion code.
 		case 4:  // Buffer contains just one data byte.
+			lastMessage = iterations;
+
 			MessageBuffer[length] = *DLC_Receive_FIFO;
 			length++;
 			break;
@@ -259,6 +285,8 @@ int ReadMessage(char *completionCode, char *readState)
 		case 5: // Buffer contains a completion code, followed by more data bytes.
 		case 6: // Buffer contains a completion code, followed by a full frame.
 		case 7: // Buffer contains a completion code only.
+			lastMessage = iterations;
+
 			*completionCode = *DLC_Receive_FIFO;
 
 #ifdef RECEIVE_BREADCRUMBS
@@ -461,12 +489,12 @@ void HandleVersionQuery()
 	MessageBuffer[4] = 0x00;
 	MessageBuffer[5] = 0x01; // major
 	MessageBuffer[6] = 0x00; // minor
-	MessageBuffer[7] = 0x00; // patch
+	MessageBuffer[7] = 0x02; // patch
 	MessageBuffer[8] = 0xAA; // quality (AA = alpha, BB = beta, 00 = release)
 
 	// The AllPro and ScanTool devices need a short delay to switch from 
 	// sending to receiving. Otherwise they'll miss the response.
-	VariableSleep(2);
+	ElmSleep();
 
 	WriteMessage(MessageBuffer, 9, Complete);
 }

@@ -128,60 +128,63 @@ void HandleCrcQuery()
 	length <<= 8;
 	length |= MessageBuffer[7];
 	
-	unsigned start = MessageBuffer[8];
-	start <<= 8;
-	start |= MessageBuffer[9];
-	start <<= 8;
-	start |= MessageBuffer[10];
+	unsigned address = MessageBuffer[8];
+	address <<= 8;
+	address |= MessageBuffer[9];
+	address <<= 8;
+	address |= MessageBuffer[10];
 
-	// I discovered by accident that the app is much better at getting
-	// the CRC responses if the kernel pauses here. That gives the app
-	// time to send a tool-present response, so the slow response to
-	// the CRC request gets processed as a response to the tool-present
-	// message. 
-	//
-	// This is fragile. There has to be a better way. But for now, this
-	// seems to work well enough.
-	switch(length)
+	// Convert to names and types that match the CRC code.
+	unsigned char *message = (unsigned char*) address;
+	int nBytes = length;
+
+	char path;
+    if (!crcIsStarted (message, nBytes))
+    {
+		path = 1;
+        crcStart(message, nBytes);
+    }
+	else
 	{
-		case 0x18000:
-		case 0x20000:
-			LongSleepWithWatchdog();
-			LongSleepWithWatchdog();
-			break;
-
-		case 0x2000:
-			LongSleepWithWatchdog();
-			LongSleepWithWatchdog();
-			LongSleepWithWatchdog();
-			LongSleepWithWatchdog();
-			LongSleepWithWatchdog();
-			LongSleepWithWatchdog();
-			break;
+		path = 2;
 	}
 
-	ScratchWatchdog();
-	crcInit();
+	ElmSleep();
 
-	ScratchWatchdog();
-	unsigned crc = crcFast((unsigned char*) start, length);
-
-	MessageBuffer[0] = 0x6C;
-	MessageBuffer[1] = 0xF0;
-	MessageBuffer[2] = 0x10;
-	MessageBuffer[3] = 0x7D;
-	MessageBuffer[4] = 0x02;
-	MessageBuffer[5] = (char)(length >> 16);
-	MessageBuffer[6] = (char)(length >> 8);
-	MessageBuffer[7] = (char)length;
-	MessageBuffer[8] = (char)(start >> 16);
-	MessageBuffer[9] = (char)(start >> 8);
-	MessageBuffer[10] = (char)start;
-	MessageBuffer[11] = (char)(crc >> 24);
-	MessageBuffer[12] = (char)(crc >> 16);
-	MessageBuffer[13] = (char)(crc >> 8);
-	MessageBuffer[14] = (char)crc;
-	WriteMessage(MessageBuffer, 15, Complete);
+    if (crcIsDone(message, nBytes))
+    {
+        unsigned crc = crcGetResult();
+       	MessageBuffer[0] = 0x6C;
+		MessageBuffer[1] = 0xF0;
+		MessageBuffer[2] = 0x10;
+		MessageBuffer[3] = 0x7D;
+		MessageBuffer[4] = 0x02;
+		MessageBuffer[5] = (char)(crcLength >> 16);
+		MessageBuffer[6] = (char)(crcLength >> 8);
+		MessageBuffer[7] = (char)crcLength;
+		MessageBuffer[8] = (char)((uint32_t) crcStartAddress >> 16);
+		MessageBuffer[9] = (char)((uint32_t) crcStartAddress >> 8);
+		MessageBuffer[10] = (char)(uint32_t) crcStartAddress;
+		MessageBuffer[11] = (char)(crc >> 24);
+		MessageBuffer[12] = (char)(crc >> 16);
+		MessageBuffer[13] = (char)(crc >> 8);
+		MessageBuffer[14] = (char)crc;
+		WriteMessage(MessageBuffer, 15, Complete);
+    }
+    else
+    {
+        // This is an abuse of the protocol, but I want to keep these
+		// messages short, and using 7F 3D 02 would make it hard to tell
+		// whether CRC is in progress or the kernel just isn't loaded.
+		// So this reply has a legitimate mode, and a bogus submode.
+       	MessageBuffer[0] = 0x6C;
+		MessageBuffer[1] = 0xF0;
+		MessageBuffer[2] = 0x10;
+		MessageBuffer[3] = 0x7D;
+		MessageBuffer[4] = 0xFF; 
+		MessageBuffer[5] = path;
+		WriteMessage(MessageBuffer, 6, Complete);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -560,7 +563,7 @@ KernelStart(void)
 	ScratchWatchdog();
 
 	*DLC_InterruptConfiguration = 0x00;
-	LongSleepWithWatchdog();
+	crcInit();	
 
 	// Flush the DLC
 	*DLC_Transmit_Command = 0x03;
@@ -579,12 +582,8 @@ KernelStart(void)
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
 	// for(int iterations = 0; iterations < 100; iterations++)
 	int iterations = 0;
-	int timeout = 100;
+	int timeout = 1000;
 	int lastMessage = (iterations - timeout) + 1;
-
-#ifdef MODEBYTE_BREADCRUMBS
-	int breadcrumbIndex = 0;
-#endif
 
 	for(;;)
 	{
@@ -592,16 +591,19 @@ KernelStart(void)
 
 		ScratchWatchdog();
 
+		crcProcessSlice();
+
 		char completionCode = 0xFF;
 		char readState = 0xFF;
 		int length = ReadMessage(&completionCode, &readState);
 		if (length == 0)
 		{
+
 			// If no message received for N iterations, reboot.
-			if (iterations > (lastMessage + timeout))
-			{
-				Reboot(0xFFFFFFFF);
-			}
+//			if (iterations > (lastMessage + timeout))
+//			{
+//				Reboot(0xFFFFFFFF);
+//			}
 
 			continue;
 		}
@@ -619,30 +621,24 @@ KernelStart(void)
 			continue;
 		}
 
-#ifdef MODEBYTE_BREADCRUMBS
-		BreadcrumbBuffer[breadcrumbIndex] = MessageBuffer[3];
-		breadcrumbIndex++;
-#endif
 		lastMessage = iterations;
 
 		// Did the tool just request a reboot?
 		if (MessageBuffer[3] == 0x20)
 		{
 			LongSleepWithWatchdog();
-#ifdef MODEBYTE_BREADCRUMBS
-			SendBreadcrumbsReboot(0xEE, breadcrumbIndex);
-#else
 			Reboot(0xCC000000 | iterations);
-#endif
 		}
 
 		ProcessMessage();
+
+		if (crcIndex != crcLength)
+		{
+//			SendToolPresent2(crcIndex | 0xAA000000);
+//			VariableSleep(50);
+		}
 	}
 
 	// This shouldn't happen. But, just in case...
-#ifdef MODEBYTE_BREADCRUMBS
-	SendBreadcrumbsReboot(0xFF, breadcrumbIndex);
-#else
 	Reboot(0xFF000000 | iterations);
-#endif
 }
