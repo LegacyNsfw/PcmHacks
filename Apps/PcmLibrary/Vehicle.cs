@@ -257,7 +257,7 @@ namespace PcmHacking
         {
             Message response = null;
 
-            for (int pause = 0; pause < 10; pause++)
+            for (int pause = 0; pause < 3; pause++)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {

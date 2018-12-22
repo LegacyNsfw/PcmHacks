@@ -152,12 +152,14 @@ namespace PcmHacking
                 }
 
                 bool sendAgain = false;
-                for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
+                for (int receiveAttempt = 1; receiveAttempt <= 3; receiveAttempt++)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
                         break;
                     }
+
+                    System.Threading.Thread.Sleep(100);
 
                     Message response = await this.ReceiveMessage(cancellationToken);
                     if (response == null)
@@ -193,7 +195,7 @@ namespace PcmHacking
                     continue;
                 }
 
-                this.logger.AddDebugMessage("Read request allowed, expecting for payload...");
+                this.logger.AddDebugMessage("Read request allowed, expecting payload...");
                 for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
                 {
                     if (cancellationToken.IsCancellationRequested)

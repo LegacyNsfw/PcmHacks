@@ -70,8 +70,6 @@ namespace PcmHacking
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
                 }
 
-                await this.device.SetTimeout(TimeoutScenario.Maximum);
-
                 bool success = await Write(cancellationToken, image, writeType, notifier);
 
                 // We only do cleanup after a successful write.
@@ -130,6 +128,7 @@ namespace PcmHacking
             }
 
             // Which flash chip?
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
             Query<UInt32> chipIdQuery = new Query<uint>(
                 this.device,
                 this.messageFactory.CreateFlashMemoryTypeQuery,
@@ -176,6 +175,7 @@ namespace PcmHacking
             }
 
             // Erase and rewrite the required memory ranges.
+            await this.device.SetTimeout(TimeoutScenario.Maximum);
             foreach (MemoryRange range in ranges)
             {
                 if ((range.ActualCrc == range.DesiredCrc) && (writeType != WriteType.TestWrite))
@@ -292,6 +292,9 @@ namespace PcmHacking
         private async Task<bool> CompareRanges(IList<MemoryRange> ranges, byte[] image, BlockType blockTypes, CancellationToken cancellationToken, ToolPresentNotifier notifier)
         {
             logger.AddUserMessage("Requesting CRCs from PCM...");
+
+            await this.device.SetTimeout(TimeoutScenario.ReadCrc);
+            bool successForAllRanges = true;
             foreach (MemoryRange range in ranges)
             {
                 if ((range.Type & blockTypes) == 0)
@@ -304,28 +307,30 @@ namespace PcmHacking
                     continue;
                 }
 
-                /*Query<UInt32> crcQuery = new Query<uint>(
-                    this.device,
-                    () => this.messageFactory.CreateCrcQuery(range.Address, range.Size),
-                    (message) => this.messageParser.ParseCrc(message, range.Address, range.Size),
-                    this.logger,
-                    cancellationToken,
-                    notifier);
-
-                Response<UInt32> crcResponse = await crcQuery.Execute();
-                */
-
                 this.device.ClearMessageQueue();
                 bool success = false;
                 UInt32 crc = 0;
-                await this.device.SetTimeout(TimeoutScenario.ReadProperty);
-                int retryDelay = 500;
+
+                // You might think that a shorter retry delay would speed things up,
+                // but 1500ms delay gets CRC results in about 3.5 seconds.
+                // A 1000ms delay resulted in 4+ second CRC responses, and a 750ms
+                // delay resulted in 5 second CRC responses. The PCM needs to spend
+                // its time caculating CRCs rather than responding to messages.
+                int retryDelay = 1500;
                 Message query = this.messageFactory.CreateCrcQuery(range.Address, range.Size);
-                for(int attempts = 0; attempts < 100; attempts++)
+                for (int attempts = 0; attempts < 10; attempts++)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     if (!await this.device.SendMessage(query))
                     {
-                        await Task.Delay(retryDelay);
+                        // This delay is fast because we're waiting for the bus to be available,
+                        // rather than waiting for the PCM's CPU to finish computing the CRC as 
+                        // with the other two delays below.
+                        await Task.Delay(100);
                         continue;
                     }
 
@@ -353,7 +358,8 @@ namespace PcmHacking
                 if (!success)
                 {
                     this.logger.AddUserMessage("Unable to get CRC for memory range " + range.Address.ToString("X8") + " / " + range.Size.ToString("X8"));
-                    return false;
+                    successForAllRanges = false;
+                    continue;
                 }
 
                 range.ActualCrc = crc;
@@ -384,7 +390,7 @@ namespace PcmHacking
 
             this.device.ClearMessageQueue();
 
-            return true;
+            return successForAllRanges;
         }
 
         /// <summary>

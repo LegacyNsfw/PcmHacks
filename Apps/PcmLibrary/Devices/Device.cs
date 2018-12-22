@@ -237,7 +237,7 @@ namespace PcmHacking
 
                     // Not sure why this is necessary, but AllPro 2k reads won't work without it.
                     //packetSize = (int) (packetSize * 1.1);
-                    packetSize = (int) (packetSize * 2.2);
+                    packetSize = (int) (packetSize * 2.5);
                     break;
 
                 case TimeoutScenario.SendKernel:
