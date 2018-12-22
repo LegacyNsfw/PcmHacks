@@ -94,8 +94,6 @@ namespace PcmHacking
 
         private async Task InvestigateCrc(CancellationToken cancellationToken)
         {
-            await this.device.SetTimeout(TimeoutScenario.Maximum);
-
             IList<MemoryRange> ranges = this.GetMemoryRanges(0x00894471);
 
             logger.AddUserMessage("Requesting CRCs from PCM...");
@@ -104,8 +102,14 @@ namespace PcmHacking
                 this.device.ClearMessageQueue();
                 bool success = false;
                 UInt32 crc = 0;
-                await this.device.SetTimeout(TimeoutScenario.ReadProperty);
-                int retryDelay = 500;
+                await this.device.SetTimeout(TimeoutScenario.ReadCrc);
+
+                // You might think that a shorter retry delay would speed things up,
+                // but 1500ms delay gets CRC results in about 3.5 seconds.
+                // A 1000ms delay resulted in 4+ second CRC responses, and a 750ms
+                // delay resulted in 5 second CRC responses. The PCM needs to spend
+                // its time caculating CRCs rather than responding to messages.
+                int retryDelay = 1500;
                 Message query = this.messageFactory.CreateCrcQuery(range.Address, range.Size);
                 for (int attempts = 0; attempts < 100; attempts++)
                 {

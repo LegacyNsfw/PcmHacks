@@ -71,17 +71,21 @@ namespace VpwDecoder
             SendCommand(port, "AT H 1"); // show headers
             SendCommand(port, "AT S 0"); // no spaces
             SendCommand(port, "AT MA"); // start monitoring
+
             string line = string.Empty;
+            DateTime lastMessage = DateTime.Now;
             while (line != null)
             {
                 line = port.ReadLine();
+                UInt32 elapsed = (UInt32) DateTime.Now.Subtract(lastMessage).TotalMilliseconds;
+                lastMessage = DateTime.Now;
 
                 if (line == null)
                 {
                     break;
                 }
 
-                if (line == "BUFFER FULL")
+                if ((line == "BUFFER FULL") || (line == "OUT OF MEMORY"))
                 {
                     SendCommand(port, "AT MA", false);
                 }
@@ -93,7 +97,17 @@ namespace VpwDecoder
                 }
 
                 line = Program.Decode(line);
-                Console.WriteLine(line);
+                Console.WriteLine(string.Format("{0:D4} {1}", elapsed, line));
+
+/*                while (Console.KeyAvailable)
+                {
+                    Console.ReadKey();
+                    Console.WriteLine("Key pressed. Re-opening port.");
+                    port.Close();
+                    port.NewLine = "\r";
+                    port.Open();
+                }
+*/
             }
         }
 

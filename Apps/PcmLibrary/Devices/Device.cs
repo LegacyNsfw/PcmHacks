@@ -11,6 +11,7 @@ namespace PcmHacking
     {
         Undefined = 0,
         ReadProperty,
+        ReadCrc,
         SendKernel,
         ReadMemoryBlock,
         Maximum,
@@ -222,6 +223,11 @@ namespace PcmHacking
                 case TimeoutScenario.ReadProperty:
                     // Approximate number of bytes in a get-VIN or get-OSID response.
                     packetSize = 50;
+                    break;
+
+                case TimeoutScenario.ReadCrc:
+                    // These packets are actually only 15 bytes, but the ReadProperty timeout wasn't enough.
+                    packetSize = 200;
                     break;
 
                 case TimeoutScenario.ReadMemoryBlock:

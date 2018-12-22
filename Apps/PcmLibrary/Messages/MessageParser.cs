@@ -480,7 +480,6 @@ namespace PcmHacking
         internal Response<UInt32> ParseCrc(Message responseMessage, UInt32 address, UInt32 size)
         {
             ResponseStatus status;
-
             byte[] expected = new byte[]
             {
                 0x6C,
