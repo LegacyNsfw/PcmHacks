@@ -24,6 +24,7 @@ int  main()
     ifstream file ("FirstReadFromCorvette.bin", ios::in|ios::binary|ios::ate);
     streampos size = file.tellg();
     char* content = new char[512*1024];
+    file.seekg(streampos(0), ios::beg);
     file.read(content, 512*1024);
     file.close();
     printf("Read %d bytes\r\n", size);
