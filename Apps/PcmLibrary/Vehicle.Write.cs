@@ -171,6 +171,8 @@ namespace PcmHacking
             // Stop now if the user only requested a comparison.
             if (writeType == WriteType.Compare)
             {
+                this.logger.AddUserMessage("Note that mismatched Parameter blocks are to be expected.");
+                this.logger.AddUserMessage("Parameter data can change every time the PCM is used.");
                 return true;
             }
 
