@@ -126,7 +126,7 @@
             this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
             this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
-            this.operationsBox.Size = new System.Drawing.Size(224, 428);
+            this.operationsBox.Size = new System.Drawing.Size(224, 382);
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
@@ -167,7 +167,7 @@
             // 
             // exitKernelButton
             // 
-            this.exitKernelButton.Location = new System.Drawing.Point(4, 300);
+            this.exitKernelButton.Location = new System.Drawing.Point(4, 286);
             this.exitKernelButton.Margin = new System.Windows.Forms.Padding(2);
             this.exitKernelButton.Name = "exitKernelButton";
             this.exitKernelButton.Size = new System.Drawing.Size(216, 25);
@@ -191,7 +191,7 @@
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelButton.Location = new System.Drawing.Point(4, 395);
+            this.cancelButton.Location = new System.Drawing.Point(4, 349);
             this.cancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(216, 25);
@@ -256,7 +256,7 @@
             this.tabs.Margin = new System.Windows.Forms.Padding(2);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(577, 571);
+            this.tabs.Size = new System.Drawing.Size(538, 525);
             this.tabs.TabIndex = 2;
             // 
             // resultsTab
@@ -266,7 +266,7 @@
             this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
             this.resultsTab.Name = "resultsTab";
             this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
-            this.resultsTab.Size = new System.Drawing.Size(569, 545);
+            this.resultsTab.Size = new System.Drawing.Size(530, 499);
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
@@ -282,7 +282,7 @@
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.userLog.Size = new System.Drawing.Size(563, 536);
+            this.userLog.Size = new System.Drawing.Size(524, 490);
             this.userLog.TabIndex = 0;
             // 
             // helpTab
@@ -334,7 +334,7 @@
             // 
             this.releasedUnder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedUnder.AutoSize = true;
-            this.releasedUnder.Location = new System.Drawing.Point(6, 590);
+            this.releasedUnder.Location = new System.Drawing.Point(6, 544);
             this.releasedUnder.Name = "releasedUnder";
             this.releasedUnder.Size = new System.Drawing.Size(166, 13);
             this.releasedUnder.TabIndex = 3;
@@ -344,7 +344,7 @@
             // 
             this.releasedAt.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedAt.AutoSize = true;
-            this.releasedAt.Location = new System.Drawing.Point(169, 590);
+            this.releasedAt.Location = new System.Drawing.Point(169, 544);
             this.releasedAt.Name = "releasedAt";
             this.releasedAt.Size = new System.Drawing.Size(216, 13);
             this.releasedAt.TabIndex = 4;
@@ -355,7 +355,7 @@
             // 
             this.releasedByAntus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedByAntus.AutoSize = true;
-            this.releasedByAntus.Location = new System.Drawing.Point(382, 590);
+            this.releasedByAntus.Location = new System.Drawing.Point(382, 544);
             this.releasedByAntus.Name = "releasedByAntus";
             this.releasedByAntus.Size = new System.Drawing.Size(62, 13);
             this.releasedByAntus.TabIndex = 5;
@@ -365,7 +365,7 @@
             // 
             this.releasedAtPcmHacking.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedAtPcmHacking.AutoSize = true;
-            this.releasedAtPcmHacking.Location = new System.Drawing.Point(444, 590);
+            this.releasedAtPcmHacking.Location = new System.Drawing.Point(444, 544);
             this.releasedAtPcmHacking.Name = "releasedAtPcmHacking";
             this.releasedAtPcmHacking.Size = new System.Drawing.Size(83, 13);
             this.releasedAtPcmHacking.TabIndex = 6;
@@ -376,7 +376,7 @@
             // 
             this.releasedEtc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedEtc.AutoSize = true;
-            this.releasedEtc.Location = new System.Drawing.Point(523, 590);
+            this.releasedEtc.Location = new System.Drawing.Point(523, 544);
             this.releasedEtc.Name = "releasedEtc";
             this.releasedEtc.Size = new System.Drawing.Size(237, 13);
             this.releasedEtc.TabIndex = 7;
@@ -386,7 +386,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(823, 607);
+            this.ClientSize = new System.Drawing.Size(784, 561);
             this.Controls.Add(this.releasedEtc);
             this.Controls.Add(this.releasedAtPcmHacking);
             this.Controls.Add(this.releasedByAntus);

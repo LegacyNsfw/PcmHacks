@@ -133,6 +133,8 @@ namespace PcmHacking
                 ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
 
                 await this.ResetDevice();
+
+                this.MinimumSize = new Size(800, 600);
             }
             catch (Exception exception)
             {
