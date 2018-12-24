@@ -5,6 +5,8 @@
 : -g    = include debug information - not using this because the
 :         disassembly is either corrupt or just incomprehensible
 
+call clean.bat
+
 c:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 main.c micro-kernel.c
 c:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe -T micro-kernel.ld main.o micro-kernel.o -o micro-kernel.elf
 c:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe -O binary --only-section=.kernel_code --only-section=.rodata micro-kernel.elf micro-kernel.bin
@@ -23,4 +25,5 @@ C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S write-kernel.elf > write-kerne
 c:\mingw\bin\g++ -o test.exe test.cpp crc.c
 
 copy *-kernel.bin ..\PcmHacks\Apps\PcmHammer\bin\debug
+copy write-kernel.bin ..\PcmHacks\Apps\PcmHammer\bin\debug\test-kernel.bin
 dir *.bin
