@@ -24,9 +24,10 @@ namespace PcmHacking
     public partial class Vehicle
     {
         /// <summary>
-        /// Replace the full contents of the PCM.
+        /// Write changes to the PCM's flash memory, or just test writing (Without 
+        /// making changes) to evaluate the connection quality.
         /// </summary>
-        public async Task<bool> Write(WriteType writeType, UInt32 kernelVersion, bool recoveryMode, CancellationToken cancellationToken, byte[] image)
+        public async Task<bool> Write(WriteType writeType, UInt32 kernelVersion, CancellationToken cancellationToken, byte[] image)
         {
             try
             {
@@ -90,7 +91,8 @@ namespace PcmHacking
                 this.logger.AddUserMessage("Do not power off the PCM! Do not exit this program!");
                 this.logger.AddUserMessage("Try flashing again. If errors continue, seek help online.");
                 this.logger.AddUserMessage("https://pcmhacking.net/forums/viewtopic.php?f=3&t=6080");
-                this.logger.AddDebugMessage(exception.ToString());
+                this.logger.AddUserMessage(string.Empty);
+                this.logger.AddUserMessage(exception.ToString());
                 return false;
             }
         }
@@ -273,7 +275,7 @@ namespace PcmHacking
                 this.RequestDebugLogs(cancellationToken);
             }
 
-            return true;
+            return false;
         }
 
         /// <summary>

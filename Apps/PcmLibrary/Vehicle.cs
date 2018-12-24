@@ -121,7 +121,7 @@ namespace PcmHacking
         {
             this.device.ClearMessageQueue();
 
-            for (int iterations = 0; iterations < 3; iterations++)
+            for (int iterations = 0; iterations < 10; iterations++)
             {
                 await this.TrySendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x62 }), "recovery query", 2);
                 Message response = await this.device.ReceiveMessage();

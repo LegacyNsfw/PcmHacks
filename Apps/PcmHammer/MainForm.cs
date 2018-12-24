@@ -196,7 +196,7 @@ namespace PcmHacking
             this.writeCalibrationButton.Enabled = false;
             this.writeOsAndCalibration.Enabled = false;
             this.writeFullContentsButton.Enabled = false;
-            this.testKernelButton.Enabled = false;
+            this.exitKernelButton.Enabled = false;
             this.reinitializeButton.Enabled = false;
         }
 
@@ -218,7 +218,7 @@ namespace PcmHacking
             this.writeCalibrationButton.Invoke((MethodInvoker)delegate () { this.writeCalibrationButton.Enabled = true; });
             this.writeOsAndCalibration.Invoke((MethodInvoker)delegate () { this.writeOsAndCalibration.Enabled = true; });
             this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true; });
-            this.testKernelButton.Invoke((MethodInvoker)delegate () { this.testKernelButton.Enabled = true; });
+            this.exitKernelButton.Invoke((MethodInvoker)delegate () { this.exitKernelButton.Enabled = true; });
             this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true; });
         }
 
@@ -647,7 +647,7 @@ namespace PcmHacking
         {
             if (!BackgroundWorker.IsAlive)
             {
-                BackgroundWorker = new System.Threading.Thread(() => testKernel_BackgroundThread());
+                BackgroundWorker = new System.Threading.Thread(() => exitKernel_BackgroundThread());
                 BackgroundWorker.IsBackground = true;
                 BackgroundWorker.Start();
             }
@@ -786,6 +786,9 @@ namespace PcmHacking
             }
         }
 
+        /// <summary>
+        /// Write changes to the PCM's flash memory.
+        /// </summary>
         private async void write_BackgroundThread(WriteType writeType)
         {
             try
@@ -814,42 +817,56 @@ namespace PcmHacking
                 }
 
                 UInt32 kernelVersion = 0;
+                bool needUnlock;
+                int keyAlgorithm = 1;
 
                 try
                 {
-                    this.AddUserMessage("Checking for recovery mode...");
-                    bool recoveryMode = await this.vehicle.IsInRecoveryMode();
-
-                    if (recoveryMode)
+                    this.AddUserMessage("Requesting operating system ID...");
+                    Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                    if (osidResponse.Status == ResponseStatus.Success)
                     {
-                        this.AddUserMessage("PCM is in recovery mode.");
+                        PcmInfo info = new PcmInfo(osidResponse.Value);
+                        keyAlgorithm = info.KeyAlgorithm;
+                        needUnlock = true;
                     }
                     else
                     {
-                        this.AddUserMessage("PCM is not in recovery mode.");
-
                         kernelVersion = await vehicle.GetKernelVersion();
                         if (kernelVersion == 0)
                         {
-                            this.AddUserMessage("Requesting operating system ID...");
-                            Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
-                            if (osidResponse.Status != ResponseStatus.Success)
-                            {
-                                this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
+                            this.AddUserMessage("Checking for recovery mode...");
+                            bool recoveryMode = await this.vehicle.IsInRecoveryMode();
 
+                            if (recoveryMode)
+                            {
+                                this.AddUserMessage("PCM is in recovery mode.");
+                                keyAlgorithm = 1;
+                                needUnlock = true;
+                            }
+                            else
+                            {
+                                this.AddUserMessage("PCM is not responding to OSID, kernel version, or recovery mode checks.");
                                 return;
                             }
-
-                            PcmInfo info = new PcmInfo(osidResponse.Value);
-                            bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                            if (!unlocked)
-                            {
-                                this.AddUserMessage("Unlock was not successful.");
-                                return;
-                            }
-
-                            this.AddUserMessage("Unlock succeeded.");
                         }
+                        else
+                        {
+                            needUnlock = false;
+                        }
+                    }
+
+                    if (needUnlock)
+                    { 
+
+                        bool unlocked = await this.vehicle.UnlockEcu(keyAlgorithm);
+                        if (!unlocked)
+                        {
+                            this.AddUserMessage("Unlock was not successful.");
+                            return;
+                        }
+
+                        this.AddUserMessage("Unlock succeeded.");
                     }
 
                     using (Stream stream = File.OpenRead(path))
@@ -883,7 +900,7 @@ namespace PcmHacking
                             return;
                         }
 
-                        await this.vehicle.Write(writeType, kernelVersion, recoveryMode, this.cancellationTokenSource.Token, image);
+                        await this.vehicle.Write(writeType, kernelVersion, this.cancellationTokenSource.Token, image);
                     }
                 }
                 catch (IOException exception)
@@ -905,7 +922,14 @@ namespace PcmHacking
 
         }
 
-        private async void testKernel_BackgroundThread()
+        /// <summary>
+        /// From the user's perspective, this is for exiting the kernel, in 
+        /// case it remains running after an aborted operation.
+        /// 
+        /// From the developer's perspective, this is for testing, debugging,
+        /// and investigating kernel features that are development.
+        /// </summary>
+        private async void exitKernel_BackgroundThread()
         {
             try
             {
@@ -924,40 +948,9 @@ namespace PcmHacking
 
                 this.cancellationTokenSource = new CancellationTokenSource();
 
-                bool kernelRunning = false;
-
                 try
                 {
-                    this.AddUserMessage("Checking for recovery mode...");
-                    bool recoveryMode = await this.vehicle.IsInRecoveryMode();
-
-                    if (!recoveryMode)
-                    {
-                        this.AddUserMessage("PCM is not in recovery mode.");
-                        this.AddUserMessage("Requesting operating system ID...");
-                        Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
-                        if (osidResponse.Status != ResponseStatus.Success)
-                        {
-                            this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
-
-                            return;
-                        }
-
-                        PcmInfo info = new PcmInfo(osidResponse.Value);
-
-                        this.AddUserMessage("Unlocking PCM...");
-                        bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                        if (!unlocked)
-                        {
-                            this.AddUserMessage("Unlock was not successful.");
-                            return;
-                        }
-
-                        this.AddUserMessage("Unlock succeeded.");
-                    }
-
-
-                    await this.vehicle.TestKernel(kernelRunning, recoveryMode, this.cancellationTokenSource.Token, null);
+                    await this.vehicle.ExitKernel(true, false, this.cancellationTokenSource.Token, null);
                 }
                 catch (IOException exception)
                 {

@@ -41,23 +41,58 @@ namespace PcmHacking
         }
     }
 
+    /// <summary>
+    /// We expose this to users as a way to halt/exit the kernel, but it 
+    /// is also a convenient place to insert code to test kernel features
+    /// that are under development.
+    /// </summary>
     public partial class Vehicle
     {        
         /// <summary>
         /// For testing prototype kernels. 
         /// </summary>
-        public async Task<bool> TestKernel(bool kernelRunning, bool recoveryMode, CancellationToken cancellationToken, Stream unused)
+        public async Task<bool> ExitKernel(bool kernelRunning, bool recoveryMode, CancellationToken cancellationToken, Stream unused)
         {
             try
             {
                 this.device.ClearMessageQueue();                
 
-                Response<byte[]> response = await LoadKernelFromFile("write-kernel.bin");
+                Response<byte[]> response = await LoadKernelFromFile("test-kernel.bin");
                 if (response.Status != ResponseStatus.Success)
                 {
-                    logger.AddUserMessage("Failed to load kernel from file.");
+                    // The cleanup code in the finally block will exit the kernel.
+                    return true;
+                }
+
+                logger.AddUserMessage("Test kernel found.");
+
+                UInt32 kernelVersion = 0;
+                int keyAlgorithm = 1; // default, will work for most factory operating systems.
+                Response<uint> osidResponse = await this.QueryOperatingSystemId();
+                if (osidResponse.Status != ResponseStatus.Success)
+                {
+                    kernelVersion = await this.GetKernelVersion();
+
+                    // TODO: Check for recovery mode.                    
+                    // TODO: Load the tiny kernel, then use that to load the test kernel.
+                    // Just to see whether we could potentially use that technique to assist 
+                    // a user whose flash is corrupted and regular flashing isn't working.
+                }
+                else
+                {
+                    PcmInfo info = new PcmInfo(osidResponse.Value);
+                    keyAlgorithm = info.KeyAlgorithm;
+                }
+
+                this.logger.AddUserMessage("Unlocking PCM...");
+                bool unlocked = await this.UnlockEcu(keyAlgorithm);
+                if (!unlocked)
+                {
+                    this.logger.AddUserMessage("Unlock was not successful.");
                     return false;
                 }
+
+                this.logger.AddUserMessage("Unlock succeeded.");
 
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -92,6 +127,9 @@ namespace PcmHacking
             }
         }
 
+        /// <summary>
+        /// This was used to test the kernel's CRC code.
+        /// </summary>
         private async Task InvestigateCrc(CancellationToken cancellationToken)
         {
             IList<MemoryRange> ranges = this.GetMemoryRanges(0x00894471);

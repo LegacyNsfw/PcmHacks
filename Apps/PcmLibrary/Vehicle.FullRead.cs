@@ -85,7 +85,8 @@ namespace PcmHacking
                     }
 
                     // TODO: Figure out why the AllPro is more reliable if we ALWAYS send a notification here, and then remove this hack.
-                    if (this.device.MaxReceiveSize > 2000)
+                    // (The AllPro is currently the only device with a 2048 byte receive buffer, so this hack only gets invoked for it.)
+                    if (this.device.MaxReceiveSize == 2048)
                     {
                         await toolPresentNotifier.ForceNotify();
                     }
@@ -166,8 +167,6 @@ namespace PcmHacking
                     {
                         break;
                     }
-
-                    System.Threading.Thread.Sleep(100);
 
                     Message response = await this.ReceiveMessage(cancellationToken);
                     if (response == null)
