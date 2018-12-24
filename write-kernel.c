@@ -432,10 +432,10 @@ unsigned char WriteToFlash(const unsigned int payloadLengthInBytes, const unsign
 
 	if (!testWrite)
 	{
-				// Return flash to normal mode.
-				unsigned short* address = (unsigned short*)startAddress;
-				*address = 0xFFFF;
-				*address = 0xFFFF;
+		// Return flash to normal mode.
+		unsigned short* address = (unsigned short*)startAddress;
+		*address = 0xFFFF;
+		*address = 0xFFFF;
 		LockFlash();
 	}
 	
