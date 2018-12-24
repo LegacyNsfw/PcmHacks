@@ -149,7 +149,7 @@ void HandleCrcQuery()
 		path = 2;
 	}
 
-	VariableSleep(1);
+	ElmSleep();
 
     if (crcIsDone(message, nBytes))
     {
