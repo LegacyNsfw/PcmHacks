@@ -684,6 +684,21 @@ namespace PcmHacking
                     return;
                 }
 
+                // Get the path to save the image to.
+                //
+                // TODO: remember this value and offer to re-use it, in case 
+                // the read fails and the user has to try again.
+                //
+                string path = "";
+                this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
+                if (path == null)
+                {
+                    this.AddUserMessage("Save canceled.");
+                    return;
+                }
+
+                this.AddUserMessage("Will save to " + path);
+
                 this.cancellationTokenSource = new CancellationTokenSource();
 
                 this.AddUserMessage("Querying operating system of current PCM.");
@@ -731,45 +746,45 @@ namespace PcmHacking
                 }
 
                 // Do the actual reading.
+                DateTime start = DateTime.Now;
                 Response<Stream> readResponse = await this.vehicle.ReadContents(info, this.cancellationTokenSource.Token);
+                this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
                 if (readResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
                     return;
                 }
 
-                // Get the path to save the image to.
-                //
-                // TODO: remember this value and offer to re-use it, in case 
-                // the read fails and the user has to try again.
-                //
-                string path = "";
-                this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
-                if (path == null)
-                {
-                    this.AddUserMessage("Save canceled.");
-                    return;
-                }
-
-                this.AddUserMessage("Will save to " + path);
-
                 // Save the contents to the path that the user provided.
-                try
+                bool success = false;
+                do
                 {
-                    this.AddUserMessage("Saving contents to " + path);
-
-                    readResponse.Value.Position = 0;
-
-                    using (Stream output = File.OpenWrite(path))
+                    try
                     {
-                        await readResponse.Value.CopyToAsync(output);
+                        this.AddUserMessage("Saving contents to " + path);
+
+                        readResponse.Value.Position = 0;
+
+                        using (Stream output = File.OpenWrite(path))
+                        {
+                            await readResponse.Value.CopyToAsync(output);
+                        }
+
+                        success = true;
                     }
-                }
-                catch (IOException exception)
-                {
-                    this.AddUserMessage("Unable to save file: " + exception.Message);
-                    this.AddDebugMessage(exception.ToString());
-                }
+                    catch (IOException exception)
+                    {
+                        this.AddUserMessage("Unable to save file: " + exception.Message);
+                        this.AddDebugMessage(exception.ToString());
+
+                        this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
+                        if (path == null)
+                        {
+                            this.AddUserMessage("Save canceled.");
+                            return;
+                        }
+                    }
+                } while (!success);
             }
             catch (Exception exception)
             {
