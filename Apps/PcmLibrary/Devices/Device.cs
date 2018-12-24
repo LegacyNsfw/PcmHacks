@@ -226,8 +226,10 @@ namespace PcmHacking
                     break;
 
                 case TimeoutScenario.ReadCrc:
-                    // These packets are actually only 15 bytes, but the ReadProperty timeout wasn't enough.
-                    packetSize = 200;
+                    // These packets are actually only 15 bytes, but the ReadProperty timeout wasn't
+                    // enough for the AllPro at 4x. Still not sure why. So this is a bit of a hack.
+                    // TODO: Figure out why the AllPro needs a hack to receive CRC values at 4x.
+                    packetSize = 1000;
                     break;
 
                 case TimeoutScenario.ReadMemoryBlock:

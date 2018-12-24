@@ -761,7 +761,7 @@ namespace PcmHacking
 
                         readResponse.Value.Position = 0;
 
-                        using (Stream output = File.OpenWrite(path))
+                        using (Stream output = File.Open(path, FileMode.Create))
                         {
                             await readResponse.Value.CopyToAsync(output);
                         }

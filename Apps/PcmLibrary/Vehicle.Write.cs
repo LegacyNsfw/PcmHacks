@@ -39,7 +39,7 @@ namespace PcmHacking
                 {
                     // switch to 4x, if possible. But continue either way.
                     // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                    if (false && !await this.VehicleSetVPW4x(VpwSpeed.FourX))
+                    if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
                     {
                         this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
                         return false;
@@ -311,7 +311,7 @@ namespace PcmHacking
                 this.device.ClearMessageQueue();
                 bool success = false;
                 UInt32 crc = 0;
-
+                
                 // You might think that a shorter retry delay would speed things up,
                 // but 1500ms delay gets CRC results in about 3.5 seconds.
                 // A 1000ms delay resulted in 4+ second CRC responses, and a 750ms
