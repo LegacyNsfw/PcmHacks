@@ -37,15 +37,12 @@ namespace PcmHacking
                 // TODO: install newer version if available.
                 if (kernelVersion == 0)
                 {
-                    if (false)
+                    // switch to 4x, if possible. But continue either way.
+                    // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
+                    if (false && !await this.VehicleSetVPW4x(VpwSpeed.FourX))
                     {
-                        // switch to 4x, if possible. But continue either way.
-                        // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                        if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
-                        {
-                            this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
-                            return false;
-                        }
+                        this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
+                        return false;
                     }
 
                     Response<byte[]> response = await LoadKernelFromFile("write-kernel.bin");

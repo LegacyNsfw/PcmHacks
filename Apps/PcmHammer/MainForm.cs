@@ -839,12 +839,15 @@ namespace PcmHacking
                     Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
                     if (osidResponse.Status == ResponseStatus.Success)
                     {
+                        this.AddUserMessage("Operating System: " + osidResponse.Value.ToString());
                         PcmInfo info = new PcmInfo(osidResponse.Value);
                         keyAlgorithm = info.KeyAlgorithm;
                         needUnlock = true;
                     }
                     else
                     {
+                        this.AddUserMessage("Operating system request failed, checking for a live kernel...");
+
                         kernelVersion = await vehicle.GetKernelVersion();
                         if (kernelVersion == 0)
                         {
@@ -860,11 +863,13 @@ namespace PcmHacking
                             else
                             {
                                 this.AddUserMessage("PCM is not responding to OSID, kernel version, or recovery mode checks.");
-                                return;
+                                this.AddUserMessage("Unlock may not work, but we'll try...");
+                                needUnlock = true;
                             }
                         }
                         else
                         {
+                            this.AddUserMessage("Kernel version: " + kernelVersion.ToString("X8"));
                             needUnlock = false;
                         }
                     }
