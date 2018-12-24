@@ -685,10 +685,6 @@ namespace PcmHacking
                 }
 
                 // Get the path to save the image to.
-                //
-                // TODO: remember this value and offer to re-use it, in case 
-                // the read fails and the user has to try again.
-                //
                 string path = "";
                 this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
                 if (path == null)
@@ -917,7 +913,9 @@ namespace PcmHacking
                             return;
                         }
 
+                        DateTime start = DateTime.Now;
                         await this.vehicle.Write(writeType, kernelVersion, this.cancellationTokenSource.Token, image);
+                        this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
                     }
                 }
                 catch (IOException exception)

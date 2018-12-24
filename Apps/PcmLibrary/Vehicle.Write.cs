@@ -243,7 +243,7 @@ namespace PcmHacking
             {
                 // TODO: the app should know if any errors were encountered. The user shouldn't need to check.
                 this.logger.AddUserMessage("Test complete. Were any errors logged above?");
-                return false;
+                return true;
             }
 
             if (match)

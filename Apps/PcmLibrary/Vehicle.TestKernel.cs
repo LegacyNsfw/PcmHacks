@@ -123,6 +123,7 @@ namespace PcmHacking
             }
             finally
             {
+                this.logger.AddUserMessage("Halting kernel.");
                 await this.Cleanup();
             }
         }
