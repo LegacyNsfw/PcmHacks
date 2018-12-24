@@ -829,6 +829,8 @@ namespace PcmHacking
                     return;
                 }
 
+                this.AddUserMessage(path);
+
                 UInt32 kernelVersion = 0;
                 bool needUnlock;
                 int keyAlgorithm = 1;

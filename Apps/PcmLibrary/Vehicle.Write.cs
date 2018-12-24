@@ -294,6 +294,19 @@ namespace PcmHacking
         {
             logger.AddUserMessage("Requesting CRCs from PCM...");
 
+            // The kernel will remember (and return) the CRC value of the last block it 
+            // was asked about, which leads to misleading results if you only rewrite 
+            // a single block. So we send a a bogus query to reset the last-used CRC 
+            // value in the kernel.
+            Query<UInt32> crcReset = new Query<uint>(
+                this.device,
+                () => this.messageFactory.CreateCrcQuery(0, 0),
+                (message) => this.messageParser.ParseCrc(message, 0, 0),
+                this.logger,
+                cancellationToken,
+                notifier);
+            await crcReset.Execute();
+
             await this.device.SetTimeout(TimeoutScenario.ReadCrc);
             bool successForAllRanges = true;
             foreach (MemoryRange range in ranges)
