@@ -380,7 +380,7 @@ namespace PcmHacking
 
                 this.logger.AddUserMessage(
                     string.Format(
-                        "Range {0:X6}-{1:X6} - Local: {2:X8} - PCM: {3:X8} - ({4}) - {5}",
+                        "Range {0:X6}-{1:X6} - File: {2:X8} - PCM: {3:X8} - ({4}) - {5}",
                         range.Address,
                         range.Address + (range.Size - 1),
                         range.DesiredCrc,

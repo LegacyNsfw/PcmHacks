@@ -47,6 +47,8 @@ namespace PcmHacking
     /// </summary>
     public abstract class Device : IDisposable
     {
+        private int maxSendSize;
+
         /// <summary>
         /// Provides access to the Results and Debug panes.
         /// </summary>
@@ -55,7 +57,23 @@ namespace PcmHacking
         /// <summary>
         /// Maximum size of sent messages.
         /// </summary>
-        public int MaxSendSize { get; protected set; }
+        /// <remarks>
+        /// Max send size is currently limited to 2k, because the kernel
+        /// crashes at startup with a 4k buffer.
+        /// TODO: Make the kernel happy with a 4k buffer, remove this limit.
+        /// </remarks>
+        public int MaxSendSize
+        {
+            get
+            {
+                return Math.Min(2048, this.maxSendSize);
+            }
+
+            protected set
+            {
+                this.maxSendSize = value;
+            }
+        }
 
         /// <summary>
         /// Maximum size of received messages.
