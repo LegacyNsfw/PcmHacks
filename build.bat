@@ -12,6 +12,11 @@ c:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe -T micro-kernel.ld main.o micro-kernel.o 
 c:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe -O binary --only-section=.kernel_code --only-section=.rodata micro-kernel.elf micro-kernel.bin
 C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S micro-kernel.elf > micro-kernel.disassembly
 
+c:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 -O0 main.c test-kernel.c common.c 
+c:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe -T test-kernel.ld main.o test-kernel.o common.o -o test-kernel.elf
+c:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe -O binary --only-section=.kernel_code --only-section=.rodata test-kernel.elf test-kernel.bin
+C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S test-kernel.elf > test-kernel.disassembly
+
 c:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 -O0 main.c read-kernel.c common.c common-readwrite.c
 c:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe -T read-kernel.ld main.o read-kernel.o common.o common-readwrite.o -o read-kernel.elf
 c:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe -O binary --only-section=.kernel_code --only-section=.rodata read-kernel.elf read-kernel.bin
@@ -25,5 +30,4 @@ C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S write-kernel.elf > write-kerne
 c:\mingw\bin\g++ -o test.exe test.cpp crc.c
 
 copy *-kernel.bin ..\PcmHacks\Apps\PcmHammer\bin\debug
-copy write-kernel.bin ..\PcmHacks\Apps\PcmHammer\bin\debug\test-kernel.bin
 dir *.bin

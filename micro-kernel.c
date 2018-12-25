@@ -28,8 +28,8 @@ char volatile * const Watchdog2 = (char*)0xFFD006;
 // The code that extracts the kernel bin needs to exclude that address range,
 // because it will just add 8kb of 0x00 bytes to the kernel bin file.
 //
-// 4096 == 0x1000
-#define MessageBufferSize 1024
+// 4096 == 0x1000, we're using 4096+20 bytes for message-header overhead
+#define MessageBufferSize 5016 
 #define BreadcrumbBufferSize 6
 char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
 
@@ -87,6 +87,11 @@ void ClearMessageBuffer()
 {
 	for (int index = 0; index < MessageBufferSize; index++)
 	{
+		if (index % 256 == 0)
+		{
+			ScratchWatchdog();
+		}
+
 		MessageBuffer[index] = 0;
 	}
 }
@@ -232,8 +237,8 @@ int ReadMessage(char *completionCode, char *readState)
 	int length = 0;
 	for (int iterations = 0; iterations < 30 * 1000; iterations++)
 	{
-		// Artificial message-length limit for debugging.
-		if (length == 25)
+		// Message-length limit for debugging.
+		if (length == MessageBufferSize)
 		{
 			*readState = 0xEE;
 			return length;
@@ -386,9 +391,8 @@ KernelStart(void)
 	// to allow the app to recover from any failures. 
 	// If we choose to loop forever we need a good story for how to get out of that state.
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
-	for(int iterations = 0; iterations < 100; iterations++)
+	for(int iterations = 0; iterations < 1000 * 1000; iterations++)
 	{
-		//LongSleepWithWatchdog();
 		ScratchWatchdog();
 		WasteTime();
 
@@ -402,10 +406,10 @@ KernelStart(void)
 			toolPresent[4] = *DLC_Status;
 			toolPresent[5] = completionCode;
 			toolPresent[6] = readState;
-			CopyToMessageBuffer(toolPresent, 7, 0);
+//			CopyToMessageBuffer(toolPresent, 7, 0);
 			
-			WriteMessage(7, 0);
-			ClearMessageBuffer();
+//			WriteMessage(7, 0);
+//			ClearMessageBuffer();
 
 			// Enable this for breadcrumb debugging.
 			// It gives insight into the code, but it causes side-effects in the 
@@ -444,17 +448,20 @@ KernelStart(void)
 			Reboot(0xEE);
 		}
 
-		// Support the ping message used by Dimented's kernel.
-		if (MessageBuffer[3] == 0x36 && MessageBuffer[4] == 0xE0)
+		// Support the version request used by the PCM Hammer app
+		if (MessageBuffer[3] == 0x3D && MessageBuffer[4] == 0x00)
 		{
 			MessageBuffer[0] = 0x6C;
 			MessageBuffer[1] = 0xF0;
 			MessageBuffer[2] = 0x10;
-			MessageBuffer[3] = 0x36;
-			MessageBuffer[4] = 0xE0;
-			MessageBuffer[5] = 0x80;
+			MessageBuffer[3] = 0x7D;
+			MessageBuffer[4] = 0x00;
+			MessageBuffer[5] = 0x01;
+			MessageBuffer[6] = 0x00;
+			MessageBuffer[7] = 0x00;
+			MessageBuffer[8] = 0xDD;
 
-			WriteMessage(6, 0);
+			WriteMessage(9, 0);
 			LongSleepWithWatchdog();
 			LongSleepWithWatchdog();
 			continue;
@@ -462,16 +469,14 @@ KernelStart(void)
 
 		// Echo the received message 
 		int offset = 7; 
-		CopyToMessageBuffer(MessageBuffer, length, offset);
+//		CopyToMessageBuffer(MessageBuffer, length, offset);
 		MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
 		MessageBuffer[2] = 0x10;
-		MessageBuffer[3] = 0xAA;
-		MessageBuffer[4] = (char)(length & 0xFF);
-		MessageBuffer[5] = completionCode;
-		MessageBuffer[6] = readState;
+		MessageBuffer[3] = 0x7E;
+		MessageBuffer[4] = (unsigned char)length;
 
-		WriteMessage(length + offset, 1);
+		WriteMessage(length, 0);
 
 		ClearMessageBuffer();
 
