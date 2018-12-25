@@ -112,7 +112,8 @@ namespace PcmHacking
 
                 //await this.InvestigateDataCorruption(cancellationToken);
                 //await this.InvestigateKernelVersionQueryTiming();
-                await this.InvestigateCrc(cancellationToken);
+                //await this.InvestigateCrc(cancellationToken);
+                await this.InvestigateDataRelayCorruption(cancellationToken);
                 return true;
             }
             catch (Exception exception)
@@ -125,6 +126,36 @@ namespace PcmHacking
             {
                 this.logger.AddUserMessage("Halting kernel.");
                 await this.Cleanup();
+            }
+        }
+
+        /// <summary>
+        /// Send a series of increasingly longer messages. They should be echoed back with
+        /// only the mode byte changing from 3E to 7E.
+        /// </summary>
+        private async Task InvestigateDataRelayCorruption(CancellationToken cancellationToken)
+        {
+            for (int length = 1000; length < 1030; length++)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                byte[] message = new byte[length + 5];
+                message[0] = 0x6C;
+                message[1] = 0x10;
+                message[2] = 0xF0;
+                message[3] = 0x3E;
+                message[4] = (byte)length; // to indicate what the loop counter is
+
+                for (int index = 0; index < length; index++)
+                {
+                    message[5 + index] = (byte)(0xAA + (0x11 * (index % 4)));
+                }
+
+                await this.device.SendMessage(new Message(message));
+                await Task.Delay(3000, cancellationToken);
             }
         }
 
