@@ -22,6 +22,21 @@ namespace PcmHacking
     public partial class MainForm : Form, ILogger
     {
         /// <summary>
+        /// This will become the first half of the Window caption, and will 
+        /// be printed to the user and debug logs each time a device is 
+        /// initialized.
+        /// </summary>
+        private const string AppName = "PCM Hammer";
+
+        /// <summary>
+        /// This becomes the second half of the window caption, and is printed
+        /// when devices are initialized. 
+        /// 
+        /// If null, the build timestamp will be used.
+        /// </summary>
+        private const string AppVersion = null;
+
+        /// <summary>
         /// The Vehicle object is our interface to the car. It has the device, the message generator, and the message parser.
         /// </summary>
         private Vehicle vehicle;
@@ -117,12 +132,31 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Gets a string to use in the window caption and at the top of each log.
+        /// </summary>
+        private static string GetAppNameAndVersion()
+        {
+            string versionString = AppVersion;
+            if (versionString == null)
+            {
+                DateTime localTime = Generated.BuildTime.ToLocalTime();
+                versionString = String.Format(
+                    "({0}, {1})",
+                    localTime.ToShortDateString(),
+                    localTime.ToShortTimeString());
+            }
+
+            return AppName + " " + versionString;
+        }
+
+        /// <summary>
         /// Called when the main window is being created.
         /// </summary>
         private async void MainForm_Load(object sender, EventArgs e)
         {
             try
             {
+                this.Text = GetAppNameAndVersion();
                 this.interfaceBox.Enabled = true;
                 this.operationsBox.Enabled = true;
 
@@ -133,6 +167,8 @@ namespace PcmHacking
                 ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
 
                 await this.ResetDevice();
+
+                this.MinimumSize = new Size(800, 600);
             }
             catch (Exception exception)
             {
@@ -191,10 +227,12 @@ namespace PcmHacking
             this.readPropertiesButton.Enabled = false;
             this.readFullContentsButton.Enabled = false;
             this.modifyVinButton.Enabled = false;
+            this.quickComparisonButton.Enabled = false;
+            this.testWriteButton.Enabled = false;
             this.writeCalibrationButton.Enabled = false;
             this.writeOsAndCalibration.Enabled = false;
             this.writeFullContentsButton.Enabled = false;
-            this.testKernelButton.Enabled = false;
+            this.exitKernelButton.Enabled = false;
             this.reinitializeButton.Enabled = false;
         }
 
@@ -211,10 +249,12 @@ namespace PcmHacking
             this.readPropertiesButton.Invoke((MethodInvoker)delegate () { this.readPropertiesButton.Enabled = true; });
             this.readFullContentsButton.Invoke((MethodInvoker)delegate () { this.readFullContentsButton.Enabled = true; });
             this.modifyVinButton.Invoke((MethodInvoker)delegate () { this.modifyVinButton.Enabled = true; });
+            this.quickComparisonButton.Invoke((MethodInvoker)delegate () { this.quickComparisonButton.Enabled = true; });
+            this.testWriteButton.Invoke((MethodInvoker)delegate () { this.testWriteButton.Enabled = true; });
             this.writeCalibrationButton.Invoke((MethodInvoker)delegate () { this.writeCalibrationButton.Enabled = true; });
             this.writeOsAndCalibration.Invoke((MethodInvoker)delegate () { this.writeOsAndCalibration.Enabled = true; });
             this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true; });
-            this.testKernelButton.Invoke((MethodInvoker)delegate () { this.testKernelButton.Enabled = true; });
+            this.exitKernelButton.Invoke((MethodInvoker)delegate () { this.exitKernelButton.Enabled = true; });
             this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true; });
         }
 
@@ -289,6 +329,7 @@ namespace PcmHacking
 
             this.debugLog.Clear();
             this.userLog.Clear();
+            this.AddUserMessage(GetAppNameAndVersion());
 
             try
             {
@@ -476,6 +517,13 @@ namespace PcmHacking
         /// </summary>
         private void readFullContentsButton_Click(object sender, EventArgs e)
         {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
             if (!BackgroundWorker.IsAlive)
             {
                 BackgroundWorker = new System.Threading.Thread(() => readFullContents_BackgroundThread());
@@ -489,6 +537,13 @@ namespace PcmHacking
         /// </summary>
         private void writeCalibrationButton_Click(object sender, EventArgs e)
         {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
             if (!BackgroundWorker.IsAlive)
             {
                 DialogResult result = MessageBox.Show(
@@ -518,10 +573,17 @@ namespace PcmHacking
         /// </summary>
         private void writeOsAndCalibration_Click(object sender, EventArgs e)
         {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
             if (!BackgroundWorker.IsAlive)
             {
                 DialogResult result = MessageBox.Show(
-                    "Changing the operating system can render the PCM inoperable." + Environment.NewLine +
+                    "Changing the operating system can render the PCM unusable." + Environment.NewLine +
                     "Special tools may be needed to make the PCM work again." + Environment.NewLine +
                     "Are you sure you really want to take that risk?",
                     "This is dangerous.",
@@ -547,10 +609,17 @@ namespace PcmHacking
         /// </summary>
         private void writeFullContentsButton_Click(object sender, EventArgs e)
         {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
             if (!BackgroundWorker.IsAlive)
             {
                 DialogResult result = MessageBox.Show(
-                    "Changing the operating system can render the PCM inoperable." + Environment.NewLine +
+                    "Changing the operating system can render the PCM unusable." + Environment.NewLine +
                     "Special tools may be needed to make the PCM work again." + Environment.NewLine +
                     "Are you sure you really want to take that risk?",
                     "This is dangerous.",
@@ -572,13 +641,50 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Compare block CRCs of a file and the PCM.
+        /// </summary>
+        private void quickComparisonButton_Click(object sender, EventArgs e)
+        {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            if (!BackgroundWorker.IsAlive)
+            {
+                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Compare));
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
+            }
+        }
+
+        private void testWriteButton_Click(object sender, EventArgs e)
+        {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            if (!BackgroundWorker.IsAlive)
+            {
+                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.TestWrite));
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
+            }
+        }
+
+        /// <summary>
         /// Test something in a kernel.
         /// </summary>
         private void testKernelButton_Click(object sender, EventArgs e)
         {
             if (!BackgroundWorker.IsAlive)
             {
-                BackgroundWorker = new System.Threading.Thread(() => testKernel_BackgroundThread());
+                BackgroundWorker = new System.Threading.Thread(() => exitKernel_BackgroundThread());
                 BackgroundWorker.IsBackground = true;
                 BackgroundWorker.Start();
             }
@@ -613,14 +719,18 @@ namespace PcmHacking
                     return;
                 }
 
-                this.cancellationTokenSource = new CancellationTokenSource();
-
-                DelayDialogBox dialogBox = new DelayDialogBox();
-                DialogResult dialogResult = dialogBox.ShowDialog();
-                if (dialogResult == DialogResult.Cancel)
+                // Get the path to save the image to.
+                string path = "";
+                this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
+                if (path == null)
                 {
+                    this.AddUserMessage("Save canceled.");
                     return;
                 }
+
+                this.AddUserMessage("Will save to " + path);
+
+                this.cancellationTokenSource = new CancellationTokenSource();
 
                 this.AddUserMessage("Querying operating system of current PCM.");
                 Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
@@ -667,45 +777,45 @@ namespace PcmHacking
                 }
 
                 // Do the actual reading.
+                DateTime start = DateTime.Now;
                 Response<Stream> readResponse = await this.vehicle.ReadContents(info, this.cancellationTokenSource.Token);
+                this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
                 if (readResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
                     return;
                 }
 
-                // Get the path to save the image to.
-                //
-                // TODO: remember this value and offer to re-use it, in case 
-                // the read fails and the user has to try again.
-                //
-                string path = "";
-                this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
-                if (path == null)
-                {
-                    this.AddUserMessage("Save canceled.");
-                    return;
-                }
-
-                this.AddUserMessage("Will save to " + path);
-
                 // Save the contents to the path that the user provided.
-                try
+                bool success = false;
+                do
                 {
-                    this.AddUserMessage("Saving contents to " + path);
-
-                    readResponse.Value.Position = 0;
-
-                    using (Stream output = File.OpenWrite(path))
+                    try
                     {
-                        await readResponse.Value.CopyToAsync(output);
+                        this.AddUserMessage("Saving contents to " + path);
+
+                        readResponse.Value.Position = 0;
+
+                        using (Stream output = File.Open(path, FileMode.Create))
+                        {
+                            await readResponse.Value.CopyToAsync(output);
+                        }
+
+                        success = true;
                     }
-                }
-                catch (IOException exception)
-                {
-                    this.AddUserMessage("Unable to save file: " + exception.Message);
-                    this.AddDebugMessage(exception.ToString());
-                }
+                    catch (IOException exception)
+                    {
+                        this.AddUserMessage("Unable to save file: " + exception.Message);
+                        this.AddDebugMessage(exception.ToString());
+
+                        this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
+                        if (path == null)
+                        {
+                            this.AddUserMessage("Save canceled.");
+                            return;
+                        }
+                    }
+                } while (!success);
             }
             catch (Exception exception)
             {
@@ -724,6 +834,9 @@ namespace PcmHacking
             }
         }
 
+        /// <summary>
+        /// Write changes to the PCM's flash memory.
+        /// </summary>
         private async void write_BackgroundThread(WriteType writeType)
         {
             try
@@ -750,46 +863,101 @@ namespace PcmHacking
                 {
                     return;
                 }
-                
-                bool kernelRunning = false;
+
+                this.AddUserMessage(path);
+
+                UInt32 kernelVersion = 0;
+                bool needUnlock;
+                int keyAlgorithm = 1;
 
                 try
                 {
-                    bool recoveryMode = await this.vehicle.IsInRecoveryMode();
-
-                    if (!recoveryMode)
+                    this.AddUserMessage("Requesting operating system ID...");
+                    Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                    if (osidResponse.Status == ResponseStatus.Success)
                     {
-                        if (await this.vehicle.TryWaitForKernel(cancellationTokenSource.Token, 1))
+                        this.AddUserMessage("Operating System: " + osidResponse.Value.ToString());
+                        PcmInfo info = new PcmInfo(osidResponse.Value);
+                        keyAlgorithm = info.KeyAlgorithm;
+                        needUnlock = true;
+                    }
+                    else
+                    {
+                        this.AddUserMessage("Operating system request failed, checking for a live kernel...");
+
+                        kernelVersion = await vehicle.GetKernelVersion();
+                        if (kernelVersion == 0)
                         {
-                            kernelRunning = true;
+                            this.AddUserMessage("Checking for recovery mode...");
+                            bool recoveryMode = await this.vehicle.IsInRecoveryMode();
+
+                            if (recoveryMode)
+                            {
+                                this.AddUserMessage("PCM is in recovery mode.");
+                                keyAlgorithm = 1;
+                                needUnlock = true;
+                            }
+                            else
+                            {
+                                this.AddUserMessage("PCM is not responding to OSID, kernel version, or recovery mode checks.");
+                                this.AddUserMessage("Unlock may not work, but we'll try...");
+                                needUnlock = true;
+                            }
                         }
                         else
                         {
-
-                            Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
-                            if (osidResponse.Status != ResponseStatus.Success)
-                            {
-                                this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
-
-                                return;
-                            }
-
-                            PcmInfo info = new PcmInfo(osidResponse.Value);
-
-                            bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                            if (!unlocked)
-                            {
-                                this.AddUserMessage("Unlock was not successful.");
-                                return;
-                            }
-
-                            this.AddUserMessage("Unlock succeeded.");
+                            this.AddUserMessage("Kernel version: " + kernelVersion.ToString("X8"));
+                            needUnlock = false;
                         }
+                    }
+
+                    if (needUnlock)
+                    { 
+
+                        bool unlocked = await this.vehicle.UnlockEcu(keyAlgorithm);
+                        if (!unlocked)
+                        {
+                            this.AddUserMessage("Unlock was not successful.");
+                            return;
+                        }
+
+                        this.AddUserMessage("Unlock succeeded.");
                     }
 
                     using (Stream stream = File.OpenRead(path))
                     {
-                        await this.vehicle.Write(writeType, kernelRunning, recoveryMode, this.cancellationTokenSource.Token, stream);
+                        byte[] image = new byte[stream.Length];
+                        int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
+                        if (bytesRead != stream.Length)
+                        {
+                            // If this happens too much, we should try looping rather than reading the whole file in one shot.
+                            this.AddUserMessage("Unable to load file.");
+                            return;
+                        }
+
+                        // Sanity checks. 
+                        // TODO: Check OSID as well, ask user to confirm if it doesn't match.
+                        if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024))
+                        {
+                            this.AddUserMessage("This file is not a supported size.");
+                            return;
+                        }
+
+                        if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
+                        {
+                            this.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
+                            return;
+                        }
+
+                        if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
+                        {
+                            this.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
+                            return;
+                        }
+
+                        DateTime start = DateTime.Now;
+                        await this.vehicle.Write(writeType, kernelVersion, this.cancellationTokenSource.Token, image);
+                        this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
                     }
                 }
                 catch (IOException exception)
@@ -811,7 +979,14 @@ namespace PcmHacking
 
         }
 
-        private async void testKernel_BackgroundThread()
+        /// <summary>
+        /// From the user's perspective, this is for exiting the kernel, in 
+        /// case it remains running after an aborted operation.
+        /// 
+        /// From the developer's perspective, this is for testing, debugging,
+        /// and investigating kernel features that are development.
+        /// </summary>
+        private async void exitKernel_BackgroundThread()
         {
             try
             {
@@ -830,36 +1005,9 @@ namespace PcmHacking
 
                 this.cancellationTokenSource = new CancellationTokenSource();
 
-                bool kernelRunning = false;
-
                 try
                 {
-                    bool recoveryMode = await this.vehicle.IsInRecoveryMode();
-
-                    if (!recoveryMode)
-                    {
-                        Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
-                        if (osidResponse.Status != ResponseStatus.Success)
-                        {
-                            this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
-
-                            return;
-                        }
-
-                        PcmInfo info = new PcmInfo(osidResponse.Value);
-
-                        bool unlocked = await this.vehicle.UnlockEcu(info.KeyAlgorithm);
-                        if (!unlocked)
-                        {
-                            this.AddUserMessage("Unlock was not successful.");
-                            return;
-                        }
-
-                        this.AddUserMessage("Unlock succeeded.");
-                    }
-
-
-                    await this.vehicle.TestKernel(kernelRunning, recoveryMode, this.cancellationTokenSource.Token, null);
+                    await this.vehicle.ExitKernel(true, false, this.cancellationTokenSource.Token, null);
                 }
                 catch (IOException exception)
                 {
@@ -879,7 +1027,6 @@ namespace PcmHacking
             }
 
         }
-
     }
 }
  

@@ -147,10 +147,8 @@ namespace PcmHacking
             // otherwise you get "STOPPED" or "NO DATA" somewhat randomly. (I mostly saw
             // this when sending the tool-present messages, but that might be coincidence.)
             //
-            // 100 was not enough
-            // 150 seems like enough
-            // Consider 200 if STOPPED / NO DATA is still a problem. 
-            this.Port.SetTimeout(milliseconds + 150);
+            // Consider increasing if STOPPED / NO DATA is still a problem. 
+            this.Port.SetTimeout(milliseconds + 250);
 
             // I briefly tried hard-coding timeout values for the AT ST command,
             // but that's a recipe for failure. If the port timeout is shorter

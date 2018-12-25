@@ -170,14 +170,64 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Check for a running kernel.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<UInt32> GetKernelVersion()
+        {
+            Message query = this.messageFactory.CreateKernelVersionQuery();
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                if (!await this.device.SendMessage(query))
+                {
+                    await Task.Delay(250);
+                    continue;
+                }
+
+                Message reply = await this.device.ReceiveMessage();
+                if (reply == null)
+                {
+                    await Task.Delay(250);
+                    continue;
+                }
+
+                Response<UInt32> response = this.messageParser.ParseKernelVersion(reply);
+                if (response.Status == ResponseStatus.Success)
+                {
+                    return response.Value;
+                }
+
+                if (response.Status == ResponseStatus.Refused)
+                {
+                    return 0;
+                }
+
+                await Task.Delay(250);
+            }
+
+            return 0;
+        }
+
+        /// <summary>
         /// Load the executable payload on the PCM at the supplied address, and execute it.
         /// </summary>
         public async Task<bool> PCMExecute(byte[] payload, int address, CancellationToken cancellationToken)
         {
             logger.AddUserMessage("Uploading kernel to PCM.");
-
             logger.AddDebugMessage("Sending upload request with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
-            Message request = messageFactory.CreateUploadRequest(payload.Length, address);
+
+            // Note that we request an upload of 4k maximum, because the PCM will reject anything bigger.
+            // But you can request a 4k upload and then send up to 16k if you want, and the PCM will not object.
+            int claimedSize = Math.Min(4096, payload.Length);
+
+            // Since we're going to lie about the size, we need to check for overflow ourselves.
+            if (address + payload.Length > 0xFFCDFF)
+            {
+                logger.AddUserMessage("Base address and size would exceed usable RAM.");
+                return false;
+            }
+
+            Message request = messageFactory.CreateUploadRequest(address, claimedSize);
 
             if(!await TrySendMessage(request, "upload request"))
             {
@@ -220,9 +270,9 @@ namespace PcmHacking
                 offset, 
                 remainder, 
                 address + offset, 
-                remainder == payload.Length);
+                remainder == payload.Length ? BlockCopyType.Execute : BlockCopyType.Copy);
 
-            Response<bool> uploadResponse = await WriteToRam(remainderMessage, cancellationToken);
+            Response<bool> uploadResponse = await WritePayload(remainderMessage, cancellationToken);
             if (uploadResponse.Status != ResponseStatus.Success)
             {
                 logger.AddDebugMessage("Could not upload kernel to PCM, remainder payload not accepted.");
@@ -244,16 +294,16 @@ namespace PcmHacking
                     offset,
                     payloadSize,
                     startAddress,
-                    offset == 0);
+                    offset == 0 ? BlockCopyType.Execute : BlockCopyType.Copy);
 
                 logger.AddDebugMessage(
                     string.Format(
-                        "Sending payload with offset 0x{0:X}, start address 0x{1:X}, length 0x{2:X}.",
+                        "Sending payload with offset 0x{0:X6}, start address 0x{1:X6}, length 0x{2:X4}.",
                         offset,
                         startAddress,
                         payloadSize));
 
-                uploadResponse = await WriteToRam(payloadMessage, cancellationToken);
+                uploadResponse = await WritePayload(payloadMessage, cancellationToken);
                 if (uploadResponse.Status != ResponseStatus.Success)
                 {
                     logger.AddDebugMessage("Could not upload kernel to PCM, payload not accepted.");
@@ -268,6 +318,10 @@ namespace PcmHacking
                         "Kernel upload {0}% complete.",
                         percentDone));
             }
+
+            // Consider: return kernel version rather than boolean?
+            UInt32 kernelVersion = await this.GetKernelVersion();
+            this.logger.AddUserMessage("Kernel Version: " + kernelVersion.ToString("X8"));
 
             return true;
         }
@@ -388,7 +442,7 @@ namespace PcmHacking
         /// <remarks>
         /// Returns a succsefull Response on the first successful attempt, or the failed Response if we run out of tries.
         /// </remarks>
-        async Task<Response<bool>> WriteToRam(Message message, CancellationToken cancellationToken)
+        private async Task<Response<bool>> WritePayload(Message message, CancellationToken cancellationToken)
         {
             for (int i = MaxSendAttempts; i>0; i--)
             {
@@ -399,7 +453,7 @@ namespace PcmHacking
 
                 if (!await device.SendMessage(message))
                 {
-                    this.logger.AddDebugMessage("WriteToRam: Unable to send message.");
+                    this.logger.AddDebugMessage("WritePayload: Unable to send message.");
                     continue;
                 }
 
@@ -408,10 +462,10 @@ namespace PcmHacking
                     return Response.Create(ResponseStatus.Success, true);
                 }
 
-                this.logger.AddDebugMessage("WriteToRam: Upload request failed.");
+                this.logger.AddDebugMessage("WritePayload: Upload request failed.");
             }
 
-            this.logger.AddDebugMessage("WriteToRam: Giving up.");
+            this.logger.AddDebugMessage("WritePayload: Giving up.");
             return Response.Create(ResponseStatus.Error, false); // this should be response from the loop but the compiler thinks the response variable isnt in scope here????
         }
     }

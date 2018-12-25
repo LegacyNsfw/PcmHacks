@@ -119,16 +119,21 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> IsInRecoveryMode()
         {
-            await this.TrySendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x62 }), "recovery query");
-            Message response = await this.device.ReceiveMessage();
-            if (response == null)
+            this.device.ClearMessageQueue();
+
+            for (int iterations = 0; iterations < 10; iterations++)
             {
-                return false;
-            }
-            
-            if (this.messageParser.ParseRecoveryModeBroadcast(response).Value == true)
-            {
-                return true;
+                await this.TrySendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x62 }), "recovery query", 2);
+                Message response = await this.device.ReceiveMessage();
+                if (response == null)
+                {
+                    continue;
+                }
+
+                if (this.messageParser.ParseRecoveryModeBroadcast(response).Value == true)
+                {
+                    return true;
+                }
             }
 
             return false;
@@ -252,7 +257,7 @@ namespace PcmHacking
         {
             Message response = null;
 
-            for (int pause = 0; pause < 10; pause++)
+            for (int pause = 0; pause < 3; pause++)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {

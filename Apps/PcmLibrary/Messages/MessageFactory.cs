@@ -6,6 +6,18 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+    public enum BlockCopyType
+    {
+        // Copy to RAM or Flash
+        Copy = 0x00,
+
+        // Execute after copying to RAM
+        Execute = 0x80,
+
+        // Test copy to flash, but do not unlock or actually write.
+        TestWrite = 0x44,    
+    };
+
     /// <summary>
     /// This class is responsible for generating the messages that the app sends to the PCM.
     /// </summary>
@@ -143,14 +155,11 @@ namespace PcmHacking
         /// <summary>
         /// Create a block message from the supplied arguments.
         /// </summary>
-        public Message CreateBlockMessage(byte[] Payload, int Offset, int Length, int Address, bool Execute)
+        public Message CreateBlockMessage (byte[] Payload, int Offset, int Length, int Address, BlockCopyType copyType)
         {
             byte[] Buffer = new byte[10 + Length + 2];
             byte[] Header = new byte[10];
-
-            byte Exec = SubMode.NoExecute;
-            if (Execute == true) Exec = SubMode.Execute;
-
+        
             byte Size1 = unchecked((byte)(Length >> 8));
             byte Size2 = unchecked((byte)(Length & 0xFF));
             byte Addr1 = unchecked((byte)(Address >> 16));
@@ -161,7 +170,7 @@ namespace PcmHacking
             Header[1] = DeviceId.Pcm;
             Header[2] = DeviceId.Tool;
             Header[3] = Mode.PCMUpload;
-            Header[4] = Exec;
+            Header[4] = (byte)copyType;
             Header[5] = Size1;
             Header[6] = Size2;
             Header[7] = Addr1;
@@ -321,41 +330,83 @@ namespace PcmHacking
         /// <remarks>
         /// Note that mode 0x34 is only a request. The actual payload is sent as a mode 0x36.
         /// </remarks>
-        public Message CreateUploadRequest(int Size, int Address)
+        public Message CreateUploadRequest(int Address, int Size)
         {
-            byte[] requestupload = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, SubMode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
-            requestupload[5] = unchecked((byte)(Size >> 8));
-            requestupload[6] = unchecked((byte)(Size & 0xFF));
-            requestupload[7] = unchecked((byte)(Address >> 16));
-            requestupload[8] = unchecked((byte)(Address >> 8));
-            requestupload[9] = unchecked((byte)(Address & 0xFF));
+            byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, SubMode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            requestBytes[5] = unchecked((byte)(Size >> 8));
+            requestBytes[6] = unchecked((byte)(Size & 0xFF));
+            requestBytes[7] = unchecked((byte)(Address >> 16));
+            requestBytes[8] = unchecked((byte)(Address >> 8));
+            requestBytes[9] = unchecked((byte)(Address & 0xFF));
             
-            return new Message(requestupload);
+            return new Message(requestBytes);
         }
 
-        public Message CreateKernelPing()
+
+        ///////////////////////////////////////////////////////////////////////
+        // Mode 3D was apparently not used for anything, so it's being taken
+        // for flash-chip and CRC queries.
+        ///////////////////////////////////////////////////////////////////////
+
+
+        /// <summary>
+        /// Create a request for the kernel version.
+        /// </summary>
+        public Message CreateKernelVersionQuery()
         {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE0 });
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x00 });
         }
+
+        /// <summary>
+        /// Create a request to identify the flash chip. 
+        /// </summary>
+        public Message CreateFlashMemoryTypeQuery()
+        {
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x01 });
+        }
+
+        /// <summary>
+        /// Create a request to get the CRC of a byte range.
+        /// </summary>
+        public Message CreateCrcQuery(UInt32 address, UInt32 size)
+        {
+            byte[] requestBytes = new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            requestBytes[5] = unchecked((byte)(size >> 16));
+            requestBytes[6] = unchecked((byte)(size >> 8));
+            requestBytes[7] = unchecked((byte)size);
+            requestBytes[8] = unchecked((byte)(address >> 16));
+            requestBytes[9] = unchecked((byte)(address >> 8));
+            requestBytes[10] = unchecked((byte)address);
+            return new Message(requestBytes);
+        }
+
+        /// <summary>
+        /// Create a request for implementation details... for development use only.
+        /// </summary>
+        public Message CreateDebugQuery()
+        {
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0xFF });
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+        // Mode 3E was apparently not used for anything, so it's being taken
+        // for flash-chip lock, unlock, and erase.
+        ///////////////////////////////////////////////////////////////////////
+
 
         public Message CreateFlashUnlockRequest()
         {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA1 });
-        }
-
-        public Message CreateCalibrationEraseRequest()
-        {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA4 });
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x03 });
         }
 
         public Message CreateFlashLockRequest()
         {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA0 });   
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x04 });
         }
 
-        public Message CreateWriteKernelResetRequest()
+        public Message CreateFlashEraseCalibrationRequest()
         {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x36, 0xE3, 0xA3 });
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x05 });
         }
     }
 }

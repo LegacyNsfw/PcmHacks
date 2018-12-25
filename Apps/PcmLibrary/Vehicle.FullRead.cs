@@ -84,7 +84,15 @@ namespace PcmHacking
                         return Response.Create(ResponseStatus.Cancelled, (Stream)null);
                     }
 
-                    await toolPresentNotifier.Notify();
+                    // TODO: Figure out why the AllPro and ScanTool are more reliable if we ALWAYS send a notification here, and then remove this hack.
+                    if (this.device is ElmDevice)
+                    {
+                        await toolPresentNotifier.ForceNotify();
+                    }
+                    else
+                    {
+                        await toolPresentNotifier.Notify();
+                    }
 
                     if (startAddress + blockSize > endAddress)
                     {
@@ -150,50 +158,8 @@ namespace PcmHacking
                     this.logger.AddDebugMessage("Unable to send read request.");
                     continue;
                 }
-
-                bool sendAgain = false;
-                for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-
-                    Message response = await this.ReceiveMessage(cancellationToken);
-                    if (response == null)
-                    {
-                        this.logger.AddDebugMessage("Did not receive a response to the read request.");
-                        sendAgain = true;
-                        break;
-                    }
-
-                    this.logger.AddDebugMessage("Processing message");
-
-                    Response<bool> readResponse = this.messageParser.ParseReadResponse(response);
-                    if (readResponse.Status != ResponseStatus.Success)
-                    {
-                        this.logger.AddDebugMessage("Not a read response.");
-                        continue;
-                    }
-
-                    if (!readResponse.Value)
-                    {
-                        this.logger.AddDebugMessage("Read request failed.");
-                        sendAgain = true;
-                        break;
-                    }
-
-                    // We got a successful read response, so now wait for the payload.
-                    sendAgain = false;
-                    break;
-                }
-
-                if (sendAgain)
-                {
-                    continue;
-                }
-
-                this.logger.AddDebugMessage("Read request allowed, expecting for payload...");
+                
+                this.logger.AddDebugMessage("Read request allowed, expecting payload...");
                 for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
                 {
                     if (cancellationToken.IsCancellationRequested)
