@@ -22,6 +22,21 @@ namespace PcmHacking
     public partial class MainForm : Form, ILogger
     {
         /// <summary>
+        /// This will become the first half of the Window caption, and will 
+        /// be printed to the user and debug logs each time a device is 
+        /// initialized.
+        /// </summary>
+        private const string AppName = "PCM Hammer";
+
+        /// <summary>
+        /// This becomes the second half of the window caption, and is printed
+        /// when devices are initialized. 
+        /// 
+        /// If null, the build timestamp will be used.
+        /// </summary>
+        private const string AppVersion = null;
+
+        /// <summary>
         /// The Vehicle object is our interface to the car. It has the device, the message generator, and the message parser.
         /// </summary>
         private Vehicle vehicle;
@@ -117,12 +132,31 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Gets a string to use in the window caption and at the top of each log.
+        /// </summary>
+        private static string GetAppNameAndVersion()
+        {
+            string versionString = AppVersion;
+            if (versionString == null)
+            {
+                DateTime localTime = Generated.BuildTime.ToLocalTime();
+                versionString = String.Format(
+                    "({0}, {1})",
+                    localTime.ToShortDateString(),
+                    localTime.ToShortTimeString());
+            }
+
+            return AppName + " " + versionString;
+        }
+
+        /// <summary>
         /// Called when the main window is being created.
         /// </summary>
         private async void MainForm_Load(object sender, EventArgs e)
         {
             try
             {
+                this.Text = GetAppNameAndVersion();
                 this.interfaceBox.Enabled = true;
                 this.operationsBox.Enabled = true;
 
@@ -295,6 +329,7 @@ namespace PcmHacking
 
             this.debugLog.Clear();
             this.userLog.Clear();
+            this.AddUserMessage(GetAppNameAndVersion());
 
             try
             {
