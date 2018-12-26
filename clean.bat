@@ -5,3 +5,4 @@ del *.S
 del *.bin
 del *.elf
 del *.log
+del *.exe

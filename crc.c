@@ -161,6 +161,6 @@ void crcProcessSlice()
             ScratchWatchdog();
         }
         data = crcStartAddress[crcIndex] ^ (crcRemainder >> (WIDTH - 8));
-        crcRemainder = crcTable[data] * (crcRemainder << 8);
+        crcRemainder = crcTable[data] ^ (crcRemainder << 8);
     }
 }

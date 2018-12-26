@@ -480,7 +480,7 @@ void SetBlockChecksum(int length, unsigned short checksum)
 ///////////////////////////////////////////////////////////////////////////////
 // Get the version of the kernel. (Mode 3D, submode 00)
 ///////////////////////////////////////////////////////////////////////////////
-void HandleVersionQuery()
+void HandleVersionQuery(uint8_t kernelType)
 {
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
@@ -490,7 +490,7 @@ void HandleVersionQuery()
 	MessageBuffer[5] = 0x01; // major
 	MessageBuffer[6] = 0x00; // minor
 	MessageBuffer[7] = 0x02; // patch
-	MessageBuffer[8] = 0xAA; // quality (AA = alpha, BB = beta, 00 = release)
+	MessageBuffer[8] = kernelType; // AA = read, BB = write
 
 	// The AllPro and ScanTool devices need a short delay to switch from 
 	// sending to receiving. Otherwise they'll miss the response.

@@ -4,10 +4,27 @@
 
 #include "common.h"
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Echo the received message
+///////////////////////////////////////////////////////////////////////////////
+void HandleEchoRequest(int length)
+{
+	ElmSleep();
+
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7E;
+	MessageBuffer[4] = (unsigned char)length;
+
+	WriteMessage(MessageBuffer, length, Complete);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Process an incoming message.
 ///////////////////////////////////////////////////////////////////////////////
-void ProcessMessage()
+void ProcessMessage(int length)
 {
 	if ((MessageBuffer[1] != 0x10) && (MessageBuffer[1] != 0xFE))
 	{
@@ -22,42 +39,19 @@ void ProcessMessage()
 	}
 
 	switch (MessageBuffer[3])
-	{
-	case 0x34:
-		HandleWriteRequestMode34();
-		ClearBreadcrumbBuffer();
-		break;
-
-	case 0x35:
-		HandleReadMode35();
-		break;
-
-	case 0x36:
-		if (MessageBuffer[0] == 0x6D)
-		{
-			HandleWriteMode36();
-		}
-		break;
-
-	case 0x37:
-		// ReadMode37();
-		SendToolPresent(0xB2, MessageBuffer[3], 0, 0);
+	{	
+	case 0x3E:
+		HandleEchoRequest(length);
 		break;
 
 	case 0x3D:
 		if (MessageBuffer[4] == 0x00)
 		{
-			HandleVersionQuery(0xAA);
+			HandleVersionQuery(0xCC);
+			break;
 		}
-		else
-		{
-			SendToolPresent(
-				0x3D,
-				MessageBuffer[4],
-				0,
-				0);
-		}
-		break;
+
+		// Fall through:
 
 	default:
 		SendToolPresent(
@@ -121,12 +115,6 @@ KernelStart(void)
 		int length = ReadMessage(&completionCode, &readState);
 		if (length == 0)
 		{
-			// If no message received for N iterations, reboot.
-//			if (iterations > (lastMessage + timeout))
-//			{
-//				Reboot(0xFFFFFFFF);
-//			}
-
 			continue;
 		}
 
@@ -152,7 +140,7 @@ KernelStart(void)
 			Reboot(0xCC000000 | iterations);
 		}
 
-		ProcessMessage();
+		ProcessMessage(length);
 	}
 
 	// This shouldn't happen. But, just in case...

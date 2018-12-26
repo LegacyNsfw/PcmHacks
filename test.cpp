@@ -18,7 +18,7 @@ int  main()
     streampos size = file.tellg();
 	cout << "Size: " << size << endl;
     char* content = new char[512*1024];
-	file.seekg(streampos(0), std::begin);
+    file.seekg(streampos(0), ios::beg);
     file.read(content, 512*1024);
     file.close();
 	

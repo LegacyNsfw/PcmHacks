@@ -291,8 +291,8 @@ void HandleEraseCalibrationRequest()
 		success = 1;
 	}
 
-	*flashBase == 0xFFFF;
-	*flashBase == 0xFFFF;
+	*flashBase = 0xFFFF;
+	*flashBase = 0xFFFF;
 
 	LockFlash();
 
@@ -432,10 +432,10 @@ unsigned char WriteToFlash(const unsigned int payloadLengthInBytes, const unsign
 
 	if (!testWrite)
 	{
-				// Return flash to normal mode.
-				unsigned short* address = (unsigned short*)startAddress;
-				*address = 0xFFFF;
-				*address = 0xFFFF;
+		// Return flash to normal mode.
+		unsigned short* address = (unsigned short*)startAddress;
+		*address = 0xFFFF;
+		*address = 0xFFFF;
 		LockFlash();
 	}
 	
@@ -495,7 +495,7 @@ void ProcessMessage()
 		switch(MessageBuffer[4])
 		{
 		case 0x00:
-			HandleVersionQuery();
+			HandleVersionQuery(0xBB);
 			break;
 
 		case 0x01:
@@ -581,9 +581,10 @@ KernelStart(void)
 	// If we choose to loop forever we need a good story for how to get out of that state.
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
 	// for(int iterations = 0; iterations < 100; iterations++)
-	int iterations = 0;
-	int timeout = 1000;
-	int lastMessage = (iterations - timeout) + 1;
+	uint32_t iterations = 0;
+	uint32_t timeout = 2500; // Timeout of 2500 = 2.2 seconds between messages. 5,000 = 3.9 seconds.
+	uint32_t lastMessage = (iterations - timeout) + 1;
+	uint32_t lastActivity = iterations - timeout;
 
 	for(;;)
 	{
@@ -598,8 +599,18 @@ KernelStart(void)
 		int length = ReadMessage(&completionCode, &readState);
 		if (length == 0)
 		{
+			if (iterations > (lastActivity + timeout))
+			{
+				SendToolPresent(110, 115, 102, 119);
+				lastActivity = iterations;
+			}
 
-			// If no message received for N iterations, reboot.
+///////////////////////////////////////////////////////////////////////////////
+// For now the plan is to let the kernel run indefinitely, and give the app
+// an exit-kernel button. This should give us some flexibility in recovering 
+// from failed flashes, especially those involving the boot block.
+//
+//			// If no message received for N iterations, reboot.
 //			if (iterations > (lastMessage + timeout))
 //			{
 //				Reboot(0xFFFFFFFF);
@@ -622,6 +633,7 @@ KernelStart(void)
 		}
 
 		lastMessage = iterations;
+		lastActivity = iterations;
 
 		// Did the tool just request a reboot?
 		if (MessageBuffer[3] == 0x20)
@@ -631,12 +643,6 @@ KernelStart(void)
 		}
 
 		ProcessMessage();
-
-		if (crcIndex != crcLength)
-		{
-//			SendToolPresent2(crcIndex | 0xAA000000);
-//			VariableSleep(50);
-		}
 	}
 
 	// This shouldn't happen. But, just in case...
