@@ -99,6 +99,8 @@ namespace PcmHacking
         /// </summary>
         private async Task<bool> Write(CancellationToken cancellationToken, byte[] image, WriteType writeType, ToolPresentNotifier notifier)
         {
+            await notifier.Notify();
+
             BlockType relevantBlocks;
             switch (writeType)
             {
@@ -127,13 +129,15 @@ namespace PcmHacking
             }
 
             // Which flash chip?
+            await notifier.Notify();
             await this.device.SetTimeout(TimeoutScenario.ReadProperty);
             Query<UInt32> chipIdQuery = new Query<uint>(
                 this.device,
                 this.messageFactory.CreateFlashMemoryTypeQuery,
                 this.messageParser.ParseFlashMemoryType,
                 this.logger,
-                cancellationToken);
+                cancellationToken,
+                notifier);
             Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
 
             if (chipIdResponse.Status != ResponseStatus.Success)
@@ -144,6 +148,7 @@ namespace PcmHacking
 
             logger.AddUserMessage("Flash memory type: " + chipIdResponse.Value.ToString("X8"));
 
+            await notifier.Notify();
             IList<MemoryRange> ranges = this.GetMemoryRanges(chipIdResponse.Value);
             if (ranges == null)
             {
@@ -157,7 +162,8 @@ namespace PcmHacking
                 ranges, 
                 image, 
                 relevantBlocks, 
-                cancellationToken, notifier))
+                notifier, 
+                cancellationToken))
             {
                 // Don't stop here if the user just wants to test their cable.
                 if (writeType != WriteType.TestWrite)
@@ -179,6 +185,7 @@ namespace PcmHacking
             await this.device.SetTimeout(TimeoutScenario.Maximum);
             foreach (MemoryRange range in ranges)
             {
+                // We'll send a tool-present message during the erase request.
                 if ((range.ActualCrc == range.DesiredCrc) && (writeType != WriteType.TestWrite))
                 {
                     continue;
@@ -227,14 +234,17 @@ namespace PcmHacking
                     this.logger.AddUserMessage("Writing...");
                 }
 
+                await notifier.Notify();
+
                 await WriteMemoryRange(
                     range, 
                     image, 
                     writeType == WriteType.TestWrite, 
+                    notifier,
                     cancellationToken);
             }
 
-            bool match = await this.CompareRanges(ranges, image, relevantBlocks, cancellationToken, notifier);
+            bool match = await this.CompareRanges(ranges, image, relevantBlocks, notifier, cancellationToken);
 
             if (writeType == WriteType.TestWrite)
             {
@@ -290,9 +300,15 @@ namespace PcmHacking
         /// <summary>
         /// Compare CRCs from the file to CRCs from the PCM.
         /// </summary>
-        private async Task<bool> CompareRanges(IList<MemoryRange> ranges, byte[] image, BlockType blockTypes, CancellationToken cancellationToken, ToolPresentNotifier notifier)
+        private async Task<bool> CompareRanges(
+            IList<MemoryRange> ranges, 
+            byte[] image, 
+            BlockType blockTypes,
+            ToolPresentNotifier notifier,
+            CancellationToken cancellationToken)
         {
             logger.AddUserMessage("Requesting CRCs from PCM...");
+            await notifier.Notify();
 
             // The kernel will remember (and return) the CRC value of the last block it 
             // was asked about, which leads to misleading results if you only rewrite 
@@ -321,6 +337,7 @@ namespace PcmHacking
                     continue;
                 }
 
+                await notifier.Notify();
                 this.device.ClearMessageQueue();
                 bool success = false;
                 UInt32 crc = 0;
@@ -339,6 +356,7 @@ namespace PcmHacking
                         break;
                     }
 
+                    await notifier.Notify();
                     if (!await this.device.SendMessage(query))
                     {
                         // This delay is fast because we're waiting for the bus to be available,
@@ -389,6 +407,8 @@ namespace PcmHacking
                         range.DesiredCrc == range.ActualCrc ? "Same" : "Different"));
             }
 
+            await notifier.Notify();
+
             foreach (MemoryRange range in ranges)
             {
                 if ((range.Type & blockTypes) == 0)
@@ -410,7 +430,12 @@ namespace PcmHacking
         /// <summary>
         /// Copy a single memory range to the PCM.
         /// </summary>
-        private async Task<bool> WriteMemoryRange(MemoryRange range, byte[] image, bool justTestWrite, CancellationToken cancellationToken)
+        private async Task<bool> WriteMemoryRange(
+            MemoryRange range, 
+            byte[] image, 
+            bool justTestWrite, 
+            ToolPresentNotifier notifier, 
+            CancellationToken cancellationToken)
         {
             int devicePayloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
             for (int index = 0; index < range.Size; index += devicePayloadSize)
@@ -419,6 +444,8 @@ namespace PcmHacking
                 {
                     return false;
                 }
+
+                await notifier.Notify();
 
                 int startAddress = (int)(range.Address + index);
                 int thisPayloadSize = Math.Min(devicePayloadSize, (int)range.Size - index);
@@ -437,7 +464,7 @@ namespace PcmHacking
                         startAddress,
                         thisPayloadSize));
 
-                await this.WritePayload(payloadMessage, cancellationToken);
+                await this.WritePayload(payloadMessage, notifier, cancellationToken);
 
                 // Not checking the success or failure here.
                 // The debug pane will show if anything goes wrong, and the CRC check at the end will alert the user.
