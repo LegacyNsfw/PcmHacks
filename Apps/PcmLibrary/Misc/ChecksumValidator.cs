@@ -63,13 +63,13 @@ namespace PcmHacking
             bool success = true;
 
             success &= ValidateRange(      0, 0x7FFFD,   0x500, "Operating system");
-            success &= ValidateRange( 0x8002, 0x13FFD,  0x8000, "Engine calibration");
-            success &= ValidateRange(0x14002, 0x16D2F, 0x14000, "Engine diagnostics.");
-            success &= ValidateRange(0x16E02, 0x1BDFD, 0x16E00, "Transmission calibration");
-            success &= ValidateRange(0x1BE02, 0x1C7FD, 0x1BE00, "Transmission diagnostics");
-            success &= ValidateRange(0x1C802, 0x1E517, 0x1C800, "Fuel system");
-            success &= ValidateRange(0x1E522, 0x1EEA2, 0x1E520, "System");
-            success &= ValidateRange(0x1EEA2, 0x1EF9D, 0x1EEA0, "Speedometer");
+            success &= ValidateRange( 0x8002, 0x13FFF,  0x8000, "Engine calibration");
+            success &= ValidateRange(0x14002, 0x16DFF, 0x14000, "Engine diagnostics.");
+            success &= ValidateRange(0x16E02, 0x1BDFF, 0x16E00, "Transmission calibration");
+            success &= ValidateRange(0x1BE02, 0x1C7FF, 0x1BE00, "Transmission diagnostics");
+            success &= ValidateRange(0x1C802, 0x1E51F, 0x1C800, "Fuel system");
+            success &= ValidateRange(0x1E522, 0x1EE9F, 0x1E520, "System");
+            success &= ValidateRange(0x1EEA2, 0x1EF9F, 0x1EEA0, "Speedometer");
 
             return success;
         }
@@ -108,10 +108,10 @@ namespace PcmHacking
 
                 UInt16 value = (UInt16)(this.image[address] << 8);
                 value |= this.image[address + 1];
-                computedChecksum -= value;
+                computedChecksum += value;
             }
 
-            computedChecksum = (UInt16)((~computedChecksum) + 1);
+            computedChecksum = (UInt16)((0 - computedChecksum));
 
             if (storedChecksum == computedChecksum)
             {
