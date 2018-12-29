@@ -84,15 +84,8 @@ namespace PcmHacking
                         return Response.Create(ResponseStatus.Cancelled, (Stream)null);
                     }
 
-                    // TODO: Figure out why the AllPro and ScanTool are more reliable if we ALWAYS send a notification here, and then remove this hack.
-                    if (this.device is ElmDevice)
-                    {
-                        await toolPresentNotifier.ForceNotify();
-                    }
-                    else
-                    {
-                        await toolPresentNotifier.Notify();
-                    }
+                    // The read kernel needs a short message here for reasons unknown. Without it, it will RX 2 messages then drop one.
+                    await toolPresentNotifier.ForceNotify();
 
                     if (startAddress + blockSize > endAddress)
                     {
@@ -141,9 +134,9 @@ namespace PcmHacking
         /// </summary>
         private async Task<bool> TryReadBlock(byte[] image, int length, int startAddress, CancellationToken cancellationToken)
         {
-            this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, length));
-            
-            for(int sendAttempt = 1; sendAttempt <= MaxSendAttempts; sendAttempt++)
+            this.logger.AddDebugMessage(string.Format("Reading from {0} / 0x{0:X}, length {1} / 0x{1:X}", startAddress, length));
+
+            for (int sendAttempt = 1; sendAttempt <= MaxSendAttempts; sendAttempt++)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -152,14 +145,12 @@ namespace PcmHacking
 
                 Message message = this.messageFactory.CreateReadRequest(startAddress, length);
 
-                //this.logger.AddDebugMessage("Sending " + message.GetBytes().ToHex());
                 if (!await this.device.SendMessage(message))
                 {
                     this.logger.AddDebugMessage("Unable to send read request.");
                     continue;
                 }
                 
-                this.logger.AddDebugMessage("Read request allowed, expecting payload...");
                 for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
                 {
                     if (cancellationToken.IsCancellationRequested)
