@@ -866,6 +866,47 @@ namespace PcmHacking
 
                 this.AddUserMessage(path);
 
+                byte[] image;
+                using (Stream stream = File.OpenRead(path))
+                {
+                    image = new byte[stream.Length];
+                    int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
+                    if (bytesRead != stream.Length)
+                    {
+                        // If this happens too much, we should try looping rather than reading the whole file in one shot.
+                        this.AddUserMessage("Unable to load file.");
+                        return;
+                    }
+                }
+
+                // Sanity checks. 
+                // TODO: Check OSID as well, ask user to confirm if it doesn't match.
+                if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024))
+                {
+                    this.AddUserMessage("This file is not a supported size.");
+                    return;
+                }
+
+                if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
+                {
+                    this.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
+                    return;
+                }
+
+                if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
+                {
+                    this.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
+                    return;
+                }
+
+                // Validate checksums within the file.
+                ChecksumValidator validator = new ChecksumValidator(image, this);
+                if (!validator.IsValid())
+                {
+                    this.AddUserMessage("This file is corrupt. It would render your PCM unusable.");
+                    return;
+                }
+
                 UInt32 kernelVersion = 0;
                 bool needUnlock;
                 int keyAlgorithm = 1;
@@ -924,41 +965,9 @@ namespace PcmHacking
                         this.AddUserMessage("Unlock succeeded.");
                     }
 
-                    using (Stream stream = File.OpenRead(path))
-                    {
-                        byte[] image = new byte[stream.Length];
-                        int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
-                        if (bytesRead != stream.Length)
-                        {
-                            // If this happens too much, we should try looping rather than reading the whole file in one shot.
-                            this.AddUserMessage("Unable to load file.");
-                            return;
-                        }
-
-                        // Sanity checks. 
-                        // TODO: Check OSID as well, ask user to confirm if it doesn't match.
-                        if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024))
-                        {
-                            this.AddUserMessage("This file is not a supported size.");
-                            return;
-                        }
-
-                        if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
-                        {
-                            this.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
-                            return;
-                        }
-
-                        if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
-                        {
-                            this.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
-                            return;
-                        }
-
-                        DateTime start = DateTime.Now;
-                        await this.vehicle.Write(writeType, kernelVersion, this.cancellationTokenSource.Token, image);
-                        this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
-                    }
+                    DateTime start = DateTime.Now;
+                    await this.vehicle.Write(writeType, kernelVersion, this.cancellationTokenSource.Token, image);
+                    this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
                 }
                 catch (IOException exception)
                 {
