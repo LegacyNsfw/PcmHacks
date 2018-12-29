@@ -272,7 +272,9 @@ namespace PcmHacking
                 address + offset, 
                 remainder == payload.Length ? BlockCopyType.Execute : BlockCopyType.Copy);
 
-            Response<bool> uploadResponse = await WritePayload(remainderMessage, cancellationToken);
+            ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
+            await notifier.Notify();
+            Response<bool> uploadResponse = await WritePayload(remainderMessage, notifier, cancellationToken);
             if (uploadResponse.Status != ResponseStatus.Success)
             {
                 logger.AddDebugMessage("Could not upload kernel to PCM, remainder payload not accepted.");
@@ -303,7 +305,7 @@ namespace PcmHacking
                         startAddress,
                         payloadSize));
 
-                uploadResponse = await WritePayload(payloadMessage, cancellationToken);
+                uploadResponse = await WritePayload(payloadMessage, notifier, cancellationToken);
                 if (uploadResponse.Status != ResponseStatus.Success)
                 {
                     logger.AddDebugMessage("Could not upload kernel to PCM, payload not accepted.");
@@ -442,10 +444,12 @@ namespace PcmHacking
         /// <remarks>
         /// Returns a succsefull Response on the first successful attempt, or the failed Response if we run out of tries.
         /// </remarks>
-        private async Task<Response<bool>> WritePayload(Message message, CancellationToken cancellationToken)
+        private async Task<Response<bool>> WritePayload(Message message, ToolPresentNotifier notifier, CancellationToken cancellationToken)
         {
             for (int i = MaxSendAttempts; i>0; i--)
             {
+                await notifier.Notify();
+
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return Response.Create(ResponseStatus.Cancelled, false);
