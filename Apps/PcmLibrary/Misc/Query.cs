@@ -74,7 +74,7 @@ namespace PcmHacking
             Message request = this.generator();
 
             bool success = false;
-            for (int sendAttempt = 1; sendAttempt <= 5; sendAttempt++)
+            for (int sendAttempt = 1; sendAttempt <= 2; sendAttempt++)
             {
                 if (this.cancellationToken.IsCancellationRequested)
                 {

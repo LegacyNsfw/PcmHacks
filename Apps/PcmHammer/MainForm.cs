@@ -404,7 +404,7 @@ namespace PcmHacking
                 }
                 this.AddUserMessage("VIN: " + vinResponse.Value);
 
-                var osResponse = await this.vehicle.QueryOperatingSystemId();
+                var osResponse = await this.vehicle.QueryOperatingSystemId(CancellationToken.None);
                 if (osResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("OS ID query failed: " + osResponse.Status.ToString());
@@ -465,7 +465,7 @@ namespace PcmHacking
         {
             try
             {
-                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId(CancellationToken.None);
                 if (osidResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
@@ -733,13 +733,13 @@ namespace PcmHacking
                 this.cancellationTokenSource = new CancellationTokenSource();
 
                 this.AddUserMessage("Querying operating system of current PCM.");
-                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
                 if (osidResponse.Status != ResponseStatus.Success)
                 {
                     this.AddUserMessage("Operating system query failed, will retry: " + osidResponse.Status);
                     await this.vehicle.ExitKernel();
 
-                    osidResponse = await this.vehicle.QueryOperatingSystemId();
+                    osidResponse = await this.vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
                     if (osidResponse.Status != ResponseStatus.Success)
                     {
                         this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
@@ -914,7 +914,7 @@ namespace PcmHacking
                 try
                 {
                     this.AddUserMessage("Requesting operating system ID...");
-                    Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId();
+                    Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
                     if (osidResponse.Status == ResponseStatus.Success)
                     {
                         this.AddUserMessage("Operating System: " + osidResponse.Value.ToString());
@@ -924,6 +924,11 @@ namespace PcmHacking
                     }
                     else
                     {
+                        if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                        {
+                            return;
+                        }
+
                         this.AddUserMessage("Operating system request failed, checking for a live kernel...");
 
                         kernelVersion = await vehicle.GetKernelVersion();
