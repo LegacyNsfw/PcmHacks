@@ -147,6 +147,21 @@ namespace PcmHacking
             }
 
             logger.AddUserMessage("Flash memory type: " + chipIdResponse.Value.ToString("X8"));
+            
+            // known chips
+            // http://ftp1.digi.com/support/documentation/jtag_v410_flashes.pdf
+            string Amd   = "Amd";               // 0001
+            string Intel = "Intel";             // 0089
+            string I4471 = "28F400B5-B 512Kb";  // 4471
+            string A2258 = "Am29F800B 1Mbyte";  // 2258
+            string I889D = "28F800B5-B 1Mbyte"; // 889D
+            
+            logger.AddUserMessage("Flash memory ID: " + chipIdResponse.Value.ToString("X8"));
+            if ((chipIdResponse.Value >> 16)    == 0x0001) logger.AddUserMessage("Flash memory manufactuer: " + Amd);
+            if ((chipIdResponse.Value >> 16)    == 0x0089) logger.AddUserMessage("Flash memory manufactuer: " + Intel);
+            if ((chipIdResponse.Value & 0xFFFF) == 0x4471) logger.AddUserMessage("Flash memory type: " + I4471);
+            if ((chipIdResponse.Value & 0xFFFF) == 0x2258) logger.AddUserMessage("Flash memory type: " + A2258);
+            if ((chipIdResponse.Value & 0xFFFF) == 0x889D) logger.AddUserMessage("Flash memory type: " + I889D);
 
             await notifier.Notify();
             IList<MemoryRange> ranges = this.GetMemoryRanges(chipIdResponse.Value);
