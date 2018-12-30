@@ -68,7 +68,7 @@ namespace PcmHacking
 
                 UInt32 kernelVersion = 0;
                 int keyAlgorithm = 1; // default, will work for most factory operating systems.
-                Response<uint> osidResponse = await this.QueryOperatingSystemId();
+                Response<uint> osidResponse = await this.QueryOperatingSystemId(cancellationToken);
                 if (osidResponse.Status != ResponseStatus.Success)
                 {
                     kernelVersion = await this.GetKernelVersion();

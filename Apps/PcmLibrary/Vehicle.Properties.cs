@@ -176,9 +176,10 @@ namespace PcmHacking
         /// Query the PCM's operating system ID.
         /// </summary>
         /// <returns></returns>
-        public async Task<Response<UInt32>> QueryOperatingSystemId()
+        public async Task<Response<UInt32>> QueryOperatingSystemId(CancellationToken cancellationToken)
         {
-            return await this.QueryUnsignedValue(this.messageFactory.CreateOperatingSystemIdReadRequest, CancellationToken.None);
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+            return await this.QueryUnsignedValue(this.messageFactory.CreateOperatingSystemIdReadRequest, cancellationToken);
         }
 
         /// <summary>
