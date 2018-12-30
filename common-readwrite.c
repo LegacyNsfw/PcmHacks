@@ -181,16 +181,11 @@ void HandleWriteMode36()
 			entryPoint();
 		}
 	}
-	else if ((start >= 0x8000) && ((start+length) <= 0x20000))
+	else
 	{
 		char flashError = WriteToFlash(length, start, &MessageBuffer[10], command == 0x44);
 
-		if (flashError == 0) 	SendWriteSuccess(command);
-		else 									SendWriteFail(0, flashError);
-	}
-	else
-	{
-		// Bad memory range
-		SendWriteFail(0xEE, 0x00);
+		if (flashError == 0) SendWriteSuccess(command);
+		else SendWriteFail(0, flashError);
 	}
 }

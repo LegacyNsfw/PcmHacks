@@ -272,6 +272,7 @@ void HandleEraseBlock()
 
 	UnlockFlash();
 
+	uint16_t *flashBase = (uint16_t*)address;
 	*flashBase = 0x5050; // TODO: Move these commands to defines
 	*flashBase = 0x2020;
 	*flashBase = 0xD0D0;
