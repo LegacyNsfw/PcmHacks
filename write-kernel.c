@@ -221,12 +221,6 @@ void UnlockFlash()
 	VariableSleep(0x50);
 }
 
-void HandleFlashUnlockRequest()
-{
-	UnlockFlash(); // No delay necessary, the UnlockFlash function already takes a long time.
-	SendReply(1, 0x03, 0x00);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Lock the flash memory.
 //
@@ -248,21 +242,36 @@ void LockFlash()
 	VariableSleep(0x50);
 }
 
-void HandleFlashLockRequest()
+///////////////////////////////////////////////////////////////////////////////
+// Erase the given block.
+///////////////////////////////////////////////////////////////////////////////
+void HandleEraseBlock()
 {
-	LockFlash();
-	// No delay necessary, the UnlockFlash function already takes a long time.
-	SendReply(1, 0x04, 0x00);
-}
+	unsigned address = MessageBuffer[5];
+	address <<= 8;
+	address |= MessageBuffer[6];
+	address <<= 8;
+	address |= MessageBuffer[7];
 
-///////////////////////////////////////////////////////////////////////////////
-// Erase the calibration blocks.
-///////////////////////////////////////////////////////////////////////////////
-void HandleEraseCalibrationRequest()
-{
+	// Only allow known addresses. Anything else probably indicates a bug.
+	switch (address)
+	{
+	case 0: // Boot
+	case 0x4000: // Parameters
+	case 0x6000: // Parameters
+	case 0x8000: // Calibration
+		break;
+
+	default:
+		VariableSleep(2);
+		SendReply(0, 0x05, 0xFF);
+		return;
+	}
+
+	unsigned short status = 0;
+
 	UnlockFlash();
 
-	unsigned short *flashBase = (void*)0x8000;
 	*flashBase = 0x5050; // TODO: Move these commands to defines
 	*flashBase = 0x2020;
 	*flashBase = 0xD0D0;
@@ -271,9 +280,6 @@ void HandleEraseCalibrationRequest()
 	WasteTime();
 
 	*flashBase = 0x7070;
-
-	unsigned short status = 0;
-	unsigned success = 0;
 
 	for (int iterations = 0; iterations < 0x640000; iterations++)
 	{
@@ -288,10 +294,6 @@ void HandleEraseCalibrationRequest()
 	}
 
 	status &= 0x00E8;
-	if (status == 0x0080)
-	{
-		success = 1;
-	}
 
 	*flashBase = READ_ARRAY_COMMAND;
 	*flashBase = READ_ARRAY_COMMAND;
@@ -305,7 +307,7 @@ void HandleEraseCalibrationRequest()
 	// messages when the PCM is in that state.
 	VariableSleep(2);
 
-	SendReply(success, 0x05, (char)status);
+	SendReply(status == 0x80, 0x05, (char)status);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -509,20 +511,17 @@ void ProcessMessage()
 			break;
 
 		case 0x03:
-			HandleFlashUnlockRequest();
+			// This created so much noise on the VPW bus that we couldn't communicate.
+			// HandleFlashUnlockRequest();
 			break;
 
 		case 0x04:
-			HandleFlashLockRequest();
+			// This created so much noise on the VPW bus that we couldn't communicate.
+			// HandleFlashLockRequest();
 			break;
 
 		case 0x05:
-			HandleEraseCalibrationRequest();
-			crcReset();
-			break;
-
-		case 0x06:
-			HandleEraseEverythingRequest();
+			HandleEraseBlock();
 			crcReset();
 			break;
 

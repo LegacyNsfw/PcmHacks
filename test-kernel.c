@@ -83,12 +83,12 @@ KernelStart(void)
 
 	ScratchWatchdog();
 
-	*DLC_InterruptConfiguration = 0x00;
+	DLC_INTERRUPTCONFIGURATION = 0x00;
 	LongSleepWithWatchdog();
 
 	// Flush the DLC
-	*DLC_Transmit_Command = 0x03;
-	*DLC_Transmit_FIFO = 0x00;
+	DLC_TRANSMIT_COMMAND = 0x03;
+	DLC_TRANSMIT_FIFO = 0x00;
 
 	ClearMessageBuffer();
 	WasteTime();
