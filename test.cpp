@@ -4,7 +4,7 @@
 #include <fstream>
 using namespace std;
 
-extern int  crcTable[256];
+extern int crcTable[256];
 
 void __cdecl crcInit(void);
 unsigned __cdecl crcFast(unsigned char *message, int nBytes);
@@ -14,22 +14,23 @@ int  main()
 {
     crcInit();
 
-    // This shows that the table is initialized.
-    //for (int i = 0; i < 256; i++)
-    //{
-    //    printf("%08X\r\n", crcTable[i]);
-    //}
-
-    //FILE *file = fopen("FirstReadFromCorvette.bin", "r");
     ifstream file ("FirstReadFromCorvette.bin", ios::in|ios::binary|ios::ate);
     streampos size = file.tellg();
+	cout << "Size: " << size << endl;
     char* content = new char[512*1024];
     file.seekg(streampos(0), ios::beg);
     file.read(content, 512*1024);
     file.close();
-    printf("Read %d bytes\r\n", size);
+	
+    printf("Read %d bytes\r\n", (unsigned)file.gcount());
 
-    
+	uint32_t * pData = (uint32_t*)content;
+	//printf("Pointer: %08X\r\n", (uint32_t)pData);
+	for (int i = 0; i < 10; i++)
+	{
+		printf("%02d %08X %08X\r\n", i, crcTable[i], pData[i]);
+	}
+
     unsigned crc = crcFast((unsigned char*)content, 0x2000);
     printf ("CRC: %08x\r\n", crc);
 
