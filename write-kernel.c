@@ -4,8 +4,22 @@
 
 #include "common.h"
 
-#define  SIM_BASE  ((void*)0xffffFA00)
-char volatile * const  SIM_MCR      =   SIM_BASE + 0x00; // Module Control register
+#define SIM_BASE        0x00FFFA00
+#define SIM_CSBARBT     (*(unsigned short *)(SIM_BASE + 0x48)) // CSRBASEREG, boot chip select, chip select base addr boot ROM reg,
+                                                               // must be updated to $0006 on each update of flash CE/WE states
+#define SIM_CSORBT      (*(unsigned short *)(SIM_BASE + 0x4a)) // CSROPREG, Chip select option boot ROM reg., $6820 for normal op
+#define SIM_CSBAR0      (*(unsigned short *)(SIM_BASE + 0x4c)) // CSBASEREG, chip selects
+#define SIM_CSOR0       (*(unsigned short *)(SIM_BASE + 0x4e)) // CSOPREG, *Chip select option reg., $1060 for normal op, $7060 for accessing flash chip
+#define HARDWARE_IO     (*(unsigned short *)(0xFFFFE2FA))      // Hardware I/O reg
+
+#define FLASH_BASE         (*(unsigned short *)(0x00000000))
+#define FLASH_MANUFACTURER (*(unsigned short *)(0x00000000))
+#define FLASH_DEVICE       (*(unsigned short *)(0x00000002))
+
+#define SIGNATURE_COMMAND  0x9090
+#define READ_ARRAY_COMMAND 0xFFFF
+
+/*char volatile * const  SIM_MCR      =   SIM_BASE + 0x00; // Module Control register
 char volatile * const  SIM_SYNCR    =   SIM_BASE + 0x04; // Clock synthesiser control register
 char volatile * const  SIM_RSR      =   SIM_BASE + 0x07; // Reset Status
 char volatile * const  SIM_SYPCR    =   SIM_BASE + 0x21; // System Protection
@@ -14,11 +28,7 @@ char volatile * const  SIM_PITR     =   SIM_BASE + 0x24; //
 char volatile * const  SIM_SWSR     =   SIM_BASE + 0x27; //
 char volatile * const  SIM_CSPAR0   =   SIM_BASE + 0x44; // chip sellect pin assignment
 char volatile * const  SIM_CSPAR1   =   SIM_BASE + 0x46; //
-unsigned short volatile * const  SIM_CSBARBT  =   SIM_BASE + 0x48; // CSRBASEREG, boot chip select, chip select base addr boot ROM reg, 
-                                                                   // must be updated to $0006 on each update of flash CE/WE states
-unsigned short volatile * const  SIM_CSORBT   =   SIM_BASE + 0x4a; // CSROPREG, Chip select option boot ROM reg., $6820 for normal op 
-unsigned short volatile * const  SIM_CSBAR0   =   SIM_BASE + 0x4c; // CSBASEREG, chip selects
-unsigned short volatile * const  SIM_CSOR0    =   SIM_BASE + 0x4e; // CSOPREG, *Chip select option reg., $1060 for normal op, $7060 for accessing flash chip
+
 char volatile * const  SIM_CSBAR1   =   SIM_BASE + 0x50;
 char volatile * const  SIM_CSOR1    =   SIM_BASE + 0x52;
 char volatile * const  SIM_CSBAR2   =   SIM_BASE + 0x54;
@@ -30,9 +40,8 @@ char volatile * const  SIM_CSOR4    =   SIM_BASE + 0x5e;
 char volatile * const  SIM_CSBAR5   =   SIM_BASE + 0x60;
 char volatile * const  SIM_CSOR5    =   SIM_BASE + 0x62;
 char volatile * const  SIM_CSBAR6   =   SIM_BASE + 0x64;
-char volatile * const  SIM_CSOR6    =   SIM_BASE + 0x66;
+char volatile * const  SIM_CSOR6    =   SIM_BASE + 0x66;*/
 
-unsigned short volatile * const HardwareIO     =  (void*)0xFFFFE2FA; // Hardware I/O reg
 
 // This kernel uses Mode 3D extensively, because apparently nothing else does. Submodes are:
 //
@@ -50,7 +59,7 @@ unsigned short volatile * const HardwareIO     =  (void*)0xFFFFE2FA; // Hardware
 ///////////////////////////////////////////////////////////////////////////////
 // Send a success or failure message.
 ///////////////////////////////////////////////////////////////////////////////
-void SendReply(char success, unsigned char submode, unsigned char code)
+void SendReply(unsigned char success, unsigned char submode, unsigned char code)
 {
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
@@ -70,7 +79,7 @@ void SendReply(char success, unsigned char submode, unsigned char code)
 		MessageBuffer[6] = code;
 	}
 
-	WriteMessage(MessageBuffer, success ? 6 : 7, Complete);	
+	WriteMessage(MessageBuffer, success ? 6 : 7, Complete);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -78,28 +87,23 @@ void SendReply(char success, unsigned char submode, unsigned char code)
 ///////////////////////////////////////////////////////////////////////////////
 void HandleFlashChipQuery()
 {
+	unsigned char manufacturer;
+	short device;
+
 	ScratchWatchdog();
-	*SIM_CSBAR0 = 0x0006;
-	*SIM_CSORBT = 0x6820;
-	*SIM_CSOR0 = 0x7060;
 
-	unsigned short signature_command = 0x0090;
-	unsigned short read_array_command = 0x00FF;
+	SIM_CSBAR0 = 0x0006;
+	SIM_CSORBT = 0x6820;
+	SIM_CSOR0  = 0x7060; // flash chip 12v A9 enable
 
-	unsigned short volatile * const zeroPointer = (void*)0;
-	unsigned volatile * const wideZeroPointer = (void*)0;
+	FLASH_BASE   = SIGNATURE_COMMAND; // flash chip command
+	manufacturer = FLASH_MANUFACTURER; // read manufacturer
+	device       = FLASH_DEVICE;
+	FLASH_BASE   = READ_ARRAY_COMMAND;
 
-	// This tells the flash chip we want to read the manufacturer and type IDs.
-	*zeroPointer = signature_command;
-	unsigned manufacturerAndType = *wideZeroPointer;
+	SIM_CSOR0 = 0x1060; // flash chip 12v A9 disable
 
-	// This tells the flash chip to operate normally again.
-	*zeroPointer = read_array_command;
-
-	// Not sure if this is necessary.
-	*SIM_CSOR0 = 0x1060;
-
-	// The AllPro and ScanTool devices need a short delay to switch from 
+	// The AllPro and ScanTool devices need a short delay to switch from
 	// sending to receiving. Otherwise they'll miss the response.
 	VariableSleep(1);
 
@@ -108,10 +112,10 @@ void HandleFlashChipQuery()
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7D;
 	MessageBuffer[4] = 0x01;
-	MessageBuffer[5] = (char)(manufacturerAndType >> 24);
-	MessageBuffer[6] = (char)(manufacturerAndType >> 16);
-	MessageBuffer[7] = (char)(manufacturerAndType >> 8);
-	MessageBuffer[8] = (char)(manufacturerAndType >> 0);
+	MessageBuffer[5] = manufacturer >> 8;
+	MessageBuffer[6] = manufacturer;
+	MessageBuffer[7] = device >> 8;
+	MessageBuffer[8] = device;
 	WriteMessage(MessageBuffer, 9, Complete);
 }
 
@@ -127,7 +131,7 @@ void HandleCrcQuery()
 	length |= MessageBuffer[6];
 	length <<= 8;
 	length |= MessageBuffer[7];
-	
+
 	unsigned address = MessageBuffer[8];
 	address <<= 8;
 	address |= MessageBuffer[9];
@@ -141,8 +145,8 @@ void HandleCrcQuery()
 	char path;
     if (!crcIsStarted (message, nBytes))
     {
-		path = 1;
-        crcStart(message, nBytes);
+			path = 1;
+      crcStart(message, nBytes);
     }
 	else
 	{
@@ -151,10 +155,10 @@ void HandleCrcQuery()
 
 	ElmSleep();
 
-    if (crcIsDone(message, nBytes))
-    {
-        unsigned crc = crcGetResult();
-       	MessageBuffer[0] = 0x6C;
+  if (crcIsDone(message, nBytes))
+  {
+    unsigned crc = crcGetResult();
+    MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
 		MessageBuffer[2] = 0x10;
 		MessageBuffer[3] = 0x7D;
@@ -170,21 +174,21 @@ void HandleCrcQuery()
 		MessageBuffer[13] = (char)(crc >> 8);
 		MessageBuffer[14] = (char)crc;
 		WriteMessage(MessageBuffer, 15, Complete);
-    }
-    else
-    {
-        // This is an abuse of the protocol, but I want to keep these
+  }
+  else
+  {
+    // This is an abuse of the protocol, but I want to keep these
 		// messages short, and using 7F 3D 02 would make it hard to tell
 		// whether CRC is in progress or the kernel just isn't loaded.
 		// So this reply has a legitimate mode, and a bogus submode.
-       	MessageBuffer[0] = 0x6C;
+  	MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
 		MessageBuffer[2] = 0x10;
 		MessageBuffer[3] = 0x7D;
-		MessageBuffer[4] = 0xFF; 
+		MessageBuffer[4] = 0xFF;
 		MessageBuffer[5] = path;
 		WriteMessage(MessageBuffer, 6, Complete);
-    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -197,30 +201,29 @@ void HandleCrcQuery()
 //
 // So instead of VPW commands to unlock and re-lock, we just unlock during the
 // erase and write operations, and re-lock when the operation is complete.
-// 
+//
 // These commands remain supported, just in case we find a way to use them.
 ///////////////////////////////////////////////////////////////////////////////
 void UnlockFlash()
 {
-	*SIM_CSBARBT = 0x0006;
-	*SIM_CSORBT = 0x6820;
-	*SIM_CSBAR0 = 0x0006;		
-	*SIM_CSOR0 = 0x7060;
+	SIM_CSBARBT = 0x0006;
+	SIM_CSORBT  = 0x6820;
+	SIM_CSBAR0  = 0x0006;
+	SIM_CSOR0   = 0x7060;
 
-	unsigned short hardwareFlags = *HardwareIO;
+	// TODO: can we just |= HARDWAREIO?
+	unsigned short hardwareFlags = HARDWARE_IO;
+	WasteTime();
 	hardwareFlags |= 0x0001;
 	WasteTime();
-	WasteTime();
-	*HardwareIO = hardwareFlags;
+	HARDWARE_IO = hardwareFlags;
 
 	VariableSleep(0x50);
 }
 
 void HandleFlashUnlockRequest()
 {
-	UnlockFlash();
-	
-	// No delay necessary, the UnlockFlash function already takes a long time.
+	UnlockFlash(); // No delay necessary, the UnlockFlash function already takes a long time.
 	SendReply(1, 0x03, 0x00);
 }
 
@@ -231,16 +234,16 @@ void HandleFlashUnlockRequest()
 ///////////////////////////////////////////////////////////////////////////////
 void LockFlash()
 {
-	*SIM_CSBARBT = 0x0006;
-	*SIM_CSORBT = 0x6820;
-	*SIM_CSBAR0 = 0x0006;	
-	*SIM_CSOR0 = 0x1060;
+	SIM_CSBARBT = 0x0006;
+	SIM_CSORBT  = 0x6820;
+	SIM_CSBAR0  = 0x0006;
+	SIM_CSOR0   = 0x1060;
 
-	unsigned short hardwareFlags = *HardwareIO;
+	unsigned short hardwareFlags = HARDWARE_IO;
 	hardwareFlags &= 0xFFFE;
 	WasteTime();
 	WasteTime();
-	*HardwareIO = hardwareFlags;
+	HARDWARE_IO = hardwareFlags;
 
 	VariableSleep(0x50);
 }
@@ -248,7 +251,6 @@ void LockFlash()
 void HandleFlashLockRequest()
 {
 	LockFlash();
-	
 	// No delay necessary, the UnlockFlash function already takes a long time.
 	SendReply(1, 0x04, 0x00);
 }
@@ -261,7 +263,7 @@ void HandleEraseCalibrationRequest()
 	UnlockFlash();
 
 	unsigned short *flashBase = (void*)0x8000;
-	*flashBase = 0x5050;
+	*flashBase = 0x5050; // TODO: Move these commands to defines
 	*flashBase = 0x2020;
 	*flashBase = 0xD0D0;
 
@@ -291,12 +293,12 @@ void HandleEraseCalibrationRequest()
 		success = 1;
 	}
 
-	*flashBase = 0xFFFF;
-	*flashBase = 0xFFFF;
+	*flashBase = READ_ARRAY_COMMAND;
+	*flashBase = READ_ARRAY_COMMAND;
 
 	LockFlash();
 
-	// The AllPro and ScanTool devices need a short delay to switch from 
+	// The AllPro and ScanTool devices need a short delay to switch from
 	// sending to receiving. Otherwise they'll miss the response.
 	// Also, give the lock-flash operation time to take full effect, because
 	// the signal quality is degraded and the AllPro and ScanTool can't read
@@ -305,7 +307,7 @@ void HandleEraseCalibrationRequest()
 
 	SendReply(success, 0x05, (char)status);
 }
-	
+
 ///////////////////////////////////////////////////////////////////////////////
 // Erase everything? Nope, not yet.
 ///////////////////////////////////////////////////////////////////////////////
@@ -318,7 +320,7 @@ void HandleEraseEverythingRequest()
 	MessageBuffer[4] = 0x3D;
 	MessageBuffer[5] = 0x06;
 	MessageBuffer[6] = 0x00;
-	
+
 	WriteMessage(MessageBuffer, 7, Complete);
 }
 
@@ -329,7 +331,7 @@ extern unsigned int *crcTable;
 void HandleDebugQuery()
 {
 	char test = 0;
-	unsigned value = *SIM_CSBAR0;
+	unsigned value = SIM_CSBAR0;
 	//(unsigned)&test;
 
 	MessageBuffer[0] = 0x6C;
@@ -343,7 +345,7 @@ void HandleDebugQuery()
 	MessageBuffer[8] = (char)(value >> 0);
 	WriteMessage(MessageBuffer, 9, Complete);
 
-	value = *SIM_CSOR0;
+	value = SIM_CSOR0;
 	//(unsigned)crcTable;
 
 	MessageBuffer[0] = 0x6C;
@@ -363,7 +365,7 @@ void HandleDebugQuery()
 // This is invoked by HandleWriteMode36 in common-readwrite.c
 // read-kernel.c has a stub to keep the compiler happy until this is released.
 ///////////////////////////////////////////////////////////////////////////////
-unsigned char WriteToFlash(const unsigned int payloadLengthInBytes, const unsigned int startAddress, unsigned char *payloadBytes, int testWrite)
+unsigned char WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite)
 {
 	char errorCode = 0;
 	unsigned short status;
@@ -374,7 +376,7 @@ unsigned char WriteToFlash(const unsigned int payloadLengthInBytes, const unsign
 	}
 
 	unsigned short* payloadArray = (unsigned short*) payloadBytes;
-	unsigned short* flashArray = (unsigned short*) startAddress; 
+	unsigned short* flashArray = (unsigned short*) startAddress;
 
 	for (unsigned index = 0; index < payloadLengthInBytes / 2; index++)
 	{
@@ -383,7 +385,7 @@ unsigned char WriteToFlash(const unsigned int payloadLengthInBytes, const unsign
 
 		if (!testWrite)
 		{
-			*address = 0x5050; // Clear status register
+			*address = 0x5050; // Clear status register TODO: use #define
 			*address = 0x4040; // Program setup
 			*address = value;  // Program
 			*address = 0x7070; // Prepare to read status register
@@ -393,7 +395,7 @@ unsigned char WriteToFlash(const unsigned int payloadLengthInBytes, const unsign
 		for(int iterations = 0; iterations < 0x1000; iterations++)
 		{
 			if  (testWrite)
-			{	
+			{
 				status = 0x80;
 			}
 			else
@@ -407,7 +409,7 @@ unsigned char WriteToFlash(const unsigned int payloadLengthInBytes, const unsign
 			{
 				success = 1;
 				break;
-			}		
+			}
 
 			WasteTime();
 			WasteTime();
@@ -432,13 +434,13 @@ unsigned char WriteToFlash(const unsigned int payloadLengthInBytes, const unsign
 
 	if (!testWrite)
 	{
-		// Return flash to normal mode.
-		unsigned short* address = (unsigned short*)startAddress;
-		*address = 0xFFFF;
-		*address = 0xFFFF;
+				// Return flash to normal mode.
+				unsigned short* address = (unsigned short*)startAddress;
+				*address = 0xFFFF;
+				*address = 0xFFFF;
 		LockFlash();
 	}
-	
+
 	// Check the last value we got from the status register.
 	if ((status & 0x98) != 0x80)
 	{
@@ -516,10 +518,12 @@ void ProcessMessage()
 
 		case 0x05:
 			HandleEraseCalibrationRequest();
+			crcReset();
 			break;
-			
+
 		case 0x06:
 			HandleEraseEverythingRequest();
+			crcReset();
 			break;
 
 		case 0xFF:
@@ -562,12 +566,12 @@ KernelStart(void)
 
 	ScratchWatchdog();
 
-	*DLC_InterruptConfiguration = 0x00;
-	crcInit();	
+	DLC_INTERRUPTCONFIGURATION = 0x00;
+	crcInit();
 
 	// Flush the DLC
-	*DLC_Transmit_Command = 0x03;
-	*DLC_Transmit_FIFO = 0x00;
+	DLC_TRANSMIT_COMMAND = 0x03;
+	DLC_TRANSMIT_FIFO = 0x00;
 
 	ClearMessageBuffer();
 	WasteTime();
@@ -577,7 +581,7 @@ KernelStart(void)
 
 	// This loop runs out quickly, to force the PCM to reboot, to speed up testing.
 	// The real kernel should probably loop for a much longer time (possibly forever),
-	// to allow the app to recover from any failures. 
+	// to allow the app to recover from any failures.
 	// If we choose to loop forever we need a good story for how to get out of that state.
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
 	// for(int iterations = 0; iterations < 100; iterations++)
@@ -607,7 +611,7 @@ KernelStart(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 // For now the plan is to let the kernel run indefinitely, and give the app
-// an exit-kernel button. This should give us some flexibility in recovering 
+// an exit-kernel button. This should give us some flexibility in recovering
 // from failed flashes, especially those involving the boot block.
 //
 //			// If no message received for N iterations, reboot.

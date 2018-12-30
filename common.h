@@ -5,19 +5,21 @@
 #define EXTERN extern
 #endif
 
-typedef unsigned char uint8_t;
+typedef unsigned char  uint8_t;
 typedef unsigned short uint16_t;
-typedef unsigned uint32_t;
-typedef int int32_t;
+typedef unsigned       uint32_t;
+typedef int            int32_t;
 
-EXTERN char volatile * const DLC_Configuration;
-EXTERN char volatile * const DLC_InterruptConfiguration;
-EXTERN char volatile * const DLC_Transmit_Command;
-EXTERN char volatile * const DLC_Transmit_FIFO;
-EXTERN char volatile * const DLC_Status;
-EXTERN char volatile * const DLC_Receive_FIFO;
-EXTERN char volatile * const Watchdog1;
-EXTERN char volatile * const Watchdog2;
+#ifndef DLC_CONFIGURATION
+	#define DLC_CONFIGURATION          (*(unsigned char *)0x00FFF600)
+	#define DLC_INTERRUPTCONFIGURATION (*(unsigned char *)0x00FFF606)
+	#define DLC_TRANSMIT_COMMAND       (*(unsigned char *)0x00FFF60C)
+	#define DLC_TRANSMIT_FIFO          (*(unsigned char *)0x00FFF60D)
+	#define DLC_STATUS                 (*(unsigned char *)0x00FFF60E)
+	#define DLC_RECEIVE_FIFO           (*(unsigned char *)0x00FFF60F)
+	#define WATCHDOG1                  (*(unsigned char *)0x00FFFA27)
+	#define WATCHDOG2                  (*(unsigned char *)0x00FFD006)
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -76,7 +78,7 @@ void ElmSleep();
 // Sleep for a variable amount of time. This should be close to Dimented24x7's
 // assembly-language implementation.
 ///////////////////////////////////////////////////////////////////////////////
-void VariableSleep(int iterations);
+void VariableSleep(unsigned int iterations);
 
 ///////////////////////////////////////////////////////////////////////////////
 // All outgoing messages must be written into this buffer. The WriteMessage
@@ -99,7 +101,7 @@ void HandleWriteMode36();
 
 ///////////////////////////////////////////////////////////////////////////////
 // Indicates whether the buffer passed to WriteMessage contains the beginning,
-// middle, or end of a message. 
+// middle, or end of a message.
 ///////////////////////////////////////////////////////////////////////////////
 typedef enum
 {
@@ -107,6 +109,7 @@ typedef enum
 	Start = 1,
 	Middle = 2,
 	End = 4,
+	AddSum = 8,
 	Complete = Start | End,
 } Segment;
 
@@ -116,18 +119,18 @@ typedef enum
 // The message must be written into MessageBuffer first.
 // This function will send 'length' bytes from that buffer onto the wire.
 ///////////////////////////////////////////////////////////////////////////////
-void WriteMessage(char* start, int length, Segment segment);
+void WriteMessage(unsigned char* start, unsigned short length, Segment segment);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Read a VPW message into the 'MessageBuffer' buffer.
 ///////////////////////////////////////////////////////////////////////////////
-int ReadMessage(char *completionCode, char *readState);
+int ReadMessage(unsigned char *completionCode, unsigned char *readState);
 
 ///////////////////////////////////////////////////////////////////////////////
 // TODO: REMOVE.
 // Copy the given buffer into the message buffer.
 ///////////////////////////////////////////////////////////////////////////////
-void CopyToMessageBuffer(char* start, int length, int offset);
+void CopyToMessageBuffer(unsigned char* start, unsigned int length, unsigned int offset);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Send a message to explain why we're rebooting, then reboot.
@@ -143,28 +146,28 @@ void SendToolPresent2(unsigned int value);
 ///////////////////////////////////////////////////////////////////////////////
 // Send the breadcrumb array as a payload of a tool-present message.
 ///////////////////////////////////////////////////////////////////////////////
-void SendBreadcrumbs(char code);
+void SendBreadcrumbs(unsigned char code);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Send the breadcrumb array, then reboot.
 // This is useful in figuring out how the kernel got into a bad state.
 ///////////////////////////////////////////////////////////////////////////////
-void SendBreadcrumbsReboot(char code, int breadcrumbs);
+void SendBreadcrumbsReboot(unsigned char code, unsigned int breadcrumbs);
 
 ///////////////////////////////////////////////////////////////////////////////
-// Comput the checksum for the header of an outgoing message.
+// Compute the checksum for the header of an outgoing message.
 ///////////////////////////////////////////////////////////////////////////////
 unsigned short StartChecksum();
 
 ///////////////////////////////////////////////////////////////////////////////
 // Copy the payload for a read request, while updating the checksum.
 ///////////////////////////////////////////////////////////////////////////////
-unsigned short AddReadPayloadChecksum(char* start, int length);
+unsigned short AddReadPayloadChecksum(unsigned char* start, unsigned int length);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Set the checksum for a data block.
 ///////////////////////////////////////////////////////////////////////////////
-void SetBlockChecksum(int length, unsigned short checksum);
+void SetBlockChecksum(unsigned int length, unsigned short checksum);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Get the version of the kernel. (Mode 3D, submode 00)
@@ -186,6 +189,7 @@ extern int __attribute((section(".kerneldata"))) crcIndex;
 extern uint32_t __attribute((section(".kerneldata"))) crcRemainder;
 
 void crcInit(void);
+void crcReset(void);
 
 int crcIsStarted(uint8_t *message, int nBytes);
 int crcIsDone(uint8_t *message, int nBytes);

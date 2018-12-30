@@ -3,15 +3,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 #define EXTERN
 #include "common.h"
-char volatile * const DLC_Configuration = (char*)0xFFF600;
-char volatile * const DLC_InterruptConfiguration = (char*)0xFFF606;
-char volatile * const DLC_Transmit_Command = (char*)0xFFF60C;
-char volatile * const DLC_Transmit_FIFO = (char*)0xFFF60D;
-char volatile * const DLC_Status = (unsigned char*)0xFFF60E;
-char volatile * const DLC_Receive_FIFO = (char*)0xFFF60F;
-char volatile * const Watchdog1 = (char*)0xFFFA27;
-char volatile * const Watchdog2 = (char*)0xFFD006;
-
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -33,10 +24,10 @@ unsigned char __attribute((section(".kerneldata"))) BreadcrumbBuffer[BreadcrumbB
 ///////////////////////////////////////////////////////////////////////////////
 void ScratchWatchdog()
 {
-	*Watchdog1 = 0x55;
-	*Watchdog1 = 0xAA;
-	*Watchdog2 = *Watchdog2 & 0x7F;
-	*Watchdog2 = *Watchdog2 | 0x80;
+	WATCHDOG1 = 0x55;
+	WATCHDOG1 = 0xAA;
+	WATCHDOG2 &= 0x7F;
+	WATCHDOG2 |= 0x80;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -91,10 +82,10 @@ void LongSleepWithWatchdog()
 void ElmSleep()
 {
 	// 1,25 worked well for a long series of kernel-version requests with both
-	// the AllPro and Scantool at 1x speed. 
+	// the AllPro and Scantool at 1x speed.
 	// CRC responses aren't received by either device. Not sure if timing related.
 	// Have not tested 4x yet. Have not tried smaller delay either.
-	PrivateSleep(1, 100);
+	PrivateSleep(1, 50);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -104,7 +95,7 @@ void ElmSleep()
 // call sites. Consecutive message-sends (e.g. in HandleReadMode35) work fine
 // with an inner loop of 100. Haven't tried 50 yet.
 ///////////////////////////////////////////////////////////////////////////////
-void VariableSleep(int iterations)
+void VariableSleep(unsigned int iterations)
 {
 	PrivateSleep(iterations, 250);
 }
@@ -134,71 +125,93 @@ void ClearBreadcrumbBuffer()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Send a byte - used by WriteMessage
+///////////////////////////////////////////////////////////////////////////////
+void WriteByte(unsigned char byte)
+{
+	unsigned char status;
+
+	// Status 2 means the transmit buffer is almost full.
+	// In that case, pause until there's room in the buffer.
+	status = DLC_STATUS & 0x03;
+
+	// TODO: try looping around 0x02 (almost full) rather than 0x03 (full)
+	unsigned char loopCount = 0;
+	while ((status == 0x02 || status == 0x03) && loopCount < 250)
+	{
+		loopCount++;
+
+		// With max iterations at 25, we get some 2s and 3s in the loop counter.
+		for (int iterations = 0; iterations < 50; iterations++) WasteTime();
+
+		ScratchWatchdog();
+		status = DLC_STATUS & 0x03;
+	}
+	DLC_TRANSMIT_FIFO = byte;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Send the given bytes over the VPW bus.
 // The DLC will append the checksum byte, so we don't have to.
 // The message must be written into MessageBuffer first.
 // This function will send 'length' bytes from that buffer onto the wire.
+// does not init the blocksum global variable so we can continue an existing
+// count. Use StartChecksum() to begin with the header sum, and let this
+// finish and transmit it.
 ///////////////////////////////////////////////////////////////////////////////
-void WriteMessage(char* start, int length, Segment segment)
+void WriteMessage(unsigned char *start, unsigned short length, Segment segment)
 {
 	ScratchWatchdog();
 
 	if ((segment & Start) != 0)
 	{
-		*DLC_Transmit_Command = 0x14;
+		DLC_TRANSMIT_COMMAND = 0x14;
 	}
-		
-	int lastIndex = (segment & End) ? length - 1 : length;
+
+	unsigned short lastIndex = (segment & End) ? length - 1 : length;
 
 	unsigned char status;
+	unsigned char lastbyte;
 
 	int stopUsing = 0;
 
-	// Send message
-	for (int index = 0; index < lastIndex; index++)
+	unsigned short checksum = StartChecksum();
+
+	// Send a message body
+	unsigned short index;
+	for (index = 0; index < lastIndex; index++)
 	{
-		*DLC_Transmit_FIFO = start[index];
-		ScratchWatchdog();
+		checksum += (unsigned char) start[index];
+		WriteByte(start[index]);
+	}
 
-		// Status 2 means the transmit buffer is almost full.
-		// In that case, pause until there's room in the buffer.
-		status = *DLC_Status & 0x03;
-
-		// TODO: try looping around 0x02 (almost full) rather than 0x03 (full)
-		int loopCount = 0;
-		while ((status == 0x02 || status == 0x03) && loopCount < 250)
-		{
-			loopCount++;
-
-			// With max iterations at 25, we get some 2s and 3s in the loop counter.
-			for (int iterations = 0; iterations < 50; iterations++)
-			{
-				ScratchWatchdog();
-				WasteTime();
-			}
-
-			ScratchWatchdog();
-			status = *DLC_Status & 0x03;
-		}
+	// transmit a a block sum?
+	if (segment & AddSum) {
+		checksum += (unsigned char) start[index]; // complete the sum
+		WriteByte(start[index]);  // send the last payload byte
+		WriteByte(checksum >> 8);      // send the first block sum byte
+		lastbyte = checksum;  // load the second block sum byte as the last byte
+	} else {
+		lastbyte = start[index];    // No block sum, last byte as normal
 	}
 
 	if ((segment & End) != 0)
 	{
 		// Send last byte
-		*DLC_Transmit_Command = 0x0C;
-		*DLC_Transmit_FIFO = start[length - 1];
+		DLC_TRANSMIT_COMMAND = 0x0C;
+		DLC_TRANSMIT_FIFO = lastbyte;
 
-		// Send checksum? 
+		// Send checksum?
 		WasteTime();
-		*DLC_Transmit_Command = 0x03;
-		*DLC_Transmit_FIFO = 0x00;
+		DLC_TRANSMIT_COMMAND = 0x03;
+		DLC_TRANSMIT_FIFO = 0x00;
 
 		// Wait for the message to be flushed.
 		//
 		// This seems to work as it should, however note that, as per the DLC spec,
 		// we'll get a series of 0x03 status values (buffer full) before the status
 		// changes immediately to zero. There's no 0x02 (almost full) in between.
-		status = *DLC_Status & 0x03;
+		status = DLC_STATUS & 0x03;
 		int loopCount = 0;
 		while (status != 0 && loopCount < 500)
 		{
@@ -211,7 +224,7 @@ void WriteMessage(char* start, int length, Segment segment)
 			}
 
 			ScratchWatchdog();
-			status = *DLC_Status & 0x03;
+			status = DLC_STATUS & 0x03;
 		}
 
 		ClearMessageBuffer();
@@ -221,15 +234,10 @@ void WriteMessage(char* start, int length, Segment segment)
 ///////////////////////////////////////////////////////////////////////////////
 // Read a VPW message into the 'MessageBuffer' buffer.
 ///////////////////////////////////////////////////////////////////////////////
-int ReadMessage(char *completionCode, char *readState)
+int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 {
 	ScratchWatchdog();
 	unsigned char status;
-
-#ifdef RECEIVE_BREADCRUMBS
-	ClearBreadcrumbBuffer();
-	int breadcrumbIndex = 0; 
-#endif
 
 	int iterations = 0;
 	int timeout = 1000;
@@ -242,66 +250,40 @@ int ReadMessage(char *completionCode, char *readState)
 		iterations++;
 
 		// If no message received for N iterations, exit.
-		if ((length == 0) && iterations > (lastMessage + timeout))
-		{
-			return 0;
-		}
+		if ((length == 0) && iterations > (lastMessage + timeout)) return 0;
 
 		// Artificial message-length limit for debugging.
-		if (length == 5100)
+		if (length == 4112)
 		{
 			*readState = 0xEE;
 			return length;
 		}
 
-		status = (*DLC_Status & 0xE0) >> 5;
-		
-#ifdef RECEIVE_BREADCRUMBS
-		// Another artificial limit just for debugging.
-		if (breadcrumbIndex == BreadcrumbBufferSize)
-		{
-			*readState = 0xFF;
-			return length;
-		}
-
-//		BreadcrumbBuffer[breadcrumbIndex] = status;
-//		breadcrumbIndex++;
-#endif
+		status = (DLC_STATUS & 0xE0) >> 5;
 		switch (status)
 		{
 		case 0: // No data to process. This wait period may need more tuning.
 			VariableSleep(1);
 			break;
-
 		case 1: // Buffer contains data bytes.
 		case 2: // Buffer contains data followed by a completion code.
-		case 4:  // Buffer contains just one data byte.
+		case 4: // Buffer contains just one data byte.
 			lastMessage = iterations;
-
-			MessageBuffer[length] = *DLC_Receive_FIFO;
-			length++;
+			MessageBuffer[length++] = DLC_RECEIVE_FIFO;
 			break;
-
 		case 5: // Buffer contains a completion code, followed by more data bytes.
 		case 6: // Buffer contains a completion code, followed by a full frame.
 		case 7: // Buffer contains a completion code only.
 			lastMessage = iterations;
+			*completionCode = DLC_RECEIVE_FIFO;
 
-			*completionCode = *DLC_Receive_FIFO;
-
-#ifdef RECEIVE_BREADCRUMBS
-			BreadcrumbBuffer[breadcrumbIndex++] = *completionCode;
-#endif
 			// Not sure if this is necessary - the code works without it, but it seems
 			// like a good idea according to 5.1.3.2. of the DLC data sheet.
-			*DLC_Transmit_Command = 0x02;
+			DLC_TRANSMIT_COMMAND = 0x02;
 
-			// If we return here when the length is zero, we'll never return 
+			// If we return here when the length is zero, we'll never return
 			// any message data at all. Not sure why.
-			if (length == 0)
-			{
-				break;
-			}
+			if (length == 0) 	break;
 
 			if ((*completionCode & 0x30) == 0x30)
 			{
@@ -314,14 +296,10 @@ int ReadMessage(char *completionCode, char *readState)
 
 		case 3:  // Buffer overflow. What do do here?
 			// Just throw the message away and hope the tool sends again?
-			while (*DLC_Status & 0xE0 == 0x60)
-			{
-				char unused = *DLC_Receive_FIFO;
-			}
+			while (DLC_STATUS & 0xE0 == 0x60) MessageBuffer[length] = DLC_RECEIVE_FIFO;
 			*readState = 0x0B;
 			return 0;
 		}
-
 		ScratchWatchdog();
 	}
 
@@ -337,7 +315,7 @@ int ReadMessage(char *completionCode, char *readState)
 ///////////////////////////////////////////////////////////////////////////////
 // Copy the given buffer into the message buffer.
 ///////////////////////////////////////////////////////////////////////////////
-void CopyToMessageBuffer(char* start, int length, int offset)
+void CopyToMessageBuffer(unsigned char* start, unsigned int length, unsigned int offset)
 {
 	// This is the obvious way to do it, but one of the usage scenarios
 	// involves moving data in the buffer to a location further into the
@@ -353,11 +331,7 @@ void CopyToMessageBuffer(char* start, int length, int offset)
 	for (int index = length - 1; index >= 0; index--)
 	{
 		MessageBuffer[index + offset] = start[index];
-
-		if (index % 100 == 0)
-		{
-			ScratchWatchdog();
-		}
+		if (index % 512 == 0) ScratchWatchdog();
 	}
 }
 
@@ -389,7 +363,7 @@ void Reboot(unsigned int value)
 ///////////////////////////////////////////////////////////////////////////////
 void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3, unsigned char b4)
 {
-	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00, 0x00, 0x00 };
+	unsigned char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00, 0x00, 0x00 };
 	toolPresent[4] = b1;
 	toolPresent[5] = b2;
 	toolPresent[6] = b3;
@@ -409,9 +383,9 @@ void SendToolPresent2(unsigned int value)
 }
 
 #if defined(RECEIVE_BREADCRUMBS) || defined(TRANSMIT_BREADCRUMBS) || defined(MODEBYTE_BREADCRUMBS)
-void SendBreadcrumbs(char code)
+void SendBreadcrumbs(unsigned char code)
 {
-	char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, code };
+	unsigned char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, code };
 	WriteMessage(toolPresent, 5, Start);
 	WriteMessage(BreadcrumbBuffer, breadcrumbs, End);
 	LongSleepWithWatchdog();
@@ -422,7 +396,7 @@ void SendBreadcrumbs(char code)
 // Send the breadcrumb array, then reboot.
 // This is useful in figuring out how the kernel got into a bad state.
 ///////////////////////////////////////////////////////////////////////////////
-void SendBreadcrumbsReboot(char code, int breadcrumbs)
+void SendBreadcrumbsReboot(unsigned char code, unsigned int breadcrumbs)
 {
 	SendBreadcrumbs(code);
 	Reboot(code);
@@ -430,7 +404,7 @@ void SendBreadcrumbsReboot(char code, int breadcrumbs)
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
-// Comput the checksum for the header of an outgoing message.
+// Compute the checksum for the header of an outgoing message.
 ///////////////////////////////////////////////////////////////////////////////
 unsigned short StartChecksum()
 {
@@ -439,14 +413,13 @@ unsigned short StartChecksum()
 	{
 		checksum += MessageBuffer[index];
 	}
-
 	return checksum;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Copy the payload for a read request, while updating the checksum.
 ///////////////////////////////////////////////////////////////////////////////
-unsigned short AddReadPayloadChecksum(char* start, int length)
+unsigned short AddReadPayloadChecksum(unsigned char *start, unsigned int length)
 {
 	ScratchWatchdog();
 
@@ -471,7 +444,7 @@ unsigned short AddReadPayloadChecksum(char* start, int length)
 ///////////////////////////////////////////////////////////////////////////////
 // Set the checksum for a data block.
 ///////////////////////////////////////////////////////////////////////////////
-void SetBlockChecksum(int length, unsigned short checksum)
+void SetBlockChecksum(unsigned int length, unsigned short checksum)
 {
 	MessageBuffer[10 + length] = (unsigned char)((checksum & 0xFF00) >> 8);
 	MessageBuffer[11 + length] = (unsigned char)(checksum & 0xFF);
@@ -489,10 +462,10 @@ void HandleVersionQuery(uint8_t kernelType)
 	MessageBuffer[4] = 0x00;
 	MessageBuffer[5] = 0x01; // major
 	MessageBuffer[6] = 0x00; // minor
-	MessageBuffer[7] = 0x02; // patch
+	MessageBuffer[7] = 0x03; // patch
 	MessageBuffer[8] = kernelType; // AA = read, BB = write
 
-	// The AllPro and ScanTool devices need a short delay to switch from 
+	// The AllPro and ScanTool devices need a short delay to switch from
 	// sending to receiving. Otherwise they'll miss the response.
 	ElmSleep();
 

@@ -48,7 +48,7 @@ void crcInit(void)
         {
             /*
              * Try to divide the current data bit.
-             */			
+             */
             if (remainder & TOPBIT)
             {
                 remainder = (remainder << 1) ^ POLYNOMIAL;
@@ -66,6 +66,15 @@ void crcInit(void)
     }
 
 }   /* crcInit() */
+
+// Used by the erase function to destory any previously calculated CRC
+void crcReset(void)
+{
+  crcStartAddress = 0;
+  crcLength = 0;
+  crcIndex = 0;
+  crcRemainder = 0;
+}
 
 crc crcFast(unsigned char *message, int nBytes)
 {

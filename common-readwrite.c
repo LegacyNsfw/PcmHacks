@@ -20,40 +20,21 @@ void HandleReadMode35()
 
 	// TODO: Validate the start address and length, fail if unreasonable.
 
-	// Send the "agree" response.
-	MessageBuffer[0] = 0x6C;
-	MessageBuffer[1] = 0xF0;
-	MessageBuffer[2] = 0x10;
-	MessageBuffer[3] = 0x75;
-
-	MessageBuffer[4] = 0x01;
-	MessageBuffer[5] = 0x54;
-	MessageBuffer[6] = 0x6C;
-	MessageBuffer[7] = 0xF0;
-
-	// Give the tool time to proces that message (especially the AllPro)
-	ElmSleep();
-	WriteMessage(MessageBuffer, 8, Complete);
-
 	// Send the payload
 	MessageBuffer[0] = 0x6D;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x36;
 	MessageBuffer[4] = 0x01;
-	MessageBuffer[5] = (char)(length >> 8);
-	MessageBuffer[6] = (char)length;
-	MessageBuffer[7] = (char)(start >> 16);
-	MessageBuffer[8] = (char)(start >> 8);
-	MessageBuffer[9] = (char)start;
-
-	unsigned short checksum = StartChecksum();
-	checksum += AddReadPayloadChecksum((char*)start, length);
+	MessageBuffer[5] = length >> 8;
+	MessageBuffer[6] = length;
+	MessageBuffer[7] = start >> 16;
+	MessageBuffer[8] = start >> 8;
+	MessageBuffer[9] = start;
 
 	ElmSleep();
 	WriteMessage(MessageBuffer, 10, Start);
-	WriteMessage((char*)start, length, Middle);
-	WriteMessage((char*)&checksum, 2, End);
+	WriteMessage((char*)start, length, End|AddSum);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -138,33 +119,34 @@ void HandleWriteMode36()
 
 	// Compute checksum
 	unsigned short checksum = 0;
-	for (int index = 4; index < length + 10; index++)
+	for (unsigned int index = 4; index < length + 10 ; index++) // vpw header = 10 bytes offset from payload length
 	{
-		if (index % 1024 == 0)
-		{
-			ScratchWatchdog();
-		}
-
-		checksum = checksum + MessageBuffer[index];
+		if (index % 1024 == 0) ScratchWatchdog();
+		checksum += MessageBuffer[index];
 	}
 
 	// Validate checksum
 	unsigned short expected = (MessageBuffer[10 + length] << 8) | MessageBuffer[10 + length + 1];
 	if (checksum != expected)
 	{
+		/*unsigned char tmp = MessageBuffer[1];
+		MessageBuffer[1] = MessageBuffer[2];
+		MessageBuffer[2] = tmp;
+		WriteMessage(MessageBuffer, 10 + length + 1, Complete);*/
+
 		MessageBuffer[0] = 0x6D;
 		MessageBuffer[1] = 0xF0;
 		MessageBuffer[2] = 0x10;
-		MessageBuffer[3] = 0x7F; 
+		MessageBuffer[3] = 0x7F;
 		MessageBuffer[4] = 0x36;
-		MessageBuffer[5] = (char)((checksum & 0xFF00) >> 8);
-		MessageBuffer[6] = (char)(checksum & 0x00FF);
-		MessageBuffer[7] = (char)((expected & 0xFF00) >> 8);
-		MessageBuffer[8] = (char)(expected & 0x00FF);
-		MessageBuffer[9] = (char)((length & 0xFF00) >> 8);
-		MessageBuffer[10] = (char)(length & 0x00FF);
-
+		MessageBuffer[5] = checksum >> 8;
+		MessageBuffer[6] = checksum;
+		MessageBuffer[7] = expected >> 8;
+		MessageBuffer[8] = expected;
+		MessageBuffer[9] = length>> 8;
+		MessageBuffer[10]= length;
 		WriteMessage(MessageBuffer, 11, Complete);
+
 		return;
 	}
 
@@ -177,15 +159,11 @@ void HandleWriteMode36()
 
 	if ((start >= 0xFF8000) && (start+length <= 0xFFCDFF))
 	{
-		// Copy content	
+		// Copy content
 		unsigned int address = 0;
 		for (int index = 0; index < length; index++)
 		{
-			if (index % 50 == 1)
-			{
-				ScratchWatchdog();
-			}
-
+			if (index % 50 == 1) ScratchWatchdog();
 			address = start + index;
 			*((unsigned char*)address) = MessageBuffer[10 + index];
 		}
@@ -194,7 +172,7 @@ void HandleWriteMode36()
 		SendWriteSuccess(command);
 
 		// Let the success message flush.
-		LongSleepWithWatchdog();		
+		LongSleepWithWatchdog();
 
 		// Execute if requested to do so.
 		if (command == 0x80)
@@ -204,19 +182,11 @@ void HandleWriteMode36()
 		}
 	}
 	else if ((start >= 0x8000) && ((start+length) <= 0x20000))
-	{		
-		// Write to flash memory.
+	{
 		char flashError = WriteToFlash(length, start, &MessageBuffer[10], command == 0x44);
 
-		// Send success or failure.
-		if (flashError == 0)
-		{
-			SendWriteSuccess(command);
-		}
-		else
-		{
-			SendWriteFail(0, flashError);
-		}
+		if (flashError == 0) 	SendWriteSuccess(command);
+		else 									SendWriteFail(0, flashError);
 	}
 	else
 	{

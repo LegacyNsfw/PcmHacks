@@ -5,12 +5,12 @@ SECTIONS
 		main.o	
 	}
 
-	.kernel_data (0xFFA000) :
+	.kernel_data (0xFFB000) :
 	{
 		micro-kernel.o (.kerneldata)
 	}
 
-	.kernel_code (0xFF8000) :
+	.kernel_code (0xFFA000) :
 	{
 		micro-kernel.o (.kernelstart)
 		micro-kernel.o (.text)
