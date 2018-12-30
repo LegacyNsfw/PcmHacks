@@ -404,9 +404,19 @@ namespace PcmHacking
             return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x04 });
         }
 
-        public Message CreateFlashEraseCalibrationRequest()
+        public Message CreateFlashEraseBlockRequest(UInt32 baseAddress)
         {
-            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x05 });
+            return new Message(new byte[]
+            {
+                0x6C,
+                0x10,
+                0xF0,
+                0x3D,
+                0x05,
+                (byte)(baseAddress >> 16),
+                (byte)(baseAddress >> 8),
+                (byte)baseAddress
+            });
         }
     }
 }

@@ -230,6 +230,7 @@ namespace PcmHacking
             this.quickComparisonButton.Enabled = false;
             this.testWriteButton.Enabled = false;
             this.writeCalibrationButton.Enabled = false;
+            this.writeParametersButton.Enabled = false;
             this.writeOsAndCalibration.Enabled = false;
             this.writeFullContentsButton.Enabled = false;
             this.exitKernelButton.Enabled = false;
@@ -252,6 +253,7 @@ namespace PcmHacking
             this.quickComparisonButton.Invoke((MethodInvoker)delegate () { this.quickComparisonButton.Enabled = true; });
             this.testWriteButton.Invoke((MethodInvoker)delegate () { this.testWriteButton.Enabled = true; });
             this.writeCalibrationButton.Invoke((MethodInvoker)delegate () { this.writeCalibrationButton.Enabled = true; });
+            this.writeParametersButton.Invoke((MethodInvoker)delegate () { this.writeParametersButton.Enabled = true; });
             this.writeOsAndCalibration.Invoke((MethodInvoker)delegate () { this.writeOsAndCalibration.Enabled = true; });
             this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true; });
             this.exitKernelButton.Invoke((MethodInvoker)delegate () { this.exitKernelButton.Enabled = true; });
@@ -562,6 +564,42 @@ namespace PcmHacking
                 else
                 {
                     BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Calibration));
+                    BackgroundWorker.IsBackground = true;
+                    BackgroundWorker.Start();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Write the parameter blocks (VIN, problem history, etc)
+        /// </summary>
+        private void writeParametersButton_Click(object sender, EventArgs e)
+        {
+            DelayDialogBox dialogBox = new DelayDialogBox();
+            DialogResult dialogResult = dialogBox.ShowDialog();
+            if (dialogResult == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            if (!BackgroundWorker.IsAlive)
+            {
+                DialogResult result = MessageBox.Show(
+                    "This software is still new, and it is not as reliable as commercial software." + Environment.NewLine +
+                    "The PCM can be rendered unusuable, and special tools may be needed to make the PCM work again." + Environment.NewLine +
+                    "If your PCM stops working, will that make your life difficult?",
+                    "Answer carefully...",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button1);
+
+                if (result == DialogResult.Yes)
+                {
+                    this.AddUserMessage("Please try again with a less important PCM.");
+                }
+                else
+                {
+                    BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Parameters));
                     BackgroundWorker.IsBackground = true;
                     BackgroundWorker.Start();
                 }

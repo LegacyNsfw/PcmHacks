@@ -34,6 +34,7 @@
             this.selectButton = new System.Windows.Forms.Button();
             this.deviceDescription = new System.Windows.Forms.Label();
             this.operationsBox = new System.Windows.Forms.GroupBox();
+            this.writeParametersButton = new System.Windows.Forms.Button();
             this.testWriteButton = new System.Windows.Forms.Button();
             this.quickComparisonButton = new System.Windows.Forms.Button();
             this.writeOsAndCalibration = new System.Windows.Forms.Button();
@@ -112,6 +113,7 @@
             // 
             this.operationsBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.operationsBox.Controls.Add(this.writeParametersButton);
             this.operationsBox.Controls.Add(this.testWriteButton);
             this.operationsBox.Controls.Add(this.quickComparisonButton);
             this.operationsBox.Controls.Add(this.writeOsAndCalibration);
@@ -130,6 +132,17 @@
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
+            // 
+            // writeParametersButton
+            // 
+            this.writeParametersButton.Location = new System.Drawing.Point(4, 194);
+            this.writeParametersButton.Margin = new System.Windows.Forms.Padding(2);
+            this.writeParametersButton.Name = "writeParametersButton";
+            this.writeParametersButton.Size = new System.Drawing.Size(216, 25);
+            this.writeParametersButton.TabIndex = 6;
+            this.writeParametersButton.Text = "Write Parameters (Clone)";
+            this.writeParametersButton.UseVisualStyleBackColor = true;
+            this.writeParametersButton.Click += new System.EventHandler(this.writeParametersButton_Click);
             // 
             // testWriteButton
             // 
@@ -155,11 +168,11 @@
             // 
             // writeOsAndCalibration
             // 
-            this.writeOsAndCalibration.Location = new System.Drawing.Point(4, 194);
+            this.writeOsAndCalibration.Location = new System.Drawing.Point(4, 223);
             this.writeOsAndCalibration.Margin = new System.Windows.Forms.Padding(2);
             this.writeOsAndCalibration.Name = "writeOsAndCalibration";
             this.writeOsAndCalibration.Size = new System.Drawing.Size(216, 25);
-            this.writeOsAndCalibration.TabIndex = 6;
+            this.writeOsAndCalibration.TabIndex = 7;
             this.writeOsAndCalibration.Text = "Write &OS && Calibration";
             this.writeOsAndCalibration.UseVisualStyleBackColor = true;
             this.writeOsAndCalibration.Visible = false;
@@ -167,22 +180,22 @@
             // 
             // exitKernelButton
             // 
-            this.exitKernelButton.Location = new System.Drawing.Point(4, 286);
+            this.exitKernelButton.Location = new System.Drawing.Point(4, 301);
             this.exitKernelButton.Margin = new System.Windows.Forms.Padding(2);
             this.exitKernelButton.Name = "exitKernelButton";
             this.exitKernelButton.Size = new System.Drawing.Size(216, 25);
-            this.exitKernelButton.TabIndex = 8;
+            this.exitKernelButton.TabIndex = 9;
             this.exitKernelButton.Text = "&Halt Kernel";
             this.exitKernelButton.UseVisualStyleBackColor = true;
             this.exitKernelButton.Click += new System.EventHandler(this.testKernelButton_Click);
             // 
             // writeFullContentsButton
             // 
-            this.writeFullContentsButton.Location = new System.Drawing.Point(4, 223);
+            this.writeFullContentsButton.Location = new System.Drawing.Point(4, 252);
             this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
             this.writeFullContentsButton.Name = "writeFullContentsButton";
             this.writeFullContentsButton.Size = new System.Drawing.Size(216, 25);
-            this.writeFullContentsButton.TabIndex = 7;
+            this.writeFullContentsButton.TabIndex = 8;
             this.writeFullContentsButton.Text = "Write &Full Contents";
             this.writeFullContentsButton.UseVisualStyleBackColor = true;
             this.writeFullContentsButton.Visible = false;
@@ -195,7 +208,7 @@
             this.cancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(216, 25);
-            this.cancelButton.TabIndex = 9;
+            this.cancelButton.TabIndex = 10;
             this.cancelButton.Text = "&Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
             this.cancelButton.Click += new System.EventHandler(this.CancelButton_Click);
@@ -291,7 +304,7 @@
             this.helpTab.Location = new System.Drawing.Point(4, 22);
             this.helpTab.Margin = new System.Windows.Forms.Padding(2);
             this.helpTab.Name = "helpTab";
-            this.helpTab.Size = new System.Drawing.Size(569, 545);
+            this.helpTab.Size = new System.Drawing.Size(530, 499);
             this.helpTab.TabIndex = 2;
             this.helpTab.Text = "Help";
             this.helpTab.UseVisualStyleBackColor = true;
@@ -303,7 +316,7 @@
             this.helpWebBrowser.Margin = new System.Windows.Forms.Padding(2);
             this.helpWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
             this.helpWebBrowser.Name = "helpWebBrowser";
-            this.helpWebBrowser.Size = new System.Drawing.Size(569, 545);
+            this.helpWebBrowser.Size = new System.Drawing.Size(530, 499);
             this.helpWebBrowser.TabIndex = 0;
             // 
             // debugTab
@@ -313,7 +326,7 @@
             this.debugTab.Margin = new System.Windows.Forms.Padding(2);
             this.debugTab.Name = "debugTab";
             this.debugTab.Padding = new System.Windows.Forms.Padding(2);
-            this.debugTab.Size = new System.Drawing.Size(569, 545);
+            this.debugTab.Size = new System.Drawing.Size(530, 499);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -327,7 +340,7 @@
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.debugLog.Size = new System.Drawing.Size(565, 541);
+            this.debugLog.Size = new System.Drawing.Size(526, 495);
             this.debugLog.TabIndex = 0;
             // 
             // releasedUnder
@@ -384,6 +397,7 @@
             // 
             // MainForm
             // 
+            this.AcceptButton = this.readPropertiesButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 561);
@@ -442,6 +456,7 @@
         private System.Windows.Forms.Button writeOsAndCalibration;
         private System.Windows.Forms.Button testWriteButton;
         private System.Windows.Forms.Button quickComparisonButton;
+        private System.Windows.Forms.Button writeParametersButton;
     }
 }
 
