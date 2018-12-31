@@ -305,6 +305,8 @@ namespace PcmHacking
             if (device == null)
             {
                 this.deviceDescription.Text = "None selected.";
+                this.DisableUserInput();
+                this.interfaceBox.Enabled = true;
                 return;
             }
 
