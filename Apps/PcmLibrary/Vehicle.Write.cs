@@ -17,6 +17,7 @@ namespace PcmHacking
         Compare,
         TestWrite,
         Calibration,
+        Parameters,
         OsAndCalibration,
         Full,
     }
@@ -114,6 +115,10 @@ namespace PcmHacking
 
                 case WriteType.Calibration:
                     relevantBlocks = BlockType.Calibration;
+                    break;
+
+                case WriteType.Parameters:
+                    relevantBlocks = BlockType.Parameter;
                     break;
 
                 case WriteType.OsAndCalibration:
@@ -220,19 +225,26 @@ namespace PcmHacking
                 if (writeType != WriteType.TestWrite)
                 {
                     this.logger.AddUserMessage("Erasing");
-
+                    
                     Query<byte> eraseRequest = new Query<byte>(
                          this.device,
-                         this.messageFactory.CreateFlashEraseCalibrationRequest,
-                         this.messageParser.ParseFlashErase,
+                         () => this.messageFactory.CreateFlashEraseBlockRequest(range.Address),
+                         this.messageParser.ParseFlashEraseBlock,
                          this.logger,
                          cancellationToken,
                          notifier);
 
-                    eraseRequest.MaxTimeouts = 50; // Reduce this when we know how many are likely to be needed.
+                    eraseRequest.MaxTimeouts = 5; // Reduce this when we know how many are likely to be needed.
                     Response<byte> eraseResponse = await eraseRequest.Execute();
 
-                    if (eraseResponse.Status != ResponseStatus.Success)
+                    if (eraseResponse.Status != ResponseStatus.Success) 
+                    {
+                        this.logger.AddUserMessage("Unable to erase flash memory: " + eraseResponse.Status.ToString());
+                        this.RequestDebugLogs(cancellationToken);
+                        return false;
+                    }
+
+                    if (eraseResponse.Value != 0x80)
                     {
                         this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
                         this.RequestDebugLogs(cancellationToken);
@@ -282,6 +294,7 @@ namespace PcmHacking
             {
                 this.logger.AddUserMessage("");
                 this.logger.AddUserMessage("The operation was cancelled.");
+                this.logger.AddUserMessage("This PCM is probably not usable in its current state.");
                 this.logger.AddUserMessage("");
             }
             else
