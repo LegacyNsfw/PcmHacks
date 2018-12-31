@@ -34,7 +34,7 @@ namespace PcmHacking
         /// 
         /// If null, the build timestamp will be used.
         /// </summary>
-        private const string AppVersion = null;
+        private const string AppVersion = "Release 3";
 
         /// <summary>
         /// The Vehicle object is our interface to the car. It has the device, the message generator, and the message parser.
