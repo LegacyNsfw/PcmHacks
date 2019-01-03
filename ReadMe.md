@@ -6,6 +6,8 @@ Reading is working well. Writing is working well enough to try it on your projec
 
 See also:
 
+https://github.com/LegacyNsfw/PcmHacks/wiki (The wiki)
+
 https://pcmhacking.net/forums/viewforum.php?f=8 (The GM section of pcmhacking.net)
 
 https://www.facebook.com/PcmHammer (announcements)
