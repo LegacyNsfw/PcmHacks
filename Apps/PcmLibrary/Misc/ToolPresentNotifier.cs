@@ -76,7 +76,7 @@ namespace PcmHacking
         private async Task SendNotification()
         {
             this.logger.AddDebugMessage("Sending 'test device present' notification.");
-            Message message = this.protocol.CreateTestDevicePresent();
+            Message message = this.protocol.CreateTestDevicePresentNotification();
             await this.device.SendMessage(message);
         }
     }
