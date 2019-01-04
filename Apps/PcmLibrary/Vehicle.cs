@@ -40,12 +40,7 @@ namespace PcmHacking
         /// <summary>
         /// This class knows how to generate message to send to the PCM.
         /// </summary>
-        private MessageFactory messageFactory;
-
-        /// <summary>
-        /// This class knows how to parse the messages that come in from the PCM.
-        /// </summary>
-        private MessageParser messageParser;
+        private Protocol protocol;
         
         /// <summary>
         /// This is how we send user-friendly status messages and developer-oriented debug messages to the UI.
@@ -65,13 +60,11 @@ namespace PcmHacking
         /// </summary>
         public Vehicle(
             Device device, 
-            MessageFactory messageFactory,
-            MessageParser messageParser,
+            Protocol protocol,
             ILogger logger)
         {
             this.device = device;
-            this.messageFactory = messageFactory;
-            this.messageParser = messageParser;
+            this.protocol = protocol;
             this.logger = logger;
         }
 
@@ -130,7 +123,7 @@ namespace PcmHacking
                     continue;
                 }
 
-                if (this.messageParser.ParseRecoveryModeBroadcast(response).Value == true)
+                if (this.protocol.ParseRecoveryModeBroadcast(response).Value == true)
                 {
                     return true;
                 }
@@ -149,7 +142,7 @@ namespace PcmHacking
             this.device.ClearMessageQueue();
 
             this.logger.AddDebugMessage("Sending seed request.");
-            Message seedRequest = this.messageFactory.CreateSeedRequest();
+            Message seedRequest = this.protocol.CreateSeedRequest();
 
             if (!await this.TrySendMessage(seedRequest, "seed request"))
             {
@@ -169,14 +162,14 @@ namespace PcmHacking
                     return false;
                 }
 
-                if (this.messageParser.IsUnlocked(seedResponse.GetBytes()))
+                if (this.protocol.IsUnlocked(seedResponse.GetBytes()))
                 {
                     this.logger.AddUserMessage("PCM is already unlocked");
                     return true;
                 }
 
                 this.logger.AddDebugMessage("Parsing seed value.");
-                Response<UInt16> seedValueResponse = this.messageParser.ParseSeed(seedResponse.GetBytes());
+                Response<UInt16> seedValueResponse = this.protocol.ParseSeed(seedResponse.GetBytes());
                 if (seedValueResponse.Status == ResponseStatus.Success)
                 {
                     seedValue = seedValueResponse.Value;
@@ -202,7 +195,7 @@ namespace PcmHacking
             UInt16 key = KeyAlgorithm.GetKey(keyAlgorithm, seedValue);
 
             this.logger.AddDebugMessage("Sending unlock request (" + seedValue.ToString("X4") + ", " + key.ToString("X4") + ")");
-            Message unlockRequest = this.messageFactory.CreateUnlockRequest(key);
+            Message unlockRequest = this.protocol.CreateUnlockRequest(key);
             if (!await this.TrySendMessage(unlockRequest, "unlock request"))
             {
                 this.logger.AddDebugMessage("Unable to send unlock request.");
@@ -219,7 +212,7 @@ namespace PcmHacking
                 }
 
                 string errorMessage;
-                Response<bool> result = this.messageParser.ParseUnlockResponse(unlockResponse.GetBytes(), out errorMessage);
+                Response<bool> result = this.protocol.ParseUnlockResponse(unlockResponse.GetBytes(), out errorMessage);
                 if (errorMessage == null)
                 {
                     return result.Value;

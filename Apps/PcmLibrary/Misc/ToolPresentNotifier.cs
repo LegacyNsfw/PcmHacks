@@ -19,7 +19,7 @@ namespace PcmHacking
         /// <summary>
         /// Generates VPW messages.
         /// </summary>
-        MessageFactory messageFactory;
+        Protocol protocol;
 
         /// <summary>
         /// The device to send messages with.
@@ -34,10 +34,10 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ToolPresentNotifier(ILogger logger, MessageFactory messageFactory, Device device)
+        public ToolPresentNotifier(ILogger logger, Protocol protocol, Device device)
         {
             this.logger = logger;
-            this.messageFactory = messageFactory;
+            this.protocol = protocol;
             this.device = device;
         }
 
@@ -76,7 +76,7 @@ namespace PcmHacking
         private async Task SendNotification()
         {
             this.logger.AddDebugMessage("Sending 'test device present' notification.");
-            Message message = this.messageFactory.CreateTestDevicePresent();
+            Message message = this.protocol.CreateTestDevicePresentNotification();
             await this.device.SendMessage(message);
         }
     }

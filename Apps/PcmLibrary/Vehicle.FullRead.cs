@@ -27,7 +27,7 @@ namespace PcmHacking
                 this.device.ClearMessageQueue();
 
                 // This must precede the switch to 4X.
-                ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
+                ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.protocol, this.device);
                 await toolPresentNotifier.Notify();
 
                 // switch to 4x, if possible. But continue either way.
@@ -143,7 +143,7 @@ namespace PcmHacking
                     break;
                 }
 
-                Message message = this.messageFactory.CreateReadRequest(startAddress, length);
+                Message message = this.protocol.CreateReadRequest(startAddress, length);
 
                 if (!await this.device.SendMessage(message))
                 {
@@ -167,7 +167,7 @@ namespace PcmHacking
 
                     this.logger.AddDebugMessage("Processing message");
 
-                    Response<byte[]> payloadResponse = this.messageParser.ParsePayload(payloadMessage, length, startAddress);
+                    Response<byte[]> payloadResponse = this.protocol.ParsePayload(payloadMessage, length, startAddress);
                     if (payloadResponse.Status != ResponseStatus.Success)
                     {
                         this.logger.AddDebugMessage("Not a valid payload message or bad checksum");

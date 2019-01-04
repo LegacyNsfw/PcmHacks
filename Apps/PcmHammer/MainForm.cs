@@ -314,7 +314,7 @@ namespace PcmHacking
 
             this.deviceDescription.Text = device.ToString();
 
-            this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), this);
+            this.vehicle = new Vehicle(device, new Protocol(), this);
             await this.InitializeCurrentDevice();
         }
 
