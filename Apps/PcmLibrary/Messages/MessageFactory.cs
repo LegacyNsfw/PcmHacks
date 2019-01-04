@@ -30,7 +30,7 @@ namespace PcmHacking
     /// Some devices will require these messages to be translated according to the specific
     /// device's protocol - that too is the job of the currently-selected Device class.
     /// </remarks>
-    public class MessageFactory
+    public partial class Protocol
     {
         /// <summary>
         /// Create a request to read the given block of PCM memory.

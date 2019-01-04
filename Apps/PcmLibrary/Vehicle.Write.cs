@@ -32,7 +32,7 @@ namespace PcmHacking
         {
             try
             {
-                ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
+                ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.protocol, this.device);
                 this.device.ClearMessageQueue();
 
                 // TODO: install newer version if available.
@@ -138,8 +138,8 @@ namespace PcmHacking
             await this.device.SetTimeout(TimeoutScenario.ReadProperty);
             Query<UInt32> chipIdQuery = new Query<uint>(
                 this.device,
-                this.messageFactory.CreateFlashMemoryTypeQuery,
-                this.messageParser.ParseFlashMemoryType,
+                this.protocol.CreateFlashMemoryTypeQuery,
+                this.protocol.ParseFlashMemoryType,
                 this.logger,
                 cancellationToken,
                 notifier);
@@ -228,8 +228,8 @@ namespace PcmHacking
                     
                     Query<byte> eraseRequest = new Query<byte>(
                          this.device,
-                         () => this.messageFactory.CreateFlashEraseBlockRequest(range.Address),
-                         this.messageParser.ParseFlashEraseBlock,
+                         () => this.protocol.CreateFlashEraseBlockRequest(range.Address),
+                         this.protocol.ParseFlashEraseBlock,
                          this.logger,
                          cancellationToken,
                          notifier);
@@ -344,8 +344,8 @@ namespace PcmHacking
             // value in the kernel.
             Query<UInt32> crcReset = new Query<uint>(
                 this.device,
-                () => this.messageFactory.CreateCrcQuery(0, 0),
-                (message) => this.messageParser.ParseCrc(message, 0, 0),
+                () => this.protocol.CreateCrcQuery(0, 0),
+                (message) => this.protocol.ParseCrc(message, 0, 0),
                 this.logger,
                 cancellationToken,
                 notifier);
@@ -376,7 +376,7 @@ namespace PcmHacking
                 // delay resulted in 5 second CRC responses. The PCM needs to spend
                 // its time caculating CRCs rather than responding to messages.
                 int retryDelay = 1500;
-                Message query = this.messageFactory.CreateCrcQuery(range.Address, range.Size);
+                Message query = this.protocol.CreateCrcQuery(range.Address, range.Size);
                 for (int attempts = 0; attempts < 10; attempts++)
                 {
                     if (cancellationToken.IsCancellationRequested)
@@ -401,7 +401,7 @@ namespace PcmHacking
                         continue;
                     }
 
-                    Response<UInt32> crcResponse = this.messageParser.ParseCrc(response, range.Address, range.Size);
+                    Response<UInt32> crcResponse = this.protocol.ParseCrc(response, range.Address, range.Size);
                     if (crcResponse.Status != ResponseStatus.Success)
                     {
                         await Task.Delay(retryDelay);
@@ -478,7 +478,7 @@ namespace PcmHacking
                 int startAddress = (int)(range.Address + index);
                 int thisPayloadSize = Math.Min(devicePayloadSize, (int)range.Size - index);
                                                 
-                Message payloadMessage = messageFactory.CreateBlockMessage(
+                Message payloadMessage = protocol.CreateBlockMessage(
                     image,
                     startAddress,
                     thisPayloadSize,

@@ -22,7 +22,7 @@ namespace PcmHacking
         public async Task SuppressChatter()
         {
             this.logger.AddDebugMessage("Suppressing VPW chatter.");
-            Message suppressChatter = this.messageFactory.CreateDisableNormalMessageTransmission();
+            Message suppressChatter = this.protocol.CreateDisableNormalMessageTransmission();
             await this.device.SendMessage(suppressChatter);
         }
         
@@ -141,7 +141,7 @@ namespace PcmHacking
         /// </remarks>
         public async Task ExitKernel()
         {
-            Message exitKernel = this.messageFactory.CreateExitKernel();
+            Message exitKernel = this.protocol.CreateExitKernel();
 
             this.device.ClearMessageQueue();
             if (device.Supports4X)
@@ -162,8 +162,8 @@ namespace PcmHacking
         /// </remarks>
         public async Task ClearDTCs()
         {
-            Message ClearDTCs = this.messageFactory.CreateClearDTCs();
-            Message ClearDTCsOK = this.messageFactory.CreateClearDTCsOK();
+            Message ClearDTCs = this.protocol.CreateClearDTCs();
+            Message ClearDTCsOK = this.protocol.CreateClearDTCsOK();
 
             await this.device.SendMessage(ClearDTCs);
             this.device.ClearMessageQueue();
@@ -175,7 +175,7 @@ namespace PcmHacking
         /// <returns></returns>
         public async Task<UInt32> GetKernelVersion()
         {
-            Message query = this.messageFactory.CreateKernelVersionQuery();
+            Message query = this.protocol.CreateKernelVersionQuery();
             for (int attempt = 0; attempt < 2; attempt++)
             {
                 if (!await this.device.SendMessage(query))
@@ -191,7 +191,7 @@ namespace PcmHacking
                     continue;
                 }
 
-                Response<UInt32> response = this.messageParser.ParseKernelVersion(reply);
+                Response<UInt32> response = this.protocol.ParseKernelVersion(reply);
                 if (response.Status == ResponseStatus.Success)
                 {
                     return response.Value;
@@ -227,14 +227,14 @@ namespace PcmHacking
                 return false;
             }
 
-            Message request = messageFactory.CreateUploadRequest(address, claimedSize);
+            Message request = protocol.CreateUploadRequest(address, claimedSize);
 
             if(!await TrySendMessage(request, "upload request"))
             {
                 return false;
             }
 
-            if (!await this.WaitForSuccess(this.messageParser.ParseUploadPermissionResponse, cancellationToken))
+            if (!await this.WaitForSuccess(this.protocol.ParseUploadPermissionResponse, cancellationToken))
             {
                 logger.AddUserMessage("Permission to upload kernel was denied.");
                 return false;
@@ -265,14 +265,14 @@ namespace PcmHacking
                     startAddress,
                     remainder));
 
-            Message remainderMessage = messageFactory.CreateBlockMessage(
+            Message remainderMessage = protocol.CreateBlockMessage(
                 payload, 
                 offset, 
                 remainder, 
                 address + offset, 
                 remainder == payload.Length ? BlockCopyType.Execute : BlockCopyType.Copy);
 
-            ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
+            ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.protocol, this.device);
             await notifier.Notify();
             Response<bool> uploadResponse = await WritePayload(remainderMessage, notifier, cancellationToken);
             if (uploadResponse.Status != ResponseStatus.Success)
@@ -291,7 +291,7 @@ namespace PcmHacking
 
                 offset = (chunkIndex - 1) * payloadSize;
                 startAddress = address + offset;
-                Message payloadMessage = messageFactory.CreateBlockMessage(
+                Message payloadMessage = protocol.CreateBlockMessage(
                     payload,
                     offset,
                     payloadSize,
@@ -359,7 +359,7 @@ namespace PcmHacking
                     return false;
                 }
 
-                Message broadcast = this.messageFactory.CreateBeginHighSpeed(DeviceId.Broadcast);
+                Message broadcast = this.protocol.CreateBeginHighSpeed(DeviceId.Broadcast);
                 await this.device.SendMessage(broadcast);
 
                 // Check for any devices that refused to switch to 4X speed.
@@ -367,7 +367,7 @@ namespace PcmHacking
                 Message response = null;
                 while ((response = await this.device.ReceiveMessage()) != null)
                 {
-                    Response<bool> refused = this.messageParser.ParseHighSpeedRefusal(response);
+                    Response<bool> refused = this.protocol.ParseHighSpeedRefusal(response);
                     if (refused.Status != ResponseStatus.Success)
                     {
                         continue;
@@ -400,7 +400,7 @@ namespace PcmHacking
         /// </summary>
         private async Task<List<byte>> RequestHighSpeedPermission()
         {
-            Message permissionCheck = this.messageFactory.CreateHighSpeedPermissionRequest(DeviceId.Broadcast);
+            Message permissionCheck = this.protocol.CreateHighSpeedPermissionRequest(DeviceId.Broadcast);
             await this.device.SendMessage(permissionCheck);
 
             // Note that as of right now, the AllPro only receives 6 of the 11 responses.
@@ -412,7 +412,7 @@ namespace PcmHacking
             while ((response = await this.device.ReceiveMessage()) != null)
             {
                 this.logger.AddDebugMessage("Parsing " + response.GetBytes().ToHex());
-                MessageParser.HighSpeedPermissionResult parsed = this.messageParser.ParseHighSpeedPermissionResponse(response);
+                Protocol.HighSpeedPermissionResult parsed = this.protocol.ParseHighSpeedPermissionResponse(response);
                 if (!parsed.IsValid)
                 {
                     continue;
@@ -461,7 +461,7 @@ namespace PcmHacking
                     continue;
                 }
 
-                if (await this.WaitForSuccess(this.messageParser.ParseUploadResponse, cancellationToken))
+                if (await this.WaitForSuccess(this.protocol.ParseUploadResponse, cancellationToken))
                 {
                     return Response.Create(ResponseStatus.Success, true);
                 }

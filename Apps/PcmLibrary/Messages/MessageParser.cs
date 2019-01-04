@@ -15,18 +15,9 @@ namespace PcmHacking
     /// device sends a CRC byte to the caller, the Device class for that hardware must
     /// remove the CRC byte before the byte array is passed to this class.
     /// </remarks>
-    public class MessageParser
+    public partial class Protocol
     {
         /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <remarks>
-        /// Doesn't do much. In theory we could use static methods for all of this, but
-        /// I'm allergic to static classes. They make testing harder.
-        /// </remarks>
-        public MessageParser()
-        {
-        }
 
         /// <summary>
         /// Parse the response to an OS ID request.
