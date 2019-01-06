@@ -24,6 +24,7 @@ namespace PcmHacking
             this.logger.AddDebugMessage("Suppressing VPW chatter.");
             Message suppressChatter = this.protocol.CreateDisableNormalMessageTransmission();
             await this.device.SendMessage(suppressChatter);
+            await this.notifier.ForceNotify();
         }
         
         /// <summary>
@@ -211,7 +212,7 @@ namespace PcmHacking
         /// <summary>
         /// Load the executable payload on the PCM at the supplied address, and execute it.
         /// </summary>
-        public async Task<bool> PCMExecute(byte[] payload, int address, CancellationToken cancellationToken)
+        public async Task<bool> PCMExecute(byte[] payload, int address, ToolPresentNotifier notifier, CancellationToken cancellationToken)
         {
             logger.AddUserMessage("Uploading kernel to PCM.");
             logger.AddDebugMessage("Sending upload request with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
@@ -272,7 +273,6 @@ namespace PcmHacking
                 address + offset, 
                 remainder == payload.Length ? BlockCopyType.Execute : BlockCopyType.Copy);
 
-            ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.protocol, this.device);
             await notifier.Notify();
             Response<bool> uploadResponse = await WritePayload(remainderMessage, notifier, cancellationToken);
             if (uploadResponse.Status != ResponseStatus.Success)
@@ -331,7 +331,7 @@ namespace PcmHacking
         /// <summary>
         /// Does everything required to switch to VPW 4x
         /// </summary>
-        public async Task<bool> VehicleSetVPW4x(VpwSpeed newSpeed)
+        public async Task<bool> VehicleSetVPW4x(VpwSpeed newSpeed, ToolPresentNotifier notifier)
         {
             if (!device.Supports4X) 
             {
@@ -352,7 +352,7 @@ namespace PcmHacking
                 // The list of modules may not be useful after all, but 
                 // checking for an empty list indicates an uncooperative
                 // module on the VPW bus.
-                List<byte> modules = await this.RequestHighSpeedPermission();
+                List<byte> modules = await this.RequestHighSpeedPermission(notifier);
                 if (modules == null)
                 {
                     // A device has refused the switch to high speed mode.
@@ -370,6 +370,8 @@ namespace PcmHacking
                     Response<bool> refused = this.protocol.ParseHighSpeedRefusal(response);
                     if (refused.Status != ResponseStatus.Success)
                     {
+                        // This should help ELM devices receive responses.
+                        await notifier.ForceNotify();
                         continue;
                     }
 
@@ -398,7 +400,7 @@ namespace PcmHacking
         /// <summary>
         /// Ask all of the devices on the VPW bus for permission to switch to 4X speed.
         /// </summary>
-        private async Task<List<byte>> RequestHighSpeedPermission()
+        private async Task<List<byte>> RequestHighSpeedPermission(ToolPresentNotifier notifier)
         {
             Message permissionCheck = this.protocol.CreateHighSpeedPermissionRequest(DeviceId.Broadcast);
             await this.device.SendMessage(permissionCheck);
@@ -423,6 +425,9 @@ namespace PcmHacking
                 if (parsed.PermissionGranted)
                 {
                     this.logger.AddUserMessage(string.Format("Module 0x{0:X2} ({1}) has agreed to enter high-speed mode.", parsed.DeviceId, DeviceId.DeviceCategory(parsed.DeviceId)));
+
+                    // Forcing a notification message should help ELM devices receive responses.
+                    await notifier.ForceNotify();
                     continue;
                 }
 

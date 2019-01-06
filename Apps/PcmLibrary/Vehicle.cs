@@ -47,6 +47,16 @@ namespace PcmHacking
         /// </summary>
         private ILogger logger;
 
+        /// <summary>
+        /// Use this to periodically send tool-present messages during long operations, to 
+        /// discourage devices on the VPW bus from sending messages that could interfere
+        /// with whatever the application is doing.
+        /// </summary>
+        private ToolPresentNotifier notifier;
+
+        /// <summary>
+        /// Gets a string that describes the device this instance is using.
+        /// </summary>
         public string DeviceDescription
         {
             get
@@ -61,11 +71,13 @@ namespace PcmHacking
         public Vehicle(
             Device device, 
             Protocol protocol,
-            ILogger logger)
+            ILogger logger,
+            ToolPresentNotifier notifier)
         {
             this.device = device;
             this.protocol = protocol;
             this.logger = logger;
+            this.notifier = notifier;
         }
 
         /// <summary>

@@ -34,7 +34,7 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ToolPresentNotifier(ILogger logger, Protocol protocol, Device device)
+        public ToolPresentNotifier(Device device, Protocol protocol, ILogger logger)
         {
             this.logger = logger;
             this.protocol = protocol;

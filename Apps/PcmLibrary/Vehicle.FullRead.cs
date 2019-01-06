@@ -24,21 +24,18 @@ namespace PcmHacking
         {
             try
             {
+                await notifier.Notify();
                 this.device.ClearMessageQueue();
-
-                // This must precede the switch to 4X.
-                ToolPresentNotifier toolPresentNotifier = new ToolPresentNotifier(this.logger, this.protocol, this.device);
-                await toolPresentNotifier.Notify();
 
                 // switch to 4x, if possible. But continue either way.
                 // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
+                if (!await this.VehicleSetVPW4x(VpwSpeed.FourX, notifier))
                 {
                     this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
                     return Response.Create(ResponseStatus.Error, (Stream)null);
                 }
 
-                await toolPresentNotifier.Notify();
+                await notifier.Notify();
 
                 // execute read kernel
                 Response<byte[]> response = await LoadKernelFromFile("read-kernel.bin");
@@ -53,11 +50,11 @@ namespace PcmHacking
                     return Response.Create(ResponseStatus.Cancelled, (Stream)null);
                 }
 
-                await toolPresentNotifier.Notify();
+                await notifier.Notify();
 
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
                 // TODO: choose kernel at run time? Because now it's FF8000...
-                if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
+                if (!await PCMExecute(response.Value, 0xFF8000, notifier, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -85,7 +82,7 @@ namespace PcmHacking
                     }
 
                     // The read kernel needs a short message here for reasons unknown. Without it, it will RX 2 messages then drop one.
-                    await toolPresentNotifier.ForceNotify();
+                    await notifier.ForceNotify();
 
                     if (startAddress + blockSize > endAddress)
                     {
