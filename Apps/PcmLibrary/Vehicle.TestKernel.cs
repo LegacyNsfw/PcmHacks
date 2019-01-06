@@ -99,8 +99,6 @@ namespace PcmHacking
                     return false;
                 }
 
-                // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.protocol, this.device);
                 if (!await PCMExecute(response.Value, 0xFF8000, notifier, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");

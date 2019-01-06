@@ -24,6 +24,7 @@ namespace PcmHacking
             this.logger.AddDebugMessage("Suppressing VPW chatter.");
             Message suppressChatter = this.protocol.CreateDisableNormalMessageTransmission();
             await this.device.SendMessage(suppressChatter);
+            await this.notifier.ForceNotify();
         }
         
         /// <summary>

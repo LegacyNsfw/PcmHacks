@@ -24,11 +24,8 @@ namespace PcmHacking
         {
             try
             {
-                this.device.ClearMessageQueue();
-
-                // This must precede the switch to 4X.
-                ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.protocol, this.device);
                 await notifier.Notify();
+                this.device.ClearMessageQueue();
 
                 // switch to 4x, if possible. But continue either way.
                 // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.

@@ -314,7 +314,12 @@ namespace PcmHacking
 
             this.deviceDescription.Text = device.ToString();
 
-            this.vehicle = new Vehicle(device, new Protocol(), this);
+            Protocol protocol = new Protocol();
+            this.vehicle = new Vehicle(
+                device, 
+                protocol, 
+                this,
+                new ToolPresentNotifier(device, protocol, this));
             await this.InitializeCurrentDevice();
         }
 
@@ -996,6 +1001,8 @@ namespace PcmHacking
                             needUnlock = false;
                         }
                     }
+
+                    await this.vehicle.SuppressChatter();
 
                     if (needUnlock)
                     { 

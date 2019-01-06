@@ -32,9 +32,7 @@ namespace PcmHacking
         {
             try
             {
-                ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.protocol, this.device);
                 await notifier.Notify();
-
                 this.device.ClearMessageQueue();
 
                 // TODO: install newer version if available.
