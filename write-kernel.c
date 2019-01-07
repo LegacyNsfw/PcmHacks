@@ -139,15 +139,15 @@ void HandleCrcQuery()
 	address |= MessageBuffer[10];
 
 	// Convert to names and types that match the CRC code.
-	unsigned char *message = (unsigned char*) address;
+	unsigned char *message = (unsigned char*)address;
 	int nBytes = length;
 
 	char path;
-    if (!crcIsStarted (message, nBytes))
-    {
-			path = 1;
-      crcStart(message, nBytes);
-    }
+	if (!crcIsStarted(message, nBytes))
+	{
+		path = 1;
+		crcStart(message, nBytes);
+	}
 	else
 	{
 		path = 2;
@@ -155,10 +155,10 @@ void HandleCrcQuery()
 
 	ElmSleep();
 
-  if (crcIsDone(message, nBytes))
-  {
-    unsigned crc = crcGetResult();
-    MessageBuffer[0] = 0x6C;
+	if (crcIsDone(message, nBytes))
+	{
+		unsigned crc = crcGetResult();
+		MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
 		MessageBuffer[2] = 0x10;
 		MessageBuffer[3] = 0x7D;
@@ -166,29 +166,62 @@ void HandleCrcQuery()
 		MessageBuffer[5] = (char)(crcLength >> 16);
 		MessageBuffer[6] = (char)(crcLength >> 8);
 		MessageBuffer[7] = (char)crcLength;
-		MessageBuffer[8] = (char)((uint32_t) crcStartAddress >> 16);
-		MessageBuffer[9] = (char)((uint32_t) crcStartAddress >> 8);
-		MessageBuffer[10] = (char)(uint32_t) crcStartAddress;
+		MessageBuffer[8] = (char)((uint32_t)crcStartAddress >> 16);
+		MessageBuffer[9] = (char)((uint32_t)crcStartAddress >> 8);
+		MessageBuffer[10] = (char)(uint32_t)crcStartAddress;
 		MessageBuffer[11] = (char)(crc >> 24);
 		MessageBuffer[12] = (char)(crc >> 16);
 		MessageBuffer[13] = (char)(crc >> 8);
 		MessageBuffer[14] = (char)crc;
 		WriteMessage(MessageBuffer, 15, Complete);
-  }
-  else
-  {
-    // This is an abuse of the protocol, but I want to keep these
-		// messages short, and using 7F 3D 02 would make it hard to tell
-		// whether CRC is in progress or the kernel just isn't loaded.
-		// So this reply has a legitimate mode, and a bogus submode.
-  	MessageBuffer[0] = 0x6C;
+	}
+	else
+	{
+		// This is an abuse of the protocol, but I want to keep these
+			// messages short, and using 7F 3D 02 would make it hard to tell
+			// whether CRC is in progress or the kernel just isn't loaded.
+			// So this reply has a legitimate mode, and a bogus submode.
+		MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
 		MessageBuffer[2] = 0x10;
 		MessageBuffer[3] = 0x7D;
 		MessageBuffer[4] = 0xFF;
 		MessageBuffer[5] = path;
 		WriteMessage(MessageBuffer, 6, Complete);
-  }
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Tell the app which OS is installed on this PCM.
+//
+// It was tempting to just implement the same OS ID query as the PCM software,
+// but then the app would need to do a kernel request of some type to determine 
+// whether the PCM is running the GM OS or the kernel. However, in almost all 
+// cases, the PCM will be running the GM OS, and that kernel request would slow
+// down the most common usage scenario.
+//
+// So we keep the common scenario fast by having the standard OS ID request 
+// succeed only when the standard operating system is running. When it fails,
+// that puts the app into a slower path were it checks for a kernel and then 
+// asks the kernel what OS is installed. Or it checks for recovery mode, loads
+// the kernel, and then asks the kernel what OS is installed.
+///////////////////////////////////////////////////////////////////////////////
+void HandleOperatingSystemQuery()
+{
+	ElmSleep();
+
+	uint8_t *osid = (uint8_t*)0x504;
+
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7D;
+	MessageBuffer[4] = 0x03;
+	MessageBuffer[5] = osid[0];
+	MessageBuffer[6] = osid[1];
+	MessageBuffer[7] = osid[2];
+	MessageBuffer[8] = osid[3];
+	WriteMessage(MessageBuffer, 9, Complete);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -512,13 +545,14 @@ void ProcessMessage()
 			break;
 
 		case 0x03:
-			// This created so much noise on the VPW bus that we couldn't communicate.
-			// HandleFlashUnlockRequest();
+			HandleOperatingSystemQuery();
 			break;
 
 		case 0x04:
-			// This created so much noise on the VPW bus that we couldn't communicate.
-			// HandleFlashLockRequest();
+			// This submode is available for future use.
+			//
+			// It was originally intended for flash lock (0x03 was for unlock) but that
+			// creates so much noise on the VPW line that communication stops working.
 			break;
 
 		case 0x05:
