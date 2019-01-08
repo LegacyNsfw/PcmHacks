@@ -925,27 +925,7 @@ namespace PcmHacking
                 }
 
                 // Sanity checks. 
-                // TODO: Check OSID as well, ask user to confirm if it doesn't match.
-                if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024))
-                {
-                    this.AddUserMessage("This file is not a supported size.");
-                    return;
-                }
-
-                if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
-                {
-                    this.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
-                    return;
-                }
-
-                if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
-                {
-                    this.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
-                    return;
-                }
-
-                // Validate checksums within the file.
-                ChecksumValidator validator = new ChecksumValidator(image, this);
+                FileValidator validator = new FileValidator(image, this);
                 if (!validator.IsValid())
                 {
                     this.AddUserMessage("This file is corrupt. It would render your PCM unusable.");
@@ -955,76 +935,98 @@ namespace PcmHacking
                 UInt32 kernelVersion = 0;
                 bool needUnlock;
                 int keyAlgorithm = 1;
+                UInt32 pcmOperatingSystemId = 0;
+                bool needToCheckOperatingSystem = writeType != WriteType.Full;
 
-                try
+                this.AddUserMessage("Requesting operating system ID...");
+                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
+                if (osidResponse.Status == ResponseStatus.Success)
                 {
-                    this.AddUserMessage("Requesting operating system ID...");
-                    Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
-                    if (osidResponse.Status == ResponseStatus.Success)
+                    pcmOperatingSystemId = osidResponse.Value;
+                    PcmInfo info = new PcmInfo(pcmOperatingSystemId);
+                    keyAlgorithm = info.KeyAlgorithm;
+                    needUnlock = true;
+
+                    if (needToCheckOperatingSystem && !validator.IsSameOperatingSystem(pcmOperatingSystemId))
                     {
-                        this.AddUserMessage("Operating System: " + osidResponse.Value.ToString());
-                        PcmInfo info = new PcmInfo(osidResponse.Value);
-                        keyAlgorithm = info.KeyAlgorithm;
-                        needUnlock = true;
+                        this.AddUserMessage("Flashing this file could render your PCM unusable.");
+                        return;
                     }
-                    else
+
+                    needToCheckOperatingSystem = false;
+                }
+                else
+                {
+                    if (this.cancellationTokenSource.Token.IsCancellationRequested)
                     {
-                        if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                        return;
+                    }
+
+                    this.AddUserMessage("Operating system request failed, checking for a live kernel...");
+
+                    kernelVersion = await vehicle.GetKernelVersion();
+                    if (kernelVersion == 0)
+                    {
+                        this.AddUserMessage("Checking for recovery mode...");
+                        bool recoveryMode = await this.vehicle.IsInRecoveryMode();
+
+                        if (recoveryMode)
                         {
-                            return;
-                        }
-
-                        this.AddUserMessage("Operating system request failed, checking for a live kernel...");
-
-                        kernelVersion = await vehicle.GetKernelVersion();
-                        if (kernelVersion == 0)
-                        {
-                            this.AddUserMessage("Checking for recovery mode...");
-                            bool recoveryMode = await this.vehicle.IsInRecoveryMode();
-
-                            if (recoveryMode)
-                            {
-                                this.AddUserMessage("PCM is in recovery mode.");
-                                keyAlgorithm = 1;
-                                needUnlock = true;
-                            }
-                            else
-                            {
-                                this.AddUserMessage("PCM is not responding to OSID, kernel version, or recovery mode checks.");
-                                this.AddUserMessage("Unlock may not work, but we'll try...");
-                                needUnlock = true;
-                            }
+                            this.AddUserMessage("PCM is in recovery mode.");
+                            needUnlock = true;
                         }
                         else
                         {
-                            this.AddUserMessage("Kernel version: " + kernelVersion.ToString("X8"));
-                            needUnlock = false;
+                            this.AddUserMessage("PCM is not responding to OSID, kernel version, or recovery mode checks.");
+                            this.AddUserMessage("Unlock may not work, but we'll try...");
+                            needUnlock = true;
                         }
                     }
+                    else
+                    {
+                        needUnlock = false;
 
-                    await this.vehicle.SuppressChatter();
+                        this.AddUserMessage("Kernel version: " + kernelVersion.ToString("X8"));
 
-                    if (needUnlock)
-                    { 
-
-                        bool unlocked = await this.vehicle.UnlockEcu(keyAlgorithm);
-                        if (!unlocked)
+                        this.AddUserMessage("Asking kernel for the PCM's operating system ID...");
+                        if (needToCheckOperatingSystem && !await vehicle.IsSameOperatingSystemAccordingToKernel(validator, this.cancellationTokenSource.Token))
                         {
-                            this.AddUserMessage("Unlock was not successful.");
+                            this.AddUserMessage("Flashing this file could render your PCM unusable.");
                             return;
                         }
 
-                        this.AddUserMessage("Unlock succeeded.");
+                        needToCheckOperatingSystem = false;
+                    }
+                }
+
+                await this.vehicle.SuppressChatter();
+
+                if (needUnlock)
+                {
+
+                    bool unlocked = await this.vehicle.UnlockEcu(keyAlgorithm);
+                    if (!unlocked)
+                    {
+                        this.AddUserMessage("Unlock was not successful.");
+                        return;
                     }
 
-                    DateTime start = DateTime.Now;
-                    await this.vehicle.Write(writeType, kernelVersion, this.cancellationTokenSource.Token, image);
-                    this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
+                    this.AddUserMessage("Unlock succeeded.");
                 }
-                catch (IOException exception)
-                {
-                    this.AddUserMessage(exception.ToString());
-                }
+
+                DateTime start = DateTime.Now;
+                await this.vehicle.Write(
+                    image,
+                    writeType,
+                    kernelVersion,
+                    validator,
+                    needToCheckOperatingSystem,
+                    this.cancellationTokenSource.Token);
+                this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
+            }
+            catch (IOException exception)
+            {
+                this.AddUserMessage(exception.ToString());
             }
             finally
             {

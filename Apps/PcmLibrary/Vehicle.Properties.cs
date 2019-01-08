@@ -188,26 +188,21 @@ namespace PcmHacking
         /// <remarks>
         /// Note that this is a software variable and my not match the hardware at all of the software runs.
         /// </remarks>
-        /// <returns></returns>
         public async Task<Response<UInt32>> QueryHardwareId()
         {
             return await this.QueryUnsignedValue(this.protocol.CreateHardwareIdReadRequest, CancellationToken.None);
         }
 
         /// <summary>
-        /// Query the PCM's Hardware ID.
+        /// Query the PCM's calibration ID.
         /// </summary>
-        /// <remarks>
-        /// Note that this is a software variable and my not match the hardware at all of the software runs.
-        /// </remarks>
-        /// <returns></returns>
         public async Task<Response<UInt32>> QueryCalibrationId()
         {
             await this.device.SetTimeout(TimeoutScenario.ReadProperty);
 
             var query = this.CreateQuery(
                 this.protocol.CreateCalibrationIdReadRequest,
-                this.protocol.ParseBlockUInt32,
+                this.protocol.ParseUInt32FromBlockReadResponse,
                 CancellationToken.None);
             return await query.Execute();
         }
@@ -227,7 +222,7 @@ namespace PcmHacking
         {
             await this.device.SetTimeout(TimeoutScenario.ReadProperty);
 
-            var query = this.CreateQuery(generator, this.protocol.ParseBlockUInt32, cancellationToken);
+            var query = this.CreateQuery(generator, this.protocol.ParseUInt32FromBlockReadResponse, cancellationToken);
             return await query.Execute();
         }
     }

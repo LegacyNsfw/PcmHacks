@@ -25,10 +25,37 @@ namespace PcmHacking
     public partial class Vehicle
     {
         /// <summary>
+        /// Ask the kernel which OS is installed, fail if it doesn't match the one in the file.
+        /// </summary>
+        public async Task<bool> IsSameOperatingSystemAccordingToKernel(FileValidator validator, CancellationToken cancellationToken)
+        {
+            Response<uint> osidResponse = await this.QueryOperatingSystemIdFromKernel(cancellationToken);
+            if (osidResponse.Status != ResponseStatus.Success)
+            {
+                // The kernel seems broken. This shouldn't happen, but if it does, halt.
+                this.logger.AddUserMessage("PCM did not respond to operating system ID query.");
+                return false;
+            }
+
+            if (!validator.IsSameOperatingSystem(osidResponse.Value))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Write changes to the PCM's flash memory, or just test writing (Without 
         /// making changes) to evaluate the connection quality.
         /// </summary>
-        public async Task<bool> Write(WriteType writeType, UInt32 kernelVersion, CancellationToken cancellationToken, byte[] image)
+        public async Task<bool> Write(
+            byte[] image,
+            WriteType writeType, 
+            UInt32 kernelVersion, 
+            FileValidator validator,
+            bool needToCheckOperatingSystem,
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -67,6 +94,15 @@ namespace PcmHacking
                     }
 
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
+                }
+
+                if (needToCheckOperatingSystem)
+                {
+                    if (!await this.IsSameOperatingSystemAccordingToKernel(validator, cancellationToken))
+                    {
+                        this.logger.AddUserMessage("Flashing this file could render your PCM unusable.");
+                        return false;
+                    }
                 }
 
                 bool success = await Write(cancellationToken, image, writeType, notifier);
