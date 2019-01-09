@@ -33,7 +33,7 @@ namespace PcmHacking
             if (osidResponse.Status != ResponseStatus.Success)
             {
                 // The kernel seems broken. This shouldn't happen, but if it does, halt.
-                this.logger.AddUserMessage("PCM did not respond to operating system ID query.");
+                this.logger.AddUserMessage("The kernel did not respond to operating system ID query.");
                 return false;
             }
 
