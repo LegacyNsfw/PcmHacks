@@ -43,16 +43,15 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// <summary>
-        /// Parse the response to an OS ID request.
+        /// Parse a 32-bit value from the first four bytes of a message payload.
         /// </summary>
-        public Response<UInt32> ParseBlockUInt32(Message message)
+        public Response<UInt32> ParseUInt32(Message message, byte responseMode)
         {
             byte[] bytes = message.GetBytes();
             int result = 0;
             ResponseStatus status;
 
-            byte[] expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7C };
+            byte[] expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, responseMode };
             if (!TryVerifyInitialBytes(bytes, expected, out status))
             {
                 return Response.Create(ResponseStatus.Error, (UInt32)result);
@@ -64,6 +63,14 @@ namespace PcmHacking
             result += bytes[8];
 
             return Response.Create(ResponseStatus.Success, (UInt32)result);
+        }
+
+        /// <summary>
+        /// Parse the response to a block-read request.
+        /// </summary>
+        public Response<UInt32> ParseUInt32FromBlockReadResponse(Message message)
+        {
+            return ParseUInt32(message, 0x7C);
         }
 
         #region VIN

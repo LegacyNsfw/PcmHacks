@@ -54,6 +54,11 @@ namespace PcmHacking
         private CancellationTokenSource cancellationTokenSource;
 
         /// <summary>
+        /// Indicates what type of write, if any, is in progress.
+        /// </summary>
+        private WriteType currentWriteType = WriteType.None;
+
+        /// <summary>
         /// Initializes a new instance of the main window.
         /// </summary>
         public MainForm()
@@ -212,6 +217,29 @@ namespace PcmHacking
                     this.AddDebugMessage(exception.ToString());
                 }
             });
+        }
+
+        /// <summary>
+        /// Discourage users from closing the app during a write.
+        /// </summary>
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (this.currentWriteType == WriteType.None)
+            {
+                return;
+            }
+
+            var choice = MessageBox.Show(
+                this,
+                "Closing PCM Hammer now could make your PCM unusable." + Environment.NewLine +
+                "Are you sure you want to take that risk?",
+                "PCM Hammer",
+                MessageBoxButtons.YesNo);
+
+            if (choice == DialogResult.No)
+            {
+                e.Cancel = true;
+            }
         }
 
         /// <summary>
@@ -414,47 +442,64 @@ namespace PcmHacking
                 this.AddUserMessage("VIN: " + vinResponse.Value);
 
                 var osResponse = await this.vehicle.QueryOperatingSystemId(CancellationToken.None);
-                if (osResponse.Status != ResponseStatus.Success)
+                if (osResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("OS ID: " + osResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("OS ID query failed: " + osResponse.Status.ToString());
                 }
-                this.AddUserMessage("OS ID: " + osResponse.Value.ToString());
 
                 var calResponse = await this.vehicle.QueryCalibrationId();
-                if (calResponse.Status != ResponseStatus.Success)
+                if (calResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Calibration ID: " + calResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("Calibration ID query failed: " + calResponse.Status.ToString());
                 }
-                this.AddUserMessage("Calibration ID: " + calResponse.Value.ToString());
 
                 var hardwareResponse = await this.vehicle.QueryHardwareId();
-                if (hardwareResponse.Status != ResponseStatus.Success)
+                if (hardwareResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("Hardware ID query failed: " + hardwareResponse.Status.ToString());
                 }
 
-                this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString());
-
                 var serialResponse = await this.vehicle.QuerySerial();
-                if (serialResponse.Status != ResponseStatus.Success)
+                if (serialResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Serial Number: " + serialResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("Serial Number query failed: " + serialResponse.Status.ToString());
                 }
-                this.AddUserMessage("Serial Number: " + serialResponse.Value.ToString());
 
                 var bccResponse = await this.vehicle.QueryBCC();
-                if (bccResponse.Status != ResponseStatus.Success)
+                if (bccResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Broad Cast Code: " + bccResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("BCC query failed: " + bccResponse.Status.ToString());
                 }
-                this.AddUserMessage("Broad Cast Code: " + bccResponse.Value.ToString());
 
                 var mecResponse = await this.vehicle.QueryMEC();
-                if (mecResponse.Status != ResponseStatus.Success)
+                if (mecResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("MEC: " + mecResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("MEC query failed: " + mecResponse.Status.ToString());
                 }
-                this.AddUserMessage("MEC: " + mecResponse.Value.ToString());
             }
             catch (Exception exception)
             {
@@ -886,6 +931,8 @@ namespace PcmHacking
         {
             try
             {
+                this.currentWriteType = writeType;
+
                 if (this.vehicle == null)
                 {
                     // This shouldn't be possible - it would mean the buttons 
@@ -925,27 +972,7 @@ namespace PcmHacking
                 }
 
                 // Sanity checks. 
-                // TODO: Check OSID as well, ask user to confirm if it doesn't match.
-                if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024))
-                {
-                    this.AddUserMessage("This file is not a supported size.");
-                    return;
-                }
-
-                if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
-                {
-                    this.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
-                    return;
-                }
-
-                if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
-                {
-                    this.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
-                    return;
-                }
-
-                // Validate checksums within the file.
-                ChecksumValidator validator = new ChecksumValidator(image, this);
+                FileValidator validator = new FileValidator(image, this);
                 if (!validator.IsValid())
                 {
                     this.AddUserMessage("This file is corrupt. It would render your PCM unusable.");
@@ -955,79 +982,103 @@ namespace PcmHacking
                 UInt32 kernelVersion = 0;
                 bool needUnlock;
                 int keyAlgorithm = 1;
+                UInt32 pcmOperatingSystemId = 0;
+                bool needToCheckOperatingSystem = writeType != WriteType.Full;
 
-                try
+                this.AddUserMessage("Requesting operating system ID...");
+                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
+                if (osidResponse.Status == ResponseStatus.Success)
                 {
-                    this.AddUserMessage("Requesting operating system ID...");
-                    Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
-                    if (osidResponse.Status == ResponseStatus.Success)
+                    pcmOperatingSystemId = osidResponse.Value;
+                    PcmInfo info = new PcmInfo(pcmOperatingSystemId);
+                    keyAlgorithm = info.KeyAlgorithm;
+                    needUnlock = true;
+
+                    if (needToCheckOperatingSystem && !validator.IsSameOperatingSystem(pcmOperatingSystemId))
                     {
-                        this.AddUserMessage("Operating System: " + osidResponse.Value.ToString());
-                        PcmInfo info = new PcmInfo(osidResponse.Value);
-                        keyAlgorithm = info.KeyAlgorithm;
-                        needUnlock = true;
+                        this.AddUserMessage("Flashing this file could render your PCM unusable.");
+                        return;
                     }
-                    else
+
+                    needToCheckOperatingSystem = false;
+                }
+                else
+                {
+                    if (this.cancellationTokenSource.Token.IsCancellationRequested)
                     {
-                        if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                        return;
+                    }
+
+                    this.AddUserMessage("Operating system request failed, checking for a live kernel...");
+
+                    kernelVersion = await vehicle.GetKernelVersion();
+                    if (kernelVersion == 0)
+                    {
+                        this.AddUserMessage("Checking for recovery mode...");
+                        bool recoveryMode = await this.vehicle.IsInRecoveryMode();
+
+                        if (recoveryMode)
                         {
-                            return;
-                        }
-
-                        this.AddUserMessage("Operating system request failed, checking for a live kernel...");
-
-                        kernelVersion = await vehicle.GetKernelVersion();
-                        if (kernelVersion == 0)
-                        {
-                            this.AddUserMessage("Checking for recovery mode...");
-                            bool recoveryMode = await this.vehicle.IsInRecoveryMode();
-
-                            if (recoveryMode)
-                            {
-                                this.AddUserMessage("PCM is in recovery mode.");
-                                keyAlgorithm = 1;
-                                needUnlock = true;
-                            }
-                            else
-                            {
-                                this.AddUserMessage("PCM is not responding to OSID, kernel version, or recovery mode checks.");
-                                this.AddUserMessage("Unlock may not work, but we'll try...");
-                                needUnlock = true;
-                            }
+                            this.AddUserMessage("PCM is in recovery mode.");
+                            needUnlock = true;
                         }
                         else
                         {
-                            this.AddUserMessage("Kernel version: " + kernelVersion.ToString("X8"));
-                            needUnlock = false;
+                            this.AddUserMessage("PCM is not responding to OSID, kernel version, or recovery mode checks.");
+                            this.AddUserMessage("Unlock may not work, but we'll try...");
+                            needUnlock = true;
                         }
                     }
+                    else
+                    {
+                        needUnlock = false;
 
-                    await this.vehicle.SuppressChatter();
+                        this.AddUserMessage("Kernel version: " + kernelVersion.ToString("X8"));
 
-                    if (needUnlock)
-                    { 
-
-                        bool unlocked = await this.vehicle.UnlockEcu(keyAlgorithm);
-                        if (!unlocked)
+                        this.AddUserMessage("Asking kernel for the PCM's operating system ID...");
+                        if (needToCheckOperatingSystem && !await vehicle.IsSameOperatingSystemAccordingToKernel(validator, this.cancellationTokenSource.Token))
                         {
-                            this.AddUserMessage("Unlock was not successful.");
+                            this.AddUserMessage("Flashing this file could render your PCM unusable.");
                             return;
                         }
 
-                        this.AddUserMessage("Unlock succeeded.");
+                        needToCheckOperatingSystem = false;
+                    }
+                }
+
+                await this.vehicle.SuppressChatter();
+
+                if (needUnlock)
+                {
+
+                    bool unlocked = await this.vehicle.UnlockEcu(keyAlgorithm);
+                    if (!unlocked)
+                    {
+                        this.AddUserMessage("Unlock was not successful.");
+                        return;
                     }
 
-                    DateTime start = DateTime.Now;
-                    await this.vehicle.Write(writeType, kernelVersion, this.cancellationTokenSource.Token, image);
-                    this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
+                    this.AddUserMessage("Unlock succeeded.");
                 }
-                catch (IOException exception)
-                {
-                    this.AddUserMessage(exception.ToString());
-                }
+
+                DateTime start = DateTime.Now;
+                await this.vehicle.Write(
+                    image,
+                    writeType,
+                    kernelVersion,
+                    validator,
+                    needToCheckOperatingSystem,
+                    this.cancellationTokenSource.Token);
+                this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
+            }
+            catch (IOException exception)
+            {
+                this.AddUserMessage(exception.ToString());
             }
             finally
             {
+                this.currentWriteType = WriteType.None;
+
                 this.Invoke((MethodInvoker)delegate ()
                 {
                     this.EnableUserInput();

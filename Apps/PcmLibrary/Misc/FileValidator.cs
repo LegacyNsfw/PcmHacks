@@ -7,7 +7,7 @@ namespace PcmHacking
     /// <summary>
     /// Try to detect corrupted firmware images.
     /// </summary>
-    public class ChecksumValidator
+    public class FileValidator
     {
         /// <summary>
         /// The contents of the firmware file that someone wants to flash.
@@ -22,7 +22,7 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ChecksumValidator(byte[] image, ILogger logger)
+        public FileValidator(byte[] image, ILogger logger)
         {
             this.image = image;
             this.logger = logger;
@@ -56,11 +56,47 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Compare the OS ID from the PCM with the OS ID from the file.
+        /// </summary>
+        public bool IsSameOperatingSystem(UInt32 pcmOsid)
+        {
+            UInt32 fileOsid = this.GetOsidFromImage();
+
+            if (pcmOsid == fileOsid)
+            {
+                this.logger.AddUserMessage("PCM and file are both operating system " + pcmOsid);
+                return true;
+            }
+
+            this.logger.AddUserMessage("Operating system IDs do not match.");
+            this.logger.AddUserMessage("PCM operating system ID: " + pcmOsid);
+            this.logger.AddUserMessage("File operating system ID: " + fileOsid);
+            return false;
+        }
+
+        /// <summary>
+        /// Get the OSID from the file that the user wants to flash.
+        /// </summary>
+        public uint GetOsidFromImage()
+        {
+            int osid = 0;
+            if (image.Length == 512 * 1024 || image.Length == 1024 * 1024) // bin valid sizes
+            {
+                osid += image[0x504] << 24;
+                osid += image[0x505] << 16;
+                osid += image[0x506] << 8;
+                osid += image[0x507] << 0;
+            }
+
+            return (uint)osid;
+        }
+
+        /// <summary>
         /// Validate a 512k image.
         /// </summary>
         private bool Validate512()
         {
-            bool success = true;
+            bool success = ValidateSignatures();
 
             this.PrintHeader();
             success &= this.ValidateRange(      0, 0x7FFFD,   0x500, "Operating system");
@@ -85,6 +121,29 @@ namespace PcmHacking
             return false;
         }
 
+        /// <summary>
+        /// Validate signatures
+        /// </summary>
+        private bool ValidateSignatures()
+        {
+            if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
+            {
+                this.logger.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
+                return false;
+            }
+
+            if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
+            {
+                this.logger.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Print the header for the table of checksums.
+        /// </summary>
         private void PrintHeader()
         {
             this.logger.AddUserMessage("\tStart\tEnd\tResult\tFile\tActual\tContent");

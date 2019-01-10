@@ -24,6 +24,35 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Create a request to get the operating system ID from the kernel.
+        /// </summary>
+        /// <remarks>
+        /// It was tempting to just implement the same OS ID query as the PCM software,
+        /// but then the app would need to do a kernel request of some type to determine 
+        /// whether the PCM is running the GM OS or the kernel. However, in almost all 
+        /// cases, the PCM will be running the GM OS, and that kernel request would slow
+        /// down the most common usage scenario.
+        ///
+        /// So we keep the common scenario fast by having the standard OS ID request 
+        /// succeed only when the standard operating system is running. When it fails,
+        /// that puts the app into a slower path were it checks for a kernel and then 
+        /// asks the kernel what OS is installed. Or it checks for recovery mode, loads
+        /// the kernel, and then asks the kernel what OS is installed.
+        /// </remarks>
+        public Message CreateOperatingSystemIdKernelRequest()
+        {
+            return new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x3D, 0x03 });
+        }
+
+        /// <summary>
+        /// Parse the operating system ID from a kernel response.
+        /// </summary>
+        public Response<UInt32> ParseOperatingSystemIdKernelResponse(Message message)
+        {
+            return ParseUInt32(message, 0x7D);
+        }
+
+        /// <summary>
         /// Create a request to identify the flash chip. 
         /// </summary>
         public Message CreateFlashMemoryTypeQuery()

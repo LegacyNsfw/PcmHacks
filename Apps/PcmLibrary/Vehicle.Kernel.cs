@@ -171,6 +171,22 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Query the PCM's operating system ID.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Response<UInt32>> QueryOperatingSystemIdFromKernel(CancellationToken cancellationToken)
+        {
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+
+            var query = this.CreateQuery(
+                this.protocol.CreateOperatingSystemIdKernelRequest,
+                this.protocol.ParseOperatingSystemIdKernelResponse,
+                CancellationToken.None);
+
+            return await query.Execute();
+        }
+
+        /// <summary>
         /// Check for a running kernel.
         /// </summary>
         /// <returns></returns>
