@@ -13,7 +13,7 @@ namespace PcmHacking
     /// </summary>
     public enum WriteType
     {
-        Invalid = 0,
+        None = 0,
         Compare,
         TestWrite,
         Calibration,

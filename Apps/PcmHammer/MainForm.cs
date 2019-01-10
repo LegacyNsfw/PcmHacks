@@ -54,6 +54,11 @@ namespace PcmHacking
         private CancellationTokenSource cancellationTokenSource;
 
         /// <summary>
+        /// Indicates what type of write, if any, is in progress.
+        /// </summary>
+        private WriteType currentWriteType = WriteType.None;
+
+        /// <summary>
         /// Initializes a new instance of the main window.
         /// </summary>
         public MainForm()
@@ -212,6 +217,29 @@ namespace PcmHacking
                     this.AddDebugMessage(exception.ToString());
                 }
             });
+        }
+
+        /// <summary>
+        /// Discourage users from closing the app during a write.
+        /// </summary>
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (this.currentWriteType == WriteType.None)
+            {
+                return;
+            }
+
+            var choice = MessageBox.Show(
+                this,
+                "Closing PCM Hammer now could make your PCM unusable." + Environment.NewLine +
+                "Are you sure you want to take that risk?",
+                "PCM Hammer",
+                MessageBoxButtons.YesNo);
+
+            if (choice == DialogResult.No)
+            {
+                e.Cancel = true;
+            }
         }
 
         /// <summary>
@@ -903,6 +931,8 @@ namespace PcmHacking
         {
             try
             {
+                this.currentWriteType = writeType;
+
                 if (this.vehicle == null)
                 {
                     // This shouldn't be possible - it would mean the buttons 
@@ -1047,6 +1077,8 @@ namespace PcmHacking
             }
             finally
             {
+                this.currentWriteType = WriteType.None;
+
                 this.Invoke((MethodInvoker)delegate ()
                 {
                     this.EnableUserInput();
