@@ -16,20 +16,20 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Create a broadcast message telling the PCM to clear DTCs
+        /// Create a broadcast message telling all modules to clear diagnostic trouble codes.
         /// </summary>
-        public Message CreateClearDTCs()
+        public Message CreateClearDiagnosticTroubleCodesRequest()
         {
-            byte[] bytes = new byte[] { Priority.Functional0, 0x6A, DeviceId.Tool, Mode.ClearDTCs };
+            byte[] bytes = new byte[] { Priority.Functional0, 0x6A, DeviceId.Tool, Mode.ClearDiagnosticTroubleCodes };
             return new Message(bytes);
         }
 
         /// <summary>
-        /// A successfull response seen after the Clear DTCs message
+        /// Create a broadcast message telling all modules to clear diagnostic information.
         /// </summary>
-        public Message CreateClearDTCsOK()
+        public Message CreateClearPcmDiagnosticInformationRequest()
         {
-            byte[] bytes = new byte[] { 0x48, 0x6B, DeviceId.Pcm, Mode.ClearDTCs + Mode.Response };
+            byte[] bytes = new byte[] { Priority.Physical0High, DeviceId.Broadcast, DeviceId.Tool, Mode.ClearDiagnosticInformation };
             return new Message(bytes);
         }
 
@@ -56,7 +56,7 @@ namespace PcmHacking
         /// </summary>
         public Message ClearDTCs()
         {
-            byte[] bytes = new byte[] { Priority.Functional0, 0x6A, DeviceId.Tool, Mode.ClearDTCs };
+            byte[] bytes = new byte[] { Priority.Functional0, 0x6A, DeviceId.Tool, Mode.ClearDiagnosticTroubleCodes };
             return new Message(bytes);
         }
 
@@ -65,7 +65,7 @@ namespace PcmHacking
         /// </summary>
         public Message ClearDTCsOK()
         {
-            byte[] bytes = new byte[] { Priority.Functional0Low, 0x6B, DeviceId.Pcm, Mode.ClearDTCs + Mode.Response };
+            byte[] bytes = new byte[] { Priority.Functional0Low, 0x6B, DeviceId.Pcm, Mode.ClearDiagnosticTroubleCodes + Mode.Response };
             return new Message(bytes);
         }
 

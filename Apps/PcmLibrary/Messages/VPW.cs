@@ -135,7 +135,8 @@ namespace PcmHacking
         public const byte Response = 0x40; // added to the Mode by the PCM for it's the response
         public const byte Rejected = 0x75;
 
-        public const byte ClearDTCs = 0x04;
+        public const byte ClearDiagnosticTroubleCodes = 0x04;
+        public const byte ClearDiagnosticInformation = 0x14;
         public const byte ExitKernel = 0x20;
         public const byte Seed = 0x27;
         public const byte SilenceBus = 0x28;
