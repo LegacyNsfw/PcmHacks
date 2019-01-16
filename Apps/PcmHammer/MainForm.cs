@@ -168,7 +168,8 @@ namespace PcmHacking
                 // This will be enabled during full reads (but not writes)
                 this.cancelButton.Enabled = false;
 
-                // Load the Help content asynchronously.
+                // Load the dynamic content asynchronously.
+                ThreadPool.QueueUserWorkItem(new WaitCallback(LoadStartMessage));
                 ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
 
                 await this.ResetDevice();
@@ -183,40 +184,81 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Get the URL to a file on github, using the release branch or the develop branch.
+        /// </summary>
+        private string GetFileUrl(string path)
+        {
+            string urlBase = "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/";
+            string branch = AppVersion == null ? "develop" : "Release/" + AppVersion;
+            string result = urlBase + branch + path;
+            return result;
+        }
+
+        /// <summary>
         /// The Help content is loaded after the window appears, so that it doesn't slow down app initialization.
         /// </summary>
-        private void LoadHelp(object unused)
+        private async void LoadStartMessage(object unused)
         {
-            this.helpWebBrowser.Invoke((MethodInvoker)async delegate ()
+            try
             {
-                try
-                {
-                    HttpRequestMessage request = new HttpRequestMessage(
-                        HttpMethod.Get,
-                        "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/Release/003/Apps/PcmHammer/help.html");
-                    request.Headers.Add("Cache-Control", "no-cache");
-                    HttpClient client = new HttpClient();
-                    var response = await client.SendAsync(request);
+                HttpRequestMessage request = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    GetFileUrl("/Apps/PcmHammer/start.txt"));
 
-                    if (response.StatusCode == HttpStatusCode.OK)
-                    {
-                        this.helpWebBrowser.DocumentStream = await response.Content.ReadAsStreamAsync();
-                    }
-                    else
-                    {
-                        var assembly = Assembly.GetExecutingAssembly();
-                        var resourceName = "PcmHacking.help.html";
+                request.Headers.Add("Cache-Control", "no-cache");
+                HttpClient client = new HttpClient();
+                var response = await client.SendAsync(request);
 
-                        // This will leak the stream, but it will only be invoked once.
-                        this.helpWebBrowser.DocumentStream = assembly.GetManifestResourceStream(resourceName);
-                    }
-                }
-                catch (Exception exception)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    this.AddUserMessage("Unable to load help content: " + exception.Message);
-                    this.AddDebugMessage(exception.ToString());
+                    string message = await response.Content.ReadAsStringAsync();
+                    this.AddUserMessage(message);                    
                 }
-            });
+            }
+            catch (Exception exception)
+            {
+                this.AddDebugMessage("Unable to fetch the startup message: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        /// The Help content is loaded after the window appears, so that it doesn't slow down app initialization.
+        /// </summary>
+        private async void LoadHelp(object unused)
+        {
+            try
+            {
+                HttpRequestMessage request = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    GetFileUrl("/Apps/PcmHammer/help.html"));
+
+                request.Headers.Add("Cache-Control", "no-cache");
+                HttpClient client = new HttpClient();
+                var response = await client.SendAsync(request);
+
+                Stream stream;
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    stream = await response.Content.ReadAsStreamAsync();
+                }
+                else
+                {
+                    var assembly = Assembly.GetExecutingAssembly();
+                    var resourceName = "PcmHacking.help.html";
+                    stream = assembly.GetManifestResourceStream(resourceName);
+                }
+
+                this.helpWebBrowser.Invoke((MethodInvoker)delegate ()
+                {
+                    this.helpWebBrowser.DocumentStream = stream;
+                });
+            }
+            catch (Exception exception)
+            {
+                this.AddDebugMessage("Unable to fetch updated help content.");
+                this.AddDebugMessage("This exception can safely be ignored.");
+                this.AddDebugMessage(exception.ToString());
+            }
         }
 
         /// <summary>
