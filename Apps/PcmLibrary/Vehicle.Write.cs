@@ -57,6 +57,8 @@ namespace PcmHacking
             bool needToCheckOperatingSystem,
             CancellationToken cancellationToken)
         {
+            bool success = false;
+
             try
             {
                 await notifier.Notify();
@@ -105,11 +107,10 @@ namespace PcmHacking
                     }
                 }
 
-                bool success = await Write(cancellationToken, image, writeType, notifier);
+                success = await Write(cancellationToken, image, writeType, notifier);
 
                 // We only do cleanup after a successful write.
                 // If the kernel remains running, the user can try to flash again without rebooting and reloading.
-                // TODO: kernel should send tool-present messages to keep itself in control.
                 // TODO: kernel version should be stored at a fixed location in the bin file.
                 // TODO: app should check kernel version (not just "is present") and reload only if version is lower than version in kernel file.
                 if (success)
@@ -121,13 +122,17 @@ namespace PcmHacking
             }
             catch (Exception exception)
             {
-                this.logger.AddUserMessage("Something went wrong. " + exception.Message);
-                this.logger.AddUserMessage("Do not power off the PCM! Do not exit this program!");
-                this.logger.AddUserMessage("Try flashing again. If errors continue, seek help online.");
-                this.logger.AddUserMessage("https://pcmhacking.net/forums/viewtopic.php?f=3&t=6080");
-                this.logger.AddUserMessage(string.Empty);
-                this.logger.AddUserMessage(exception.ToString());
-                return false;
+                if (!success)
+                {
+                    this.logger.AddUserMessage("Something went wrong. " + exception.Message);
+                    this.logger.AddUserMessage("Do not power off the PCM! Do not exit this program!");
+                    this.logger.AddUserMessage("Try flashing again. If errors continue, seek help online.");
+                    this.logger.AddUserMessage("https://pcmhacking.net/forums/viewtopic.php?f=3&t=6080");
+                    this.logger.AddUserMessage(string.Empty);
+                    this.logger.AddUserMessage(exception.ToString());
+                }
+
+                return success;
             }
         }
 

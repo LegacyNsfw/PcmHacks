@@ -128,10 +128,22 @@ namespace PcmHacking
         /// </remarks>
         public async Task Cleanup()
         {
-            this.logger.AddDebugMessage("Cleaning up Flash Kernel");
+            this.logger.AddDebugMessage("Halting the kernel.");
             await this.ExitKernel();
-            this.logger.AddDebugMessage("Clear DTCs");
-            await this.ClearDTCs();
+
+            /* Waiting for the PCM to reboot didn't make any difference.
+             * But I still hope that if we send the right messages after
+             * restarting the PCM, we can clear the TAC's P1518 code.
+             * 
+            this.logger.AddUserMessage("Waiting for the PCM to restart...");
+            for(int remaining = 10; remaining > 0; remaining--)
+            {
+                this.logger.AddUserMessage(remaining.ToString() + " seconds left.");
+                await Task.Delay(1000);
+            }
+            */
+
+            await this.ClearTroubleCodes();
         }
 
         /// <summary>
@@ -156,18 +168,29 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Clears DTCs
+        /// Ask the factory operating system to clear trouble codes. 
+        /// This should only run 10 seconds after rebooting, to ensure that the operating system is running again.
         /// </summary>
         /// <remarks>
-        /// Return code is not checked as its an uncommon mode and IDs, different devices will handle this differently.
+        /// 
         /// </remarks>
-        public async Task ClearDTCs()
+        public async Task ClearTroubleCodes()
         {
-            Message ClearDTCs = this.protocol.CreateClearDTCs();
-            Message ClearDTCsOK = this.protocol.CreateClearDTCsOK();
-
-            await this.device.SendMessage(ClearDTCs);
+            this.logger.AddUserMessage("Clearing trouble codes.");
             this.device.ClearMessageQueue();
+
+            // The response is not checked because the priority byte and destination address are odd.
+            // Different devices will handle this differently. Scantool won't recieve it.
+            // so we send it twice just to be sure.
+            Message clearCodesRequest = this.protocol.CreateClearDiagnosticTroubleCodesRequest();                        
+            await this.device.SendMessage(clearCodesRequest);
+            await this.device.SendMessage(clearCodesRequest);
+
+            // This is a conventional message, but the response from the PCM might get lost 
+            // among the responses from other modules on the bus, so again we just send it twice.
+            Message clearDiagnosticInformationRequest = this.protocol.CreateClearDiagnosticInformationRequest();
+            await this.device.SendMessage(clearDiagnosticInformationRequest);
+            await this.device.SendMessage(clearDiagnosticInformationRequest);
         }
 
         /// <summary>
