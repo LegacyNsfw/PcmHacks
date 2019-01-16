@@ -27,7 +27,7 @@ namespace PcmHacking
         /// <summary>
         /// Create a broadcast message telling all modules to clear diagnostic information.
         /// </summary>
-        public Message CreateClearPcmDiagnosticInformationRequest()
+        public Message CreateClearDiagnosticInformationRequest()
         {
             byte[] bytes = new byte[] { Priority.Physical0High, DeviceId.Broadcast, DeviceId.Tool, Mode.ClearDiagnosticInformation };
             return new Message(bytes);

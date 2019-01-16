@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PcmHammer", "PcmHammer\PcmH
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{0AA6F273-995D-4ADE-8CBB-DB1B6E8A0FCE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PcmLibrary", "PcmLibrary\PcmLibrary.csproj", "{0B317C5A-E078-4A96-8E7A-00601BCA1429}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PcmLibrary", "PcmLibrary\PcmLibrary.csproj", "{0B317C5A-E078-4A96-8E7A-00601BCA1429}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

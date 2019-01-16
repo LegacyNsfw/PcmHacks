@@ -131,13 +131,18 @@ namespace PcmHacking
             this.logger.AddDebugMessage("Halting the kernel.");
             await this.ExitKernel();
 
+            /* Waiting for the PCM to reboot didn't make any difference.
+             * But I still hope that if we send the right messages after
+             * restarting the PCM, we can clear the TAC's P1518 code.
+             * 
             this.logger.AddUserMessage("Waiting for the PCM to restart...");
             for(int remaining = 10; remaining > 0; remaining--)
             {
                 this.logger.AddUserMessage(remaining.ToString() + " seconds left.");
                 await Task.Delay(1000);
             }
-            this.logger.AddUserMessage("Clearing trouble codes.");
+            */
+
             await this.ClearTroubleCodes();
         }
 
@@ -171,6 +176,7 @@ namespace PcmHacking
         /// </remarks>
         public async Task ClearTroubleCodes()
         {
+            this.logger.AddUserMessage("Clearing trouble codes.");
             this.device.ClearMessageQueue();
 
             // The response is not checked because the priority byte and destination address are odd.
@@ -182,7 +188,7 @@ namespace PcmHacking
 
             // This is a conventional message, but the response from the PCM might get lost 
             // among the responses from other modules on the bus, so again we just send it twice.
-            Message clearDiagnosticInformationRequest = this.protocol.CreateClearPcmDiagnosticInformationRequest();
+            Message clearDiagnosticInformationRequest = this.protocol.CreateClearDiagnosticInformationRequest();
             await this.device.SendMessage(clearDiagnosticInformationRequest);
             await this.device.SendMessage(clearDiagnosticInformationRequest);
         }
