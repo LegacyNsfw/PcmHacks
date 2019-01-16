@@ -184,6 +184,17 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Get the URL to a file on github, using the release branch or the develop branch.
+        /// </summary>
+        private string GetFileUrl(string path)
+        {
+            string urlBase = "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/";
+            string branch = AppVersion == null ? "develop" : "Release/" + AppVersion;
+            string result = urlBase + branch + path;
+            return result;
+        }
+
+        /// <summary>
         /// The Help content is loaded after the window appears, so that it doesn't slow down app initialization.
         /// </summary>
         private async void LoadStartMessage(object unused)
@@ -192,7 +203,7 @@ namespace PcmHacking
             {
                 HttpRequestMessage request = new HttpRequestMessage(
                     HttpMethod.Get,
-                    "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/nsfw/StartupMessage/Apps/PcmHammer/start.txt");
+                    GetFileUrl("/Apps/PcmHammer/start.txt"));
 
                 request.Headers.Add("Cache-Control", "no-cache");
                 HttpClient client = new HttpClient();
@@ -219,7 +230,8 @@ namespace PcmHacking
             {
                 HttpRequestMessage request = new HttpRequestMessage(
                     HttpMethod.Get,
-                    "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/Release/003/Apps/PcmHammer/help.html");
+                    GetFileUrl("/Apps/PcmHammer/help.html"));
+
                 request.Headers.Add("Cache-Control", "no-cache");
                 HttpClient client = new HttpClient();
                 var response = await client.SendAsync(request);
