@@ -192,8 +192,7 @@ namespace PcmHacking
             {
                 HttpRequestMessage request = new HttpRequestMessage(
                     HttpMethod.Get,
-                    // "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/nsfw/StartMessage/Apps/PcmHammer/start.txt");
-                    "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/develop/ReadMe.md");
+                    "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/nsfw/StartupMessage/Apps/PcmHammer/start.txt");
 
                 request.Headers.Add("Cache-Control", "no-cache");
                 HttpClient client = new HttpClient();
