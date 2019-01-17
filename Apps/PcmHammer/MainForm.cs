@@ -274,6 +274,11 @@ namespace PcmHacking
                 return;
             }
 
+            if (this.currentWriteType == WriteType.TestWrite)
+            {
+                return;
+            }
+
             var choice = MessageBox.Show(
                 this,
                 "Closing PCM Hammer now could make your PCM unusable." + Environment.NewLine +
@@ -830,6 +835,21 @@ namespace PcmHacking
         /// </summary>
         private void CancelButton_Click(object sender, EventArgs e)
         {
+            if ((this.currentWriteType != WriteType.None) && (this.currentWriteType != WriteType.TestWrite))
+            {
+                var choice = MessageBox.Show(
+                    this,
+                    "Canceling now could make your PCM unusable." + Environment.NewLine +
+                    "Are you sure you want to take that risk?",
+                    "PCM Hammer",
+                    MessageBoxButtons.YesNo);
+
+                if (choice == DialogResult.No)
+                {
+                    return;
+                }
+            }
+
             this.AddUserMessage("Cancel button clicked.");
             this.cancellationTokenSource?.Cancel();
         }
