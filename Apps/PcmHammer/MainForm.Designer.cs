@@ -34,7 +34,11 @@
             this.selectButton = new System.Windows.Forms.Button();
             this.deviceDescription = new System.Windows.Forms.Label();
             this.operationsBox = new System.Windows.Forms.GroupBox();
-            this.testKernelButton = new System.Windows.Forms.Button();
+            this.writeParametersButton = new System.Windows.Forms.Button();
+            this.testWriteButton = new System.Windows.Forms.Button();
+            this.quickComparisonButton = new System.Windows.Forms.Button();
+            this.writeOsAndCalibration = new System.Windows.Forms.Button();
+            this.exitKernelButton = new System.Windows.Forms.Button();
             this.writeFullContentsButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
             this.writeCalibrationButton = new System.Windows.Forms.Button();
@@ -48,7 +52,6 @@
             this.helpWebBrowser = new System.Windows.Forms.WebBrowser();
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
-            this.startServerButton = new System.Windows.Forms.Button();
             this.releasedUnder = new System.Windows.Forms.Label();
             this.releasedAt = new System.Windows.Forms.LinkLabel();
             this.releasedByAntus = new System.Windows.Forms.Label();
@@ -78,10 +81,10 @@
             // 
             // reinitializeButton
             // 
-            this.reinitializeButton.Location = new System.Drawing.Point(6, 96);
+            this.reinitializeButton.Location = new System.Drawing.Point(4, 96);
             this.reinitializeButton.Margin = new System.Windows.Forms.Padding(2);
             this.reinitializeButton.Name = "reinitializeButton";
-            this.reinitializeButton.Size = new System.Drawing.Size(214, 25);
+            this.reinitializeButton.Size = new System.Drawing.Size(216, 25);
             this.reinitializeButton.TabIndex = 2;
             this.reinitializeButton.Text = "Re-&Initialize Device";
             this.reinitializeButton.UseVisualStyleBackColor = true;
@@ -89,9 +92,9 @@
             // 
             // selectButton
             // 
-            this.selectButton.Location = new System.Drawing.Point(5, 68);
+            this.selectButton.Location = new System.Drawing.Point(4, 66);
             this.selectButton.Name = "selectButton";
-            this.selectButton.Size = new System.Drawing.Size(214, 23);
+            this.selectButton.Size = new System.Drawing.Size(216, 25);
             this.selectButton.TabIndex = 1;
             this.selectButton.Text = "&Select Device";
             this.selectButton.UseVisualStyleBackColor = true;
@@ -99,7 +102,7 @@
             // 
             // deviceDescription
             // 
-            this.deviceDescription.Location = new System.Drawing.Point(5, 30);
+            this.deviceDescription.Location = new System.Drawing.Point(4, 30);
             this.deviceDescription.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.deviceDescription.Name = "deviceDescription";
             this.deviceDescription.Size = new System.Drawing.Size(214, 13);
@@ -110,7 +113,11 @@
             // 
             this.operationsBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.operationsBox.Controls.Add(this.testKernelButton);
+            this.operationsBox.Controls.Add(this.writeParametersButton);
+            this.operationsBox.Controls.Add(this.testWriteButton);
+            this.operationsBox.Controls.Add(this.quickComparisonButton);
+            this.operationsBox.Controls.Add(this.writeOsAndCalibration);
+            this.operationsBox.Controls.Add(this.exitKernelButton);
             this.operationsBox.Controls.Add(this.writeFullContentsButton);
             this.operationsBox.Controls.Add(this.cancelButton);
             this.operationsBox.Controls.Add(this.writeCalibrationButton);
@@ -121,62 +128,108 @@
             this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
             this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
-            this.operationsBox.Size = new System.Drawing.Size(224, 315);
+            this.operationsBox.Size = new System.Drawing.Size(224, 382);
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
             // 
-            // testKernelButton
+            // writeParametersButton
             // 
-            this.testKernelButton.Location = new System.Drawing.Point(6, 183);
-            this.testKernelButton.Margin = new System.Windows.Forms.Padding(2);
-            this.testKernelButton.Name = "testKernelButton";
-            this.testKernelButton.Size = new System.Drawing.Size(214, 25);
-            this.testKernelButton.TabIndex = 5;
-            this.testKernelButton.Text = "&Test Kernel";
-            this.testKernelButton.UseVisualStyleBackColor = true;
-            this.testKernelButton.Click += new System.EventHandler(this.testKernelButton_Click);
+            this.writeParametersButton.Location = new System.Drawing.Point(4, 194);
+            this.writeParametersButton.Margin = new System.Windows.Forms.Padding(2);
+            this.writeParametersButton.Name = "writeParametersButton";
+            this.writeParametersButton.Size = new System.Drawing.Size(216, 25);
+            this.writeParametersButton.TabIndex = 6;
+            this.writeParametersButton.Text = "Write Parameters (Clone)";
+            this.writeParametersButton.UseVisualStyleBackColor = true;
+            this.writeParametersButton.Click += new System.EventHandler(this.writeParametersButton_Click);
+            // 
+            // testWriteButton
+            // 
+            this.testWriteButton.Location = new System.Drawing.Point(4, 136);
+            this.testWriteButton.Margin = new System.Windows.Forms.Padding(2);
+            this.testWriteButton.Name = "testWriteButton";
+            this.testWriteButton.Size = new System.Drawing.Size(216, 25);
+            this.testWriteButton.TabIndex = 4;
+            this.testWriteButton.Text = "&Test Write";
+            this.testWriteButton.UseVisualStyleBackColor = true;
+            this.testWriteButton.Click += new System.EventHandler(this.testWriteButton_Click);
+            // 
+            // quickComparisonButton
+            // 
+            this.quickComparisonButton.Location = new System.Drawing.Point(4, 107);
+            this.quickComparisonButton.Margin = new System.Windows.Forms.Padding(2);
+            this.quickComparisonButton.Name = "quickComparisonButton";
+            this.quickComparisonButton.Size = new System.Drawing.Size(216, 25);
+            this.quickComparisonButton.TabIndex = 3;
+            this.quickComparisonButton.Text = "&Quick Comparison";
+            this.quickComparisonButton.UseVisualStyleBackColor = true;
+            this.quickComparisonButton.Click += new System.EventHandler(this.quickComparisonButton_Click);
+            // 
+            // writeOsAndCalibration
+            // 
+            this.writeOsAndCalibration.Location = new System.Drawing.Point(4, 223);
+            this.writeOsAndCalibration.Margin = new System.Windows.Forms.Padding(2);
+            this.writeOsAndCalibration.Name = "writeOsAndCalibration";
+            this.writeOsAndCalibration.Size = new System.Drawing.Size(216, 25);
+            this.writeOsAndCalibration.TabIndex = 7;
+            this.writeOsAndCalibration.Text = "Write &OS && Calibration";
+            this.writeOsAndCalibration.UseVisualStyleBackColor = true;
+            this.writeOsAndCalibration.Visible = false;
+            this.writeOsAndCalibration.Click += new System.EventHandler(this.writeOsAndCalibration_Click);
+            // 
+            // exitKernelButton
+            // 
+            this.exitKernelButton.Location = new System.Drawing.Point(4, 301);
+            this.exitKernelButton.Margin = new System.Windows.Forms.Padding(2);
+            this.exitKernelButton.Name = "exitKernelButton";
+            this.exitKernelButton.Size = new System.Drawing.Size(216, 25);
+            this.exitKernelButton.TabIndex = 9;
+            this.exitKernelButton.Text = "&Halt Kernel";
+            this.exitKernelButton.UseVisualStyleBackColor = true;
+            this.exitKernelButton.Click += new System.EventHandler(this.testKernelButton_Click);
             // 
             // writeFullContentsButton
             // 
-            this.writeFullContentsButton.Location = new System.Drawing.Point(6, 136);
+            this.writeFullContentsButton.Location = new System.Drawing.Point(4, 252);
             this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
             this.writeFullContentsButton.Name = "writeFullContentsButton";
-            this.writeFullContentsButton.Size = new System.Drawing.Size(214, 25);
-            this.writeFullContentsButton.TabIndex = 4;
+            this.writeFullContentsButton.Size = new System.Drawing.Size(216, 25);
+            this.writeFullContentsButton.TabIndex = 8;
             this.writeFullContentsButton.Text = "Write &Full Contents";
             this.writeFullContentsButton.UseVisualStyleBackColor = true;
+            this.writeFullContentsButton.Visible = false;
             this.writeFullContentsButton.Click += new System.EventHandler(this.writeFullContentsButton_Click);
             // 
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelButton.Location = new System.Drawing.Point(5, 276);
+            this.cancelButton.Location = new System.Drawing.Point(4, 349);
             this.cancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(214, 25);
-            this.cancelButton.TabIndex = 6;
+            this.cancelButton.Size = new System.Drawing.Size(216, 25);
+            this.cancelButton.TabIndex = 10;
             this.cancelButton.Text = "&Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
             this.cancelButton.Click += new System.EventHandler(this.CancelButton_Click);
             // 
             // writeCalibrationButton
             // 
-            this.writeCalibrationButton.Location = new System.Drawing.Point(5, 107);
+            this.writeCalibrationButton.Location = new System.Drawing.Point(4, 165);
             this.writeCalibrationButton.Margin = new System.Windows.Forms.Padding(2);
             this.writeCalibrationButton.Name = "writeCalibrationButton";
-            this.writeCalibrationButton.Size = new System.Drawing.Size(214, 25);
-            this.writeCalibrationButton.TabIndex = 3;
+            this.writeCalibrationButton.Size = new System.Drawing.Size(216, 25);
+            this.writeCalibrationButton.TabIndex = 5;
             this.writeCalibrationButton.Text = "&Write Calibration";
             this.writeCalibrationButton.UseVisualStyleBackColor = true;
             this.writeCalibrationButton.Click += new System.EventHandler(this.writeCalibrationButton_Click);
             // 
             // readFullContentsButton
             // 
-            this.readFullContentsButton.Location = new System.Drawing.Point(5, 48);
+            this.readFullContentsButton.Location = new System.Drawing.Point(4, 48);
             this.readFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
             this.readFullContentsButton.Name = "readFullContentsButton";
-            this.readFullContentsButton.Size = new System.Drawing.Size(214, 25);
+            this.readFullContentsButton.Size = new System.Drawing.Size(216, 25);
             this.readFullContentsButton.TabIndex = 1;
             this.readFullContentsButton.Text = "&Read Full Contents";
             this.readFullContentsButton.UseVisualStyleBackColor = true;
@@ -184,10 +237,10 @@
             // 
             // modifyVinButton
             // 
-            this.modifyVinButton.Location = new System.Drawing.Point(5, 78);
+            this.modifyVinButton.Location = new System.Drawing.Point(4, 78);
             this.modifyVinButton.Margin = new System.Windows.Forms.Padding(2);
             this.modifyVinButton.Name = "modifyVinButton";
-            this.modifyVinButton.Size = new System.Drawing.Size(214, 25);
+            this.modifyVinButton.Size = new System.Drawing.Size(216, 25);
             this.modifyVinButton.TabIndex = 2;
             this.modifyVinButton.Text = "Modify &VIN";
             this.modifyVinButton.UseVisualStyleBackColor = true;
@@ -195,10 +248,10 @@
             // 
             // readPropertiesButton
             // 
-            this.readPropertiesButton.Location = new System.Drawing.Point(5, 18);
+            this.readPropertiesButton.Location = new System.Drawing.Point(4, 18);
             this.readPropertiesButton.Margin = new System.Windows.Forms.Padding(2);
             this.readPropertiesButton.Name = "readPropertiesButton";
-            this.readPropertiesButton.Size = new System.Drawing.Size(214, 25);
+            this.readPropertiesButton.Size = new System.Drawing.Size(216, 25);
             this.readPropertiesButton.TabIndex = 0;
             this.readPropertiesButton.Text = "Read &Properties";
             this.readPropertiesButton.UseVisualStyleBackColor = true;
@@ -216,8 +269,8 @@
             this.tabs.Margin = new System.Windows.Forms.Padding(2);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(577, 539);
-            this.tabs.TabIndex = 3;
+            this.tabs.Size = new System.Drawing.Size(538, 525);
+            this.tabs.TabIndex = 2;
             // 
             // resultsTab
             // 
@@ -226,7 +279,7 @@
             this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
             this.resultsTab.Name = "resultsTab";
             this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
-            this.resultsTab.Size = new System.Drawing.Size(569, 513);
+            this.resultsTab.Size = new System.Drawing.Size(530, 499);
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
@@ -242,7 +295,7 @@
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.userLog.Size = new System.Drawing.Size(563, 504);
+            this.userLog.Size = new System.Drawing.Size(524, 490);
             this.userLog.TabIndex = 0;
             // 
             // helpTab
@@ -251,7 +304,7 @@
             this.helpTab.Location = new System.Drawing.Point(4, 22);
             this.helpTab.Margin = new System.Windows.Forms.Padding(2);
             this.helpTab.Name = "helpTab";
-            this.helpTab.Size = new System.Drawing.Size(569, 513);
+            this.helpTab.Size = new System.Drawing.Size(530, 499);
             this.helpTab.TabIndex = 2;
             this.helpTab.Text = "Help";
             this.helpTab.UseVisualStyleBackColor = true;
@@ -263,7 +316,7 @@
             this.helpWebBrowser.Margin = new System.Windows.Forms.Padding(2);
             this.helpWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
             this.helpWebBrowser.Name = "helpWebBrowser";
-            this.helpWebBrowser.Size = new System.Drawing.Size(569, 513);
+            this.helpWebBrowser.Size = new System.Drawing.Size(530, 499);
             this.helpWebBrowser.TabIndex = 0;
             // 
             // debugTab
@@ -273,7 +326,7 @@
             this.debugTab.Margin = new System.Windows.Forms.Padding(2);
             this.debugTab.Name = "debugTab";
             this.debugTab.Padding = new System.Windows.Forms.Padding(2);
-            this.debugTab.Size = new System.Drawing.Size(569, 513);
+            this.debugTab.Size = new System.Drawing.Size(530, 499);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -287,40 +340,27 @@
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.debugLog.Size = new System.Drawing.Size(565, 509);
+            this.debugLog.Size = new System.Drawing.Size(526, 495);
             this.debugLog.TabIndex = 0;
-            // 
-            // startServerButton
-            // 
-            this.startServerButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.startServerButton.Location = new System.Drawing.Point(14, 520);
-            this.startServerButton.Margin = new System.Windows.Forms.Padding(2);
-            this.startServerButton.Name = "startServerButton";
-            this.startServerButton.Size = new System.Drawing.Size(214, 25);
-            this.startServerButton.TabIndex = 2;
-            this.startServerButton.Text = "Enter &HTTP Server Mode";
-            this.startServerButton.UseVisualStyleBackColor = true;
-            this.startServerButton.Visible = false;
-            this.startServerButton.Click += new System.EventHandler(this.startServerButton_Click);
             // 
             // releasedUnder
             // 
             this.releasedUnder.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedUnder.AutoSize = true;
-            this.releasedUnder.Location = new System.Drawing.Point(6, 558);
+            this.releasedUnder.Location = new System.Drawing.Point(6, 544);
             this.releasedUnder.Name = "releasedUnder";
             this.releasedUnder.Size = new System.Drawing.Size(166, 13);
-            this.releasedUnder.TabIndex = 4;
+            this.releasedUnder.TabIndex = 3;
             this.releasedUnder.Text = "Released under GPLv3 license at";
             // 
             // releasedAt
             // 
             this.releasedAt.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedAt.AutoSize = true;
-            this.releasedAt.Location = new System.Drawing.Point(169, 558);
+            this.releasedAt.Location = new System.Drawing.Point(169, 544);
             this.releasedAt.Name = "releasedAt";
             this.releasedAt.Size = new System.Drawing.Size(216, 13);
-            this.releasedAt.TabIndex = 5;
+            this.releasedAt.TabIndex = 4;
             this.releasedAt.TabStop = true;
             this.releasedAt.Text = "https://github.com/LegacyNsfw/PcmHacks";
             // 
@@ -328,20 +368,20 @@
             // 
             this.releasedByAntus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedByAntus.AutoSize = true;
-            this.releasedByAntus.Location = new System.Drawing.Point(382, 558);
+            this.releasedByAntus.Location = new System.Drawing.Point(382, 544);
             this.releasedByAntus.Name = "releasedByAntus";
             this.releasedByAntus.Size = new System.Drawing.Size(62, 13);
-            this.releasedByAntus.TabIndex = 6;
+            this.releasedByAntus.TabIndex = 5;
             this.releasedByAntus.Text = "By antus @";
             // 
             // releasedAtPcmHacking
             // 
             this.releasedAtPcmHacking.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedAtPcmHacking.AutoSize = true;
-            this.releasedAtPcmHacking.Location = new System.Drawing.Point(444, 558);
+            this.releasedAtPcmHacking.Location = new System.Drawing.Point(444, 544);
             this.releasedAtPcmHacking.Name = "releasedAtPcmHacking";
             this.releasedAtPcmHacking.Size = new System.Drawing.Size(83, 13);
-            this.releasedAtPcmHacking.TabIndex = 7;
+            this.releasedAtPcmHacking.TabIndex = 6;
             this.releasedAtPcmHacking.TabStop = true;
             this.releasedAtPcmHacking.Text = "pcmhacking.net";
             // 
@@ -349,23 +389,23 @@
             // 
             this.releasedEtc.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.releasedEtc.AutoSize = true;
-            this.releasedEtc.Location = new System.Drawing.Point(523, 558);
+            this.releasedEtc.Location = new System.Drawing.Point(523, 544);
             this.releasedEtc.Name = "releasedEtc";
             this.releasedEtc.Size = new System.Drawing.Size(237, 13);
-            this.releasedEtc.TabIndex = 8;
+            this.releasedEtc.TabIndex = 7;
             this.releasedEtc.Text = "and NSFW. J2534 support by Envyous Customs.";
             // 
             // MainForm
             // 
+            this.AcceptButton = this.readPropertiesButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(823, 575);
+            this.ClientSize = new System.Drawing.Size(784, 561);
             this.Controls.Add(this.releasedEtc);
             this.Controls.Add(this.releasedAtPcmHacking);
             this.Controls.Add(this.releasedByAntus);
             this.Controls.Add(this.releasedAt);
             this.Controls.Add(this.releasedUnder);
-            this.Controls.Add(this.startServerButton);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.operationsBox);
             this.Controls.Add(this.interfaceBox);
@@ -401,7 +441,6 @@
         private System.Windows.Forms.TabPage debugTab;
         private System.Windows.Forms.TextBox debugLog;
         private System.Windows.Forms.Button reinitializeButton;
-        private System.Windows.Forms.Button startServerButton;
         private System.Windows.Forms.Button selectButton;
         private System.Windows.Forms.Label deviceDescription;
         private System.Windows.Forms.Label releasedUnder;
@@ -412,8 +451,12 @@
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.TabPage helpTab;
         private System.Windows.Forms.WebBrowser helpWebBrowser;
-        private System.Windows.Forms.Button testKernelButton;
+        private System.Windows.Forms.Button exitKernelButton;
         private System.Windows.Forms.Button writeFullContentsButton;
+        private System.Windows.Forms.Button writeOsAndCalibration;
+        private System.Windows.Forms.Button testWriteButton;
+        private System.Windows.Forms.Button quickComparisonButton;
+        private System.Windows.Forms.Button writeParametersButton;
     }
 }
 

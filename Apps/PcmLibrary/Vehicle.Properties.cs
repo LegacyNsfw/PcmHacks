@@ -115,7 +115,8 @@ namespace PcmHacking
 
             var query = this.CreateQuery(
                 this.messageFactory.CreateBCCRequest,
-                this.messageParser.ParseBCCresponse);
+                this.messageParser.ParseBCCresponse, 
+                CancellationToken.None);
 
             return await query.Execute();
         }
@@ -129,7 +130,8 @@ namespace PcmHacking
 
             var query = this.CreateQuery(
                 this.messageFactory.CreateMECRequest,
-                this.messageParser.ParseMECresponse);
+                this.messageParser.ParseMECresponse,
+                CancellationToken.None);
 
             return await query.Execute();
         }
@@ -174,9 +176,10 @@ namespace PcmHacking
         /// Query the PCM's operating system ID.
         /// </summary>
         /// <returns></returns>
-        public async Task<Response<UInt32>> QueryOperatingSystemId()
+        public async Task<Response<UInt32>> QueryOperatingSystemId(CancellationToken cancellationToken)
         {
-            return await this.QueryUnsignedValue(this.messageFactory.CreateOperatingSystemIdReadRequest);
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+            return await this.QueryUnsignedValue(this.messageFactory.CreateOperatingSystemIdReadRequest, cancellationToken);
         }
 
         /// <summary>
@@ -188,7 +191,7 @@ namespace PcmHacking
         /// <returns></returns>
         public async Task<Response<UInt32>> QueryHardwareId()
         {
-            return await this.QueryUnsignedValue(this.messageFactory.CreateHardwareIdReadRequest);
+            return await this.QueryUnsignedValue(this.messageFactory.CreateHardwareIdReadRequest, CancellationToken.None);
         }
 
         /// <summary>
@@ -204,26 +207,27 @@ namespace PcmHacking
 
             var query = this.CreateQuery(
                 this.messageFactory.CreateCalibrationIdReadRequest,
-                this.messageParser.ParseBlockUInt32);
+                this.messageParser.ParseBlockUInt32,
+                CancellationToken.None);
             return await query.Execute();
         }
 
         /// <summary>
         /// Helper function to create Query objects.
         /// </summary>
-        private Query<T> CreateQuery<T>(Func<Message> generator, Func<Message, Response<T>> filter)
+        private Query<T> CreateQuery<T>(Func<Message> generator, Func<Message, Response<T>> filter, CancellationToken cancellationToken)
         {
-            return new Query<T>(this.device, generator, filter, this.logger);
+            return new Query<T>(this.device, generator, filter, this.logger, cancellationToken);
         }
 
         /// <summary>
         /// Helper function for queries that return unsigned 32-bit integers.
         /// </summary>
-        private async Task<Response<UInt32>> QueryUnsignedValue(Func<Message> generator)
+        private async Task<Response<UInt32>> QueryUnsignedValue(Func<Message> generator, CancellationToken cancellationToken)
         {
             await this.device.SetTimeout(TimeoutScenario.ReadProperty);
 
-            var query = this.CreateQuery(generator, this.messageParser.ParseBlockUInt32);
+            var query = this.CreateQuery(generator, this.messageParser.ParseBlockUInt32, cancellationToken);
             return await query.Execute();
         }
     }

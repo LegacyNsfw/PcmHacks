@@ -239,6 +239,12 @@ namespace PcmHacking
                 return true;
             }
 
+            // We sent successfully, but the PCM didn't reply immediately.
+            if (rawResponse == "NO DATA")
+            {
+                return true;
+            }
+
             string[] segments = rawResponse.Split('<');
             foreach (string segment in segments)
             {

@@ -51,7 +51,7 @@ namespace VpwDecoder
                 case 1:
                     inputFile = args[0];
                     return true;
-                    
+
                 default:
                     inputFile = null;
                     return false;
@@ -61,27 +61,67 @@ namespace VpwDecoder
         private static void DecodeFromSerial(string portName)
         {
             SerialPort port = new SerialPort(portName, 115200, Parity.None, 8, StopBits.One);
+            port.NewLine = "\r";
             port.Open();
+            SendCommand(port, "AT Z"); // reset
             SendCommand(port, "AT AL");
-            SendCommand(port, "AT SP2");
-            SendCommand(port, "AT AR");
-            SendCommand(port, "AT ST 20");
-            SendCommand(port, "AT MA");
+            SendCommand(port, "AT SP2"); // set protocol to VPW
+            SendCommand(port, "AT AR"); 
+            SendCommand(port, "AT ST 20"); // timeout
+            SendCommand(port, "AT H 1"); // show headers
+            SendCommand(port, "AT S 0"); // no spaces
+            SendCommand(port, "AT MA"); // start monitoring
+
             string line = string.Empty;
+            DateTime lastMessage = DateTime.Now;
             while (line != null)
             {
                 line = port.ReadLine();
-                Console.WriteLine(line ?? string.Empty);
+                UInt32 elapsed = (UInt32) DateTime.Now.Subtract(lastMessage).TotalMilliseconds;
+                lastMessage = DateTime.Now;
+
+                if (line == null)
+                {
+                    break;
+                }
+
+                if ((line == "BUFFER FULL") || (line == "OUT OF MEMORY"))
+                {
+                    SendCommand(port, "AT MA", false);
+                }
+
+                line = line.Trim();
+                if (line.Length == 0)
+                {
+                    continue;
+                }
+
+                line = Program.Decode(line);
+                Console.WriteLine(string.Format("{0:D4} {1}", elapsed, line));
+
+/*                while (Console.KeyAvailable)
+                {
+                    Console.ReadKey();
+                    Console.WriteLine("Key pressed. Re-opening port.");
+                    port.Close();
+                    port.NewLine = "\r";
+                    port.Open();
+                }
+*/
             }
         }
 
-        private static void SendCommand(SerialPort port, string message)
+        private static void SendCommand(SerialPort port, string message, bool show = true)
         {
             Console.WriteLine(message);
             byte[] buffer = Encoding.ASCII.GetBytes(message + "\r\n");
             port.Write(buffer, 0, buffer.Length);
             string response = ReadElmLine(port);
-            Console.WriteLine(response);
+
+            if (show)
+            {
+                Console.WriteLine(response);
+            }
         }
 
         /// <summary>
@@ -157,8 +197,6 @@ namespace VpwDecoder
                 int lineNumber = 0;
                 string line;
 
-                Parser parser = new Parser(fileName, 1);
-
                 while (true)
                 {
                     lineNumber++;
@@ -174,40 +212,8 @@ namespace VpwDecoder
                         continue;
                     }
 
-                    string[] hexStrings = line.Split(whitespace);
-                    for (int index = 0; index < hexStrings.Length; index++)
-                    {
-                        string hex = hexStrings[index];
-                        if (hex.Length != 2)
-                        {
-                            Console.WriteLine("Line {0} byte size syntax error: {1}", lineNumber, line);
-                            continue;
-                        }
-
-                        int value = GetByte(hex[0], hex[1]);
-                        if (value < 0)
-                        {
-                            Console.WriteLine("Line {0} byte value sytax error: {1}", lineNumber, line);
-                            continue;
-                        }
-
-                        if (index == hexStrings.Length - 1)
-                        {
-                            if (parser.CheckCrc((byte)value))
-                            {
-                                parser.Dispose();
-                                parser = new Parser(fileName, lineNumber);
-                            }
-                            else
-                            {
-                                parser.ToString();
-                            }
-                        }
-                        else
-                        {
-                            parser.Push(hex, (byte)value);
-                        }
-                    }
+                    line = Decode(line);
+                    Console.WriteLine(line);
                 }
 
                 Console.WriteLine("End of input file.");
@@ -218,7 +224,7 @@ namespace VpwDecoder
         {
             return (GetHex(c1) << 4) + GetHex(c2);
         }
-        
+
         private static int GetHex(char newCharacter)
         {
             if (newCharacter >= '0' && (newCharacter <= '9'))
@@ -238,6 +244,241 @@ namespace VpwDecoder
 
             return -1;
         }
+
+        private static string Decode(string line)
+        {
+            if (!IsHex(line))
+            {
+                return line;
+            }
+
+            // This will be incremented before it gets used.
+            int position = -1;
+
+            byte priorityByte = 0;
+
+            byte sourceByte = 0;
+            string source = "";
+
+            byte targetByte = 0;
+            string target = "";
+
+            byte modeByte = 0;
+            string mode = "";
+
+            byte submodeByte = 0;
+            bool haveSubmode = false;
+
+            int length = 0;
+            int address = 0;
+
+            List<byte> rawData = new List<byte>();
+            List<byte> payload = new List<byte>();
+
+            StringBuilder rawBuilder = new StringBuilder();
+            StringBuilder tailBuilder = new StringBuilder();
+            StringBuilder descriptionBuilder = new StringBuilder();
+    
+            byte b = 0;
+            for (int index = 0; index < line.Length; index++)
+            {
+                char c = line[index];
+                if (index % 2 == 0)
+                {
+                    b = CharToValue(c);
+                    continue;
+                }
+                else
+                {
+                    b <<= 4;
+                    b |= CharToValue(c);
+                }
+
+                position++;
+                
+                if (position < 12)
+                {
+                    rawBuilder.Append(b.ToString("X02"));
+                }
+                else if (position == 12)
+                {
+                    rawBuilder.Append("...");
+                    tailBuilder.Append("  ...");
+                    tailBuilder.Append(b.ToString("X02"));
+                }
+                else
+                {
+                    tailBuilder.Append(b.ToString("X02"));
+                }
+
+                // Skip the last character, it's just the checksum
+                if (position >= ((line.Length / 2) - 1))
+                {
+                    if (!haveSubmode)
+                    {
+                        mode = Data.DecodeMode(priorityByte, modeByte, submodeByte, haveSubmode);
+                        descriptionBuilder.Append(mode);
+                    }
+
+                    continue;
+                }
+
+                switch (position)
+                {
+                    case 0:
+                        priorityByte = b;
+                        descriptionBuilder.Append(b.ToString("X2"));
+                        descriptionBuilder.Append(" ");
+                        descriptionBuilder.Append(Data.DecodePriority(b));
+                        descriptionBuilder.Append(", ");
+                        break;
+
+                    case 1:
+                        targetByte = b;
+                        target = Data.DecodeDevice(b);
+                        break;
+
+                    case 2:
+                        sourceByte = b;
+                        source = Data.DecodeDevice(b);
+                        string route = string.Format("{0:X2} {1,-20} --> {2:X2} {3,-20}  ", sourceByte, source, targetByte, target);
+                        descriptionBuilder.Append(route);
+                        break;
+
+                    case 3:
+                        modeByte = b;
+                        break;
+
+                    case 4:
+                        submodeByte = b;
+                        haveSubmode = true;
+                        mode = Data.DecodeMode(priorityByte, modeByte, submodeByte, haveSubmode);
+                        descriptionBuilder.Append(string.Format("{0,-22}", mode));
+                        break;
+
+                    case 5:
+                        if (MessageContainsAddressAndLength(modeByte, submodeByte))
+                        {
+                            length = b << 8;
+                        }
+                        else
+                        {
+                            payload.Add(b);
+                        }
+                        break;
+
+                    case 6:
+                        if (MessageContainsAddressAndLength(modeByte, submodeByte))
+                        {
+                            length |= b;
+                            descriptionBuilder.Append(string.Format("  Length: {0:X4} ({0}), ", length, length));
+                        }
+                        else
+                        {
+                            payload.Add(b);
+                        }
+                        break;
+
+                    case 7:
+                        if (MessageContainsAddressAndLength(modeByte, submodeByte))
+                        {
+                            address = b << 16;
+                        }
+                        else
+                        {
+                            payload.Add(b);
+                        }
+                        break;
+
+                    case 8:
+                        if (MessageContainsAddressAndLength(modeByte, submodeByte))
+                        {
+                            address |= b << 8;
+                        }
+                        else
+                        {
+                            payload.Add(b);
+                        }
+                        break;
+
+                    case 9:
+                        if (MessageContainsAddressAndLength(modeByte, submodeByte))
+                        {
+                            address |= b;
+                            descriptionBuilder.Append(string.Format("Address: {0:X06}", address));
+                        }
+                        else
+                        {
+                            payload.Add(b);
+                        }
+                        break;
+
+                    default:
+                        payload.Add(b);
+                        break;
+                }
+            }
+
+            return string.Format("{0,-30} {1} {2}", rawBuilder.ToString(), descriptionBuilder.ToString(), tailBuilder.ToString());
+        }
+
+        private static bool MessageContainsAddressAndLength(byte mode, byte submode)
+        {
+            switch(mode)
+            {
+                case 0x34:
+                    return true;
+
+                case 0x36:
+                    return true;
+            }
+
+            return false;
+        }
+        
+        private static byte CharToValue(char c)
+        {
+            if (c >= '0' && c <= '9')
+            {
+                return (byte)(c - '0');
+            }
+
+            if (c >= 'a' && c <= 'f')
+            {
+                return (byte)((c - 'a') + 10);
+            }
+
+            if (c >= 'A' && c <= 'F')
+            {
+                return (byte)((c - 'A') + 10);
+            }
+
+            throw new InvalidDataException("Can't convert '" + c + "' to hex.");
+        }
+
+        private static bool IsHex(string line)
+        {
+            foreach (char c in line)
+            {
+                if (char.IsNumber(c))
+                {
+                    continue;
+                }
+
+                if (c >= 'a' && c <= 'f')
+                {
+                    continue;
+                }
+
+                if (c >= 'A' && c <= 'F')
+                {
+                    continue;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
     }
 }
-

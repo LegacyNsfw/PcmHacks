@@ -22,6 +22,16 @@ namespace PcmHacking
         private byte[] message;
 
         /// <summary>
+        /// When the message was created.
+        /// </summary>
+        private ulong timestamp;
+
+        /// <summary>
+        /// Error code, if applicable.
+        /// </summary>
+        private ulong error;
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         public Message(byte[] message)
@@ -32,31 +42,29 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Message(byte[] message, ulong Timestamp, ulong Error)
+        public Message(byte[] message, ulong timestamp, ulong error)
         {
             this.message = message;
-            this._Timestamp = Timestamp;
-            this._Error = Error;
+            this.timestamp = timestamp;
+            this.error = error;
         }
 
         /// <summary>
         /// When the message was created or recevied.
         /// </summary>
-        private ulong _Timestamp;
         public ulong TimeStamp
         {
-            get { return this._Timestamp; }
-            set { this._Timestamp = value; }
+            get { return this.timestamp; }
+            set { this.timestamp = value; }
         }
 
         /// <summary>
         /// The error associated with creating or receiving this message.
         /// </summary>
-        private ulong _Error;
         public ulong Error
         {
-            get { return this.Error; }
-            set { this.Error = value; }
+            get { return this.error; }
+            set { this.error = value; }
         }
 
         /// <summary>

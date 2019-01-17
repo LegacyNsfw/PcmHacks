@@ -62,6 +62,15 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Send a tool-present message, even if not much time has passed. This is to aid in polling.
+        /// </summary>
+        /// <returns></returns>
+        public async Task ForceNotify()
+        {
+            await this.SendNotification();
+        }
+
+        /// <summary>
         /// Send a tool-present message.
         /// </summary>
         private async Task SendNotification()

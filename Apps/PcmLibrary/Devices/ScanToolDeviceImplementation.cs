@@ -32,6 +32,8 @@ namespace PcmHacking
             // adapter we'll overwrite these values, see the Initialize method below.
 
             // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
+            // The STPX approach to sending messages should work with larger buffers, but when I tried
+            // with my SX, it didn't work. That might only work with the MX (bluetooth version).
             this.MaxSendSize = 192 + 12;
 
             // The ScanTool SX will download 512kb in roughly 30 minutes at 500 bytes per read.

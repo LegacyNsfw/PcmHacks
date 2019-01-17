@@ -119,16 +119,21 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> IsInRecoveryMode()
         {
-            await this.TrySendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x62 }), "recovery query");
-            Message response = await this.device.ReceiveMessage();
-            if (response == null)
+            this.device.ClearMessageQueue();
+
+            for (int iterations = 0; iterations < 10; iterations++)
             {
-                return false;
-            }
-            
-            if (this.messageParser.ParseRecoveryModeBroadcast(response).Value == true)
-            {
-                return true;
+                await this.TrySendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x62 }), "recovery query", 2);
+                Message response = await this.device.ReceiveMessage();
+                if (response == null)
+                {
+                    continue;
+                }
+
+                if (this.messageParser.ParseRecoveryModeBroadcast(response).Value == true)
+                {
+                    return true;
+                }
             }
 
             return false;
@@ -248,12 +253,17 @@ namespace PcmHacking
         /// <summary>
         /// Wait for an incoming message.
         /// </summary>
-        private async Task<Message> ReceiveMessage()
+        private async Task<Message> ReceiveMessage(CancellationToken cancellationToken)
         {
             Message response = null;
 
-            for (int pause = 0; pause < 10; pause++)
+            for (int pause = 0; pause < 3; pause++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return null;
+                }
+
                 response = await this.device.ReceiveMessage();
                 if (response == null)
                 {
@@ -271,10 +281,15 @@ namespace PcmHacking
         /// <summary>
         /// Read messages from the device, ignoring irrelevant messages.
         /// </summary>
-        private async Task<bool> WaitForSuccess(Func<Message, Response<bool>> filter, int attempts = MaxReceiveAttempts)
+        private async Task<bool> WaitForSuccess(Func<Message, Response<bool>> filter, CancellationToken cancellationToken, int attempts = MaxReceiveAttempts)
         {
             for(int attempt = 1; attempt<=attempts; attempt++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 Message message = await this.device.ReceiveMessage();
                 if(message == null)
                 {

@@ -23,28 +23,28 @@ http://gnutoolchains.com/m68k-elf/
 
 --
 
-It might be possible to get gcc for m68k for Linux using the instructions
-below, but I haven't tried that approach. They're from here:
-http://daveho.github.io/2012/10/26/m68k-elf-cross-compiler.html
+The gcc toolchain for linux can be built on most linux distros with https://github.com/haarer/toolchain68k
 
-set -e
-export M68KPREFIX=/home/dhovemey/linux/m68k-elf
-export PATH=$M68KPREFIX/bin:$PATH
-mkdir crossgcc
-wget http://ftp.gnu.org/gnu/binutils/binutils-2.23.tar.gz
-gunzip -c binutils-2.23.tar.gz | tar xvf -
-wget http://ftp.gnu.org/gnu/gcc/gcc-4.4.2/gcc-core-4.4.2.tar.bz2
-bunzip2 -c gcc-core-4.4.2.tar.bz2 | tar xvf -
-mkdir build
-cd build
-mkdir binutils
-mkdir gcc
-cd binutils
-../../binutils-2.23/configure --target=m68k-unknown-elf --prefix=$M68KPREFIX
-make -j 3
-make install
-cd ../gcc
-../../gcc-4.4.2/configure --target=m68k-unknown-elf --disable-libssp \
-  --prefix=$M68KPREFIX
-make -j 3
-make install
+You will need to comment out avr in the build scripts then uncomment m68k-elf
+
+If you do not use the default install location update the makefile prefix to point to the new location
+
+$ cd Kernels
+$ make clean
+rm -f *.bin *.o *.elf *.asm
+$ make
+/opt/crosschain/bin/m68k-elf-gcc -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 micro-kernel.c -o micro-kernel.o
+/opt/crosschain/bin/m68k-elf-gcc -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 main.c -o main.o
+/opt/crosschain/bin/m68k-elf-gcc -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 common.c -o common.o
+/opt/crosschain/bin/m68k-elf-ld  -T micro-kernel.ld main.o micro-kernel.o -o micro-kernel.elf
+/opt/crosschain/bin/m68k-elf-objcopy -O binary --only-section=.kernel_code --only-section=.rodata micro-kernel.elf micro-kernel.bin
+/opt/crosschain/bin/m68k-elf-gcc -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 read-kernel.c -o read-kernel.o
+/opt/crosschain/bin/m68k-elf-ld  -T read-kernel.ld main.o read-kernel.o -o read-kernel.elf
+/opt/crosschain/bin/m68k-elf-objcopy -O binary --only-section=.kernel_ram read-kernel.elf read-kernel.bin
+
+$ ls -l *.bin *.elf
+-rwxr-xr-x. 1 antus antus   810 Dec  8 15:34 micro-kernel.bin
+-rwxr-xr-x. 1 antus antus 17508 Dec  8 15:34 micro-kernel.elf
+-rwxr-xr-x. 1 antus antus   889 Dec  8 15:34 read-kernel.bin
+-rwxr-xr-x. 1 antus antus  9576 Dec  8 15:34 read-kernel.elf
+

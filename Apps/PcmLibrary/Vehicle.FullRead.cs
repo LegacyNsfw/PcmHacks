@@ -41,7 +41,7 @@ namespace PcmHacking
                 await toolPresentNotifier.Notify();
 
                 // execute read kernel
-                Response<byte[]> response = await LoadKernelFromFile("kernel.bin");
+                Response<byte[]> response = await LoadKernelFromFile("read-kernel.bin");
                 if (response.Status != ResponseStatus.Success)
                 {
                     logger.AddUserMessage("Failed to load kernel from file.");
@@ -56,7 +56,8 @@ namespace PcmHacking
                 await toolPresentNotifier.Notify();
 
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
-                if (!await PCMExecute(response.Value, 0xFF9150, cancellationToken))
+                // TODO: choose kernel at run time? Because now it's FF8000...
+                if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -83,7 +84,8 @@ namespace PcmHacking
                         return Response.Create(ResponseStatus.Cancelled, (Stream)null);
                     }
 
-                    await toolPresentNotifier.Notify();
+                    // The read kernel needs a short message here for reasons unknown. Without it, it will RX 2 messages then drop one.
+                    await toolPresentNotifier.ForceNotify();
 
                     if (startAddress + blockSize > endAddress)
                     {
@@ -96,7 +98,7 @@ namespace PcmHacking
                         break;
                     }
                     
-                    if (!await TryReadBlock(image, blockSize, startAddress))
+                    if (!await TryReadBlock(image, blockSize, startAddress, cancellationToken))
                     {
                         this.logger.AddUserMessage(
                             string.Format(
@@ -130,61 +132,32 @@ namespace PcmHacking
         /// <summary>
         /// Try to read a block of PCM memory.
         /// </summary>
-        private async Task<bool> TryReadBlock(byte[] image, int length, int startAddress)
+        private async Task<bool> TryReadBlock(byte[] image, int length, int startAddress, CancellationToken cancellationToken)
         {
-            this.logger.AddDebugMessage(string.Format("Reading from {0}, length {1}", startAddress, length));
-            
-            for(int sendAttempt = 1; sendAttempt <= MaxSendAttempts; sendAttempt++)
+            this.logger.AddDebugMessage(string.Format("Reading from {0} / 0x{0:X}, length {1} / 0x{1:X}", startAddress, length));
+
+            for (int sendAttempt = 1; sendAttempt <= MaxSendAttempts; sendAttempt++)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 Message message = this.messageFactory.CreateReadRequest(startAddress, length);
 
-                //this.logger.AddDebugMessage("Sending " + message.GetBytes().ToHex());
                 if (!await this.device.SendMessage(message))
                 {
                     this.logger.AddDebugMessage("Unable to send read request.");
                     continue;
                 }
-
-                bool sendAgain = false;
+                
                 for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
                 {
-                    Message response = await this.ReceiveMessage();
-                    if (response == null)
+                    if (cancellationToken.IsCancellationRequested)
                     {
-                        this.logger.AddDebugMessage("Did not receive a response to the read request.");
-                        sendAgain = true;
                         break;
                     }
 
-                    this.logger.AddDebugMessage("Processing message");
-
-                    Response<bool> readResponse = this.messageParser.ParseReadResponse(response);
-                    if (readResponse.Status != ResponseStatus.Success)
-                    {
-                        this.logger.AddDebugMessage("Not a read response.");
-                        continue;
-                    }
-
-                    if (!readResponse.Value)
-                    {
-                        this.logger.AddDebugMessage("Read request failed.");
-                        sendAgain = true;
-                        break;
-                    }
-
-                    // We got a successful read response, so now wait for the payload.
-                    sendAgain = false;
-                    break;
-                }
-
-                if (sendAgain)
-                {
-                    continue;
-                }
-
-                this.logger.AddDebugMessage("Read request allowed, expecting for payload...");
-                for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
-                {   
                     Message payloadMessage = await this.device.ReceiveMessage();
                     if (payloadMessage == null)
                     {

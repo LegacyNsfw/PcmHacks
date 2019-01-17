@@ -11,6 +11,7 @@ namespace PcmHacking
     {
         Undefined = 0,
         ReadProperty,
+        ReadCrc,
         SendKernel,
         ReadMemoryBlock,
         Maximum,
@@ -46,6 +47,8 @@ namespace PcmHacking
     /// </summary>
     public abstract class Device : IDisposable
     {
+        private int maxSendSize;
+
         /// <summary>
         /// Provides access to the Results and Debug panes.
         /// </summary>
@@ -54,7 +57,23 @@ namespace PcmHacking
         /// <summary>
         /// Maximum size of sent messages.
         /// </summary>
-        public int MaxSendSize { get; protected set; }
+        /// <remarks>
+        /// Max send size is currently limited to 2k, because the kernel
+        /// crashes at startup with a 4k buffer.
+        /// TODO: Make the kernel happy with a 4k buffer, remove this limit.
+        /// </remarks>
+        public int MaxSendSize
+        {
+            get
+            {
+                return Math.Min(2048, this.maxSendSize);
+            }
+
+            protected set
+            {
+                this.maxSendSize = value;
+            }
+        }
 
         /// <summary>
         /// Maximum size of received messages.
@@ -128,7 +147,7 @@ namespace PcmHacking
         public abstract Task<bool> SendMessage(Message message);
 
         /// <summary>
-        /// Removes any messages that might be waiting in the incoming-message queue.
+        /// Removes any messages that might be waiting in the incoming-message queue. Also clears the buffer.
         /// </summary>
         public void ClearMessageQueue()
         {
@@ -224,6 +243,13 @@ namespace PcmHacking
                     packetSize = 50;
                     break;
 
+                case TimeoutScenario.ReadCrc:
+                    // These packets are actually only 15 bytes, but the ReadProperty timeout wasn't
+                    // enough for the AllPro at 4x. Still not sure why. So this is a bit of a hack.
+                    // TODO: Figure out why the AllPro needs a hack to receive CRC values at 4x.
+                    packetSize = 1000;
+                    break;
+
                 case TimeoutScenario.ReadMemoryBlock:
                     // Adding 20 bytes to account for the 'read request accepted' 
                     // message that comes before the read payload.
@@ -231,7 +257,7 @@ namespace PcmHacking
 
                     // Not sure why this is necessary, but AllPro 2k reads won't work without it.
                     //packetSize = (int) (packetSize * 1.1);
-                    packetSize = (int) (packetSize * 2.2);
+                    packetSize = (int) (packetSize * 2.5);
                     break;
 
                 case TimeoutScenario.SendKernel:
