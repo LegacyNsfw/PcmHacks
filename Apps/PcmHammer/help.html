@@ -24,9 +24,11 @@
     <P id="readfirst"><h3>Read This First</h3>
     <P>This software is very new, and was written by a few guys in their free time. While it has worked well for us, we can't promise that it has the reliability and trustworthiness that you would expect from a commercial product. If you require foolproof commercial-quality tools, this software is not for you. But we do hope that this will reach that point eventually.
 
-    <p>For several seconds after you turn the key, the PCM will be busy booting. Most operations will fail during that period. This is why the app asks you to wait before proceeding with complex operations. If you skip that waiting period, you won't do any lasting damage, but you will probably need to pull the PCM's fuse for a few seconds to reset it.
+    <p>For several seconds after you turn the key, the PCM will be busy booting. Most operations will fail during that period. This is why the app asks you to wait before proceeding with complex operations. If you skip that waiting period, you won't do any lasting damage, but whatever you're trying to do might not work, and you might need to pull the PCM's fuse for a few seconds to reset it.
 
     <p>Many of the app's operations will require transferring custom software (a "kernel") to the PCM. While that software is running on the PCM, normal PCM functions are suspended, so you will see and hear a variety of error messages and chimes. This is normal. After the app is done, the PCM will reboot and will work normally again.
+
+    <p>If you have a drive-by-wire throttle, you will probably find that the Check Engine light turns on after reading or writing, and a code reader will report P1518, indicating a communication error with the Throttle Actuator Control module. This can be ignored, and it will go away after you start the engine a few times. We're looking for a way to prevent this.
 
 
         <hr />
@@ -41,14 +43,14 @@
         However this means that AllPro devices purchased before early June 2018 will need a firmware update to version 1.21 or later.
         Updating the firmware on the AllPro adapter requires the FlashMagic tool. Instructions are on the <a href="http://www.obddiag.net/">ObdDiag.Net web site.</a> and a link to the firmware can be found <a href="http://www.obddiag.net/allpro.html">here</a>.
 
-    <p><b><a href="https://www.scantool.net/obdlink-sx/">Scantool SX</a></b> - This is inexpensive and superior to ELM knock-off devices, however it does not support 4x (high speed) mode, so a full read takes a little over 20 minutes. The ObdLink MX is similar but unfortunately does not have enough memory to receive 500-byte packets of PCM data, so it is not supported. Other devices based on the Scantool OBD2 chip may or may not work, depending on their message size limits. If you find another one that works (or doesn't), please let us know.
+    <p><b><a href="https://www.scantool.net/obdlink-sx/">Scantool SX</a></b> - This is inexpensive and superior to ELM knock-off devices, however it does not support 4x (high speed) mode, so a full read takes a little over 20 minutes. The ObdLink LX and MX are similar but unfortunately does not have enough memory to receive 500-byte packets of PCM data, so they are not supported. Other devices based on the Scantool OBD2 chip may or may not work, depending on their message size limits. If you find another one that works (or doesn't), please let us know.
 
     <p><b><a href="http://www.avt-hq.com/852_hw.htm">AVT 852</a></b> - This is the most expensive option, but this was one of the first interfaces to properly support J1850 VPW high-speed mode.
 
     <p><b>Any J2534-compatible interface that supports J1850 VPW</b> - At least in theory, these should all work. There are a few of those on the market, and we cannot test them all, but if you have one, give it a try. As time goes by we'll list the ones that are proven to work. The genuine GM MDIs are one device which is known to work, though it is not cheap. Over time we hope to confirm that other, less expensive devices will also work.
 
     <p>
-        Note that ELM-based devices are not supported.
+        Note that most ELM-based devices are <i>not</i> supported, because they do not work. 
 
         <hr />
     <p id="basics"><h3>Basic Operations</h3>
@@ -81,7 +83,7 @@
 
     <p><b>Test Write</b> - This will simulate the process of updating your PCM's calibration block from a file on your computer. However, the contents of your PCM will not be changed. This is useful for verifying that quality of the connection between your computer and your PCM.
 
-    <p><b>Write Calibration</b> - This will erase and reprogram the calibration section of your PCM's flash memory. This is tuning, basically. It can take several minutes, and if this is interrupted your PCM may be unusable, so make sure your car batter and laptop batter are fully charged. Also, once the process begins, don't do anything that might interrupt it. Don't close the app, reboot the computer, spill coffee on the keyboard, etc.
+    <p><b>Write Calibration</b> - This will erase and reprogram the calibration section of your PCM's flash memory. This is tuning, basically. It can take several minutes, and if this is interrupted your PCM may be unusable, so make sure your car battery and laptop batter are fully charged. Also, once the process begins, don't do anything that might interrupt it. Don't close the app, reboot the computer, spill coffee on the keyboard, etc.
 
     <p><b>Write Parameters (Clone)</b> - This will erase and reprogram the parameter sections of your PCM's flash memory. These sections contain the VIN, serial number, stored OBD2 codes, etc. This is useful if you are replacing an old PCM with a new one from another vehicle.
 
@@ -92,7 +94,7 @@
     <P id="online"><h3>Getting Help Online</h3>
 
     <p>
-        If you have questions about the app or how to use it, please head to <a href="https://pcmhacking.net/forums/viewforum.php?f=3">this section of the pcmhacking.net forum</a> to converse with other like-minded users.
+        If you have questions about the app or how to use it, please head to <a href="https://pcmhacking.net/forums/viewforum.php?f=42">this section of the pcmhacking.net forum</a> to converse with other like-minded users.
 
         <hr />
     <p id="licensing"><h3>Licensing</h3>
