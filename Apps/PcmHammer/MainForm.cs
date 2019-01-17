@@ -29,10 +29,13 @@ namespace PcmHacking
         private const string AppName = "PCM Hammer";
 
         /// <summary>
-        /// This becomes the second half of the window caption, and is printed
-        /// when devices are initialized. 
+        /// This becomes the second half of the window caption, is printed
+        /// when devices are initialized, and is used to create links to the
+        /// help.html and start.txt files.
         /// 
         /// If null, the build timestamp will be used.
+        /// 
+        /// If not null, use a number like "004" that matches a release branch.
         /// </summary>
         private const string AppVersion = null;
 
@@ -267,6 +270,11 @@ namespace PcmHacking
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (this.currentWriteType == WriteType.None)
+            {
+                return;
+            }
+
+            if (this.currentWriteType == WriteType.TestWrite)
             {
                 return;
             }
@@ -827,6 +835,21 @@ namespace PcmHacking
         /// </summary>
         private void CancelButton_Click(object sender, EventArgs e)
         {
+            if ((this.currentWriteType != WriteType.None) && (this.currentWriteType != WriteType.TestWrite))
+            {
+                var choice = MessageBox.Show(
+                    this,
+                    "Canceling now could make your PCM unusable." + Environment.NewLine +
+                    "Are you sure you want to take that risk?",
+                    "PCM Hammer",
+                    MessageBoxButtons.YesNo);
+
+                if (choice == DialogResult.No)
+                {
+                    return;
+                }
+            }
+
             this.AddUserMessage("Cancel button clicked.");
             this.cancellationTokenSource?.Cancel();
         }
