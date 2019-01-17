@@ -29,12 +29,15 @@ namespace PcmHacking
         private const string AppName = "PCM Hammer";
 
         /// <summary>
-        /// This becomes the second half of the window caption, and is printed
-        /// when devices are initialized. 
+        /// This becomes the second half of the window caption, is printed
+        /// when devices are initialized, and is used to create links to the
+        /// help.html and start.txt files.
         /// 
         /// If null, the build timestamp will be used.
+        /// 
+        /// If not null, use a number like "004" that matches a release branch.
         /// </summary>
-        private const string AppVersion = null;
+        private const string AppVersion = "004";
 
         /// <summary>
         /// The Vehicle object is our interface to the car. It has the device, the message generator, and the message parser.
