@@ -8,7 +8,7 @@ See also:
 
 https://github.com/LegacyNsfw/PcmHacks/wiki (The wiki)
 
-https://pcmhacking.net/forums/viewforum.php?f=8 (The GM section of pcmhacking.net)
+https://pcmhacking.net/forums/viewforum.php?f=42 (The GM section of pcmhacking.net)
 
 https://www.facebook.com/PcmHammer (announcements)
 
