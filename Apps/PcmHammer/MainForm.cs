@@ -29,12 +29,15 @@ namespace PcmHacking
         private const string AppName = "PCM Hammer";
 
         /// <summary>
-        /// This becomes the second half of the window caption, and is printed
-        /// when devices are initialized. 
+        /// This becomes the second half of the window caption, is printed
+        /// when devices are initialized, and is used to create links to the
+        /// help.html and start.txt files.
         /// 
         /// If null, the build timestamp will be used.
+        /// 
+        /// If not null, use a number like "004" that matches a release branch.
         /// </summary>
-        private const string AppVersion = "Release 3";
+        private const string AppVersion = "004";
 
         /// <summary>
         /// The Vehicle object is our interface to the car. It has the device, the message generator, and the message parser.
@@ -52,6 +55,11 @@ namespace PcmHacking
         /// Long-running operations can abort when this flag changes.
         /// </summary>
         private CancellationTokenSource cancellationTokenSource;
+
+        /// <summary>
+        /// Indicates what type of write, if any, is in progress.
+        /// </summary>
+        private WriteType currentWriteType = WriteType.None;
 
         /// <summary>
         /// Initializes a new instance of the main window.
@@ -163,7 +171,8 @@ namespace PcmHacking
                 // This will be enabled during full reads (but not writes)
                 this.cancelButton.Enabled = false;
 
-                // Load the Help content asynchronously.
+                // Load the dynamic content asynchronously.
+                ThreadPool.QueueUserWorkItem(new WaitCallback(LoadStartMessage));
                 ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
 
                 await this.ResetDevice();
@@ -178,40 +187,109 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Get the URL to a file on github, using the release branch or the develop branch.
+        /// </summary>
+        private string GetFileUrl(string path)
+        {
+            string urlBase = "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/";
+            string branch = AppVersion == null ? "develop" : "Release/" + AppVersion;
+            string result = urlBase + branch + path;
+            return result;
+        }
+
+        /// <summary>
         /// The Help content is loaded after the window appears, so that it doesn't slow down app initialization.
         /// </summary>
-        private void LoadHelp(object unused)
+        private async void LoadStartMessage(object unused)
         {
-            this.helpWebBrowser.Invoke((MethodInvoker)async delegate ()
+            try
             {
-                try
-                {
-                    HttpRequestMessage request = new HttpRequestMessage(
-                        HttpMethod.Get,
-                        "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/Release/003/Apps/PcmHammer/help.html");
-                    request.Headers.Add("Cache-Control", "no-cache");
-                    HttpClient client = new HttpClient();
-                    var response = await client.SendAsync(request);
+                HttpRequestMessage request = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    GetFileUrl("/Apps/PcmHammer/start.txt"));
 
-                    if (response.StatusCode == HttpStatusCode.OK)
-                    {
-                        this.helpWebBrowser.DocumentStream = await response.Content.ReadAsStreamAsync();
-                    }
-                    else
-                    {
-                        var assembly = Assembly.GetExecutingAssembly();
-                        var resourceName = "PcmHacking.help.html";
+                request.Headers.Add("Cache-Control", "no-cache");
+                HttpClient client = new HttpClient();
+                var response = await client.SendAsync(request);
 
-                        // This will leak the stream, but it will only be invoked once.
-                        this.helpWebBrowser.DocumentStream = assembly.GetManifestResourceStream(resourceName);
-                    }
-                }
-                catch (Exception exception)
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    this.AddUserMessage("Unable to load help content: " + exception.Message);
-                    this.AddDebugMessage(exception.ToString());
+                    string message = await response.Content.ReadAsStringAsync();
+                    this.AddUserMessage(message);                    
                 }
-            });
+            }
+            catch (Exception exception)
+            {
+                this.AddDebugMessage("Unable to fetch the startup message: " + exception.Message);
+            }
+        }
+
+        /// <summary>
+        /// The Help content is loaded after the window appears, so that it doesn't slow down app initialization.
+        /// </summary>
+        private async void LoadHelp(object unused)
+        {
+            try
+            {
+                HttpRequestMessage request = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    GetFileUrl("/Apps/PcmHammer/help.html"));
+
+                request.Headers.Add("Cache-Control", "no-cache");
+                HttpClient client = new HttpClient();
+                var response = await client.SendAsync(request);
+
+                Stream stream;
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    stream = await response.Content.ReadAsStreamAsync();
+                }
+                else
+                {
+                    var assembly = Assembly.GetExecutingAssembly();
+                    var resourceName = "PcmHacking.help.html";
+                    stream = assembly.GetManifestResourceStream(resourceName);
+                }
+
+                this.helpWebBrowser.Invoke((MethodInvoker)delegate ()
+                {
+                    this.helpWebBrowser.DocumentStream = stream;
+                });
+            }
+            catch (Exception exception)
+            {
+                this.AddDebugMessage("Unable to fetch updated help content.");
+                this.AddDebugMessage("This exception can safely be ignored.");
+                this.AddDebugMessage(exception.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Discourage users from closing the app during a write.
+        /// </summary>
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (this.currentWriteType == WriteType.None)
+            {
+                return;
+            }
+
+            if (this.currentWriteType == WriteType.TestWrite)
+            {
+                return;
+            }
+
+            var choice = MessageBox.Show(
+                this,
+                "Closing PCM Hammer now could make your PCM unusable." + Environment.NewLine +
+                "Are you sure you want to take that risk?",
+                "PCM Hammer",
+                MessageBoxButtons.YesNo);
+
+            if (choice == DialogResult.No)
+            {
+                e.Cancel = true;
+            }
         }
 
         /// <summary>
@@ -314,7 +392,12 @@ namespace PcmHacking
 
             this.deviceDescription.Text = device.ToString();
 
-            this.vehicle = new Vehicle(device, new MessageFactory(), new MessageParser(), this);
+            Protocol protocol = new Protocol();
+            this.vehicle = new Vehicle(
+                device, 
+                protocol, 
+                this,
+                new ToolPresentNotifier(device, protocol, this));
             await this.InitializeCurrentDevice();
         }
 
@@ -409,47 +492,64 @@ namespace PcmHacking
                 this.AddUserMessage("VIN: " + vinResponse.Value);
 
                 var osResponse = await this.vehicle.QueryOperatingSystemId(CancellationToken.None);
-                if (osResponse.Status != ResponseStatus.Success)
+                if (osResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("OS ID: " + osResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("OS ID query failed: " + osResponse.Status.ToString());
                 }
-                this.AddUserMessage("OS ID: " + osResponse.Value.ToString());
 
                 var calResponse = await this.vehicle.QueryCalibrationId();
-                if (calResponse.Status != ResponseStatus.Success)
+                if (calResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Calibration ID: " + calResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("Calibration ID query failed: " + calResponse.Status.ToString());
                 }
-                this.AddUserMessage("Calibration ID: " + calResponse.Value.ToString());
 
                 var hardwareResponse = await this.vehicle.QueryHardwareId();
-                if (hardwareResponse.Status != ResponseStatus.Success)
+                if (hardwareResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("Hardware ID query failed: " + hardwareResponse.Status.ToString());
                 }
 
-                this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString());
-
                 var serialResponse = await this.vehicle.QuerySerial();
-                if (serialResponse.Status != ResponseStatus.Success)
+                if (serialResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Serial Number: " + serialResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("Serial Number query failed: " + serialResponse.Status.ToString());
                 }
-                this.AddUserMessage("Serial Number: " + serialResponse.Value.ToString());
 
                 var bccResponse = await this.vehicle.QueryBCC();
-                if (bccResponse.Status != ResponseStatus.Success)
+                if (bccResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Broad Cast Code: " + bccResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("BCC query failed: " + bccResponse.Status.ToString());
                 }
-                this.AddUserMessage("Broad Cast Code: " + bccResponse.Value.ToString());
 
                 var mecResponse = await this.vehicle.QueryMEC();
-                if (mecResponse.Status != ResponseStatus.Success)
+                if (mecResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("MEC: " + mecResponse.Value.ToString());
+                }
+                else
                 {
                     this.AddUserMessage("MEC query failed: " + mecResponse.Status.ToString());
                 }
-                this.AddUserMessage("MEC: " + mecResponse.Value.ToString());
             }
             catch (Exception exception)
             {
@@ -735,6 +835,21 @@ namespace PcmHacking
         /// </summary>
         private void CancelButton_Click(object sender, EventArgs e)
         {
+            if ((this.currentWriteType != WriteType.None) && (this.currentWriteType != WriteType.TestWrite))
+            {
+                var choice = MessageBox.Show(
+                    this,
+                    "Canceling now could make your PCM unusable." + Environment.NewLine +
+                    "Are you sure you want to take that risk?",
+                    "PCM Hammer",
+                    MessageBoxButtons.YesNo);
+
+                if (choice == DialogResult.No)
+                {
+                    return;
+                }
+            }
+
             this.AddUserMessage("Cancel button clicked.");
             this.cancellationTokenSource?.Cancel();
         }
@@ -881,6 +996,8 @@ namespace PcmHacking
         {
             try
             {
+                this.currentWriteType = writeType;
+
                 if (this.vehicle == null)
                 {
                     // This shouldn't be possible - it would mean the buttons 
@@ -920,27 +1037,7 @@ namespace PcmHacking
                 }
 
                 // Sanity checks. 
-                // TODO: Check OSID as well, ask user to confirm if it doesn't match.
-                if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024))
-                {
-                    this.AddUserMessage("This file is not a supported size.");
-                    return;
-                }
-
-                if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
-                {
-                    this.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
-                    return;
-                }
-
-                if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
-                {
-                    this.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
-                    return;
-                }
-
-                // Validate checksums within the file.
-                ChecksumValidator validator = new ChecksumValidator(image, this);
+                FileValidator validator = new FileValidator(image, this);
                 if (!validator.IsValid())
                 {
                     this.AddUserMessage("This file is corrupt. It would render your PCM unusable.");
@@ -950,77 +1047,103 @@ namespace PcmHacking
                 UInt32 kernelVersion = 0;
                 bool needUnlock;
                 int keyAlgorithm = 1;
+                UInt32 pcmOperatingSystemId = 0;
+                bool needToCheckOperatingSystem = writeType != WriteType.Full;
 
-                try
+                this.AddUserMessage("Requesting operating system ID...");
+                Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
+                if (osidResponse.Status == ResponseStatus.Success)
                 {
-                    this.AddUserMessage("Requesting operating system ID...");
-                    Response<uint> osidResponse = await this.vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
-                    if (osidResponse.Status == ResponseStatus.Success)
+                    pcmOperatingSystemId = osidResponse.Value;
+                    PcmInfo info = new PcmInfo(pcmOperatingSystemId);
+                    keyAlgorithm = info.KeyAlgorithm;
+                    needUnlock = true;
+
+                    if (needToCheckOperatingSystem && !validator.IsSameOperatingSystem(pcmOperatingSystemId))
                     {
-                        this.AddUserMessage("Operating System: " + osidResponse.Value.ToString());
-                        PcmInfo info = new PcmInfo(osidResponse.Value);
-                        keyAlgorithm = info.KeyAlgorithm;
-                        needUnlock = true;
+                        this.AddUserMessage("Flashing this file could render your PCM unusable.");
+                        return;
                     }
-                    else
+
+                    needToCheckOperatingSystem = false;
+                }
+                else
+                {
+                    if (this.cancellationTokenSource.Token.IsCancellationRequested)
                     {
-                        if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                        return;
+                    }
+
+                    this.AddUserMessage("Operating system request failed, checking for a live kernel...");
+
+                    kernelVersion = await vehicle.GetKernelVersion();
+                    if (kernelVersion == 0)
+                    {
+                        this.AddUserMessage("Checking for recovery mode...");
+                        bool recoveryMode = await this.vehicle.IsInRecoveryMode();
+
+                        if (recoveryMode)
                         {
-                            return;
-                        }
-
-                        this.AddUserMessage("Operating system request failed, checking for a live kernel...");
-
-                        kernelVersion = await vehicle.GetKernelVersion();
-                        if (kernelVersion == 0)
-                        {
-                            this.AddUserMessage("Checking for recovery mode...");
-                            bool recoveryMode = await this.vehicle.IsInRecoveryMode();
-
-                            if (recoveryMode)
-                            {
-                                this.AddUserMessage("PCM is in recovery mode.");
-                                keyAlgorithm = 1;
-                                needUnlock = true;
-                            }
-                            else
-                            {
-                                this.AddUserMessage("PCM is not responding to OSID, kernel version, or recovery mode checks.");
-                                this.AddUserMessage("Unlock may not work, but we'll try...");
-                                needUnlock = true;
-                            }
+                            this.AddUserMessage("PCM is in recovery mode.");
+                            needUnlock = true;
                         }
                         else
                         {
-                            this.AddUserMessage("Kernel version: " + kernelVersion.ToString("X8"));
-                            needUnlock = false;
+                            this.AddUserMessage("PCM is not responding to OSID, kernel version, or recovery mode checks.");
+                            this.AddUserMessage("Unlock may not work, but we'll try...");
+                            needUnlock = true;
                         }
                     }
+                    else
+                    {
+                        needUnlock = false;
 
-                    if (needUnlock)
-                    { 
+                        this.AddUserMessage("Kernel version: " + kernelVersion.ToString("X8"));
 
-                        bool unlocked = await this.vehicle.UnlockEcu(keyAlgorithm);
-                        if (!unlocked)
+                        this.AddUserMessage("Asking kernel for the PCM's operating system ID...");
+                        if (needToCheckOperatingSystem && !await vehicle.IsSameOperatingSystemAccordingToKernel(validator, this.cancellationTokenSource.Token))
                         {
-                            this.AddUserMessage("Unlock was not successful.");
+                            this.AddUserMessage("Flashing this file could render your PCM unusable.");
                             return;
                         }
 
-                        this.AddUserMessage("Unlock succeeded.");
+                        needToCheckOperatingSystem = false;
+                    }
+                }
+
+                await this.vehicle.SuppressChatter();
+
+                if (needUnlock)
+                {
+
+                    bool unlocked = await this.vehicle.UnlockEcu(keyAlgorithm);
+                    if (!unlocked)
+                    {
+                        this.AddUserMessage("Unlock was not successful.");
+                        return;
                     }
 
-                    DateTime start = DateTime.Now;
-                    await this.vehicle.Write(writeType, kernelVersion, this.cancellationTokenSource.Token, image);
-                    this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
+                    this.AddUserMessage("Unlock succeeded.");
                 }
-                catch (IOException exception)
-                {
-                    this.AddUserMessage(exception.ToString());
-                }
+
+                DateTime start = DateTime.Now;
+                await this.vehicle.Write(
+                    image,
+                    writeType,
+                    kernelVersion,
+                    validator,
+                    needToCheckOperatingSystem,
+                    this.cancellationTokenSource.Token);
+                this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
+            }
+            catch (IOException exception)
+            {
+                this.AddUserMessage(exception.ToString());
             }
             finally
             {
+                this.currentWriteType = WriteType.None;
+
                 this.Invoke((MethodInvoker)delegate ()
                 {
                     this.EnableUserInput();

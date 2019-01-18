@@ -13,7 +13,7 @@ namespace PcmHacking
     /// </summary>
     public enum WriteType
     {
-        Invalid = 0,
+        None = 0,
         Compare,
         TestWrite,
         Calibration,
@@ -25,14 +25,43 @@ namespace PcmHacking
     public partial class Vehicle
     {
         /// <summary>
+        /// Ask the kernel which OS is installed, fail if it doesn't match the one in the file.
+        /// </summary>
+        public async Task<bool> IsSameOperatingSystemAccordingToKernel(FileValidator validator, CancellationToken cancellationToken)
+        {
+            Response<uint> osidResponse = await this.QueryOperatingSystemIdFromKernel(cancellationToken);
+            if (osidResponse.Status != ResponseStatus.Success)
+            {
+                // The kernel seems broken. This shouldn't happen, but if it does, halt.
+                this.logger.AddUserMessage("The kernel did not respond to operating system ID query.");
+                return false;
+            }
+
+            if (!validator.IsSameOperatingSystem(osidResponse.Value))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Write changes to the PCM's flash memory, or just test writing (Without 
         /// making changes) to evaluate the connection quality.
         /// </summary>
-        public async Task<bool> Write(WriteType writeType, UInt32 kernelVersion, CancellationToken cancellationToken, byte[] image)
+        public async Task<bool> Write(
+            byte[] image,
+            WriteType writeType, 
+            UInt32 kernelVersion, 
+            FileValidator validator,
+            bool needToCheckOperatingSystem,
+            CancellationToken cancellationToken)
         {
+            bool success = false;
+
             try
             {
-                ToolPresentNotifier notifier = new ToolPresentNotifier(this.logger, this.messageFactory, this.device);
+                await notifier.Notify();
                 this.device.ClearMessageQueue();
 
                 // TODO: install newer version if available.
@@ -40,7 +69,7 @@ namespace PcmHacking
                 {
                     // switch to 4x, if possible. But continue either way.
                     // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                    if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
+                    if (!await this.VehicleSetVPW4x(VpwSpeed.FourX, notifier))
                     {
                         this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
                         return false;
@@ -59,7 +88,7 @@ namespace PcmHacking
                     }
 
                     // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
+                    if (!await PCMExecute(response.Value, 0xFF8000, notifier, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -69,11 +98,19 @@ namespace PcmHacking
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
                 }
 
-                bool success = await Write(cancellationToken, image, writeType, notifier);
+                if (needToCheckOperatingSystem)
+                {
+                    if (!await this.IsSameOperatingSystemAccordingToKernel(validator, cancellationToken))
+                    {
+                        this.logger.AddUserMessage("Flashing this file could render your PCM unusable.");
+                        return false;
+                    }
+                }
+
+                success = await Write(cancellationToken, image, writeType, notifier);
 
                 // We only do cleanup after a successful write.
                 // If the kernel remains running, the user can try to flash again without rebooting and reloading.
-                // TODO: kernel should send tool-present messages to keep itself in control.
                 // TODO: kernel version should be stored at a fixed location in the bin file.
                 // TODO: app should check kernel version (not just "is present") and reload only if version is lower than version in kernel file.
                 if (success)
@@ -85,13 +122,17 @@ namespace PcmHacking
             }
             catch (Exception exception)
             {
-                this.logger.AddUserMessage("Something went wrong. " + exception.Message);
-                this.logger.AddUserMessage("Do not power off the PCM! Do not exit this program!");
-                this.logger.AddUserMessage("Try flashing again. If errors continue, seek help online.");
-                this.logger.AddUserMessage("https://pcmhacking.net/forums/viewtopic.php?f=3&t=6080");
-                this.logger.AddUserMessage(string.Empty);
-                this.logger.AddUserMessage(exception.ToString());
-                return false;
+                if (!success)
+                {
+                    this.logger.AddUserMessage("Something went wrong. " + exception.Message);
+                    this.logger.AddUserMessage("Do not power off the PCM! Do not exit this program!");
+                    this.logger.AddUserMessage("Try flashing again. If errors continue, seek help online.");
+                    this.logger.AddUserMessage("https://pcmhacking.net/forums/viewtopic.php?f=3&t=6080");
+                    this.logger.AddUserMessage(string.Empty);
+                    this.logger.AddUserMessage(exception.ToString());
+                }
+
+                return success;
             }
         }
 
@@ -138,8 +179,8 @@ namespace PcmHacking
             await this.device.SetTimeout(TimeoutScenario.ReadProperty);
             Query<UInt32> chipIdQuery = new Query<uint>(
                 this.device,
-                this.messageFactory.CreateFlashMemoryTypeQuery,
-                this.messageParser.ParseFlashMemoryType,
+                this.protocol.CreateFlashMemoryTypeQuery,
+                this.protocol.ParseFlashMemoryType,
                 this.logger,
                 cancellationToken,
                 notifier);
@@ -228,8 +269,8 @@ namespace PcmHacking
                     
                     Query<byte> eraseRequest = new Query<byte>(
                          this.device,
-                         () => this.messageFactory.CreateFlashEraseBlockRequest(range.Address),
-                         this.messageParser.ParseFlashEraseBlock,
+                         () => this.protocol.CreateFlashEraseBlockRequest(range.Address),
+                         this.protocol.ParseFlashEraseBlock,
                          this.logger,
                          cancellationToken,
                          notifier);
@@ -344,8 +385,8 @@ namespace PcmHacking
             // value in the kernel.
             Query<UInt32> crcReset = new Query<uint>(
                 this.device,
-                () => this.messageFactory.CreateCrcQuery(0, 0),
-                (message) => this.messageParser.ParseCrc(message, 0, 0),
+                () => this.protocol.CreateCrcQuery(0, 0),
+                (message) => this.protocol.ParseCrc(message, 0, 0),
                 this.logger,
                 cancellationToken,
                 notifier);
@@ -376,7 +417,7 @@ namespace PcmHacking
                 // delay resulted in 5 second CRC responses. The PCM needs to spend
                 // its time caculating CRCs rather than responding to messages.
                 int retryDelay = 1500;
-                Message query = this.messageFactory.CreateCrcQuery(range.Address, range.Size);
+                Message query = this.protocol.CreateCrcQuery(range.Address, range.Size);
                 for (int attempts = 0; attempts < 10; attempts++)
                 {
                     if (cancellationToken.IsCancellationRequested)
@@ -401,7 +442,7 @@ namespace PcmHacking
                         continue;
                     }
 
-                    Response<UInt32> crcResponse = this.messageParser.ParseCrc(response, range.Address, range.Size);
+                    Response<UInt32> crcResponse = this.protocol.ParseCrc(response, range.Address, range.Size);
                     if (crcResponse.Status != ResponseStatus.Success)
                     {
                         await Task.Delay(retryDelay);
@@ -478,7 +519,7 @@ namespace PcmHacking
                 int startAddress = (int)(range.Address + index);
                 int thisPayloadSize = Math.Min(devicePayloadSize, (int)range.Size - index);
                                                 
-                Message payloadMessage = messageFactory.CreateBlockMessage(
+                Message payloadMessage = protocol.CreateBlockMessage(
                     image,
                     startAddress,
                     thisPayloadSize,

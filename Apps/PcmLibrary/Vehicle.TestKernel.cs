@@ -99,8 +99,7 @@ namespace PcmHacking
                     return false;
                 }
 
-                // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
+                if (!await PCMExecute(response.Value, 0xFF8000, notifier, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -180,7 +179,7 @@ namespace PcmHacking
                 // delay resulted in 5 second CRC responses. The PCM needs to spend
                 // its time caculating CRCs rather than responding to messages.
                 int retryDelay = 1500;
-                Message query = this.messageFactory.CreateCrcQuery(range.Address, range.Size);
+                Message query = this.protocol.CreateCrcQuery(range.Address, range.Size);
                 for (int attempts = 0; attempts < 100; attempts++)
                 {
                     if (cancellationToken.IsCancellationRequested)
@@ -201,7 +200,7 @@ namespace PcmHacking
                         continue;
                     }
 
-                    Response<UInt32> crcResponse = this.messageParser.ParseCrc(response, range.Address, range.Size);
+                    Response<UInt32> crcResponse = this.protocol.ParseCrc(response, range.Address, range.Size);
                     if (crcResponse.Status != ResponseStatus.Success)
                     {
                         await Task.Delay(retryDelay);
@@ -246,12 +245,12 @@ namespace PcmHacking
             int successRate = 0;
             for (int attempts = 0; attempts < 100; attempts++)
             {
-                Message vq = this.messageFactory.CreateKernelVersionQuery();
+                Message vq = this.protocol.CreateKernelVersionQuery();
                 await this.device.SendMessage(vq);
                 Message vr = await this.device.ReceiveMessage();
                 if (vr != null)
                 {
-                    Response<UInt32> resp = this.messageParser.ParseKernelVersion(vr);
+                    Response<UInt32> resp = this.protocol.ParseKernelVersion(vr);
                     if (resp.Status == ResponseStatus.Success)
                     {
                         this.logger.AddDebugMessage("Got Kernel Version");
@@ -285,7 +284,7 @@ namespace PcmHacking
                     payload[index] = 1;
                 }
 
-                Message blockMessage = messageFactory.CreateBlockMessage(
+                Message blockMessage = protocol.CreateBlockMessage(
                     payload,
                     0,
                     length,
@@ -305,7 +304,7 @@ namespace PcmHacking
                         continue;
                     }
 
-                    if (await this.WaitForSuccess(this.messageParser.ParseUploadResponse, cancellationToken))
+                    if (await this.WaitForSuccess(this.protocol.ParseUploadResponse, cancellationToken))
                     {
                         break;
                     }

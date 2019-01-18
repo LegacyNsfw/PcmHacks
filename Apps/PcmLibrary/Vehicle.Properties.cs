@@ -25,7 +25,7 @@ namespace PcmHacking
 
             this.device.ClearMessageQueue();
 
-            if (!await this.device.SendMessage(this.messageFactory.CreateVinRequest1()))
+            if (!await this.device.SendMessage(this.protocol.CreateVinRequest1()))
             {
                 return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 1 failed.");
             }
@@ -36,7 +36,7 @@ namespace PcmHacking
                 return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 1.");
             }
 
-            if (!await this.device.SendMessage(this.messageFactory.CreateVinRequest2()))
+            if (!await this.device.SendMessage(this.protocol.CreateVinRequest2()))
             {
                 return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 2 failed.");
             }
@@ -47,7 +47,7 @@ namespace PcmHacking
                 return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 2.");
             }
 
-            if (!await this.device.SendMessage(this.messageFactory.CreateVinRequest3()))
+            if (!await this.device.SendMessage(this.protocol.CreateVinRequest3()))
             {
                 return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 3 failed.");
             }
@@ -58,7 +58,7 @@ namespace PcmHacking
                 return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 3.");
             }
 
-            return this.messageParser.ParseVinResponses(response1.GetBytes(), response2.GetBytes(), response3.GetBytes());
+            return this.protocol.ParseVinResponses(response1.GetBytes(), response2.GetBytes(), response3.GetBytes());
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace PcmHacking
 
             this.device.ClearMessageQueue();
 
-            if (!await this.device.SendMessage(this.messageFactory.CreateSerialRequest1()))
+            if (!await this.device.SendMessage(this.protocol.CreateSerialRequest1()))
             {
                 return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 1 failed.");
             }
@@ -81,7 +81,7 @@ namespace PcmHacking
                 return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 1.");
             }
 
-            if (!await this.device.SendMessage(this.messageFactory.CreateSerialRequest2()))
+            if (!await this.device.SendMessage(this.protocol.CreateSerialRequest2()))
             {
                 return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 2 failed.");
             }
@@ -92,7 +92,7 @@ namespace PcmHacking
                 return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 2.");
             }
 
-            if (!await this.device.SendMessage(this.messageFactory.CreateSerialRequest3()))
+            if (!await this.device.SendMessage(this.protocol.CreateSerialRequest3()))
             {
                 return Response.Create(ResponseStatus.Timeout, "Unknown. Request for block 3 failed.");
             }
@@ -103,7 +103,7 @@ namespace PcmHacking
                 return Response.Create(ResponseStatus.Timeout, "Unknown. No response to request for block 3.");
             }
 
-            return this.messageParser.ParseSerialResponses(response1, response2, response3);
+            return this.protocol.ParseSerialResponses(response1, response2, response3);
         }
 
         /// <summary>
@@ -114,8 +114,8 @@ namespace PcmHacking
             await this.device.SetTimeout(TimeoutScenario.ReadProperty);
 
             var query = this.CreateQuery(
-                this.messageFactory.CreateBCCRequest,
-                this.messageParser.ParseBCCresponse, 
+                this.protocol.CreateBCCRequest,
+                this.protocol.ParseBCCresponse, 
                 CancellationToken.None);
 
             return await query.Execute();
@@ -129,8 +129,8 @@ namespace PcmHacking
             await this.device.SetTimeout(TimeoutScenario.ReadProperty);
 
             var query = this.CreateQuery(
-                this.messageFactory.CreateMECRequest,
-                this.messageParser.ParseMECresponse,
+                this.protocol.CreateMECRequest,
+                this.protocol.ParseMECresponse,
                 CancellationToken.None);
 
             return await query.Execute();
@@ -179,7 +179,7 @@ namespace PcmHacking
         public async Task<Response<UInt32>> QueryOperatingSystemId(CancellationToken cancellationToken)
         {
             await this.device.SetTimeout(TimeoutScenario.ReadProperty);
-            return await this.QueryUnsignedValue(this.messageFactory.CreateOperatingSystemIdReadRequest, cancellationToken);
+            return await this.QueryUnsignedValue(this.protocol.CreateOperatingSystemIdReadRequest, cancellationToken);
         }
 
         /// <summary>
@@ -188,26 +188,21 @@ namespace PcmHacking
         /// <remarks>
         /// Note that this is a software variable and my not match the hardware at all of the software runs.
         /// </remarks>
-        /// <returns></returns>
         public async Task<Response<UInt32>> QueryHardwareId()
         {
-            return await this.QueryUnsignedValue(this.messageFactory.CreateHardwareIdReadRequest, CancellationToken.None);
+            return await this.QueryUnsignedValue(this.protocol.CreateHardwareIdReadRequest, CancellationToken.None);
         }
 
         /// <summary>
-        /// Query the PCM's Hardware ID.
+        /// Query the PCM's calibration ID.
         /// </summary>
-        /// <remarks>
-        /// Note that this is a software variable and my not match the hardware at all of the software runs.
-        /// </remarks>
-        /// <returns></returns>
         public async Task<Response<UInt32>> QueryCalibrationId()
         {
             await this.device.SetTimeout(TimeoutScenario.ReadProperty);
 
             var query = this.CreateQuery(
-                this.messageFactory.CreateCalibrationIdReadRequest,
-                this.messageParser.ParseBlockUInt32,
+                this.protocol.CreateCalibrationIdReadRequest,
+                this.protocol.ParseUInt32FromBlockReadResponse,
                 CancellationToken.None);
             return await query.Execute();
         }
@@ -227,7 +222,7 @@ namespace PcmHacking
         {
             await this.device.SetTimeout(TimeoutScenario.ReadProperty);
 
-            var query = this.CreateQuery(generator, this.messageParser.ParseBlockUInt32, cancellationToken);
+            var query = this.CreateQuery(generator, this.protocol.ParseUInt32FromBlockReadResponse, cancellationToken);
             return await query.Execute();
         }
     }

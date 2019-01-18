@@ -1,6 +1,13 @@
-The goal here is to create PCM read and write kernels using C rather than assembly.
+PCM Hammer uploads 68k code to the PCM to read and write flash memory.
 
-At this point I'm just trying to create a tool chain and validate the concept.
+The code here is somewhat out-of-date, however. Due to shady behavior of certain
+individuals, we are keeping those portion of the project closed-source and not-
+for-redistribution for now. This will become open source eventually, probably
+in a few months or so. 
+
+We just don't want other people taking credit for our hard work (again).
+
+--
 
 build.bat encapsulates the options needed to convert C code into kernel binaries.
 (Perhaps this should use a makefile, but that would require installing make.)

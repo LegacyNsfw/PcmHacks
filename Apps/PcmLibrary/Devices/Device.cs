@@ -66,7 +66,7 @@ namespace PcmHacking
         {
             get
             {
-                return Math.Min(2048, this.maxSendSize);
+                return Math.Min(2048+12, this.maxSendSize);
             }
 
             protected set
