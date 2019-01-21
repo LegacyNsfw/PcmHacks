@@ -461,7 +461,7 @@ void HandleVersionQuery(uint8_t kernelType)
 	MessageBuffer[3] = 0x7D;
 	MessageBuffer[4] = 0x00;
 	MessageBuffer[5] = 0x01; // major
-	MessageBuffer[6] = 0x01; // minor
+	MessageBuffer[6] = 0x02; // minor
 	MessageBuffer[7] = 0x00; // patch
 	MessageBuffer[8] = kernelType; // AA = read, BB = write
 
