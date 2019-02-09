@@ -16,20 +16,24 @@ namespace PcmHacking
     {
         public const string DeviceType = "AVT (842/852)";
 
-        public static readonly Message AVT_RESET            = new Message(new byte[] { 0xF1, 0xA5 });
-        public static readonly Message AVT_ENTER_VPW_MODE   = new Message(new byte[] { 0xE1, 0x33 });
-        public static readonly Message AVT_REQUEST_MODEL    = new Message(new byte[] { 0xF0 });
-        public static readonly Message AVT_REQUEST_FIRMWARE = new Message(new byte[] { 0xB0 });
-        public static readonly Message AVT_1X_SPEED         = new Message(new byte[] { 0xC1, 0x00 });
-        public static readonly Message AVT_4X_SPEED         = new Message(new byte[] { 0xC1, 0x01 });
+        public static readonly Message AVT_RESET                = new Message(new byte[] { 0xF1, 0xA5 });
+        public static readonly Message AVT_ENTER_VPW_MODE       = new Message(new byte[] { 0xE1, 0x33 });
+        public static readonly Message AVT_REQUEST_MODEL        = new Message(new byte[] { 0xF0 });
+        public static readonly Message AVT_REQUEST_FIRMWARE     = new Message(new byte[] { 0xB0 });
+        public static readonly Message AVT_DISABLE_TX_ACK       = new Message(new byte[] { 0x52, 0x40, 0x00 });
+        public static readonly Message AVT_FILTER_DEST          = new Message(new byte[] { 0x52, 0x5B, DeviceId.Tool });
+        public static readonly Message AVT_1X_SPEED             = new Message(new byte[] { 0xC1, 0x00 });
+        public static readonly Message AVT_4X_SPEED             = new Message(new byte[] { 0xC1, 0x01 });
 
         // AVT reader strips the header
-        public static readonly Message AVT_VPW              = new Message(new byte[] { 0x07 });       // 91 07
-        public static readonly Message AVT_852_IDLE         = new Message(new byte[] { 0x27 });       // 91 27
-        public static readonly Message AVT_842_IDLE         = new Message(new byte[] { 0x12 });       // 91 12
-        public static readonly Message AVT_FIRMWARE         = new Message(new byte[] { 0x04 });       // 92 04 15 (firmware 1.5)
-        public static readonly Message AVT_TX_ACK           = new Message(new byte[] { 0x60 });       // 01 60
-        public static readonly Message AVT_BLOCK_TX_ACK     = new Message(new byte[] { 0xF3, 0x60 }); // F3 60
+        public static readonly Message AVT_VPW                  = new Message(new byte[] { 0x07 });       // 91 07
+        public static readonly Message AVT_852_IDLE             = new Message(new byte[] { 0x27 });       // 91 27
+        public static readonly Message AVT_842_IDLE             = new Message(new byte[] { 0x12 });       // 91 12
+        public static readonly Message AVT_FIRMWARE             = new Message(new byte[] { 0x04 });       // 92 04 15 (firmware 1.5)
+        public static readonly Message AVT_TX_ACK               = new Message(new byte[] { 0x60 });       // 01 60
+        public static readonly Message AVT_FILTER_DEST_OK       = new Message(new byte[] { 0x5B, DeviceId.Tool });// 62 5B F0
+        public static readonly Message AVT_DISABLE_TX_ACK_OK    = new Message(new byte[] { 0x40, 0x00 }); // 62 40 00
+        public static readonly Message AVT_BLOCK_TX_ACK         = new Message(new byte[] { 0xF3, 0x60 }); // F3 60
 
         public AvtDevice(IPort port, ILogger logger) : base(port, logger)
         {
@@ -307,39 +311,37 @@ namespace PcmHacking
         {
             //this.Logger.AddDebugMessage("AVTSetup called");
 
-            byte[] filterdest = { 0x52, 0x5B, DeviceId.Tool };
-            byte[] filterdestok = { 0x5B, DeviceId.Tool}; // 62 5B F0
-            byte[] disabletxack = { 0x52, 0x40, 0x00 };
-            byte[] disabletxackok = { 0x40, 0x00 }; // 62 40 00
-
-            await this.Port.Send(disabletxack);
-            Response<Message> response = await ReadAVTPacket();
-
-            if (response.Status == ResponseStatus.Success & Utility.CompareArraysPart(response.Value.GetBytes(), disabletxackok))
+            this.Logger.AddDebugMessage("Disable AVT Acks");
+            await this.Port.Send(AVT_DISABLE_TX_ACK.GetBytes());
+            Response<Message> m = await this.FindResponse(AVT_DISABLE_TX_ACK_OK);
+            if (m.Status == ResponseStatus.Success)
             {
                 this.Logger.AddDebugMessage("AVT Acks disabled");
             }
             else
             {
-                this.Logger.AddDebugMessage("Failed to disable AVT Acks");
+                this.Logger.AddUserMessage("Could not disable ACKs");
+                this.Logger.AddDebugMessage("Expected " + AVT_DISABLE_TX_ACK_OK.ToString());
                 return Response.Create(ResponseStatus.Error, false);
             }
 
-            await this.Port.Send(filterdest);
-            response = await ReadAVTPacket();
-
-            if (response.Status == ResponseStatus.Success && Utility.CompareArraysPart(response.Value.GetBytes(), filterdestok))
+            this.Logger.AddDebugMessage("Configure AVT filter");
+            await this.Port.Send(AVT_FILTER_DEST.GetBytes());
+            m = await this.FindResponse(AVT_FILTER_DEST_OK);
+            if (m.Status == ResponseStatus.Success)
             {
-                this.Logger.AddDebugMessage("AVT Filter enabled");
-                return Response.Create(ResponseStatus.Success, true);
+                this.Logger.AddDebugMessage("AVT filter configured");
             }
             else
             {
-                this.Logger.AddDebugMessage("Failed to set AVT Filter");
+                this.Logger.AddUserMessage("Could not configure AVT filter");
+                this.Logger.AddDebugMessage("Expected " + AVT_FILTER_DEST_OK.ToString());
                 return Response.Create(ResponseStatus.Error, false);
             }
+
+            return Response.Create(ResponseStatus.Success, true);
         }
-        
+
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
