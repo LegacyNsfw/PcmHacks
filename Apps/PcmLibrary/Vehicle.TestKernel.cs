@@ -47,7 +47,7 @@ namespace PcmHacking
     /// that are under development.
     /// </summary>
     public partial class Vehicle
-    {        
+    {
         /// <summary>
         /// For testing prototype kernels. 
         /// </summary>
@@ -55,7 +55,7 @@ namespace PcmHacking
         {
             try
             {
-                this.device.ClearMessageQueue();                
+                this.device.ClearMessageQueue();
 
                 Response<byte[]> response = await LoadKernelFromFile("test-kernel.bin");
                 if (response.Status != ResponseStatus.Success)
@@ -112,7 +112,8 @@ namespace PcmHacking
                 //await this.InvestigateDataCorruption(cancellationToken);
                 //await this.InvestigateKernelVersionQueryTiming();
                 //await this.InvestigateCrc(cancellationToken);
-                await this.InvestigateDataRelayCorruption(cancellationToken);
+                //await this.InvestigateDataRelayCorruption(cancellationToken);
+                await this.InvestigateFlashChipId();
                 return true;
             }
             catch (Exception exception)
@@ -264,6 +265,38 @@ namespace PcmHacking
 
             this.logger.AddDebugMessage("Success rate: " + successRate.ToString());
         }
+
+
+        /// <summary>
+        /// This was used to test the delays in the kernel prior to sending a response.
+        /// </summary>
+        /// <returns></returns>
+        private async Task InvestigateFlashChipId()
+        {
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+
+            int successRate = 0;
+            for (int attempts = 0; attempts < 1; attempts++)
+            {
+                Message vq = this.protocol.CreateFlashMemoryTypeQuery();
+                await this.device.SendMessage(vq);
+                Message responseMessage = await this.device.ReceiveMessage();
+                if (responseMessage != null)
+                {
+                    Response<UInt32> resp = this.protocol.ParseFlashMemoryType(responseMessage);
+                    if (resp.Status == ResponseStatus.Success)
+                    {
+                        this.logger.AddUserMessage("Flash chip ID: " + resp.Value.ToString("X8"));
+                        this.logger.AddDebugMessage("Got Kernel Version");
+                        successRate++;
+                    }
+                }
+
+                await Task.Delay(0);
+                continue;
+            }
+        }
+
 
         /// <summary>
         /// AllPro was getting data corruption when payloads got close to 2kb. 
