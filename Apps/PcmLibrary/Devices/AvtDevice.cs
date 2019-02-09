@@ -130,7 +130,11 @@ namespace PcmHacking
         public async Task<Response<Message>> FindResponse(Message expected)
         {
             //this.Logger.AddDebugMessage("FindResponse called");
-            for (int iterations = 0; iterations < 5; iterations++)
+
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            while(stopwatch.ElapsedMilliseconds < 3000)
             {
                 Response<Message> response = await this.ReadAVTPacket();
                 if (response.Status == ResponseStatus.Success) 
@@ -158,7 +162,7 @@ namespace PcmHacking
             {
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
-                while (sw.ElapsedMilliseconds < 2000)
+                while (sw.ElapsedMilliseconds < 1000)
                 {
                     if (await this.Port.GetReceiveQueueSize() > 0) { break;}
                 }
@@ -361,6 +365,7 @@ namespace PcmHacking
             {
                 this.Logger.AddDebugMessage("RX: " + response.Value.GetBytes().ToHex());
                 this.Enqueue(response.Value);
+                return;
             }
 
             this.Logger.AddDebugMessage("AVT: no message waiting.");            
@@ -379,18 +384,13 @@ namespace PcmHacking
             {
                 this.Logger.AddDebugMessage("AVT setting VPW 1X");
                 await this.Port.Send(AvtDevice.AVT_1X_SPEED.GetBytes());
-                await Task.Delay(100);
-                byte[] rx = new byte[2];
                 await ReadAVTPacket(); // C1 00 (switched to 1x)
             }
             else
             {
-                byte[] rx = new byte[4];
-                await Task.Delay(100);
                 await ReadAVTPacket(); // 23 83 00 20 AVT generated response from generic PCM switch high speed command in Vehicle.cs
                 this.Logger.AddDebugMessage("AVT setting VPW 4X");
                 await this.Port.Send(AvtDevice.AVT_4X_SPEED.GetBytes());
-                await Task.Delay(500); // This can take a while....
                 await ReadAVTPacket(); // C1 01 (switched to 4x)
             }
 
@@ -402,6 +402,5 @@ namespace PcmHacking
             this.Port.DiscardBuffers();
             System.Threading.Thread.Sleep(50);
         }
-    }
-    
+    }    
 }
