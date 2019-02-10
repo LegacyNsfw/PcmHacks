@@ -69,7 +69,7 @@ namespace PcmHacking
                 {
                     // switch to 4x, if possible. But continue either way.
                     // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                    if (!await this.VehicleSetVPW4x(VpwSpeed.FourX, notifier))
+                    if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
                     {
                         this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
                         return false;
@@ -88,7 +88,7 @@ namespace PcmHacking
                     }
 
                     // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await PCMExecute(response.Value, 0xFF8000, notifier, cancellationToken))
+                    if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 

@@ -19,7 +19,7 @@ namespace PcmHacking
         /// <summary>
         /// How many times we should attempt to send a message before giving up.
         /// </summary>
-        private const int MaxSendAttempts = 10;
+        public const int MaxSendAttempts = 10;
 
         /// <summary>
         /// How many times we should attempt to receive a message before giving up.
@@ -30,7 +30,7 @@ namespace PcmHacking
         /// Might be worth making this a parameter to the retry loops since
         /// in most cases when only need about 5.
         /// </remarks>
-        private const int MaxReceiveAttempts = 15;
+        public const int MaxReceiveAttempts = 15;
 
         /// <summary>
         /// The device we'll use to talk to the PCM.
@@ -62,6 +62,22 @@ namespace PcmHacking
             get
             {
                 return this.device.ToString();
+            }
+        }
+
+        public int DeviceMaxSendSize
+        {
+            get
+            {
+                return this.device.MaxSendSize;
+            }
+        }
+
+        public int DeviceMaxReceiveSize
+        {
+            get
+            {
+                return this.device.MaxReceiveSize;
             }
         }
 
@@ -115,6 +131,32 @@ namespace PcmHacking
         public async Task<bool> ResetConnection()
         {
             return await this.device.Initialize();
+        }
+
+        /// <summary>
+        /// Send a tool-present notfication.  (Or not, depending on how much 
+        /// time has passed since the last notificationw was sent.)
+        /// </summary>
+        /// <returns></returns>
+        public async Task SendToolPresentNotification()
+        {
+            await this.notifier.Notify();
+        }
+
+        /// <summary>
+        /// Change the device's timeout.
+        /// </summary>
+        public async Task SetDeviceTimeout(TimeoutScenario scenario)
+        {
+            await this.device.SetTimeout(scenario);
+        }
+
+        /// <summary>
+        /// Clear the device's incoming-message queue.
+        /// </summary>
+        public void ClearDeviceMessageQueue()
+        {
+            this.device.ClearMessageQueue();
         }
 
         /// <summary>
@@ -313,6 +355,49 @@ namespace PcmHacking
             }
 
             return false;
+        }
+
+        public async Task<Response<byte[]>> ReadMemory(
+            Func<Message> messageFactory,
+            Func<Message, Response<byte[]>> messageParser,
+            CancellationToken cancellationToken)
+        {
+            Message message = messageFactory();
+
+            if (!await this.device.SendMessage(message))
+            {
+                this.logger.AddDebugMessage("Unable to send read request.");
+                return Response.Create<byte[]>(ResponseStatus.Error, new byte[0]);
+            }
+
+            ResponseStatus lastStatus = ResponseStatus.Success;
+            for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return Response.Create<byte[]>(ResponseStatus.Cancelled, new byte[0]);
+                }
+
+                Message payloadMessage = await this.device.ReceiveMessage();
+                if (payloadMessage == null)
+                {
+                    this.logger.AddDebugMessage("No payload following read request.");
+                    continue;
+                }
+
+                this.logger.AddDebugMessage("Processing message");
+
+                Response<byte[]> payloadResponse = messageParser(payloadMessage);
+                if (payloadResponse.Status == ResponseStatus.Success)
+                {
+                    return payloadResponse;
+                }
+
+                lastStatus = payloadResponse.Status;
+                this.logger.AddDebugMessage("Unable to process response: " + lastStatus);
+            }
+
+            return Response.Create<byte[]>(lastStatus, new byte[0]);
         }
     }
 }

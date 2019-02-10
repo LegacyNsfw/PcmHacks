@@ -933,7 +933,15 @@ namespace PcmHacking
 
                 // Do the actual reading.
                 DateTime start = DateTime.Now;
-                Response<Stream> readResponse = await this.vehicle.ReadContents(info, this.cancellationTokenSource.Token);
+
+                CKernelReader reader = new CKernelReader(
+                    this.vehicle, 
+                    this);
+
+                Response<Stream> readResponse = await reader.ReadContents(
+                    info, 
+                    cancellationTokenSource.Token);
+
                 this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
                 if (readResponse.Status != ResponseStatus.Success)
                 {

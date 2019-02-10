@@ -251,7 +251,7 @@ namespace PcmHacking
         /// <summary>
         /// Load the executable payload on the PCM at the supplied address, and execute it.
         /// </summary>
-        public async Task<bool> PCMExecute(byte[] payload, int address, ToolPresentNotifier notifier, CancellationToken cancellationToken)
+        public async Task<bool> PCMExecute(byte[] payload, int address, CancellationToken cancellationToken)
         {
             logger.AddUserMessage("Uploading kernel to PCM.");
             logger.AddDebugMessage("Sending upload request with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
@@ -370,7 +370,7 @@ namespace PcmHacking
         /// <summary>
         /// Does everything required to switch to VPW 4x
         /// </summary>
-        public async Task<bool> VehicleSetVPW4x(VpwSpeed newSpeed, ToolPresentNotifier notifier)
+        public async Task<bool> VehicleSetVPW4x(VpwSpeed newSpeed)
         {
             if (!device.Supports4X) 
             {

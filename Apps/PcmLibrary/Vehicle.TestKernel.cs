@@ -99,7 +99,7 @@ namespace PcmHacking
                     return false;
                 }
 
-                if (!await PCMExecute(response.Value, 0xFF8000, notifier, cancellationToken))
+                if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 
