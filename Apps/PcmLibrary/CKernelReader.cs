@@ -160,6 +160,11 @@ namespace PcmHacking
                     (payloadMessage) => this.protocol.ParsePayload(payloadMessage, length, startAddress),
                     cancellationToken);
 
+                if(readResponse.Status != ResponseStatus.Success)
+                {
+                    continue;
+                }
+
                 byte[] payload = readResponse.Value;
                 Buffer.BlockCopy(payload, 0, image, startAddress, length);
 

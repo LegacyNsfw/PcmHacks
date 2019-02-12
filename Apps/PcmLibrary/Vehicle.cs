@@ -160,6 +160,33 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Query factory. One could argue that this is in the wrong place.
+        /// </summary>
+        public Query<T> CreateQuery<T>(
+            Func<Message> generator, 
+            Func<Message,Response<T>> parser, 
+            CancellationToken cancellationToken)
+        {
+            return new Query<T>(
+                this.device,
+                generator,
+                parser,
+                this.logger,
+                cancellationToken,
+                this.notifier);
+        }
+
+        public async Task<bool> SendMessage(Message message)
+        {
+            return await this.device.SendMessage(message);
+        }
+
+        public async Task<Message> ReceiveMessage()
+        {
+            return await this.device.ReceiveMessage();
+        }
+
+        /// <summary>
         /// Note that this has only been confirmed to work with ObdLink ScanTool devices.
         /// AllPro doesn't get the reply for some reason.
         /// Might work with AVT or J-tool, that hasn't been tested.

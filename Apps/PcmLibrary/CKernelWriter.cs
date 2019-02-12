@@ -22,27 +22,17 @@ namespace PcmHacking
         Full,
     }
 
-    public partial class Vehicle
+    public class CKernelWriter
     {
-        /// <summary>
-        /// Ask the kernel which OS is installed, fail if it doesn't match the one in the file.
-        /// </summary>
-        public async Task<bool> IsSameOperatingSystemAccordingToKernel(FileValidator validator, CancellationToken cancellationToken)
+        private readonly Vehicle vehicle;
+        private readonly Protocol protocol;
+        private readonly ILogger logger;
+
+        public CKernelWriter(Vehicle vehicle, Protocol protocol, ILogger logger)
         {
-            Response<uint> osidResponse = await this.QueryOperatingSystemIdFromKernel(cancellationToken);
-            if (osidResponse.Status != ResponseStatus.Success)
-            {
-                // The kernel seems broken. This shouldn't happen, but if it does, halt.
-                this.logger.AddUserMessage("The kernel did not respond to operating system ID query.");
-                return false;
-            }
-
-            if (!validator.IsSameOperatingSystem(osidResponse.Value))
-            {
-                return false;
-            }
-
-            return true;
+            this.vehicle = vehicle;
+            this.protocol = protocol;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -61,21 +51,21 @@ namespace PcmHacking
 
             try
             {
-                await notifier.Notify();
-                this.device.ClearMessageQueue();
+                await    this.vehicle.SendToolPresentNotification();
+                this.vehicle.ClearDeviceMessageQueue();
 
                 // TODO: install newer version if available.
                 if (kernelVersion == 0)
                 {
                     // switch to 4x, if possible. But continue either way.
                     // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                    if (!await this.VehicleSetVPW4x(VpwSpeed.FourX))
+                    if (!await this.vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
                     {
                         this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
                         return false;
                     }
 
-                    Response<byte[]> response = await LoadKernelFromFile("write-kernel.bin");
+                    Response<byte[]> response = await this.vehicle.LoadKernelFromFile("write-kernel.bin");
                     if (response.Status != ResponseStatus.Success)
                     {
                         logger.AddUserMessage("Failed to load kernel from file.");
@@ -88,7 +78,7 @@ namespace PcmHacking
                     }
 
                     // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
+                    if (!await this.vehicle.PCMExecute(response.Value, 0xFF8000, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -100,14 +90,14 @@ namespace PcmHacking
 
                 if (needToCheckOperatingSystem)
                 {
-                    if (!await this.IsSameOperatingSystemAccordingToKernel(validator, cancellationToken))
+                    if (!await this.vehicle.IsSameOperatingSystemAccordingToKernel(validator, cancellationToken))
                     {
                         this.logger.AddUserMessage("Flashing this file could render your PCM unusable.");
                         return false;
                     }
                 }
 
-                success = await Write(cancellationToken, image, writeType, notifier);
+                success = await this.Write(cancellationToken, image, writeType);
 
                 // We only do cleanup after a successful write.
                 // If the kernel remains running, the user can try to flash again without rebooting and reloading.
@@ -115,7 +105,7 @@ namespace PcmHacking
                 // TODO: app should check kernel version (not just "is present") and reload only if version is lower than version in kernel file.
                 if (success)
                 {
-                    await this.Cleanup();
+                    await this.vehicle.Cleanup();
                 }
 
                 return success;
@@ -139,9 +129,9 @@ namespace PcmHacking
         /// <summary>
         /// Write the calibration blocks.
         /// </summary>
-        private async Task<bool> Write(CancellationToken cancellationToken, byte[] image, WriteType writeType, ToolPresentNotifier notifier)
+        private async Task<bool> Write(CancellationToken cancellationToken, byte[] image, WriteType writeType)
         {
-            await notifier.Notify();
+            await this.vehicle.SendToolPresentNotification();
 
             BlockType relevantBlocks;
             switch (writeType)
@@ -175,15 +165,12 @@ namespace PcmHacking
             }
 
             // Which flash chip?
-            await notifier.Notify();
-            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
-            Query<UInt32> chipIdQuery = new Query<uint>(
-                this.device,
+            await this.vehicle.SendToolPresentNotification();
+            await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadProperty);
+            Query<UInt32> chipIdQuery = this.vehicle.CreateQuery<UInt32>(
                 this.protocol.CreateFlashMemoryTypeQuery,
                 this.protocol.ParseFlashMemoryType,
-                this.logger,
-                cancellationToken,
-                notifier);
+                cancellationToken);
             Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
 
             if (chipIdResponse.Status != ResponseStatus.Success)
@@ -209,21 +196,24 @@ namespace PcmHacking
             if ((chipIdResponse.Value & 0xFFFF) == 0x2258) logger.AddUserMessage("Flash memory type: " + A2258);
             if ((chipIdResponse.Value & 0xFFFF) == 0x889D) logger.AddUserMessage("Flash memory type: " + I889D);
 
-            await notifier.Notify();
-            IList<MemoryRange> ranges = this.GetMemoryRanges(chipIdResponse.Value);
+            await this.vehicle.SendToolPresentNotification();
+            IList<MemoryRange> ranges = FlashChips.GetMemoryRanges(chipIdResponse.Value, this.logger);
             if (ranges == null)
             {
                 return false;
             }
+            
+            CKernelVerifier verifier = new CKernelVerifier(
+                image, 
+                ranges, 
+                this.vehicle, 
+                this.protocol, 
+                this.logger);
 
-            logger.AddUserMessage("Computing CRCs from local file...");
-            this.GetCrcFromImage(ranges, image);
-
-            if (await this.CompareRanges(
+            if (await verifier.CompareRanges(
                 ranges, 
                 image, 
                 relevantBlocks, 
-                notifier, 
                 cancellationToken))
             {
                 // Don't stop here if the user just wants to test their cable.
@@ -243,7 +233,7 @@ namespace PcmHacking
             }
 
             // Erase and rewrite the required memory ranges.
-            await this.device.SetTimeout(TimeoutScenario.Maximum);
+            await this.vehicle.SetDeviceTimeout(TimeoutScenario.Maximum);
             foreach (MemoryRange range in ranges)
             {
                 // We'll send a tool-present message during the erase request.
@@ -266,14 +256,11 @@ namespace PcmHacking
                 if (writeType != WriteType.TestWrite)
                 {
                     this.logger.AddUserMessage("Erasing");
-                    
-                    Query<byte> eraseRequest = new Query<byte>(
-                         this.device,
+
+                    Query<byte> eraseRequest = this.vehicle.CreateQuery<byte>(
                          () => this.protocol.CreateFlashEraseBlockRequest(range.Address),
                          this.protocol.ParseFlashEraseBlock,
-                         this.logger,
-                         cancellationToken,
-                         notifier);
+                         cancellationToken);
 
                     eraseRequest.MaxTimeouts = 5; // Reduce this when we know how many are likely to be needed.
                     Response<byte> eraseResponse = await eraseRequest.Execute();
@@ -302,17 +289,16 @@ namespace PcmHacking
                     this.logger.AddUserMessage("Writing...");
                 }
 
-                await notifier.Notify();
+                await this.vehicle.SendToolPresentNotification();
 
                 await WriteMemoryRange(
                     range, 
                     image, 
                     writeType == WriteType.TestWrite, 
-                    notifier,
                     cancellationToken);
             }
 
-            bool match = await this.CompareRanges(ranges, image, relevantBlocks, notifier, cancellationToken);
+            bool match = await verifier.CompareRanges(ranges, image, relevantBlocks, cancellationToken);
 
             if (writeType == WriteType.TestWrite)
             {
@@ -355,158 +341,15 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Get the CRC for each address range in the file that the user wants to flash.
-        /// </summary>
-        private void GetCrcFromImage(IList<MemoryRange> ranges, byte[] image)
-        {
-            Crc crc = new Crc();
-            foreach (MemoryRange range in ranges)
-            {
-                range.DesiredCrc = crc.GetCrc(image, range.Address, range.Size);
-            }
-        }
-
-        /// <summary>
-        /// Compare CRCs from the file to CRCs from the PCM.
-        /// </summary>
-        private async Task<bool> CompareRanges(
-            IList<MemoryRange> ranges, 
-            byte[] image, 
-            BlockType blockTypes,
-            ToolPresentNotifier notifier,
-            CancellationToken cancellationToken)
-        {
-            logger.AddUserMessage("Requesting CRCs from PCM...");
-            await notifier.Notify();
-
-            // The kernel will remember (and return) the CRC value of the last block it 
-            // was asked about, which leads to misleading results if you only rewrite 
-            // a single block. So we send a a bogus query to reset the last-used CRC 
-            // value in the kernel.
-            Query<UInt32> crcReset = new Query<uint>(
-                this.device,
-                () => this.protocol.CreateCrcQuery(0, 0),
-                (message) => this.protocol.ParseCrc(message, 0, 0),
-                this.logger,
-                cancellationToken,
-                notifier);
-            await crcReset.Execute();
-
-            await this.device.SetTimeout(TimeoutScenario.ReadCrc);
-            bool successForAllRanges = true;
-            foreach (MemoryRange range in ranges)
-            {
-                if ((range.Type & blockTypes) == 0)
-                {
-                    this.logger.AddUserMessage(
-                    string.Format(
-                        "Range {0:X6}-{1:X6} - Not needed for this operation.",
-                        range.Address,
-                        range.Address + (range.Size - 1)));
-                    continue;
-                }
-
-                await notifier.Notify();
-                this.device.ClearMessageQueue();
-                bool success = false;
-                UInt32 crc = 0;
-                
-                // You might think that a shorter retry delay would speed things up,
-                // but 1500ms delay gets CRC results in about 3.5 seconds.
-                // A 1000ms delay resulted in 4+ second CRC responses, and a 750ms
-                // delay resulted in 5 second CRC responses. The PCM needs to spend
-                // its time caculating CRCs rather than responding to messages.
-                int retryDelay = 1500;
-                Message query = this.protocol.CreateCrcQuery(range.Address, range.Size);
-                for (int attempts = 0; attempts < 10; attempts++)
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-
-                    await notifier.Notify();
-                    if (!await this.device.SendMessage(query))
-                    {
-                        // This delay is fast because we're waiting for the bus to be available,
-                        // rather than waiting for the PCM's CPU to finish computing the CRC as 
-                        // with the other two delays below.
-                        await Task.Delay(100);
-                        continue;
-                    }
-
-                    Message response = await this.device.ReceiveMessage();
-                    if (response == null)
-                    {
-                        await Task.Delay(retryDelay);
-                        continue;
-                    }
-
-                    Response<UInt32> crcResponse = this.protocol.ParseCrc(response, range.Address, range.Size);
-                    if (crcResponse.Status != ResponseStatus.Success)
-                    {
-                        await Task.Delay(retryDelay);
-                        continue;
-                    }
-
-                    success = true;
-                    crc = crcResponse.Value;
-                    break;
-                }
-
-                this.device.ClearMessageQueue();
-
-                if (!success)
-                {
-                    this.logger.AddUserMessage("Unable to get CRC for memory range " + range.Address.ToString("X8") + " / " + range.Size.ToString("X8"));
-                    successForAllRanges = false;
-                    continue;
-                }
-
-                range.ActualCrc = crc;
-
-                this.logger.AddUserMessage(
-                    string.Format(
-                        "Range {0:X6}-{1:X6} - File: {2:X8} - PCM: {3:X8} - ({4}) - {5}",
-                        range.Address,
-                        range.Address + (range.Size - 1),
-                        range.DesiredCrc,
-                        range.ActualCrc,
-                        range.Type,
-                        range.DesiredCrc == range.ActualCrc ? "Same" : "Different"));
-            }
-
-            await notifier.Notify();
-
-            foreach (MemoryRange range in ranges)
-            {
-                if ((range.Type & blockTypes) == 0)
-                {
-                    continue;
-                }
-
-                if (range.ActualCrc != range.DesiredCrc)
-                {
-                    return false;
-                }
-            }
-
-            this.device.ClearMessageQueue();
-
-            return successForAllRanges;
-        }
-
-        /// <summary>
         /// Copy a single memory range to the PCM.
         /// </summary>
         private async Task<bool> WriteMemoryRange(
             MemoryRange range, 
             byte[] image, 
             bool justTestWrite, 
-            ToolPresentNotifier notifier, 
             CancellationToken cancellationToken)
         {
-            int devicePayloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
+            int devicePayloadSize = vehicle.DeviceMaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
             for (int index = 0; index < range.Size; index += devicePayloadSize)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -514,7 +357,7 @@ namespace PcmHacking
                     return false;
                 }
 
-                await notifier.Notify();
+                await this.vehicle.SendToolPresentNotification();
 
                 int startAddress = (int)(range.Address + index);
                 int thisPayloadSize = Math.Min(devicePayloadSize, (int)range.Size - index);
@@ -533,7 +376,7 @@ namespace PcmHacking
                         startAddress,
                         thisPayloadSize));
 
-                await this.WritePayload(payloadMessage, notifier, cancellationToken);
+                await this.vehicle.WritePayload(payloadMessage, cancellationToken);
 
                 // Not checking the success or failure here.
                 // The debug pane will show if anything goes wrong, and the CRC check at the end will alert the user.
@@ -571,101 +414,6 @@ namespace PcmHacking
         {
             await Task.Delay(0);
             return true;
-        }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="chipId"></param>
-        /// <returns></returns>
-        public IList<MemoryRange> GetMemoryRanges(UInt32 chipId)
-        {
-            IList<MemoryRange> result = null;
-
-            switch (chipId)
-            {
-                // This is only here as a warning to anyone adding ranges for another chip.
-                // Please read the comments carefully. See case 0x00894471 for the real deal.
-                case 0xFFFF4471:
-                    var unused = new MemoryRange[]
-                    {
-                        // These numbers and descriptions are straight from the data sheet. 
-                        // Notice that if you convert the hex sizes to decimal, they're all
-                        // half as big as the description indicates. That's wrong. It doesn't
-                        // work that way in the PCM, so this would only compare 256 kb.
-                        new MemoryRange(0x30000, 0x10000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x20000, 0x10000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x10000, 0x10000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x04000, 0x0C000, BlockType.Calibration), //  96kb main block 
-                        new MemoryRange(0x03000, 0x01000, BlockType.Parameter), //   8kb parameter block
-                        new MemoryRange(0x02000, 0x01000, BlockType.Parameter), //   8kb parameter block
-                        new MemoryRange(0x00000, 0x02000, BlockType.Boot), //  16kb boot block                        
-                    };
-                    return null;
-
-                // Intel 28F400B
-                case 0x00894471:
-                    result = new MemoryRange[]
-                    {
-                        // All of these addresses and sizes are all 2x what's listed 
-                        // in the data sheet, because the data sheet table assumes that
-                        // "bytes" are 16 bits wide. Which means they're not bytes. But
-                        // the data sheet calls them bytes.
-                        new MemoryRange(0x60000, 0x20000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x40000, 0x20000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x20000, 0x20000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block 
-                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //   8kb parameter block
-                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
-                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
-                    };
-                    break;
-
-                default:
-                    this.logger.AddUserMessage(
-                        "Unsupported flash chip ID " + chipId.ToString("X8") + ". " +
-                        Environment.NewLine +
-                        "The flash memory in this PCM is not supported by this version of PCM Hammer." +
-                        Environment.NewLine +
-                        "Please look for a thread about this at pcmhacking.net, or create one if necessary." +
-                        Environment.NewLine +
-                        "We do aim to support for all flash chips over time.");
-                    return null;
-            }
-
-            // Sanity check the memory ranges
-            UInt32 lastStart = UInt32.MaxValue;
-            for(int index = 0; index < result.Count; index++)
-            {
-                if (index == 0)
-                {
-                    UInt32 top = result[index].Address + result[index].Size;
-                    if ((top != 512 * 1024) && (top != 1024 * 1024))
-                    {
-                        throw new InvalidOperationException("Upper end of memory range must be 512k or 1024k.");
-                    }
-                }
-
-                if (index == result.Count - 1)
-                {
-                    if (result[index].Address != 0)
-                    {
-                        throw new InvalidOperationException("Memory ranges must start at zero.");
-                    }
-                }
-
-                if (lastStart != UInt32.MaxValue)
-                {
-                    if (lastStart != result[index].Address + result[index].Size)
-                    {
-                        throw new InvalidDataException("Top of this range must match base of range above.");
-                    }
-                }
-
-                lastStart = result[index].Address;
-            }
-
-            return result;
         }
     }
 }

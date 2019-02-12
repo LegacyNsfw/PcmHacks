@@ -210,6 +210,27 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Ask the kernel which OS is installed, fail if it doesn't match the one in the file.
+        /// </summary>
+        public async Task<bool> IsSameOperatingSystemAccordingToKernel(FileValidator validator, CancellationToken cancellationToken)
+        {
+            Response<uint> osidResponse = await this.QueryOperatingSystemIdFromKernel(cancellationToken);
+            if (osidResponse.Status != ResponseStatus.Success)
+            {
+                // The kernel seems broken. This shouldn't happen, but if it does, halt.
+                this.logger.AddUserMessage("The kernel did not respond to operating system ID query.");
+                return false;
+            }
+
+            if (!validator.IsSameOperatingSystem(osidResponse.Value))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Check for a running kernel.
         /// </summary>
         /// <returns></returns>
@@ -313,7 +334,7 @@ namespace PcmHacking
                 remainder == payload.Length ? BlockCopyType.Execute : BlockCopyType.Copy);
 
             await notifier.Notify();
-            Response<bool> uploadResponse = await WritePayload(remainderMessage, notifier, cancellationToken);
+            Response<bool> uploadResponse = await WritePayload(remainderMessage, cancellationToken);
             if (uploadResponse.Status != ResponseStatus.Success)
             {
                 logger.AddDebugMessage("Could not upload kernel to PCM, remainder payload not accepted.");
@@ -344,7 +365,7 @@ namespace PcmHacking
                         startAddress,
                         payloadSize));
 
-                uploadResponse = await WritePayload(payloadMessage, notifier, cancellationToken);
+                uploadResponse = await WritePayload(payloadMessage, cancellationToken);
                 if (uploadResponse.Status != ResponseStatus.Success)
                 {
                     logger.AddDebugMessage("Could not upload kernel to PCM, payload not accepted.");
@@ -488,11 +509,11 @@ namespace PcmHacking
         /// <remarks>
         /// Returns a succsefull Response on the first successful attempt, or the failed Response if we run out of tries.
         /// </remarks>
-        private async Task<Response<bool>> WritePayload(Message message, ToolPresentNotifier notifier, CancellationToken cancellationToken)
+        public async Task<Response<bool>> WritePayload(Message message, CancellationToken cancellationToken)
         {
             for (int i = MaxSendAttempts; i>0; i--)
             {
-                await notifier.Notify();
+                await this.notifier.Notify();
 
                 if (cancellationToken.IsCancellationRequested)
                 {
