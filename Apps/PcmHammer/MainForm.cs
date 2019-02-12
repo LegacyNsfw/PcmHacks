@@ -1135,13 +1135,20 @@ namespace PcmHacking
                 }
 
                 DateTime start = DateTime.Now;
-                await this.vehicle.Write(
+
+                CKernelWriter writer = new CKernelWriter(
+                    this.vehicle,
+                    new Protocol(),
+                    this);
+
+                await writer.Write(
                     image,
                     writeType,
                     kernelVersion,
                     validator,
                     needToCheckOperatingSystem,
                     this.cancellationTokenSource.Token);
+
                 this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
             }
             catch (IOException exception)
