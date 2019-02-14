@@ -99,7 +99,7 @@ namespace PcmHacking
                     return false;
                 }
 
-                if (!await PCMExecute(response.Value, 0xFF8000, notifier, cancellationToken))
+                if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -164,7 +164,7 @@ namespace PcmHacking
         /// </summary>
         private async Task InvestigateCrc(CancellationToken cancellationToken)
         {
-            IList<MemoryRange> ranges = this.GetMemoryRanges(0x00894471);
+            IList<MemoryRange> ranges = FlashChips.GetMemoryRanges(0x00894471, this.logger);
 
             logger.AddUserMessage("Requesting CRCs from PCM...");
             foreach (MemoryRange range in ranges)

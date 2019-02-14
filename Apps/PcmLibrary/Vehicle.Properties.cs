@@ -208,14 +208,6 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Helper function to create Query objects.
-        /// </summary>
-        private Query<T> CreateQuery<T>(Func<Message> generator, Func<Message, Response<T>> filter, CancellationToken cancellationToken)
-        {
-            return new Query<T>(this.device, generator, filter, this.logger, cancellationToken);
-        }
-
-        /// <summary>
         /// Helper function for queries that return unsigned 32-bit integers.
         /// </summary>
         private async Task<Response<UInt32>> QueryUnsignedValue(Func<Message> generator, CancellationToken cancellationToken)

@@ -9,13 +9,28 @@ using System.Threading.Tasks;
 namespace PcmHacking
 {
     /// <summary>
-    /// From the application's perspective, this class is the API to the vehicle.
+    /// Reader classes use a kernel to read the entire flash memory.
     /// </summary>
-    /// <remarks>
-    /// Methods in this class are high-level operations like "get the VIN," or "read the contents of the EEPROM."
-    /// </remarks>
-    public partial class Vehicle : IDisposable
+    public class CKernelReader
     {
+        private readonly Vehicle vehicle;
+        private readonly Protocol protocol;
+        private readonly ILogger logger;
+
+        public CKernelReader(Vehicle vehicle, ILogger logger)
+        {
+            this.vehicle = vehicle;
+
+            // This seems wrong... Some alternatives:
+            // a) Have the caller pass in the message factory and message-parser methods
+            // b) Have the caller pass in a smaller KernelProtocol class - with subclasses for each kernel - 
+            //    This would only make sense if it turns out that this one reader class can handle multiple kernels.
+            // c) Just create a smaller KernelProtocol class here, for the kernel that this class is intended for.
+            this.protocol = new Protocol();
+
+            this.logger = logger;
+        }
+
         /// <summary>
         /// Read the full contents of the PCM.
         /// Assumes the PCM is unlocked an were ready to go
@@ -24,21 +39,21 @@ namespace PcmHacking
         {
             try
             {
-                await notifier.Notify();
-                this.device.ClearMessageQueue();
+                await this.vehicle.SendToolPresentNotification();
+                this.vehicle.ClearDeviceMessageQueue();
 
                 // switch to 4x, if possible. But continue either way.
                 // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                if (!await this.VehicleSetVPW4x(VpwSpeed.FourX, notifier))
+                if (!await this.vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
                 {
                     this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
                     return Response.Create(ResponseStatus.Error, (Stream)null);
                 }
 
-                await notifier.Notify();
+                await this.vehicle.SendToolPresentNotification();
 
                 // execute read kernel
-                Response<byte[]> response = await LoadKernelFromFile("read-kernel.bin");
+                Response<byte[]> response = await vehicle.LoadKernelFromFile("read-kernel.bin");
                 if (response.Status != ResponseStatus.Success)
                 {
                     logger.AddUserMessage("Failed to load kernel from file.");
@@ -50,11 +65,11 @@ namespace PcmHacking
                     return Response.Create(ResponseStatus.Cancelled, (Stream)null);
                 }
 
-                await notifier.Notify();
+                await this.vehicle.SendToolPresentNotification();
 
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
                 // TODO: choose kernel at run time? Because now it's FF8000...
-                if (!await PCMExecute(response.Value, 0xFF8000, notifier, cancellationToken))
+                if (!await this.vehicle.PCMExecute(response.Value, 0xFF8000, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -65,12 +80,12 @@ namespace PcmHacking
 
                 logger.AddUserMessage("kernel uploaded to PCM succesfully. Requesting data...");
 
-                await this.device.SetTimeout(TimeoutScenario.ReadMemoryBlock);
+                await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadMemoryBlock);
 
                 int startAddress = info.ImageBaseAddress;
                 int endAddress = info.ImageBaseAddress + info.ImageSize;
                 int bytesRemaining = info.ImageSize;
-                int blockSize = this.device.MaxReceiveSize - 10 - 2; // allow space for the header and block checksum
+                int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
 
                 byte[] image = new byte[info.ImageSize];
 
@@ -82,7 +97,7 @@ namespace PcmHacking
                     }
 
                     // The read kernel needs a short message here for reasons unknown. Without it, it will RX 2 messages then drop one.
-                    await notifier.ForceNotify();
+                    await this.vehicle.ForceSendToolPresentNotification();
 
                     if (startAddress + blockSize > endAddress)
                     {
@@ -108,7 +123,7 @@ namespace PcmHacking
                     startAddress += blockSize;
                 }
 
-                await this.Cleanup(); // Not sure why this does not get called in the finally block on successfull read?
+                await this.vehicle.Cleanup(); // Not sure why this does not get called in the finally block on successfull read?
 
                 MemoryStream stream = new MemoryStream(image);
                 return new Response<Stream>(ResponseStatus.Success, stream);
@@ -122,7 +137,7 @@ namespace PcmHacking
             finally
             {
                 // Sending the exit command at both speeds and revert to 1x.
-                await this.Cleanup();
+                await this.vehicle.Cleanup();
             }
         }
 
@@ -133,52 +148,30 @@ namespace PcmHacking
         {
             this.logger.AddDebugMessage(string.Format("Reading from {0} / 0x{0:X}, length {1} / 0x{1:X}", startAddress, length));
 
-            for (int sendAttempt = 1; sendAttempt <= MaxSendAttempts; sendAttempt++)
+            for (int sendAttempt = 1; sendAttempt <= Vehicle.MaxSendAttempts; sendAttempt++)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
                     break;
                 }
 
-                Message message = this.protocol.CreateReadRequest(startAddress, length);
+                Response<byte[]> readResponse = await this.vehicle.ReadMemory(
+                    () => this.protocol.CreateReadRequest(startAddress, length),
+                    (payloadMessage) => this.protocol.ParsePayload(payloadMessage, length, startAddress),
+                    cancellationToken);
 
-                if (!await this.device.SendMessage(message))
+                if(readResponse.Status != ResponseStatus.Success)
                 {
-                    this.logger.AddDebugMessage("Unable to send read request.");
                     continue;
                 }
-                
-                for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
 
-                    Message payloadMessage = await this.device.ReceiveMessage();
-                    if (payloadMessage == null)
-                    {
-                        this.logger.AddDebugMessage("No payload following read request.");
-                        continue;
-                    }
+                byte[] payload = readResponse.Value;
+                Buffer.BlockCopy(payload, 0, image, startAddress, length);
 
-                    this.logger.AddDebugMessage("Processing message");
+                int percentDone = (startAddress * 100) / image.Length;
+                this.logger.AddUserMessage(string.Format("Recieved block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));
 
-                    Response<byte[]> payloadResponse = this.protocol.ParsePayload(payloadMessage, length, startAddress);
-                    if (payloadResponse.Status != ResponseStatus.Success)
-                    {
-                        this.logger.AddDebugMessage("Not a valid payload message or bad checksum");
-                        continue;
-                    }
-
-                    byte[] payload = payloadResponse.Value;
-                    Buffer.BlockCopy(payload, 0, image, startAddress, length);
-
-                    int percentDone = (startAddress * 100) / image.Length;
-                    this.logger.AddUserMessage(string.Format("Recieved block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));
-
-                    return true;
-                }
+                return true;
             }
 
             return false;

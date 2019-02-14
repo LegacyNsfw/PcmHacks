@@ -933,7 +933,15 @@ namespace PcmHacking
 
                 // Do the actual reading.
                 DateTime start = DateTime.Now;
-                Response<Stream> readResponse = await this.vehicle.ReadContents(info, this.cancellationTokenSource.Token);
+
+                CKernelReader reader = new CKernelReader(
+                    this.vehicle, 
+                    this);
+
+                Response<Stream> readResponse = await reader.ReadContents(
+                    info, 
+                    cancellationTokenSource.Token);
+
                 this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
                 if (readResponse.Status != ResponseStatus.Success)
                 {
@@ -1127,13 +1135,20 @@ namespace PcmHacking
                 }
 
                 DateTime start = DateTime.Now;
-                await this.vehicle.Write(
+
+                CKernelWriter writer = new CKernelWriter(
+                    this.vehicle,
+                    new Protocol(),
+                    this);
+
+                await writer.Write(
                     image,
                     writeType,
                     kernelVersion,
                     validator,
                     needToCheckOperatingSystem,
                     this.cancellationTokenSource.Token);
+
                 this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
             }
             catch (IOException exception)
