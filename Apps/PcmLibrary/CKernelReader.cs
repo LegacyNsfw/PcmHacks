@@ -97,7 +97,7 @@ namespace PcmHacking
                     }
 
                     // The read kernel needs a short message here for reasons unknown. Without it, it will RX 2 messages then drop one.
-                    await this.vehicle.SendToolPresentNotification();
+                    await this.vehicle.ForceSendToolPresentNotification();
 
                     if (startAddress + blockSize > endAddress)
                     {

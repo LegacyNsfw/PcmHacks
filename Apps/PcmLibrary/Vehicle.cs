@@ -144,6 +144,16 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Send a tool-present notfication.  (Or not, depending on how much 
+        /// time has passed since the last notificationw was sent.)
+        /// </summary>
+        /// <returns></returns>
+        public async Task ForceSendToolPresentNotification()
+        {
+            await this.notifier.ForceNotify();
+        }
+
+        /// <summary>
         /// Change the device's timeout.
         /// </summary>
         public async Task SetDeviceTimeout(TimeoutScenario scenario)
