@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace PcmHacking
@@ -9,6 +10,21 @@ namespace PcmHacking
     /// </summary>
     public class FileValidator
     {
+        /// <summary>
+        /// Names of segments in P01 and P59 operating systems.
+        /// </summary>
+        private readonly string[] segmentNames =
+        {
+            "Operating system",
+            "Engine calibration",
+            "Engine diagnostics.",
+            "Transmission calibration",
+            "Transmission diagnostics",
+            "Fuel system",
+            "System",
+            "Speedometer",
+        };
+
         /// <summary>
         /// The contents of the firmware file that someone wants to flash.
         /// </summary>
@@ -37,12 +53,10 @@ namespace PcmHacking
             if (this.image.Length == 512 * 1024)
             {
                 this.logger.AddUserMessage("Validating 512k file.");
-                return this.Validate512();
             }
             else if (this.image.Length == 1024 * 1024)
             {
                 this.logger.AddUserMessage("Validating 1024k file.");
-                return this.Validate1024();
             }
             else
             {
@@ -53,6 +67,11 @@ namespace PcmHacking
                         this.image.Length));
                 return false;
             }
+
+            bool success = true;
+            success &= this.ValidateSignatures();
+            success &= this.ValidateChecksums();
+            return success;
         }
 
         /// <summary>
@@ -94,33 +113,52 @@ namespace PcmHacking
         /// <summary>
         /// Validate a 512k image.
         /// </summary>
-        private bool Validate512()
+        private bool ValidateChecksums()
         {
-            bool success = ValidateSignatures();
+            bool success = true;
+            UInt32 tableAddress = 0x50C;
 
-            this.PrintHeader();
-            success &= this.ValidateRange(      0, 0x7FFFD,   0x500, "Operating system");
-            success &= this.ValidateRange( 0x8002, 0x13FFF,  0x8000, "Engine calibration");
-            success &= this.ValidateRange(0x14002, 0x16DFF, 0x14000, "Engine diagnostics.");
-            success &= this.ValidateRange(0x16E02, 0x1BDFF, 0x16E00, "Transmission calibration");
-            success &= this.ValidateRange(0x1BE02, 0x1C7FF, 0x1BE00, "Transmission diagnostics");
-            success &= this.ValidateRange(0x1C802, 0x1E51F, 0x1C800, "Fuel system");
-            success &= this.ValidateRange(0x1E522, 0x1EE9F, 0x1E520, "System");
-            success &= this.ValidateRange(0x1EEA2, 0x1EF9F, 0x1EEA0, "Speedometer");
+            this.logger.AddUserMessage("Start\tEnd\tStored\tExpected\tVerdict\tSegment Name");
+
+            for (UInt32 segment = 0; segment < 8; segment++)
+            {
+                UInt32 startAddressLocation = tableAddress + (segment * 8);
+                UInt32 endAddressLocation = startAddressLocation + 4;
+
+                
+                UInt32 startAddress = ReadUnsigned(image, startAddressLocation);
+                UInt32 endAddress = ReadUnsigned(image, endAddressLocation);
+
+                // For most segments, the first two bytes are the checksum, so they're not counted in the computation.
+                // For the overall "segment" the checkum is in the middle.
+                UInt32 checksumAddress = startAddress == 0 ? 0x500 : startAddress;
+                if (startAddress != 0)
+                {
+                    startAddress += 2;
+                }
+
+                string segmentName = segmentNames[segment];
+
+                if ((startAddress >= image.Length) || (endAddress >= image.Length) || (checksumAddress >= image.Length))
+                {
+                    this.logger.AddUserMessage("Checksum table is corrupt.");
+                    return false;
+                }
+
+                success &= this.ValidateRange(startAddress, endAddress, checksumAddress, segmentName);
+            }
 
             return success;
         }
 
         /// <summary>
-        /// Validate a 1024k image.
+        /// 
         /// </summary>
-        /// <returns></returns>
-        private bool Validate1024()
+        private UInt32 ReadUnsigned(byte[] image, UInt32 offset)
         {
-            this.logger.AddUserMessage("Validate is not yet implemented for 1024k files.");
-            return false;
+            return BitConverter.ToUInt32(image.Skip((int)offset).Take(4).Reverse().ToArray(), 0);
         }
-
+        
         /// <summary>
         /// Validate signatures
         /// </summary>
@@ -128,13 +166,29 @@ namespace PcmHacking
         {
             if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
             {
-                this.logger.AddUserMessage("This file does not contain the expected signature at 0x1FFFE/0x1FFFF.");
+                this.logger.AddUserMessage("This file does not contain the expected signature at 0x1FFFE.");
                 return false;
             }
 
-            if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
+            if (image.Length == 512 * 1024)
             {
-                this.logger.AddUserMessage("This file does not contain the expected signature at 0x7FFFE/0x7FFFF.");
+                if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
+                {
+                    this.logger.AddUserMessage("This file does not contain the expected signature at 0x7FFFE.");
+                    return false;
+                }
+            }
+            else if (image.Length == 1024 * 1024)
+            {
+                if ((image[0xFFFFE] != 0x4A) || (image[0x0FFFFF] != 0xFC))
+                {
+                    this.logger.AddUserMessage("This file does not contain the expected signature at 0xFFFFE.");
+                    return false;
+                }
+            }
+            else
+            {
+                this.logger.AddUserMessage("Files of size " + image.Length.ToString("X8") + " are not supported.");
                 return false;
             }
 
@@ -154,8 +208,6 @@ namespace PcmHacking
         /// </summary>
         private bool ValidateRange(UInt32 start, UInt32 end, UInt32 storage, string description)
         {
-            string range = string.Format("\t{0:X}\t{1:X}", start, end);
-
             UInt16 storedChecksum = (UInt16)((this.image[storage] << 8) + this.image[storage + 1]);
             UInt16 computedChecksum = 0;
             
@@ -184,9 +236,9 @@ namespace PcmHacking
                 "\t{0:X}\t{1:X}\t{2}\t{3:X4}\t{4:X4}\t{5}", 
                 start, 
                 end,
-                verdict ? "Good" : "BAD",
                 storedChecksum, 
                 computedChecksum,
+                verdict ? "Good" : "BAD",
                 description);
 
             this.logger.AddUserMessage(error);
