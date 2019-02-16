@@ -65,7 +65,7 @@ namespace PcmHacking
             await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadCrc);
             bool successForAllRanges = true;
 
-            logger.AddUserMessage("\tRange\t\tFile CRC\t\tPCM CRC\t\tVerdict\tPurpose");
+            logger.AddUserMessage("\tRange\t\tFile CRC\t\tPCM CRC\tVerdict\tPurpose");
             foreach (MemoryRange range in ranges)
             {
                 if ((range.Type & blockTypes) == 0)

@@ -31,6 +31,7 @@ namespace PcmHacking
         public DelayDialogBox()
         {
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.StartPosition = FormStartPosition.CenterParent;
             InitializeComponent();
         }
 
