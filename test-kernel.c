@@ -21,6 +21,90 @@ void HandleEchoRequest(int length)
 	WriteMessage(MessageBuffer, length, Complete);
 }
 
+#define SIM_BASE        0x00FFFA00
+#define SIM_CSBARBT     (*(unsigned short *)(SIM_BASE + 0x48)) // CSRBASEREG, boot chip select, chip select base addr boot ROM reg,
+
+#define SIM_CSORBT      (*(unsigned short *)(SIM_BASE + 0x4a)) // CSROPREG, Chip select option boot ROM reg., $6820 for normal op
+#define SIM_CSBAR0      (*(unsigned short *)(SIM_BASE + 0x4c)) // CSBASEREG, chip selects
+#define SIM_CSOR0       (*(unsigned short *)(SIM_BASE + 0x4e)) // CSOPREG, *Chip select option reg., $1060 for normal op, $7060 for accessing flash chip
+
+#define FLASH_BASE         (*(unsigned short *)(0x00000000))
+#define FLASH_MANUFACTURER (*(unsigned short *)(0x00000000))
+#define FLASH_DEVICE       (*(unsigned short *)(0x00000002))
+
+#define SIGNATURE_COMMAND  0x9090
+#define READ_ARRAY_COMMAND 0xFFFF
+
+void Handle_512kb_FlashChipQuery()
+{
+	unsigned char manufacturer;
+	short device;
+
+	ScratchWatchdog();
+
+	SIM_CSBAR0 = 0x0006;
+	SIM_CSORBT = 0x6820;
+	SIM_CSOR0 = 0x7060; // flash chip 12v A9 enable
+
+	FLASH_BASE = SIGNATURE_COMMAND; // flash chip command
+	manufacturer = FLASH_MANUFACTURER; // read manufacturer
+	device = FLASH_DEVICE;
+	FLASH_BASE = READ_ARRAY_COMMAND;
+
+	SIM_CSOR0 = 0x1060; // flash chip 12v A9 disable
+
+	// The AllPro and ScanTool devices need a short delay to switch from
+	// sending to receiving. Otherwise they'll miss the response.
+	VariableSleep(1);
+
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7D;
+	MessageBuffer[4] = 0x01;
+	MessageBuffer[5] = manufacturer >> 8;
+	MessageBuffer[6] = manufacturer;
+	MessageBuffer[7] = device >> 8;
+	MessageBuffer[8] = device;
+	WriteMessage(MessageBuffer, 9, Complete);
+}
+
+void Handle_1mb_FlashChipQuery()
+{
+	ScratchWatchdog();
+	uint32_t id = 0;
+
+	SIM_CSBAR0 = 0x0006;
+	SIM_CSORBT = 0x6820;
+	SIM_CSOR0 = 0x7060; // flash chip 12v A9 enable
+
+	*((volatile uint16_t*)0xAAA) = 0xAAAA;
+	*((volatile uint16_t*)0x554) = 0x5555;
+	*((volatile uint16_t*)0xAAA) = 0x9090;
+
+	uint16_t manufacturer = FLASH_MANUFACTURER; // read manufacturer
+	uint16_t device = FLASH_DEVICE;
+
+	FLASH_BASE = READ_ARRAY_COMMAND;
+	SIM_CSOR0 = 0x1060; // flash chip 12v A9 disable
+
+	// The AllPro and ScanTool devices need a short delay to switch from
+	// sending to receiving. Otherwise they'll miss the response.
+	VariableSleep(1);
+
+	MessageBuffer[0] = 0x6C;
+	MessageBuffer[1] = 0xF0;
+	MessageBuffer[2] = 0x10;
+	MessageBuffer[3] = 0x7D;
+	MessageBuffer[4] = 0x01;
+	MessageBuffer[5] = manufacturer >> 8;
+	MessageBuffer[6] = manufacturer;
+	MessageBuffer[7] = device >> 8;
+	MessageBuffer[8] = device; 
+	WriteMessage(MessageBuffer, 9, Complete);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Process an incoming message.
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,11 +129,25 @@ void ProcessMessage(int length)
 		break;
 
 	case 0x3D:
-		if (MessageBuffer[4] == 0x00)
+		switch (MessageBuffer[4])
 		{
+		case 0x00:
 			HandleVersionQuery(0xCC);
 			break;
+
+		case 0x01:
+			Handle_1mb_FlashChipQuery();
+			break;
+
+		default:
+			SendToolPresent(
+				0xBB,
+				MessageBuffer[3],
+				MessageBuffer[4],
+				MessageBuffer[5]);
+			break;
 		}
+		break;
 
 		// Fall through:
 

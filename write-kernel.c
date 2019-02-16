@@ -13,8 +13,9 @@
 #define HARDWARE_IO     (*(unsigned short *)(0xFFFFE2FA))      // Hardware I/O reg
 
 #define FLASH_BASE         (*(unsigned short *)(0x00000000))
-#define FLASH_MANUFACTURER (*(unsigned short *)(0x00000000))
-#define FLASH_DEVICE       (*(unsigned short *)(0x00000002))
+#define FLASH_IDENTIFIER   (*(uint32_t *)(0x00000000))
+#define FLASH_MANUFACTURER (*(uint16_t *)(0x00000000))
+#define FLASH_DEVICE       (*(uint16_t *)(0x00000002))
 
 #define SIGNATURE_COMMAND  0x9090
 #define READ_ARRAY_COMMAND 0xFFFF
@@ -42,6 +43,7 @@ char volatile * const  SIM_CSOR5    =   SIM_BASE + 0x62;
 char volatile * const  SIM_CSBAR6   =   SIM_BASE + 0x64;
 char volatile * const  SIM_CSOR6    =   SIM_BASE + 0x66;*/
 
+uint32_t __attribute((section(".kerneldata"))) flashIdentifier;
 
 // This kernel uses Mode 3D extensively, because apparently nothing else does. Submodes are:
 //
@@ -85,23 +87,65 @@ void SendReply(unsigned char success, unsigned char submode, unsigned char code)
 ///////////////////////////////////////////////////////////////////////////////
 // Get the manufacturer and type of flash chip.
 ///////////////////////////////////////////////////////////////////////////////
-void HandleFlashChipQuery()
+uint32_t GetIntelId()
 {
-	unsigned char manufacturer;
-	short device;
-
-	ScratchWatchdog();
-
 	SIM_CSBAR0 = 0x0006;
 	SIM_CSORBT = 0x6820;
-	SIM_CSOR0  = 0x7060; // flash chip 12v A9 enable
 
-	FLASH_BASE   = SIGNATURE_COMMAND; // flash chip command
-	manufacturer = FLASH_MANUFACTURER; // read manufacturer
-	device       = FLASH_DEVICE;
-	FLASH_BASE   = READ_ARRAY_COMMAND;
+	// flash chip 12v A9 enable
+	SIM_CSOR0 = 0x7060; 
+
+	// Switch the flash into ID-query mode
+	FLASH_BASE = SIGNATURE_COMMAND; 
+
+	// Read the identifier from address zero.
+	flashIdentifier = FLASH_IDENTIFIER;
+
+	// Switch back to standard mode
+	FLASH_BASE = READ_ARRAY_COMMAND; 
 
 	SIM_CSOR0 = 0x1060; // flash chip 12v A9 disable
+}
+
+uint32_t GetAmdId()
+{
+	SIM_CSBAR0 = 0x0006;
+	SIM_CSORBT = 0x6820;
+
+	// flash chip 12v A9 enable
+	SIM_CSOR0 = 0x7060; 
+
+	// Switch to flash into ID-query mode.
+	*((volatile uint16_t*)0xAAA) = 0xAAAA;
+	*((volatile uint16_t*)0x554) = 0x5555;
+	*((volatile uint16_t*)0xAAA) = 0x9090;
+
+	// Read the identifier from address zero.
+	//flashIdentifier = FLASH_IDENTIFIER;
+	uint16_t manufacturer = FLASH_MANUFACTURER;
+	uint16_t device = FLASH_DEVICE;
+	flashIdentifier = ((uint32_t)manufacturer << 16) | device;
+
+	// Switch back to standard mode.
+	FLASH_BASE = READ_ARRAY_COMMAND;
+
+	// flash chip 12v A9 disable
+	SIM_CSOR0 = 0x1060; 
+}
+
+void HandleFlashChipQuery()
+{
+	ScratchWatchdog();
+
+	GetIntelId();
+
+	// If the ID query is unsuccessful, the "chipId" will actually be the
+	// initial value of the stack pointer, as that's what's stored in the 
+	// first four bytes of ROM.
+	if (flashIdentifier == 0xFFCE00)
+	{
+		GetAmdId();
+	}
 
 	// The AllPro and ScanTool devices need a short delay to switch from
 	// sending to receiving. Otherwise they'll miss the response.
@@ -112,10 +156,10 @@ void HandleFlashChipQuery()
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7D;
 	MessageBuffer[4] = 0x01;
-	MessageBuffer[5] = manufacturer >> 8;
-	MessageBuffer[6] = manufacturer;
-	MessageBuffer[7] = device >> 8;
-	MessageBuffer[8] = device;
+	MessageBuffer[5] = flashIdentifier >> 24;
+	MessageBuffer[6] = flashIdentifier >> 16;
+	MessageBuffer[7] = flashIdentifier >> 8;
+	MessageBuffer[8] = flashIdentifier;
 	WriteMessage(MessageBuffer, 9, Complete);
 }
 
