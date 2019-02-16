@@ -64,6 +64,8 @@ namespace PcmHacking
 
             await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadCrc);
             bool successForAllRanges = true;
+
+            logger.AddUserMessage("\tRange\t\tFile CRC\t\tPCM CRC\t\tVerdict\tPurpose");
             foreach (MemoryRange range in ranges)
             {
                 if ((range.Type & blockTypes) == 0)
@@ -137,13 +139,13 @@ namespace PcmHacking
 
                 this.logger.AddUserMessage(
                     string.Format(
-                        "Range {0:X6}-{1:X6} - File: {2:X8} - PCM: {3:X8} - ({4}) - {5}",
+                        "{0:X6}-{1:X6}\t{2:X8}\t{3:X8}\t{4}\t{5}",
                         range.Address,
                         range.Address + (range.Size - 1),
                         range.DesiredCrc,
                         range.ActualCrc,
-                        range.Type,
-                        range.DesiredCrc == range.ActualCrc ? "Same" : "Different"));
+                        range.DesiredCrc == range.ActualCrc ? "Same" : "Different",
+                        range.Type));
             }
 
             await this.vehicle.SendToolPresentNotification();

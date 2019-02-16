@@ -114,10 +114,27 @@ namespace PcmHacking
             {
                 if (!success)
                 {
-                    this.logger.AddUserMessage("Something went wrong. " + exception.Message);
-                    this.logger.AddUserMessage("Do not power off the PCM! Do not exit this program!");
-                    this.logger.AddUserMessage("Try flashing again. If errors continue, seek help online.");
-                    this.logger.AddUserMessage("https://pcmhacking.net/forums/viewtopic.php?f=3&t=6080");
+                    switch (writeType)
+                    {
+                        case WriteType.None:
+                        case WriteType.Compare:
+                        case WriteType.TestWrite:
+                            await this.vehicle.Cleanup();
+                            this.logger.AddUserMessage("Something has gone wrong. Please report this error.");
+                            this.logger.AddUserMessage("Errors during comparisons or test writes indicate a");
+                            this.logger.AddUserMessage("problem with the PCM, interface, cable, or app. Don't");
+                            this.logger.AddUserMessage("try to do any actual writing until you are certain that");
+                            this.logger.AddUserMessage("the underlying problem has been completely corrected.");
+                            break;
+
+                        default:
+                            this.logger.AddUserMessage("Something went wrong. " + exception.Message);
+                            this.logger.AddUserMessage("Do not power off the PCM! Do not exit this program!");
+                            this.logger.AddUserMessage("Try flashing again. If errors continue, seek help online.");
+                            break;
+                    }
+
+                    this.logger.AddUserMessage("https://pcmhacking.net/forums/viewtopic.php?f=42&t=6080");
                     this.logger.AddUserMessage(string.Empty);
                     this.logger.AddUserMessage(exception.ToString());
                 }
