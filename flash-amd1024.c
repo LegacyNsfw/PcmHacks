@@ -5,6 +5,9 @@
 #include "common.h"
 #include "flash.h"
 
+#define COMMAND_REG_AAA (*((volatile uint16_t*)0xAAA))
+#define COMMAND_REG_554 (*((volatile uint16_t*)0x554))
+
 ///////////////////////////////////////////////////////////////////////////////
 // Get the manufacturer and type of flash chip.
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,9 +20,9 @@ uint32_t Amd1024_GetFlashId()
 	SIM_CSOR0 = 0x7060;
 
 	// Switch to flash into ID-query mode.
-	*((volatile uint16_t*)0xAAA) = 0xAAAA;
-	*((volatile uint16_t*)0x554) = 0x5555;
-	*((volatile uint16_t*)0xAAA) = 0x9090;
+	COMMAND_REG_AAA = 0xAAAA;
+	COMMAND_REG_554 = 0x5555;
+	COMMAND_REG_AAA = 0x9090;
 
 	// Read the identifier from address zero.
 	//flashIdentifier = FLASH_IDENTIFIER;
@@ -37,93 +40,61 @@ uint32_t Amd1024_GetFlashId()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Unlock the flash memory.
-//
-// We tried having separate commands for lock and unlock, however the PCM's
-// VPW signal becomes noisy while the flash is unlocked. The AVT was able to
-// deal with that, but the ScanTool and AllPro interfaces couldn't read the
-// signal at all.
-//
-// So instead of VPW commands to unlock and re-lock, we just unlock during the
-// erase and write operations, and re-lock when the operation is complete.
-//
-// These commands remain supported, just in case we find a way to use them.
-///////////////////////////////////////////////////////////////////////////////
-void Amd1024_Unlock()
-{
-	SIM_CSBARBT = 0x0006;
-	SIM_CSORBT  = 0x6820;
-	SIM_CSBAR0  = 0x0006;
-	SIM_CSOR0   = 0x7060;
-
-	// TODO: can we just |= HARDWAREIO?
-	unsigned short hardwareFlags = HARDWARE_IO;
-	WasteTime();
-	hardwareFlags |= 0x0001;
-	WasteTime();
-	HARDWARE_IO = hardwareFlags;
-
-	VariableSleep(0x50);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Lock the flash memory.
-//
-// See notes above.
-///////////////////////////////////////////////////////////////////////////////
-void Amd1024_Lock()
-{
-	SIM_CSBARBT = 0x0006;
-	SIM_CSORBT  = 0x6820;
-	SIM_CSBAR0  = 0x0006;
-	SIM_CSOR0   = 0x1060;
-
-	unsigned short hardwareFlags = HARDWARE_IO;
-	hardwareFlags &= 0xFFFE;
-	WasteTime();
-	WasteTime();
-	HARDWARE_IO = hardwareFlags;
-
-	VariableSleep(0x50);
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Erase the given block.
 ///////////////////////////////////////////////////////////////////////////////
 uint8_t Amd1024_EraseBlock(uint32_t address)
 {
 	unsigned short status = 0;
 
-	Amd1024_Unlock();
+	FlashUnlock();
 
 	uint16_t *flashBase = (uint16_t*)address;
-	*flashBase = 0x5050; // TODO: Move these commands to defines
-	*flashBase = 0x2020;
-	*flashBase = 0xD0D0;
 
-	WasteTime();
-	WasteTime();
+	// Tell the chip to erase the given block.
+	COMMAND_REG_AAA = 0xAAAA;
+	COMMAND_REG_554 = 0x5555;
+	COMMAND_REG_AAA = 0x8080;
 
-	*flashBase = 0x7070;
+	COMMAND_REG_AAA = 0xAAAA;
+	COMMAND_REG_554 = 0x5555;
+	*flashBase = 0x3030;
+		
+	uint16_t read1 = 0;
+	uint16_t read2 = 0;
 
 	for (int iterations = 0; iterations < 0x640000; iterations++)
 	{
 		ScratchWatchdog();
 		WasteTime();
 		WasteTime();
-		status = *flashBase;
-		if ((status & 0x80) != 0)
+
+		read1 = *flashBase & 0x40;
+		read2 = *flashBase & 0x40;
+
+		if (read1 == read2)
+		{
+			break;
+		}
+
+		uint16_t read3 = *flashBase & 0x05;
+		if (read3 != 0)
 		{
 			break;
 		}
 	}
 
-	status &= 0x00E8;
+	read1 = *flashBase & 0x40;
+	read2 = *flashBase & 0x40;
+	if (read1 != read2)
+	{
+		status = 0xFF;
+	}
 
-	*flashBase = READ_ARRAY_COMMAND;
-	*flashBase = READ_ARRAY_COMMAND;
+	// Return to array mode.
+	*flashBase = 0xF0F0;
+	*flashBase = 0xF0F0;
 
-	Amd1024_Lock();
+	FlashLock();
 
 	return status;
 }
@@ -140,7 +111,7 @@ uint8_t Amd1024_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int sta
 
 	if (!testWrite)
 	{
-		Amd1024_Unlock();
+		FlashUnlock();
 	}
 
 	unsigned short* payloadArray = (unsigned short*) payloadBytes;
@@ -153,46 +124,39 @@ uint8_t Amd1024_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int sta
 
 		if (!testWrite)
 		{
-			*address = 0x5050; // Clear status register TODO: use #define
-			*address = 0x4040; // Program setup
-			*address = value;  // Program
-			*address = 0x7070; // Prepare to read status register
+			COMMAND_REG_AAA = 0xAAAA;
+			COMMAND_REG_554 = 0x5555;
+			COMMAND_REG_AAA = 0xA0A0;
 		}
+
+		*address = value;
 
 		char success = 0;
 		for(int iterations = 0; iterations < 0x1000; iterations++)
 		{
-			if  (testWrite)
-			{
-				status = 0x80;
-			}
-			else
-			{
-				status = *address;
-			}
-
 			ScratchWatchdog();
 
-			if (status & 0x80)
+			uint16_t read = testWrite ? value : *address;
+
+			if (read == value)
 			{
 				success = 1;
 				break;
 			}
 
 			WasteTime();
-			WasteTime();
 		}
-
+		
 		if (!success)
 		{
 			// Return flash to normal mode and return the error code.
-			errorCode = status;
+			errorCode = 0xF0;
 
 			if (!testWrite)
 			{
-				*address = 0xFFFF;
-				*address = 0xFFFF;
-				Amd1024_Lock();
+				*address = 0xF0F0;
+				*address = 0xF0F0;
+				FlashLock();
 			}
 
 			return errorCode;
@@ -204,16 +168,10 @@ uint8_t Amd1024_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int sta
 	{
 		// Return flash to normal mode.
 		unsigned short* address = (unsigned short*)startAddress;
-		*address = 0xFFFF;
-		*address = 0xFFFF;
-		Amd1024_Lock();
+		*address = 0xF0F0;
+		*address = 0xF0F0;
+		FlashLock();
 	}
 
-	// Check the last value we got from the status register.
-	if ((status & 0x98) != 0x80)
-	{
-		errorCode = status;
-	}
-
-	return errorCode;
+	return 0;
 }

@@ -22,8 +22,8 @@ c:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe -T read-kernel.ld main.o read-kernel.o co
 c:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe -O binary --only-section=.kernel_code --only-section=.rodata read-kernel.elf read-kernel.bin
 C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S read-kernel.elf > read-kernel.disassembly
 
-c:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 -O0 main.c write-kernel.c crc.c common.c common-readwrite.c flash-intel512.c flash-amd1024.c
-c:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe -T write-kernel.ld main.o write-kernel.o crc.o common.o common-readwrite.o -o write-kernel.elf flash-intel512.o flash-amd1024.o
+c:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 -O0 main.c write-kernel.c crc.c common.c common-readwrite.c flash.c flash-intel512.c flash-amd1024.c
+c:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe -T write-kernel.ld main.o write-kernel.o crc.o common.o common-readwrite.o -o write-kernel.elf flash.o flash-intel512.o flash-amd1024.o
 c:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe -O binary --only-section=.kernel_code --only-section=.rodata write-kernel.elf write-kernel.bin
 C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S write-kernel.elf > write-kernel.disassembly
 

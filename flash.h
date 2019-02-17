@@ -41,15 +41,18 @@ char volatile * const  SIM_CSOR5    =   SIM_BASE + 0x62;
 char volatile * const  SIM_CSBAR6   =   SIM_BASE + 0x64;
 char volatile * const  SIM_CSOR6    =   SIM_BASE + 0x66;*/
 
+// Lock and unlock refers to the internal +12v supply to the flash chip, needed for erasing and writing.
+void FlashLock();
+void FlashUnlock();
 
+// Functions prefixed with Intel512 work with this chip ID
 #define FLASH_ID_INTEL_512 0x00894471
 
 uint32_t Intel512_GetFlashId();
 uint8_t Intel512_EraseBlock(uint32_t address);
 uint8_t Intel512_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite);
 
-
-
+// Functions prefixed with Amd1024 work with this chip ID
 #define FLASH_ID_AMD_1024  0x00012258
 
 uint32_t Amd1024_GetFlashId();

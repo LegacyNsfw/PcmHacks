@@ -31,64 +31,13 @@ uint32_t Intel512_GetFlashId()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Unlock the flash memory.
-//
-// We tried having separate commands for lock and unlock, however the PCM's
-// VPW signal becomes noisy while the flash is unlocked. The AVT was able to
-// deal with that, but the ScanTool and AllPro interfaces couldn't read the
-// signal at all.
-//
-// So instead of VPW commands to unlock and re-lock, we just unlock during the
-// erase and write operations, and re-lock when the operation is complete.
-//
-// These commands remain supported, just in case we find a way to use them.
-///////////////////////////////////////////////////////////////////////////////
-void Intel512_Unlock()
-{
-	SIM_CSBARBT = 0x0006;
-	SIM_CSORBT  = 0x6820;
-	SIM_CSBAR0  = 0x0006;
-	SIM_CSOR0   = 0x7060;
-
-	// TODO: can we just |= HARDWAREIO?
-	unsigned short hardwareFlags = HARDWARE_IO;
-	WasteTime();
-	hardwareFlags |= 0x0001;
-	WasteTime();
-	HARDWARE_IO = hardwareFlags;
-
-	VariableSleep(0x50);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Lock the flash memory.
-//
-// See notes above.
-///////////////////////////////////////////////////////////////////////////////
-void Intel512_Lock()
-{
-	SIM_CSBARBT = 0x0006;
-	SIM_CSORBT  = 0x6820;
-	SIM_CSBAR0  = 0x0006;
-	SIM_CSOR0   = 0x1060;
-
-	unsigned short hardwareFlags = HARDWARE_IO;
-	hardwareFlags &= 0xFFFE;
-	WasteTime();
-	WasteTime();
-	HARDWARE_IO = hardwareFlags;
-
-	VariableSleep(0x50);
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Erase the given block.
 ///////////////////////////////////////////////////////////////////////////////
 uint8_t Intel512_EraseBlock(uint32_t address)
 {
 	unsigned short status = 0;
 
-	Intel512_Unlock();
+	FlashUnlock();
 
 	uint16_t *flashBase = (uint16_t*)address;
 	*flashBase = 0x5050; // TODO: Move these commands to defines
@@ -117,7 +66,7 @@ uint8_t Intel512_EraseBlock(uint32_t address)
 	*flashBase = READ_ARRAY_COMMAND;
 	*flashBase = READ_ARRAY_COMMAND;
 
-	Intel512_Lock();
+	FlashLock();
 
 	return status;
 }
@@ -134,7 +83,7 @@ uint8_t Intel512_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int st
 
 	if (!testWrite)
 	{
-		Intel512_Unlock();
+		FlashUnlock();
 	}
 
 	unsigned short* payloadArray = (unsigned short*) payloadBytes;
@@ -186,7 +135,7 @@ uint8_t Intel512_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int st
 			{
 				*address = 0xFFFF;
 				*address = 0xFFFF;
-				Intel512_Lock();
+				FlashLock();
 			}
 
 			return errorCode;
@@ -200,7 +149,7 @@ uint8_t Intel512_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int st
 		unsigned short* address = (unsigned short*)startAddress;
 		*address = 0xFFFF;
 		*address = 0xFFFF;
-		Intel512_Lock();
+		FlashLock();
 	}
 
 	// Check the last value we got from the status register.
