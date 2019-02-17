@@ -48,7 +48,7 @@ uint8_t Amd1024_EraseBlock(uint32_t address)
 
 	FlashUnlock();
 
-	uint16_t *flashBase = (uint16_t*)address;
+	uint16_t volate *flashBase = (uint16_t*)address;
 
 	// Tell the chip to erase the given block.
 	COMMAND_REG_AAA = 0xAAAA;
@@ -76,8 +76,8 @@ uint8_t Amd1024_EraseBlock(uint32_t address)
 			break;
 		}
 
-		uint16_t read3 = *flashBase & 0x05;
-		if (read3 != 0)
+		uint16_t read3 = *flashBase & 0x10;
+		if (read3 == 0)
 		{
 			break;
 		}
@@ -119,7 +119,7 @@ uint8_t Amd1024_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int sta
 
 	for (unsigned index = 0; index < payloadLengthInBytes / 2; index++)
 	{
-		unsigned short *address = &(flashArray[index]);
+		unsigned short volatile  *address = &(flashArray[index]);
 		unsigned short value = payloadArray[index];
 
 		if (!testWrite)
@@ -150,7 +150,7 @@ uint8_t Amd1024_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int sta
 		if (!success)
 		{
 			// Return flash to normal mode and return the error code.
-			errorCode = 0xF0;
+			errorCode = 0xFF;
 
 			if (!testWrite)
 			{
@@ -161,7 +161,6 @@ uint8_t Amd1024_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int sta
 
 			return errorCode;
 		}
-
 	}
 
 	if (!testWrite)

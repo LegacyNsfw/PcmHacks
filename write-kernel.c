@@ -224,7 +224,7 @@ void HandleEraseBlock()
 
 		case FLASH_ID_AMD_1024:
 			status = Amd1024_EraseBlock(address);
-			success = status;
+			success = status == 0;
 			break;
 
 		default:
