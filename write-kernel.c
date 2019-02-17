@@ -3,45 +3,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"
-
-#define SIM_BASE        0x00FFFA00
-#define SIM_CSBARBT     (*(unsigned short *)(SIM_BASE + 0x48)) // CSRBASEREG, boot chip select, chip select base addr boot ROM reg,
-                                                               // must be updated to $0006 on each update of flash CE/WE states
-#define SIM_CSORBT      (*(unsigned short *)(SIM_BASE + 0x4a)) // CSROPREG, Chip select option boot ROM reg., $6820 for normal op
-#define SIM_CSBAR0      (*(unsigned short *)(SIM_BASE + 0x4c)) // CSBASEREG, chip selects
-#define SIM_CSOR0       (*(unsigned short *)(SIM_BASE + 0x4e)) // CSOPREG, *Chip select option reg., $1060 for normal op, $7060 for accessing flash chip
-#define HARDWARE_IO     (*(unsigned short *)(0xFFFFE2FA))      // Hardware I/O reg
-
-#define FLASH_BASE         (*(unsigned short *)(0x00000000))
-#define FLASH_IDENTIFIER   (*(uint32_t *)(0x00000000))
-#define FLASH_MANUFACTURER (*(uint16_t *)(0x00000000))
-#define FLASH_DEVICE       (*(uint16_t *)(0x00000002))
-
-#define SIGNATURE_COMMAND  0x9090
-#define READ_ARRAY_COMMAND 0xFFFF
-
-/*char volatile * const  SIM_MCR      =   SIM_BASE + 0x00; // Module Control register
-char volatile * const  SIM_SYNCR    =   SIM_BASE + 0x04; // Clock synthesiser control register
-char volatile * const  SIM_RSR      =   SIM_BASE + 0x07; // Reset Status
-char volatile * const  SIM_SYPCR    =   SIM_BASE + 0x21; // System Protection
-char volatile * const  SIM_PICR     =   SIM_BASE + 0x22; // Periodic Timer
-char volatile * const  SIM_PITR     =   SIM_BASE + 0x24; //
-char volatile * const  SIM_SWSR     =   SIM_BASE + 0x27; //
-char volatile * const  SIM_CSPAR0   =   SIM_BASE + 0x44; // chip sellect pin assignment
-char volatile * const  SIM_CSPAR1   =   SIM_BASE + 0x46; //
-
-char volatile * const  SIM_CSBAR1   =   SIM_BASE + 0x50;
-char volatile * const  SIM_CSOR1    =   SIM_BASE + 0x52;
-char volatile * const  SIM_CSBAR2   =   SIM_BASE + 0x54;
-char volatile * const  SIM_CSOR2    =   SIM_BASE + 0x56;
-char volatile * const  SIM_CSBAR3   =   SIM_BASE + 0x58;
-char volatile * const  SIM_CSOR3    =   SIM_BASE + 0x5a;
-char volatile * const  SIM_CSBAR4   =   SIM_BASE + 0x5c;
-char volatile * const  SIM_CSOR4    =   SIM_BASE + 0x5e;
-char volatile * const  SIM_CSBAR5   =   SIM_BASE + 0x60;
-char volatile * const  SIM_CSOR5    =   SIM_BASE + 0x62;
-char volatile * const  SIM_CSBAR6   =   SIM_BASE + 0x64;
-char volatile * const  SIM_CSOR6    =   SIM_BASE + 0x66;*/
+#include "flash.h"
 
 uint32_t __attribute((section(".kerneldata"))) flashIdentifier;
 
@@ -87,64 +49,20 @@ void SendReply(unsigned char success, unsigned char submode, unsigned char code)
 ///////////////////////////////////////////////////////////////////////////////
 // Get the manufacturer and type of flash chip.
 ///////////////////////////////////////////////////////////////////////////////
-uint32_t GetIntelId()
-{
-	SIM_CSBAR0 = 0x0006;
-	SIM_CSORBT = 0x6820;
-
-	// flash chip 12v A9 enable
-	SIM_CSOR0 = 0x7060; 
-
-	// Switch the flash into ID-query mode
-	FLASH_BASE = SIGNATURE_COMMAND; 
-
-	// Read the identifier from address zero.
-	flashIdentifier = FLASH_IDENTIFIER;
-
-	// Switch back to standard mode
-	FLASH_BASE = READ_ARRAY_COMMAND; 
-
-	SIM_CSOR0 = 0x1060; // flash chip 12v A9 disable
-}
-
-uint32_t GetAmdId()
-{
-	SIM_CSBAR0 = 0x0006;
-	SIM_CSORBT = 0x6820;
-
-	// flash chip 12v A9 enable
-	SIM_CSOR0 = 0x7060; 
-
-	// Switch to flash into ID-query mode.
-	*((volatile uint16_t*)0xAAA) = 0xAAAA;
-	*((volatile uint16_t*)0x554) = 0x5555;
-	*((volatile uint16_t*)0xAAA) = 0x9090;
-
-	// Read the identifier from address zero.
-	//flashIdentifier = FLASH_IDENTIFIER;
-	uint16_t manufacturer = FLASH_MANUFACTURER;
-	uint16_t device = FLASH_DEVICE;
-	flashIdentifier = ((uint32_t)manufacturer << 16) | device;
-
-	// Switch back to standard mode.
-	FLASH_BASE = READ_ARRAY_COMMAND;
-
-	// flash chip 12v A9 disable
-	SIM_CSOR0 = 0x1060; 
-}
-
 void HandleFlashChipQuery()
 {
 	ScratchWatchdog();
 
-	GetIntelId();
+	// Try the Intel method first
+	flashIdentifier = Intel512_GetFlashId();
 
-	// If the ID query is unsuccessful, the "chipId" will actually be the
-	// initial value of the stack pointer, as that's what's stored in the 
+	// If the ID query is unsuccessful, the "chipId" will actually be this
+	// initial value for the stack pointer, as that's what's stored in the 
 	// first four bytes of ROM.
 	if (flashIdentifier == 0xFFCE00)
 	{
-		GetAmdId();
+		// Try the AMD method next
+		flashIdentifier = Amd1024_GetFlashId();
 	}
 
 	// The AllPro and ScanTool devices need a short delay to switch from
@@ -269,57 +187,6 @@ void HandleOperatingSystemQuery()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Unlock the flash memory.
-//
-// We tried having separate commands for lock and unlock, however the PCM's
-// VPW signal becomes noisy while the flash is unlocked. The AVT was able to
-// deal with that, but the ScanTool and AllPro interfaces couldn't read the
-// signal at all.
-//
-// So instead of VPW commands to unlock and re-lock, we just unlock during the
-// erase and write operations, and re-lock when the operation is complete.
-//
-// These commands remain supported, just in case we find a way to use them.
-///////////////////////////////////////////////////////////////////////////////
-void UnlockFlash()
-{
-	SIM_CSBARBT = 0x0006;
-	SIM_CSORBT  = 0x6820;
-	SIM_CSBAR0  = 0x0006;
-	SIM_CSOR0   = 0x7060;
-
-	// TODO: can we just |= HARDWAREIO?
-	unsigned short hardwareFlags = HARDWARE_IO;
-	WasteTime();
-	hardwareFlags |= 0x0001;
-	WasteTime();
-	HARDWARE_IO = hardwareFlags;
-
-	VariableSleep(0x50);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Lock the flash memory.
-//
-// See notes above.
-///////////////////////////////////////////////////////////////////////////////
-void LockFlash()
-{
-	SIM_CSBARBT = 0x0006;
-	SIM_CSORBT  = 0x6820;
-	SIM_CSBAR0  = 0x0006;
-	SIM_CSOR0   = 0x1060;
-
-	unsigned short hardwareFlags = HARDWARE_IO;
-	hardwareFlags &= 0xFFFE;
-	WasteTime();
-	WasteTime();
-	HARDWARE_IO = hardwareFlags;
-
-	VariableSleep(0x50);
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Erase the given block.
 ///////////////////////////////////////////////////////////////////////////////
 void HandleEraseBlock()
@@ -345,39 +212,27 @@ void HandleEraseBlock()
 		return;
 	}
 
-	unsigned short status = 0;
+	uint8_t status = 0;
+	uint8_t success = 0;
 
-	UnlockFlash();
-
-	uint16_t *flashBase = (uint16_t*)address;
-	*flashBase = 0x5050; // TODO: Move these commands to defines
-	*flashBase = 0x2020;
-	*flashBase = 0xD0D0;
-
-	WasteTime();
-	WasteTime();
-
-	*flashBase = 0x7070;
-
-	for (int iterations = 0; iterations < 0x640000; iterations++)
+	switch (flashIdentifier)
 	{
-		ScratchWatchdog();
-		WasteTime();
-		WasteTime();
-		status = *flashBase;
-		if ((status & 0x80) != 0)
-		{
+		case FLASH_ID_INTEL_512:
+			status = Intel512_EraseBlock(address);
+			success = status == 0x80;
 			break;
-		}
+
+		case FLASH_ID_AMD_1024:
+			status = Amd1024_EraseBlock(address);
+			success = status;
+			break;
+
+		default:
+			success = 0;
+			status = 0xFF;
+			return;
 	}
-
-	status &= 0x00E8;
-
-	*flashBase = READ_ARRAY_COMMAND;
-	*flashBase = READ_ARRAY_COMMAND;
-
-	LockFlash();
-
+	
 	// The AllPro and ScanTool devices need a short delay to switch from
 	// sending to receiving. Otherwise they'll miss the response.
 	// Also, give the lock-flash operation time to take full effect, because
@@ -385,7 +240,7 @@ void HandleEraseBlock()
 	// messages when the PCM is in that state.
 	VariableSleep(2);
 
-	SendReply(status == 0x80, 0x05, (char)status);
+	SendReply(success, 0x05, (char)status);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -410,23 +265,7 @@ void HandleEraseEverythingRequest()
 extern unsigned int *crcTable;
 void HandleDebugQuery()
 {
-	char test = 0;
-	unsigned value = SIM_CSBAR0;
-	//(unsigned)&test;
-
-	MessageBuffer[0] = 0x6C;
-	MessageBuffer[1] = 0xF0;
-	MessageBuffer[2] = 0x10;
-	MessageBuffer[3] = 0x7D;
-	MessageBuffer[4] = 0xFF;
-	MessageBuffer[5] = (char)(value >> 24);
-	MessageBuffer[6] = (char)(value >> 16);
-	MessageBuffer[7] = (char)(value >> 8);
-	MessageBuffer[8] = (char)(value >> 0);
-	WriteMessage(MessageBuffer, 9, Complete);
-
-	value = SIM_CSOR0;
-	//(unsigned)crcTable;
+	uint32_t value = 0x12345678;
 
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
@@ -447,90 +286,17 @@ void HandleDebugQuery()
 ///////////////////////////////////////////////////////////////////////////////
 unsigned char WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite)
 {
-	char errorCode = 0;
-	unsigned short status;
-
-	if (!testWrite)
+	switch (flashIdentifier)
 	{
-		UnlockFlash();
+	case FLASH_ID_INTEL_512:
+		return Intel512_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
+
+	case FLASH_ID_AMD_1024:
+		return Amd1024_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
+
+	default:
+		return 0xFF;
 	}
-
-	unsigned short* payloadArray = (unsigned short*) payloadBytes;
-	unsigned short* flashArray = (unsigned short*) startAddress;
-
-	for (unsigned index = 0; index < payloadLengthInBytes / 2; index++)
-	{
-		unsigned short *address = &(flashArray[index]);
-		unsigned short value = payloadArray[index];
-
-		if (!testWrite)
-		{
-			*address = 0x5050; // Clear status register TODO: use #define
-			*address = 0x4040; // Program setup
-			*address = value;  // Program
-			*address = 0x7070; // Prepare to read status register
-		}
-
-		char success = 0;
-		for(int iterations = 0; iterations < 0x1000; iterations++)
-		{
-			if  (testWrite)
-			{
-				status = 0x80;
-			}
-			else
-			{
-				status = *address;
-			}
-
-			ScratchWatchdog();
-
-			if (status & 0x80)
-			{
-				success = 1;
-				break;
-			}
-
-			WasteTime();
-			WasteTime();
-		}
-
-		if (!success)
-		{
-			// Return flash to normal mode and return the error code.
-			errorCode = status;
-
-			if (!testWrite)
-			{
-				*address = 0xFFFF;
-				*address = 0xFFFF;
-				LockFlash();
-			}
-
-			return errorCode;
-		}
-
-	}
-
-	if (!testWrite)
-	{
-				// Return flash to normal mode.
-				unsigned short* address = (unsigned short*)startAddress;
-				*address = 0xFFFF;
-				*address = 0xFFFF;
-		LockFlash();
-	}
-
-	// Check the last value we got from the status register.
-	if ((status & 0x98) != 0x80)
-	{
-		errorCode = status;
-	}
-
-//	VariableSleep(3);
-//	SendToolPresent(0x99, testWrite, 0x99, testWrite);
-
-	return errorCode;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
