@@ -68,13 +68,19 @@ namespace PcmHacking
             logger.AddUserMessage("\tRange\t\tFile CRC\t\tPCM CRC\tVerdict\tPurpose");
             foreach (MemoryRange range in ranges)
             {
+                string formatString = "{0:X6}-{1:X6}\t{2:X8}\t{3:X8}\t{4}\t{5}";
+
                 if ((range.Type & blockTypes) == 0)
                 {
                     this.logger.AddUserMessage(
                     string.Format(
-                        "Range {0:X6}-{1:X6} - Not needed for this operation.",
+                        formatString,
                         range.Address,
-                        range.Address + (range.Size - 1)));
+                        range.Address + (range.Size - 1),
+                        "not needed",
+                        "not needed",
+                        "n/a",
+                        range.Type));
                     continue;
                 }
 
@@ -139,7 +145,7 @@ namespace PcmHacking
 
                 this.logger.AddUserMessage(
                     string.Format(
-                        "{0:X6}-{1:X6}\t{2:X8}\t{3:X8}\t{4}\t{5}",
+                        formatString,
                         range.Address,
                         range.Address + (range.Size - 1),
                         range.DesiredCrc,
