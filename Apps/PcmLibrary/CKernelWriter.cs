@@ -289,7 +289,7 @@ namespace PcmHacking
                         return false;
                     }
 
-                    if (eraseResponse.Value != 0x80)
+                    if (eraseResponse.Value != 0x00)
                     {
                         this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
                         this.RequestDebugLogs(cancellationToken);
