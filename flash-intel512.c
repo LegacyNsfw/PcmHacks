@@ -68,6 +68,12 @@ uint8_t Intel512_EraseBlock(uint32_t address)
 
 	FlashLock();
 
+	// Return zero if successful, anything else is an error code.
+	if (status == 0x80)
+	{
+		status = 0;
+	}
+
 	return status;
 }
 

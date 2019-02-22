@@ -44,11 +44,12 @@ uint32_t Amd1024_GetFlashId()
 ///////////////////////////////////////////////////////////////////////////////
 uint8_t Amd1024_EraseBlock(uint32_t address)
 {
+	// Return zero if successful, anything else is an error code.
 	unsigned short status = 0;
 
 	FlashUnlock();
 
-	uint16_t volatile * flashBase = (uint16_t*)address;
+	uint32_t volatile * flashBase = (uint32_t*)address;
 
 	// Tell the chip to erase the given block.
 	COMMAND_REG_AAA = 0xAAAA;
@@ -65,29 +66,39 @@ uint8_t Amd1024_EraseBlock(uint32_t address)
 	for (int iterations = 0; iterations < 0x640000; iterations++)
 	{
 		ScratchWatchdog();
-		WasteTime();
-		WasteTime();
 
 		read1 = *flashBase & 0x40;
 		read2 = *flashBase & 0x40;
 
 		if (read1 == read2)
 		{
+			// Success!
 			break;
 		}
 
 		uint16_t read3 = *flashBase & 0x10;
 		if (read3 == 0)
 		{
-			break;
+			continue;
 		}
+
+		status = 0xA0;
+		break;
 	}
 
-	read1 = *flashBase & 0x40;
-	read2 = *flashBase & 0x40;
-	if (read1 != read2)
+	if (status == 0xA0)
 	{
-		status = 0xFF;
+		read1 = *flashBase & 0x40;
+		read2 = *flashBase & 0x40;
+		if (read1 != read2)
+		{
+			status = 0xB0;
+		}
+		else
+		{
+			// Success!
+			status = 0;
+		}
 	}
 
 	// Return to array mode.
@@ -127,9 +138,8 @@ uint8_t Amd1024_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int sta
 			COMMAND_REG_AAA = 0xAAAA;
 			COMMAND_REG_554 = 0x5555;
 			COMMAND_REG_AAA = 0xA0A0;
+			*address = value;
 		}
-
-		*address = value;
 
 		char success = 0;
 		for(int iterations = 0; iterations < 0x1000; iterations++)
@@ -150,7 +160,7 @@ uint8_t Amd1024_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int sta
 		if (!success)
 		{
 			// Return flash to normal mode and return the error code.
-			errorCode = 0xFF;
+			errorCode = 0xAA;
 
 			if (!testWrite)
 			{

@@ -153,7 +153,7 @@ void HandleWriteMode36()
 	if (start & 1)
 	{
 		// Misaligned data.
-		SendWriteFail(0xFF, 00);
+		SendWriteFail(0xBB, 00);
 		return;
 	}
 

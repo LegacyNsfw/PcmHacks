@@ -23,7 +23,7 @@ uint32_t __attribute((section(".kerneldata"))) flashIdentifier;
 ///////////////////////////////////////////////////////////////////////////////
 // Send a success or failure message.
 ///////////////////////////////////////////////////////////////////////////////
-void SendReply(unsigned char success, unsigned char submode, unsigned char code)
+void SendReply(unsigned char success, unsigned char submode, unsigned char code, unsigned char data)
 {
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
@@ -34,6 +34,7 @@ void SendReply(unsigned char success, unsigned char submode, unsigned char code)
 		MessageBuffer[3] = 0x7D;
 		MessageBuffer[4] = submode;
 		MessageBuffer[5] = code;
+		MessageBuffer[6] = data;
 	}
 	else
 	{
@@ -41,9 +42,10 @@ void SendReply(unsigned char success, unsigned char submode, unsigned char code)
 		MessageBuffer[4] = 0x3D;
 		MessageBuffer[5] = submode;
 		MessageBuffer[6] = code;
+		MessageBuffer[7] = data;
 	}
 
-	WriteMessage(MessageBuffer, success ? 6 : 7, Complete);
+	WriteMessage(MessageBuffer, success ? 7 : 8, Complete);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -200,35 +202,32 @@ void HandleEraseBlock()
 	// Only allow known addresses. Anything else probably indicates a bug.
 	switch (address)
 	{
-	case 0: // Boot
-	case 0x4000: // Parameters
-	case 0x6000: // Parameters
-	case 0x8000: // Calibration
+//	case 0: // Boot
+	case 0x004000: // Parameters
+	case 0x006000: // Parameters
+	case 0x008000: // Calibration
+	case 0x010000: // Calibration (P59 upper portion)
 		break;
 
 	default:
 		VariableSleep(2);
-		SendReply(0, 0x05, 0xFF);
+		SendReply(0, 0x05, 0xFF, 0xFF);
 		return;
 	}
 
 	uint8_t status = 0;
-	uint8_t success = 0;
 
 	switch (flashIdentifier)
 	{
 		case FLASH_ID_INTEL_512:
 			status = Intel512_EraseBlock(address);
-			success = status == 0x80;
 			break;
 
 		case FLASH_ID_AMD_1024:
 			status = Amd1024_EraseBlock(address);
-			success = status == 0;
 			break;
 
 		default:
-			success = 0;
 			status = 0xFF;
 			return;
 	}
@@ -240,7 +239,7 @@ void HandleEraseBlock()
 	// messages when the PCM is in that state.
 	VariableSleep(2);
 
-	SendReply(success, 0x05, (char)status);
+	SendReply(1, 0x05, status, 0x00);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -295,7 +294,7 @@ unsigned char WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 		return Amd1024_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
 
 	default:
-		return 0xFF;
+		return 0xEE;
 	}
 }
 
