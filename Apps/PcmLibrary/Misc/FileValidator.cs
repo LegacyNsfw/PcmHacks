@@ -118,13 +118,12 @@ namespace PcmHacking
             bool success = true;
             UInt32 tableAddress = 0x50C;
 
-            this.logger.AddUserMessage("Start\tEnd\tStored\tExpected\tVerdict\tSegment Name");
+            this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
 
             for (UInt32 segment = 0; segment < 8; segment++)
             {
                 UInt32 startAddressLocation = tableAddress + (segment * 8);
                 UInt32 endAddressLocation = startAddressLocation + 4;
-
                 
                 UInt32 startAddress = ReadUnsigned(image, startAddressLocation);
                 UInt32 endAddress = ReadUnsigned(image, endAddressLocation);
@@ -233,7 +232,7 @@ namespace PcmHacking
             bool verdict = storedChecksum == computedChecksum;
 
             string error = string.Format(
-                "\t{0:X}\t{1:X}\t{2}\t{3:X4}\t{4:X4}\t{5}", 
+                "\t{0:X5}\t{1:X5}\t{2:X4}\t{3:X4}\t{4:X4}\t{5}", 
                 start, 
                 end,
                 storedChecksum, 
