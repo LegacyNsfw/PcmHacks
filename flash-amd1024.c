@@ -49,7 +49,7 @@ uint8_t Amd1024_EraseBlock(uint32_t address)
 
 	FlashUnlock();
 
-	uint32_t volatile * flashBase = (uint32_t*)address;
+	uint16_t volatile * flashBase = (uint16_t*)address;
 
 	// Tell the chip to erase the given block.
 	COMMAND_REG_AAA = 0xAAAA;
@@ -65,9 +65,10 @@ uint8_t Amd1024_EraseBlock(uint32_t address)
 
 	for (int iterations = 0; iterations < 0x640000; iterations++)
 	{
+		read1 = *flashBase & 0x40;
+
 		ScratchWatchdog();
 
-		read1 = *flashBase & 0x40;
 		read2 = *flashBase & 0x40;
 
 		if (read1 == read2)
@@ -76,7 +77,7 @@ uint8_t Amd1024_EraseBlock(uint32_t address)
 			break;
 		}
 
-		uint16_t read3 = *flashBase & 0x10;
+		uint16_t read3 = *flashBase & 0x20;
 		if (read3 == 0)
 		{
 			continue;
