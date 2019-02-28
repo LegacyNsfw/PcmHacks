@@ -5,6 +5,8 @@
 : -g    = include debug information - not using this because the
 :         disassembly is either corrupt or just incomprehensible
 
+if -%KernelBuild%- == -- call fixpath.bat
+
 call clean.bat
 
 c:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 main.c micro-kernel.c
