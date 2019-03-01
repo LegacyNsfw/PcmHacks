@@ -8,7 +8,7 @@ namespace PcmHacking
     public static class FlashChips
     {
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="chipId"></param>
         /// <returns></returns>
@@ -23,17 +23,17 @@ namespace PcmHacking
                 case 0xFFFF4471:
                     var unused = new MemoryRange[]
                     {
-                        // These numbers and descriptions are straight from the data sheet. 
+                        // These numbers and descriptions are straight from the data sheet.
                         // Notice that if you convert the hex sizes to decimal, they're all
                         // half as big as the description indicates. That's wrong. It doesn't
                         // work that way in the PCM, so this would only compare 256 kb.
                         new MemoryRange(0x30000, 0x10000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x20000, 0x10000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x10000, 0x10000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x04000, 0x0C000, BlockType.Calibration), //  96kb main block 
+                        new MemoryRange(0x04000, 0x0C000, BlockType.Calibration), //  96kb main block
                         new MemoryRange(0x03000, 0x01000, BlockType.Parameter), //   8kb parameter block
                         new MemoryRange(0x02000, 0x01000, BlockType.Parameter), //   8kb parameter block
-                        new MemoryRange(0x00000, 0x02000, BlockType.Boot), //  16kb boot block                        
+                        new MemoryRange(0x00000, 0x02000, BlockType.Boot), //  16kb boot block
                     };
                     return null;
 
