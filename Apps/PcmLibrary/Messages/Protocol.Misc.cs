@@ -71,7 +71,9 @@ namespace PcmHacking
 
         public Response<bool> ParseRecoveryModeBroadcast(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6C, 0x62, 0x01);
+            Response<bool> rc = this.DoSimpleValidation(message, 0x6C, 0x62, 0x01);
+            if (!rc.Value) rc = this.DoSimpleValidation(message, 0x6C, 0xA2, 0x00);
+            return rc;
         }        
     }
 }
