@@ -65,7 +65,7 @@ namespace PcmHacking
             await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadCrc);
             bool successForAllRanges = true;
 
-            logger.AddUserMessage("\tRange\t\tFile CRC\t\tPCM CRC\tVerdict\tPurpose");
+            logger.AddUserMessage("\tRange\t\tFile CRC\tPCM CRC\t\tVerdict\tPurpose");
             foreach (MemoryRange range in ranges)
             {
                 string formatString = "{0:X6}-{1:X6}\t{2:X8}\t{3:X8}\t{4}\t{5}";
