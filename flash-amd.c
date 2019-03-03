@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Get the manufacturer and type of flash chip.
 ///////////////////////////////////////////////////////////////////////////////
-uint32_t Amd1024_GetFlashId()
+uint32_t Amd_GetFlashId()
 {
 	SIM_CSBAR0 = 0x0006;
 	SIM_CSORBT = 0x6820;
@@ -42,7 +42,7 @@ uint32_t Amd1024_GetFlashId()
 ///////////////////////////////////////////////////////////////////////////////
 // Erase the given block.
 ///////////////////////////////////////////////////////////////////////////////
-uint8_t Amd1024_EraseBlock(uint32_t address)
+uint8_t Amd_EraseBlock(uint32_t address)
 {
 	// Return zero if successful, anything else is an error code.
 	unsigned short status = 0;
@@ -59,7 +59,7 @@ uint8_t Amd1024_EraseBlock(uint32_t address)
 	COMMAND_REG_AAA = 0xAAAA;
 	COMMAND_REG_554 = 0x5555;
 	*flashBase = 0x3030;
-		
+
 	uint16_t read1 = 0;
 	uint16_t read2 = 0;
 
@@ -116,7 +116,7 @@ uint8_t Amd1024_EraseBlock(uint32_t address)
 // This is invoked by HandleWriteMode36 in common-readwrite.c
 // read-kernel.c has a stub to keep the compiler happy until this is released.
 ///////////////////////////////////////////////////////////////////////////////
-uint8_t Amd1024_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite)
+uint8_t Amd_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite)
 {
 	char errorCode = 0;
 	unsigned short status;
@@ -157,7 +157,7 @@ uint8_t Amd1024_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int sta
 
 			WasteTime();
 		}
-		
+
 		if (!success)
 		{
 			// Return flash to normal mode and return the error code.

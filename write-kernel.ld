@@ -2,7 +2,7 @@ SECTIONS
 {
 	.text (0x12340000) :
 	{
-		main.o	
+		main.o
 	}
 
 	.kernel_data (0xFFA800) :
@@ -20,7 +20,7 @@ SECTIONS
 		common.o (.text)
 		common-readwrite.o (.text)
 		flash.o (.text)
-		flash-intel512.o (.text)
-		flash-amd1024.o (.text)
+		flash-intel.o (.text)
+		flash-amd.o (.text)
 	}
 }

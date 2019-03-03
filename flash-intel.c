@@ -8,7 +8,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Get the manufacturer and type of flash chip.
 ///////////////////////////////////////////////////////////////////////////////
-uint32_t Intel512_GetFlashId()
+uint32_t Intel_GetFlashId()
 {
 	SIM_CSBAR0 = 0x0006;
 	SIM_CSORBT = 0x6820;
@@ -33,7 +33,7 @@ uint32_t Intel512_GetFlashId()
 ///////////////////////////////////////////////////////////////////////////////
 // Erase the given block.
 ///////////////////////////////////////////////////////////////////////////////
-uint8_t Intel512_EraseBlock(uint32_t address)
+uint8_t Intel_EraseBlock(uint32_t address)
 {
 	unsigned short status = 0;
 
@@ -82,7 +82,7 @@ uint8_t Intel512_EraseBlock(uint32_t address)
 // This is invoked by HandleWriteMode36 in common-readwrite.c
 // read-kernel.c has a stub to keep the compiler happy until this is released.
 ///////////////////////////////////////////////////////////////////////////////
-uint8_t Intel512_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite)
+uint8_t Intel_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite)
 {
 	char errorCode = 0;
 	unsigned short status;

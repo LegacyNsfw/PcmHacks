@@ -56,15 +56,13 @@ void HandleFlashChipQuery()
 	ScratchWatchdog();
 
 	// Try the Intel method first
-	flashIdentifier = Intel512_GetFlashId();
+	flashIdentifier = Intel_GetFlashId();
 
-	// If the ID query is unsuccessful, the "chipId" will actually be this
-	// initial value for the stack pointer, as that's what's stored in the 
-	// first four bytes of ROM.
-	if (flashIdentifier == 0xFFCE00)
+	// If the ID query is unsuccessful, we wont get the Intel ID, so try AMD
+	if ((flashIdentifier >> 16) != 0x0089)
 	{
 		// Try the AMD method next
-		flashIdentifier = Amd1024_GetFlashId();
+		flashIdentifier = Amd_GetFlashId();
 	}
 
 	// The AllPro and ScanTool devices need a short delay to switch from
@@ -159,14 +157,14 @@ void HandleCrcQuery()
 // Tell the app which OS is installed on this PCM.
 //
 // It was tempting to just implement the same OS ID query as the PCM software,
-// but then the app would need to do a kernel request of some type to determine 
-// whether the PCM is running the GM OS or the kernel. However, in almost all 
+// but then the app would need to do a kernel request of some type to determine
+// whether the PCM is running the GM OS or the kernel. However, in almost all
 // cases, the PCM will be running the GM OS, and that kernel request would slow
 // down the most common usage scenario.
 //
-// So we keep the common scenario fast by having the standard OS ID request 
+// So we keep the common scenario fast by having the standard OS ID request
 // succeed only when the standard operating system is running. When it fails,
-// that puts the app into a slower path were it checks for a kernel and then 
+// that puts the app into a slower path were it checks for a kernel and then
 // asks the kernel what OS is installed. Or it checks for recovery mode, loads
 // the kernel, and then asks the kernel what OS is installed.
 ///////////////////////////////////////////////////////////////////////////////
@@ -199,20 +197,23 @@ void HandleEraseBlock()
 	address <<= 8;
 	address |= MessageBuffer[7];
 
-	// Only allow known addresses. Anything else probably indicates a bug.
-	switch (address)
-	{
-//	case 0: // Boot
-	case 0x004000: // Parameters
-	case 0x006000: // Parameters
-	case 0x008000: // Calibration
-	case 0x010000: // Calibration (P59 upper portion)
-		break;
+	// Only allow known addresses for AMD.
+	// Intel full write is tested
+	if ((flashIdentifier >> 16) == 1) {
+		switch (address)
+		{
+		//	case 0: // Boot
+		case 0x004000: // Parameters
+		case 0x006000: // Parameters
+		case 0x008000: // Calibration
+		case 0x010000: // Calibration (P59 upper portion)
+			break;
 
-	default:
-		VariableSleep(2);
-		SendReply(0, 0x05, 0xFF, 0xFF);
-		return;
+		default:
+			VariableSleep(2);
+			SendReply(0, 0x05, 0xFF, 0xFF);
+			return;
+		}
 	}
 
 	uint8_t status = 0;
@@ -220,18 +221,19 @@ void HandleEraseBlock()
 	switch (flashIdentifier)
 	{
 		case FLASH_ID_INTEL_512:
-			status = Intel512_EraseBlock(address);
+		case FLASH_ID_INTEL_1024:
+			status = Intel_EraseBlock(address);
 			break;
 
 		case FLASH_ID_AMD_1024:
-			status = Amd1024_EraseBlock(address);
+			status = Amd_EraseBlock(address);
 			break;
 
 		default:
 			status = 0xFF;
 			return;
 	}
-	
+
 	// The AllPro and ScanTool devices need a short delay to switch from
 	// sending to receiving. Otherwise they'll miss the response.
 	// Also, give the lock-flash operation time to take full effect, because
@@ -288,10 +290,10 @@ unsigned char WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 	switch (flashIdentifier)
 	{
 	case FLASH_ID_INTEL_512:
-		return Intel512_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
+		return Intel_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
 
 	case FLASH_ID_AMD_1024:
-		return Amd1024_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
+		return Amd_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
 
 	default:
 		return 0xEE;

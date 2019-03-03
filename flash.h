@@ -46,15 +46,16 @@ void FlashLock();
 void FlashUnlock();
 
 // Functions prefixed with Intel512 work with this chip ID
-#define FLASH_ID_INTEL_512 0x00894471
+#define FLASH_ID_INTEL_512  0x00894471
+#define FLASH_ID_INTEL_1024 0x0089889D
 
-uint32_t Intel512_GetFlashId();
-uint8_t Intel512_EraseBlock(uint32_t address);
-uint8_t Intel512_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite);
+uint32_t Intel_GetFlashId();
+uint8_t Intel_EraseBlock(uint32_t address);
+uint8_t Intel_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite);
 
 // Functions prefixed with Amd1024 work with this chip ID
 #define FLASH_ID_AMD_1024  0x00012258
 
-uint32_t Amd1024_GetFlashId();
-uint8_t Amd1024_EraseBlock(uint32_t address);
-uint8_t Amd1024_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite);
+uint32_t Amd_GetFlashId();
+uint8_t Amd_EraseBlock(uint32_t address);
+uint8_t Amd_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite);
