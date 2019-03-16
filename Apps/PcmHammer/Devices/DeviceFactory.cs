@@ -47,6 +47,10 @@ namespace PcmHacking
                 Device device;
                 switch (serialPortDeviceType)
                 {
+                    case DviDevice.DeviceType:
+                        device = new DviDevice(port, logger);
+                        break;
+
                     case AvtDevice.DeviceType:
                         device = new AvtDevice(port, logger);
                         break;
