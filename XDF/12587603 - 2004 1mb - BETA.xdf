@@ -66,6 +66,94 @@
     <EMBEDDEDDATA mmedaddress="0xF907" mmedelementsizebits="8" mmedmajorstridebits="0" mmedminorstridebits="0" />
     <mask>0x01</mask>
   </XDFFLAG>
+
+<XDFCHECKSUM uniqueid="0x47C4">
+    <title>1 - Operating System Checksum</title>
+    <REGION>
+      <pluginmoduleid>9a53f579-d1c9-40c6-8691-7a54fa789d3b</pluginmoduleid>
+      <datastart>0x0</datastart>
+      <dataend>0xFFFFD</dataend>
+      <datasizebits>0x10</datasizebits>
+      <storeaddress>0x500</storeaddress>
+      <calculationmethod>0x0</calculationmethod>
+    </REGION>
+  </XDFCHECKSUM>
+  <XDFCHECKSUM uniqueid="0x7083">
+    <title>2 - Engine Calibration Checksum</title>
+    <REGION>
+      <datastart>0x8002</datastart>
+      <dataend>0x162cf</dataend>
+      <datasizebits>0x10</datasizebits>
+      <storeaddress>0x8000</storeaddress>
+      <calculationmethod>0x1</calculationmethod>
+    </REGION>
+  </XDFCHECKSUM>
+  <XDFCHECKSUM uniqueid="0x77F8">
+    <title>3 - Engine Diagnostics Checksum</title>
+    <REGION>
+      <datastart>0x162D2</datastart>
+      <dataend>0x195FF</dataend>
+      <datasizebits>0x10</datasizebits>
+      <storeaddress>0x162D0</storeaddress>
+      <calculationmethod>0x1</calculationmethod>
+    </REGION>
+  </XDFCHECKSUM>
+  <XDFCHECKSUM uniqueid="0xD03">
+    <title>4 - Transmission Calibration Checksum</title>
+    <REGION>
+      <datastart>0x19602</datastart>
+      <dataend>0x1D8AF</dataend>
+      <datasizebits>0x10</datasizebits>
+      <storeaddress>0x19600</storeaddress>
+      <calculationmethod>0x1</calculationmethod>
+    </REGION>
+  </XDFCHECKSUM>
+  <XDFCHECKSUM uniqueid="0x5FE1">
+    <title>5 - Transmission Diagnostics Checksum</title>
+    <REGION>
+      <datastart>0x1D8B2</datastart>
+      <dataend>0x1E1AF</dataend>
+      <datasizebits>0x10</datasizebits>
+      <storeaddress>0x1D8B0</storeaddress>
+      <calculationmethod>0x1</calculationmethod>
+    </REGION>
+  </XDFCHECKSUM>
+  <XDFCHECKSUM uniqueid="0x7279">
+    <title>6 - Fuel System Checksum</title>
+    <REGION>
+      <datastart>0x1E1B2</datastart>
+      <dataend>0x1F6BF</dataend>
+      <datasizebits>0x10</datasizebits>
+      <storeaddress>0x1E1B0</storeaddress>
+      <calculationmethod>0x1</calculationmethod>
+    </REGION>
+  </XDFCHECKSUM>
+  <XDFCHECKSUM uniqueid="0x143C">
+    <title>7 - System Checksum</title>
+    <REGION>
+      <datastart>0x1F6C2</datastart>
+      <dataend>0x1FEAF</dataend>
+      <datasizebits>0x10</datasizebits>
+      <storeaddress>0x1F6C0</storeaddress>
+      <calculationmethod>0x1</calculationmethod>
+    </REGION>
+  </XDFCHECKSUM>
+  <XDFCHECKSUM uniqueid="0x6AED">
+    <title>8 - Speedometer Checksum</title>
+    <REGION>
+      <datastart>0x1FEB2</datastart>
+      <dataend>0x1FFDF</dataend>
+      <datasizebits>0x10</datasizebits>
+      <storeaddress>0x1FEB0</storeaddress>
+      <calculationmethod>0x1</calculationmethod>
+    </REGION>
+  </XDFCHECKSUM>
+
+
+
+
+
+
   <XDFFLAG uniqueid="0x190C">
     <title>VATS Fail-Enabled Option</title>
     <CATEGORYMEM index="0" category="1" />

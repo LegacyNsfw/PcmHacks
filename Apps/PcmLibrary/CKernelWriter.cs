@@ -114,10 +114,27 @@ namespace PcmHacking
             {
                 if (!success)
                 {
-                    this.logger.AddUserMessage("Something went wrong. " + exception.Message);
-                    this.logger.AddUserMessage("Do not power off the PCM! Do not exit this program!");
-                    this.logger.AddUserMessage("Try flashing again. If errors continue, seek help online.");
-                    this.logger.AddUserMessage("https://pcmhacking.net/forums/viewtopic.php?f=3&t=6080");
+                    switch (writeType)
+                    {
+                        case WriteType.None:
+                        case WriteType.Compare:
+                        case WriteType.TestWrite:
+                            await this.vehicle.Cleanup();
+                            this.logger.AddUserMessage("Something has gone wrong. Please report this error.");
+                            this.logger.AddUserMessage("Errors during comparisons or test writes indicate a");
+                            this.logger.AddUserMessage("problem with the PCM, interface, cable, or app. Don't");
+                            this.logger.AddUserMessage("try to do any actual writing until you are certain that");
+                            this.logger.AddUserMessage("the underlying problem has been completely corrected.");
+                            break;
+
+                        default:
+                            this.logger.AddUserMessage("Something went wrong. " + exception.Message);
+                            this.logger.AddUserMessage("Do not power off the PCM! Do not exit this program!");
+                            this.logger.AddUserMessage("Try flashing again. If errors continue, seek help online.");
+                            break;
+                    }
+
+                    this.logger.AddUserMessage("https://pcmhacking.net/forums/viewtopic.php?f=42&t=6080");
                     this.logger.AddUserMessage(string.Empty);
                     this.logger.AddUserMessage(exception.ToString());
                 }
@@ -179,22 +196,39 @@ namespace PcmHacking
                 return false;
             }
 
-            logger.AddUserMessage("Flash memory type: " + chipIdResponse.Value.ToString("X8"));
-            
-            // known chips
+            // TODO: Move the device types lookup to a function in Misc/FlashChips.cs
+            // known chips in the P01 and P59
             // http://ftp1.digi.com/support/documentation/jtag_v410_flashes.pdf
-            string Amd   = "Amd";               // 0001
-            string Intel = "Intel";             // 0089
-            string I4471 = "28F400B5-B 512Kb";  // 4471
-            string A2258 = "Am29F800B 1Mbyte";  // 2258
-            string I889D = "28F800B5-B 1Mbyte"; // 889D
-            
-            logger.AddUserMessage("Flash memory ID: " + chipIdResponse.Value.ToString("X8"));
-            if ((chipIdResponse.Value >> 16)    == 0x0001) logger.AddUserMessage("Flash memory manufactuer: " + Amd);
-            if ((chipIdResponse.Value >> 16)    == 0x0089) logger.AddUserMessage("Flash memory manufactuer: " + Intel);
-            if ((chipIdResponse.Value & 0xFFFF) == 0x4471) logger.AddUserMessage("Flash memory type: " + I4471);
-            if ((chipIdResponse.Value & 0xFFFF) == 0x2258) logger.AddUserMessage("Flash memory type: " + A2258);
-            if ((chipIdResponse.Value & 0xFFFF) == 0x889D) logger.AddUserMessage("Flash memory type: " + I889D);
+            string Amd     = "AMD";               // 0001
+            string Intel   = "Intel";             // 0089
+            string I4471   = "28F400B5-B 512Kb";  // 4471
+            string A2258   = "Am29F800B 1Mbyte";  // 2258
+            string I889D   = "28F800B5-B 1Mbyte"; // 889D
+            string unknown = "unknown";           // default case
+
+            logger.AddUserMessage("Flash memory ID code: " + chipIdResponse.Value.ToString("X8"));
+
+            switch ((chipIdResponse.Value >> 16))
+            {
+                case 0x0001: logger.AddUserMessage("Flash memory manufactuer: " + Amd);
+                             break;
+                case 0x0089: logger.AddUserMessage("Flash memory manufactuer: " + Intel);
+                             break;
+                default:     logger.AddUserMessage("Flash memory manufactuer: " + unknown);
+                             break;
+            }
+
+            switch (chipIdResponse.Value & 0xFFFF)
+            {
+                case 0x4471: logger.AddUserMessage("Flash memory type: " + I4471);
+                             break;
+                case 0x2258: logger.AddUserMessage("Flash memory type: " + A2258);
+                             break;
+                case 0x889D: logger.AddUserMessage("Flash memory type: " + I889D);
+                             break;
+                default:     logger.AddUserMessage("Flash memory type: " + unknown);
+                             break;
+            }
 
             await this.vehicle.SendToolPresentNotification();
             IList<MemoryRange> ranges = FlashChips.GetMemoryRanges(chipIdResponse.Value, this.logger);
@@ -202,18 +236,18 @@ namespace PcmHacking
             {
                 return false;
             }
-            
+
             CKernelVerifier verifier = new CKernelVerifier(
-                image, 
-                ranges, 
-                this.vehicle, 
-                this.protocol, 
+                image,
+                ranges,
+                this.vehicle,
+                this.protocol,
                 this.logger);
 
             if (await verifier.CompareRanges(
-                ranges, 
-                image, 
-                relevantBlocks, 
+                ranges,
+                image,
+                relevantBlocks,
                 cancellationToken))
             {
                 // Don't stop here if the user just wants to test their cable.
@@ -265,14 +299,14 @@ namespace PcmHacking
                     eraseRequest.MaxTimeouts = 5; // Reduce this when we know how many are likely to be needed.
                     Response<byte> eraseResponse = await eraseRequest.Execute();
 
-                    if (eraseResponse.Status != ResponseStatus.Success) 
+                    if (eraseResponse.Status != ResponseStatus.Success)
                     {
                         this.logger.AddUserMessage("Unable to erase flash memory: " + eraseResponse.Status.ToString());
                         this.RequestDebugLogs(cancellationToken);
                         return false;
                     }
 
-                    if (eraseResponse.Value != 0x80)
+                    if (eraseResponse.Value != 0x00)
                     {
                         this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
                         this.RequestDebugLogs(cancellationToken);
@@ -292,9 +326,9 @@ namespace PcmHacking
                 await this.vehicle.SendToolPresentNotification();
 
                 await WriteMemoryRange(
-                    range, 
-                    image, 
-                    writeType == WriteType.TestWrite, 
+                    range,
+                    image,
+                    writeType == WriteType.TestWrite,
                     cancellationToken);
             }
 
@@ -344,9 +378,9 @@ namespace PcmHacking
         /// Copy a single memory range to the PCM.
         /// </summary>
         private async Task<bool> WriteMemoryRange(
-            MemoryRange range, 
-            byte[] image, 
-            bool justTestWrite, 
+            MemoryRange range,
+            byte[] image,
+            bool justTestWrite,
             CancellationToken cancellationToken)
         {
             int devicePayloadSize = vehicle.DeviceMaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
@@ -361,7 +395,7 @@ namespace PcmHacking
 
                 int startAddress = (int)(range.Address + index);
                 int thisPayloadSize = Math.Min(devicePayloadSize, (int)range.Size - index);
-                                                
+
                 Message payloadMessage = protocol.CreateBlockMessage(
                     image,
                     startAddress,
@@ -399,7 +433,7 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Not yet implemented. 
+        /// Not yet implemented.
         /// </summary>
         private async Task<bool> OsAndCalibrationWrite(CancellationToken cancellationToken, byte[] image)
         {

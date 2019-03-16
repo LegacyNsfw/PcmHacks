@@ -67,6 +67,12 @@ namespace PcmHacking
         public MainForm()
         {
             InitializeComponent();
+
+            // Wide enough for the CRC comparison table
+            this.Width = 1000;
+
+            // Golden ratio
+            this.Height = 618;
         }
 
         /// <summary>

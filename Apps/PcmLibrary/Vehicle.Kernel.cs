@@ -275,7 +275,7 @@ namespace PcmHacking
         public async Task<bool> PCMExecute(byte[] payload, int address, CancellationToken cancellationToken)
         {
             logger.AddUserMessage("Uploading kernel to PCM.");
-            logger.AddDebugMessage("Sending upload request with payload size " + payload.Length + ", loadaddress " + address.ToString("X6"));
+            logger.AddDebugMessage("Sending upload request for kernel size " + payload.Length + ", loadaddress " + address.ToString("X6"));
 
             // Note that we request an upload of 4k maximum, because the PCM will reject anything bigger.
             // But you can request a 4k upload and then send up to 16k if you want, and the PCM will not object.
@@ -306,7 +306,7 @@ namespace PcmHacking
                 return false;
             }
 
-            logger.AddDebugMessage("Going to load a " + payload.Length + " byte payload to 0x" + address.ToString("X6"));
+            logger.AddDebugMessage("Going to load a " + payload.Length + " byte kernel to 0x" + address.ToString("X6"));
 
             await this.device.SetTimeout(TimeoutScenario.SendKernel);
 
@@ -321,7 +321,7 @@ namespace PcmHacking
             // First we send the 'remainder' payload, containing any bytes that won't fill up an entire upload packet.
             logger.AddDebugMessage(
                 string.Format(
-                    "Sending remainder payload with offset 0x{0:X}, start address 0x{1:X}, length 0x{2:X}.",
+                    "Sending end block payload with offset 0x{0:X}, start address 0x{1:X}, length 0x{2:X}.",
                     offset,
                     startAddress,
                     remainder));
@@ -360,7 +360,7 @@ namespace PcmHacking
 
                 logger.AddDebugMessage(
                     string.Format(
-                        "Sending payload with offset 0x{0:X6}, start address 0x{1:X6}, length 0x{2:X4}.",
+                        "Sending block with offset 0x{0:X6}, start address 0x{1:X6}, length 0x{2:X4}.",
                         offset,
                         startAddress,
                         payloadSize));

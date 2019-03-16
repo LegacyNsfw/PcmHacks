@@ -8,7 +8,7 @@ namespace PcmHacking
     public static class FlashChips
     {
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="chipId"></param>
         /// <returns></returns>
@@ -23,34 +23,74 @@ namespace PcmHacking
                 case 0xFFFF4471:
                     var unused = new MemoryRange[]
                     {
-                        // These numbers and descriptions are straight from the data sheet. 
-                        // Notice that if you convert the hex sizes to decimal, they're all
-                        // half as big as the description indicates. That's wrong. It doesn't
-                        // work that way in the PCM, so this would only compare 256 kb.
+                        // These numbers and descriptions are straight from the intel 28F400B data sheet.
+                        // Notice that if you convert the 16 bit word sizes to decimal, they're all
+                        // half as big as the description here, in bytes, indicates.
                         new MemoryRange(0x30000, 0x10000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x20000, 0x10000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x10000, 0x10000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x04000, 0x0C000, BlockType.Calibration), //  96kb main block 
+                        new MemoryRange(0x04000, 0x0C000, BlockType.Calibration), //  96kb main block
                         new MemoryRange(0x03000, 0x01000, BlockType.Parameter), //   8kb parameter block
                         new MemoryRange(0x02000, 0x01000, BlockType.Parameter), //   8kb parameter block
-                        new MemoryRange(0x00000, 0x02000, BlockType.Boot), //  16kb boot block                        
+                        new MemoryRange(0x00000, 0x02000, BlockType.Boot), //  16kb boot block
                     };
                     return null;
 
-                // Intel 28F400B
-                case 0x00894471:
+                // Intel 28F800B
+                case 0x0089889D:
                     result = new MemoryRange[]
                     {
-                        // All of these addresses and sizes are all 2x what's listed 
-                        // in the data sheet, because the data sheet table assumes that
-                        // "bytes" are 16 bits wide. Which means they're not bytes. But
-                        // the data sheet calls them bytes.
+                        // These addresses are for a bottom fill chip (B) in byte mode (not word)
+                        new MemoryRange(0xE0000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0xC0000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0xA0000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x80000, 0x20000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x60000, 0x20000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x40000, 0x20000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x20000, 0x20000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block 
                         new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //   8kb parameter block
                         new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
+                    };
+                    break;
+
+                // Intel 28F400B
+                case 0x00894471:
+                    result = new MemoryRange[]
+                    {
+                        // These addresses are for a bottom fill chip (B) in byte mode (not word)
+                        new MemoryRange(0x60000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x40000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x20000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block 
+                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
+                    };
+                    break;
+
+                case 0x00012258:
+                    result = new MemoryRange[]
+                    {
+                        new MemoryRange(0xF0000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0xE0000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0xD0000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0xC0000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0xB0000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0xA0000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x90000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x80000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x70000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x60000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x50000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x40000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x30000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x20000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x10000, 0x10000, BlockType.Calibration), //  64kb calibration block
+                        new MemoryRange(0x08000, 0x08000, BlockType.Calibration), //  32kb calibration block
+                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //  8kb parameter block
+                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //  8kb parameter block
                         new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
                     };
                     break;
