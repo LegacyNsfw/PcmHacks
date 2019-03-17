@@ -180,6 +180,7 @@ namespace PcmHacking
                 // Load the dynamic content asynchronously.
                 ThreadPool.QueueUserWorkItem(new WaitCallback(LoadStartMessage));
                 ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
+                ThreadPool.QueueUserWorkItem(new WaitCallback(LoadCredits));
 
                 await this.ResetDevice();
 
@@ -265,6 +266,30 @@ namespace PcmHacking
             catch (Exception exception)
             {
                 this.AddDebugMessage("Unable to fetch updated help content.");
+                this.AddDebugMessage("This exception can safely be ignored.");
+                this.AddDebugMessage(exception.ToString());
+            }
+        }
+
+        /// <summary>
+        /// The Help content is loaded after the window appears, so that it doesn't slow down app initialization.
+        /// </summary>
+        private void LoadCredits(object unused)
+        {
+            try
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                var resourceName = "PcmHacking.credits.html";
+                var stream = assembly.GetManifestResourceStream(resourceName);
+
+                this.helpWebBrowser.Invoke((MethodInvoker)delegate ()
+                {
+                    this.creditsWebBrowser.DocumentStream = stream;
+                });
+            }
+            catch (Exception exception)
+            {
+                this.AddDebugMessage("Unable load content for Credits tab.");
                 this.AddDebugMessage("This exception can safely be ignored.");
                 this.AddDebugMessage(exception.ToString());
             }
