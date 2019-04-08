@@ -64,13 +64,35 @@ namespace PcmHacking
             try
             {
                 string stID = await this.SendRequest("ST I");                 // Identify (ScanTool.net)
-                if (stID == "?")
+                if (stID == "?" || string.IsNullOrEmpty(stID))
                 {
                     this.Logger.AddDebugMessage("This is not a ScanTool device.");
                     return false;
                 }
 
                 this.Logger.AddUserMessage("ScanTool device ID: " + stID);
+
+                if (stID.Contains("STN1130")) // SX
+                {
+                    this.MaxSendSize = 192 + 12;
+                    this.MaxReceiveSize = 500 + 12;
+                }
+                else if (stID.Contains("STN1155") || // LX
+                    stID.Contains("STN1150") || // MX version 1
+                    stID.Contains("STN1151")) // MX version 2
+                {
+                    this.MaxSendSize = 512 + 12;
+                    this.MaxReceiveSize = 512 + 12;
+                }
+                else
+                {
+                    this.Logger.AddUserMessage("This ScanTool device is not supported.");
+                    this.Logger.AddUserMessage("Please check pcmhammer.org to ensure that you have the latest release.");
+                    this.Logger.AddUserMessage("We're going to default to very small packet sizes, which will make everything slow, but at least it'll probably work.");
+                    this.MaxSendSize = 128 + 12;
+                    this.MaxReceiveSize = 128 + 12;
+                }
+
             }
             catch (Exception exception)
             {
