@@ -81,8 +81,8 @@ namespace PcmHacking
                     stID.Contains("STN1150") || // MX version 1
                     stID.Contains("STN1151")) // MX version 2
                 {
-                    this.MaxSendSize = 512 + 12;
-                    this.MaxReceiveSize = 512 + 12;
+                    this.MaxSendSize = 2048 + 12;
+                    this.MaxReceiveSize = 2048 + 12;
                 }
                 else
                 {
@@ -109,7 +109,7 @@ namespace PcmHacking
         /// </summary>
         public override async Task<bool> SendMessage(Message message)
         {
-            bool useSTPX = false;
+            bool useSTPX = true;
 
             if (useSTPX)
             {
@@ -121,27 +121,29 @@ namespace PcmHacking
                 builder.Append(messageBytes[1].ToString("X2"));
                 builder.Append(messageBytes[2].ToString("X2"));
                 builder.Append(", R:1");
-                builder.Append(", D:");
+                builder.Append(", L:");
+                int dataLength = messageBytes.Length - 3;
+                builder.Append(dataLength.ToString());
 
+                string header = builder.ToString();
+                string headerResponse = await this.SendRequest(header);
+                if (headerResponse != "DATA")
+                {
+                    this.Logger.AddUserMessage("Unexpected response to STPX header: " + headerResponse);
+                    return false;
+                }
+
+                builder = new StringBuilder();
                 for (int index = 3; index < messageBytes.Length; index++)
                 {
                     builder.Append(messageBytes[index].ToString("X2"));
                 }
 
-                builder.Append("\r");
+                string data = builder.ToString();
+                string dataResponse = await this.SendRequest(data);
 
-                string sendCommand = builder.ToString();
-
-                string sendMessageResponse = await this.SendRequest(sendCommand);
-
-                if (string.IsNullOrEmpty(sendMessageResponse))
+                if (!this.ProcessResponse(dataResponse, "STPX data"))
                 {
-                    sendMessageResponse = await this.ReadELMLine();
-                }
-
-                if (!this.ProcessResponse(sendMessageResponse, "message content"))
-                {
-
                     return false;
                 }
             }
