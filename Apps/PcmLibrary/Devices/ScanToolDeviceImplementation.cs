@@ -109,12 +109,12 @@ namespace PcmHacking
         /// </summary>
         public override async Task<bool> SendMessage(Message message)
         {
-            bool useSTPX = true;
+            byte[] messageBytes = message.GetBytes();
+
+            bool useSTPX = messageBytes.Length > 4;
 
             if (useSTPX)
-            {
-                byte[] messageBytes = message.GetBytes();
-
+            {                
                 StringBuilder builder = new StringBuilder();
                 builder.Append("STPX H:");
                 builder.Append(messageBytes[0].ToString("X2"));
@@ -126,11 +126,16 @@ namespace PcmHacking
                 builder.Append(dataLength.ToString());
 
                 string header = builder.ToString();
-                string headerResponse = await this.SendRequest(header);
-                if (headerResponse != "DATA")
+                for (int attempt = 1; attempt <= 5; attempt++)
                 {
-                    this.Logger.AddUserMessage("Unexpected response to STPX header: " + headerResponse);
-                    return false;
+                    string headerResponse = await this.SendRequest(header);
+                    if (headerResponse != "DATA")
+                    {
+                        this.Logger.AddUserMessage("Unexpected response to STPX header: " + headerResponse);
+                        continue;
+                    }
+
+                    break;
                 }
 
                 builder = new StringBuilder();
@@ -142,14 +147,14 @@ namespace PcmHacking
                 string data = builder.ToString();
                 string dataResponse = await this.SendRequest(data);
 
-                if (!this.ProcessResponse(dataResponse, "STPX data"))
+                if (!this.ProcessResponse(dataResponse, "STPX data", true))
                 {
+                    this.Logger.AddUserMessage("Unexpected response to STPX data: " + dataResponse);
                     return false;
                 }
             }
             else
             {
-                byte[] messageBytes = message.GetBytes();
                 string header;
                 string payload;
                 this.ParseMessage(messageBytes, out header, out payload);

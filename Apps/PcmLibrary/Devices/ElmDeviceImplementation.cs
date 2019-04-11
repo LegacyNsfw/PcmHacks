@@ -112,7 +112,7 @@ namespace PcmHacking
         public async Task<string> SendRequest(string request)
         {
             this.Logger.AddDebugMessage("TX: " + request);
-            await this.Port.Send(Encoding.ASCII.GetBytes(request + " \r\n"));
+            await this.Port.Send(Encoding.ASCII.GetBytes(request + " \r"));
 
             try
             {
@@ -224,14 +224,23 @@ namespace PcmHacking
         /// <summary>
         /// Process responses from the EML/ST devices.
         /// </summary>
-        protected bool ProcessResponse(string rawResponse, string context)
+        protected bool ProcessResponse(string rawResponse, string context, bool allowEmpty = false)
         {
             if (string.IsNullOrWhiteSpace(rawResponse))
             {
                 this.Logger.AddDebugMessage(
-                    string.Format("Empty response to {0}.",
-                    context));
-                return false;
+                    string.Format("Empty response to {0}. {1}",
+                    context,
+                    allowEmpty ? "That's OK" : "That's not OK."));
+
+                if (allowEmpty)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
             if (rawResponse == "OK")
