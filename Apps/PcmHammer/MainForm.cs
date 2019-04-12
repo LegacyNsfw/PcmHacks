@@ -340,7 +340,6 @@ namespace PcmHacking
             this.testWriteButton.Enabled = false;
             this.writeCalibrationButton.Enabled = false;
             this.writeParametersButton.Enabled = false;
-            this.writeOsAndCalibration.Enabled = false;
             this.writeFullContentsButton.Enabled = false;
             this.exitKernelButton.Enabled = false;
             this.reinitializeButton.Enabled = false;
@@ -363,7 +362,6 @@ namespace PcmHacking
             this.testWriteButton.Invoke((MethodInvoker)delegate () { this.testWriteButton.Enabled = true; });
             this.writeCalibrationButton.Invoke((MethodInvoker)delegate () { this.writeCalibrationButton.Enabled = true; });
             this.writeParametersButton.Invoke((MethodInvoker)delegate () { this.writeParametersButton.Enabled = true; });
-            this.writeOsAndCalibration.Invoke((MethodInvoker)delegate () { this.writeOsAndCalibration.Enabled = true; });
             this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true; });
             this.exitKernelButton.Invoke((MethodInvoker)delegate () { this.exitKernelButton.Enabled = true; });
             this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true; });
@@ -733,42 +731,6 @@ namespace PcmHacking
                 else
                 {
                     BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Parameters));
-                    BackgroundWorker.IsBackground = true;
-                    BackgroundWorker.Start();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Write the operating system and calibration.
-        /// </summary>
-        private void writeOsAndCalibration_Click(object sender, EventArgs e)
-        {
-            DelayDialogBox dialogBox = new DelayDialogBox();
-            DialogResult dialogResult = dialogBox.ShowDialog();
-            if (dialogResult == DialogResult.Cancel)
-            {
-                return;
-            }
-
-            if (!BackgroundWorker.IsAlive)
-            {
-                DialogResult result = MessageBox.Show(
-                    "Changing the operating system can render the PCM unusable." + Environment.NewLine +
-                    "Special tools may be needed to make the PCM work again." + Environment.NewLine +
-                    "Are you sure you really want to take that risk?",
-                    "This is dangerous.",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning,
-                    MessageBoxDefaultButton.Button2);
-
-                if (result == DialogResult.No)
-                {
-                    this.AddUserMessage("You have made a wise choice.");
-                }
-                else
-                {
-                    BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.OsAndCalibration));
                     BackgroundWorker.IsBackground = true;
                     BackgroundWorker.Start();
                 }
