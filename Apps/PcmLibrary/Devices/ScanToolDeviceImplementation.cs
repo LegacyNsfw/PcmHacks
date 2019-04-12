@@ -64,13 +64,35 @@ namespace PcmHacking
             try
             {
                 string stID = await this.SendRequest("ST I");                 // Identify (ScanTool.net)
-                if (stID == "?")
+                if (stID == "?" || string.IsNullOrEmpty(stID))
                 {
                     this.Logger.AddDebugMessage("This is not a ScanTool device.");
                     return false;
                 }
 
                 this.Logger.AddUserMessage("ScanTool device ID: " + stID);
+
+                if (stID.Contains("STN1130")) // SX
+                {
+                    this.MaxSendSize = 192 + 12;
+                    this.MaxReceiveSize = 500 + 12;
+                }
+                else if (stID.Contains("STN1155") || // LX
+                    stID.Contains("STN1150") || // MX version 1
+                    stID.Contains("STN1151")) // MX version 2
+                {
+                    this.MaxSendSize = 2048 + 12;
+                    this.MaxReceiveSize = 2048 + 12;
+                }
+                else
+                {
+                    this.Logger.AddUserMessage("This ScanTool device is not supported.");
+                    this.Logger.AddUserMessage("Please check pcmhammer.org to ensure that you have the latest release.");
+                    this.Logger.AddUserMessage("We're going to default to very small packet sizes, which will make everything slow, but at least it'll probably work.");
+                    this.MaxSendSize = 128 + 12;
+                    this.MaxReceiveSize = 128 + 12;
+                }
+
             }
             catch (Exception exception)
             {
@@ -87,45 +109,54 @@ namespace PcmHacking
         /// </summary>
         public override async Task<bool> SendMessage(Message message)
         {
-            bool useSTPX = false;
+            byte[] messageBytes = message.GetBytes();
 
+            bool useSTPX = messageBytes.Length > 4;
+
+            // Not sure why, but STPX is flaky with the clear-codes message at the end of the flash.
+            // So we'll fall back to the old approach for very short messages. 
             if (useSTPX)
-            {
-                byte[] messageBytes = message.GetBytes();
-
+            {                
                 StringBuilder builder = new StringBuilder();
                 builder.Append("STPX H:");
                 builder.Append(messageBytes[0].ToString("X2"));
                 builder.Append(messageBytes[1].ToString("X2"));
                 builder.Append(messageBytes[2].ToString("X2"));
                 builder.Append(", R:1");
-                builder.Append(", D:");
+                builder.Append(", L:");
+                int dataLength = messageBytes.Length - 3;
+                builder.Append(dataLength.ToString());
 
+                string header = builder.ToString();
+                for (int attempt = 1; attempt <= 5; attempt++)
+                {
+                    string headerResponse = await this.SendRequest(header);
+                    if (headerResponse != "DATA")
+                    {
+                        this.Logger.AddUserMessage("Unexpected response to STPX header: " + headerResponse);
+                        continue;
+                    }
+
+                    break;
+                }
+
+                builder = new StringBuilder();
                 for (int index = 3; index < messageBytes.Length; index++)
                 {
                     builder.Append(messageBytes[index].ToString("X2"));
                 }
 
-                builder.Append("\r");
+                string data = builder.ToString();
+                string dataResponse = await this.SendRequest(data);
 
-                string sendCommand = builder.ToString();
-
-                string sendMessageResponse = await this.SendRequest(sendCommand);
-
-                if (string.IsNullOrEmpty(sendMessageResponse))
+                if (!this.ProcessResponse(dataResponse, "STPX data", true))
                 {
-                    sendMessageResponse = await this.ReadELMLine();
-                }
-
-                if (!this.ProcessResponse(sendMessageResponse, "message content"))
-                {
-
+                    this.Logger.AddUserMessage("Unexpected response to STPX data: " + dataResponse);
                     return false;
                 }
             }
             else
             {
-                byte[] messageBytes = message.GetBytes();
                 string header;
                 string payload;
                 this.ParseMessage(messageBytes, out header, out payload);
