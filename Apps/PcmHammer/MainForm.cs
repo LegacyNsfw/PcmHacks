@@ -474,28 +474,6 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Set the HTTP server. This hasn't worked for a while, might just remove it rather than fixing it...
-        /// </summary>
-        private void startServerButton_Click(object sender, EventArgs e)
-        {
-            /*
-            this.DisableUserInput();
-            this.startServerButton.Enabled = false;
-
-            // It doesn't count if the user selected the prompt.
-            if (selectedPort == null)
-            {
-                this.AddUserMessage("You must select an actual port before starting the server.");
-                return;
-            }
-
-            this.AddUserMessage("There is no way to exit the HTTP server. Just close the app when you're done.");
-
-            HttpServer.StartWebServer(selectedPort, this);
-            */
-        }
-
-        /// <summary>
         /// Read the VIN, OS, etc.
         /// </summary>
         private async void readPropertiesButton_Click(object sender, EventArgs e)
