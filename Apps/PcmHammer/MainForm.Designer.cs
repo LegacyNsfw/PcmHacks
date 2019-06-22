@@ -180,7 +180,7 @@
             this.writeFullContentsButton.Name = "writeFullContentsButton";
             this.writeFullContentsButton.Size = new System.Drawing.Size(216, 25);
             this.writeFullContentsButton.TabIndex = 8;
-            this.writeFullContentsButton.Text = "Write &Full Contents";
+            this.writeFullContentsButton.Text = "Write &OS And Calibration";
             this.writeFullContentsButton.UseVisualStyleBackColor = true;
             this.writeFullContentsButton.Click += new System.EventHandler(this.writeFullContentsButton_Click);
             // 

@@ -174,7 +174,13 @@ namespace PcmHacking
                     break;
 
                 case WriteType.Full:
-                    relevantBlocks = BlockType.All;
+                    // Overwriting parameter blocks would break the EBCM pairing, 
+                    // which is not what most users want. They just want a new OS 
+                    // and the calibration to go along with it.
+                    //
+                    // The cast seems redundant, but C# converts the enum values 
+                    // to ints when it does arithmetic.
+                    relevantBlocks = (BlockType)(BlockType.All - BlockType.Parameter);
                     break;
 
                 default:

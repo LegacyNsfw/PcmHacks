@@ -9,7 +9,7 @@
 </head>
 
 <body>
-    <h1>PCM Hammer Release 5</h1>
+    <h1>PCM Hammer Release 6</h1>
 
     <ol>
         <li><a target="_self" href="#readfirst">Read This First</a>
@@ -28,7 +28,8 @@
 
     <p>Many of the app's operations will require transferring custom software (a "kernel") to the PCM. While that software is running on the PCM, normal PCM functions are suspended, so you will see and hear a variety of error messages and chimes. This is normal. After the app is done, the PCM will reboot and will work normally again.
 
-    <p>If you have a drive-by-wire throttle, you will probably find that the Check Engine light turns on after reading or writing, and a code reader will report P1518, indicating a communication error with the Throttle Actuator Control module. This can be ignored, and it will go away after you start the engine a few times. We're looking for a way to prevent this.
+    <p>
+        If you have a drive-by-wire throttle, you will probably find that the Check Engine light turns on after reading or writing, and a code reader will report P1518, indicating a communication error with the Throttle Actuator Control module. This can be ignored, and it will go away after you start the engine a few times. We're looking for a way to prevent this.
 
 
         <hr />
@@ -39,18 +40,20 @@
     <p><b><a href="http://www.obddiag.net/products.html">ObdDiag AllPro</a></b> - Only the USB and dev-board versions are recommended at this time. The AllPro devices are quite inexpensive, and the USB version is likely to be the most popular choice.  We don't recommend the Bluetooth version because of the risk of radio interference.
 
     <p>
-        ObdDiag has been a great partner in this project, incorporating changes and responding to feedback.
-        However this means that AllPro devices purchased before early June 2018 will need a firmware update to version 1.21 or later.
+        ObdDiag was a great partner in this project, incorporating changes and responding to feedback. However the man behind the company has moved on to other things, so these devices are no longer available.
+        Also, note that AllPro devices purchased before early June 2018 will need a firmware update to version 1.21 or later.
         Updating the firmware on the AllPro adapter requires the FlashMagic tool. Instructions are on the <a href="http://www.obddiag.net/">ObdDiag.Net web site.</a> and a link to the firmware can be found <a href="http://www.obddiag.net/allpro.html">here</a>.
 
-    <p><b><a href="https://www.scantool.net/obdlink-sx/">Scantool SX</a></b> - This is inexpensive and superior to ELM knock-off devices, however it does not support 4x (high speed) mode, so a full read takes a little over 20 minutes. The ObdLink LX and MX are similar but unfortunately does not have enough memory to receive 500-byte packets of PCM data, so they are not supported. Other devices based on the Scantool OBD2 chip may or may not work, depending on their message size limits. If you find another one that works (or doesn't), please let us know.
+    <p><b><a href="https://www.scantool.net/obdlink-sx/">ObdLink Scantool SX</a></b> - This is inexpensive and superior to ELM knock-off devices, however it does not support 4x (high speed) mode, so a full read takes a little over 20 minutes. The ObdLink LX and MX are similar but unfortunately does not have enough memory to receive 500-byte packets of PCM data, so they are not supported. Other devices based on the Scantool OBD2 chip may or may not work, depending on their message size limits. If you find another one that works (or doesn't), please let us know.
+
+    <p><b><a href="https://www.scantool.net/obdlink-sx/">ObdLink Scantool LX</a></b> - It's like an SX, but wireless and slightly faster (still not 4X fast), and it costs slightly more.
 
     <p><b><a href="http://www.avt-hq.com/852_hw.htm">AVT 852</a></b> - This is the most expensive option, but this was one of the first interfaces to properly support J1850 VPW high-speed mode.
 
     <p><b>Any J2534-compatible interface that supports J1850 VPW</b> - At least in theory, these should all work. There are a few of those on the market, and we cannot test them all, but if you have one, give it a try. As time goes by we'll list the ones that are proven to work. The genuine GM MDIs are one device which is known to work, though it is not cheap. Over time we hope to confirm that other, less expensive devices will also work.
 
     <p>
-        Note that most ELM-based devices are <i>not</i> supported, because they do not work. 
+        Note that most ELM-based devices are <i>not</i> supported, because they do not work.
 
         <hr />
     <p id="basics"><h3>Basic Operations</h3>
@@ -69,7 +72,7 @@
 
     <p><b>Read Properties</b> - To read the VIN, serial number, and other properties from the PCM, just click the "Read Properties" button. You should generally do this before doing anything else, just to confirm that the device is able to communicate with the PCM.
 
-    <p><B>Read Full Contents</B> - This button will save the entire contents of the PCM's read-only memory, and it will save that data to whatever new file you choose. You can open the resulting file in Tuner Pro, if you have the definition file (the "XDF") the corresponds to your PCM's operating system. 
+    <p><B>Read Full Contents</B> - This button will save the entire contents of the PCM's read-only memory, and it will save that data to whatever new file you choose. You can open the resulting file in Tuner Pro, if you have the definition file (the "XDF") the corresponds to your PCM's operating system.
 
     <p>If anything goes wrong during the read process, try turning the key to the off position, wait 10 seconds, turn it on again, and wait 10 seconds again.
 
@@ -79,13 +82,17 @@
 
     <p>You may find this feature useful if you've purchased a used PCM from a junkyard or online retailer, for example after bricking your PCM with software written by amateurs and downloaded from the internet. (Although, honestly, zero PCMs have been harmed during the development of this app. So far.)
 
-    <p><b>Quick Comparison</b> - You can use this feature to find out whether a file on your computer matches the contents of the PCM. This will takes a minute or so, but it's quicker than reading entire PCM and comparing both files on your computer. 
+    <p><b>Quick Comparison</b> - You can use this feature to find out whether a file on your computer matches the contents of the PCM. This will takes a minute or so, but it's quicker than reading entire PCM and comparing both files on your computer.
 
     <p><b>Test Write</b> - This will simulate the process of updating your PCM's calibration block from a file on your computer. However, the contents of your PCM will not be changed. This is useful for verifying that quality of the connection between your computer and your PCM.
 
     <p><b>Write Calibration</b> - This will erase and reprogram the calibration section of your PCM's flash memory. This is tuning, basically. It can take several minutes, and if this is interrupted your PCM may be unusable, so make sure your car battery and laptop batter are fully charged. Also, once the process begins, don't do anything that might interrupt it. Don't close the app, reboot the computer, spill coffee on the keyboard, etc.
 
     <p><b>Write Parameters (Clone)</b> - This will erase and reprogram the parameter sections of your PCM's flash memory. These sections contain the VIN, serial number, stored OBD2 codes, etc. This is useful if you are replacing an old PCM with a new one from another vehicle.
+
+    <p><b>Write OS And Calibration</b> - This will erase and reprogram everything but the parameter sections. This is useful if you want to update the operating system in your vehicle. 
+    
+    <p>If you want to replace your PCM, do a full read from the current/old PCM, then "Write OS and Calibration" then "Write Parameters (Clone)" to the new PCM. The entire flash memory of the new PCM will then be completely identical to that of the old PCM.
 
     <p><b>Halt Kernel</b> - You will probably never need to use this button. But, if you interupt a read or quick-compare operation by closing the app, you can use this to halt the PCM Hammer kernel and reboot the PCM. <b>If a write operation is interrupted, do not use this button.</b> Instead, just do another write. The app will detect that the kernel is already running, and it will restart the write operation.
 
