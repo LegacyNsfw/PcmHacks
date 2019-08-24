@@ -129,6 +129,11 @@ namespace PcmHacking
             }
         }
 
+        public Task<bool> StartLogging()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Send a series of increasingly longer messages. They should be echoed back with
         /// only the mode byte changing from 3E to 7E.
