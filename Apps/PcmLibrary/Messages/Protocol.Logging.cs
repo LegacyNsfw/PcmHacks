@@ -24,62 +24,31 @@ namespace PcmHacking
         /// </summary>
         public Message ConfigureDynamicData(byte dpid, DpidPosition position, UInt16 pid)
         {
-            byte[] Bytes = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.ConfigureDynamicData, position, offset >> 8, offset, 0xFF, 0xFF };
-            return new Message(Bytes);
+            byte[] header = new byte[]
+            {
+                Priority.Physical0,
+                DeviceId.Pcm,
+                DeviceId.Tool,
+                Mode.ConfigureDynamicData,
+                dpid,
+                (byte)position,
+                (byte)(pid >> 8),
+                (byte)pid,
+                0xFF,
+                0xFF
+            };
+            return new Message(header);
         }
 
         /// <summary>
         /// Create a request to read the PCM's operating system ID.
         /// </summary>
         /// <returns></returns>
-        public Message BeginLogging(params byte dpid)
+        public Message BeginLogging(params byte[] dpid)
         {
             // That final 0x01 might need to be the length of the dpid array?
-            byte[] bytes = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, 0x01 };
-            return new Message(bytes.Concat(dpid));
+            byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, 0x01 };
+            return new Message(header.Concat(dpid).ToArray());
         }
-
-        /// <summary>
-        /// Create a request to read the PCM's Calibration ID.
-        /// </summary>
-        /// <returns></returns>
-        public Message CreateCalibrationIdReadRequest()
-        {
-            return CreateReadRequest(BlockId.CalibrationID);
-        }
-
-        /// <summary>
-        /// Create a request to read the PCM's Hardware ID.
-        /// </summary>
-        /// <returns></returns>
-        public Message CreateHardwareIdReadRequest()
-        {
-            return CreateReadRequest(BlockId.HardwareID);
-        }
-
-        /// <summary>
-        /// Parse a 32-bit value from the first four bytes of a message payload.
-        /// </summary>
-        public Response<UInt32> ParseUInt32(Message message, byte responseMode)
-        {
-            byte[] bytes = message.GetBytes();
-            int result = 0;
-            ResponseStatus status;
-
-            byte[] expected = new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, responseMode };
-            if (!TryVerifyInitialBytes(bytes, expected, out status))
-            {
-                return Response.Create(ResponseStatus.Error, (UInt32)result);
-            }
-
-            result = bytes[5] << 24;
-            result += bytes[6] << 16;
-            result += bytes[7] << 8;
-            result += bytes[8];
-
-            return Response.Create(ResponseStatus.Success, (UInt32)result);
-        }
-
-
     }
 }
