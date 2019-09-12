@@ -17,6 +17,15 @@ namespace PcmHacking
         Position5 = 0x69,
         Position6 = 0x71,
     }
+
+    public enum DefineBy
+    {
+        Offset = 0,
+        Pid = 1,
+        Address = 2,
+        Proprietary = 3,
+    }
+    
     public partial class Protocol
     {
         /// <summary>
@@ -40,15 +49,68 @@ namespace PcmHacking
             return new Message(header);
         }
 
+        public Message ConfigureDynamicData(byte dpid, DefineBy defineBy, int offset, int size, UInt32 id)
+        {
+            int combined = (((int)defineBy) << 6) | (offset << 3) | size;
+            byte byte1, byte2, byte3;
+
+            switch (defineBy)
+            {
+                case DefineBy.Offset:
+                    byte1 = (byte)id;
+                    byte2 = 0xFF;
+                    byte3 = 0xFF;
+                    break;
+
+                case DefineBy.Pid:
+                    byte1 = (byte)(id >> 8);
+                    byte2 = (byte)id;
+                    byte3 = 0xFF;
+                    break;
+
+                case DefineBy.Address:
+                    byte1 = (byte)(id >> 16);
+                    byte2 = (byte)(id >> 8);
+                    byte3 = (byte)id;
+                    break;
+
+                default:
+                    throw new InvalidOperationException("Unsupported DefineBy value: " + defineBy.ToString());
+            }
+
+            byte[] payload = new byte[]
+            {
+                Priority.Physical0,
+                DeviceId.Pcm,
+                DeviceId.Tool,
+                Mode.ConfigureDynamicData,
+                dpid,
+                (byte)combined,
+                byte1,
+                byte2,
+                byte3,
+                0xFF
+            };
+
+            return new Message(payload);
+        }
+
         /// <summary>
         /// Create a request to read the PCM's operating system ID.
         /// </summary>
         /// <returns></returns>
         public Message BeginLogging(params byte[] dpid)
         {
-            // That final 0x01 might need to be the length of the dpid array?
-            byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, 0x01 };
-            return new Message(header.Concat(dpid).ToArray());
+            // ResponseType values:
+            // 0x01 = send once
+            // 0x12 = send slowly
+            // 0x13 = send medium
+            // 0x24 = send fast
+            byte responseType = 0x24;
+            byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, responseType };
+            byte[] padding = new byte[4];// { 0xFF, 0xFF, 0xFF, 0xFF };
+            IEnumerable<byte> test = padding.Take(5 - dpid.Length);
+            return new Message(header.Concat(dpid).Concat(test).ToArray());
         }
     }
 }

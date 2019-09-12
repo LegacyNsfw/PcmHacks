@@ -60,11 +60,11 @@
             this.categories.TabStop = false;
             this.categories.Text = "Device &Category";
             // 
-            // j2534DeviceButton
+            // j2534RadioButton
             // 
             this.j2534RadioButton.AutoSize = true;
             this.j2534RadioButton.Location = new System.Drawing.Point(142, 20);
-            this.j2534RadioButton.Name = "j2534DeviceButton";
+            this.j2534RadioButton.Name = "j2534RadioButton";
             this.j2534RadioButton.Size = new System.Drawing.Size(91, 17);
             this.j2534RadioButton.TabIndex = 1;
             this.j2534RadioButton.TabStop = true;
@@ -180,6 +180,7 @@
             // 
             this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.okButton.Location = new System.Drawing.Point(301, 12);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(94, 23);
@@ -221,6 +222,7 @@
             // 
             // DevicePicker
             // 
+            this.AcceptButton = this.okButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(407, 337);

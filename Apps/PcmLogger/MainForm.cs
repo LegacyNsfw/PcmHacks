@@ -117,8 +117,15 @@ namespace PcmHacking
                     return;
                 }
 
+                DateTime lastRequestTime = DateTime.Now;
+
                 while (!this.logStopRequested)
                 {
+                    if (DateTime.Now.Subtract(lastRequestTime) > TimeSpan.FromSeconds(3))
+                    {
+                        await this.Vehicle.SendToolPresentNotification();
+                    }
+
                     string[] rowValues = await this.Vehicle.ReadLogRow();
                     this.logValues.Text = string.Join(Environment.NewLine, rowValues);
                 }
