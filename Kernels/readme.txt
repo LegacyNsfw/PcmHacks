@@ -1,5 +1,4 @@
-build.bat encapsulates the options needed to convert C code into kernel binaries.
-(Perhaps this should use a makefile, but that would require installing make.)
+build.bat encapsulates the options needed to convert C code into kernel binaries on Windows machines.
 
 gcc.bat is mostly just for experimenting with gcc options before
 moving those options into the build.bat script.
