@@ -1,7 +1,3 @@
-The goal here is to create PCM read and write kernels using C rather than assembly.
-
-At this point I'm just trying to create a tool chain and validate the concept.
-
 build.bat encapsulates the options needed to convert C code into kernel binaries.
 (Perhaps this should use a makefile, but that would require installing make.)
 
@@ -9,12 +5,6 @@ gcc.bat is mostly just for experimenting with gcc options before
 moving those options into the build.bat script.
 
 disasm.bat can be run on .o files or a.out to inspect the contents.
-
-The build script produces a .S file, and the SRecordToKernel.exe utility 
-uses the .S file to create a .bin file which contains only the kernel, and
-none of the boilerplate code for Windows/Linux executables.
-The source code to the SRecordToKernel utility is in this same repository,
-in the DevTools\SRecordToKernel directory.
 
 --
 
