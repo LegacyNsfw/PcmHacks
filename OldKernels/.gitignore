@@ -1,8 +1,0 @@
-a.out
-*.o
-*.S
-*.bin
-*.log 
-*.disassembly
-*.elf
-IDA

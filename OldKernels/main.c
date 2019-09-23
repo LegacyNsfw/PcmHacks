@@ -1,3 +1,0 @@
-int _start(void)
-{
-}
