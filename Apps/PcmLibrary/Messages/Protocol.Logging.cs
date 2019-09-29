@@ -25,7 +25,19 @@ namespace PcmHacking
         Address = 2,
         Proprietary = 3,
     }
-    
+
+    public class RawLogData
+    {
+        public byte Dpid { get; private set; }
+        public byte[] Payload { get; private set; }
+
+        public RawLogData(byte dpid, byte[] payload)
+        {
+            this.Dpid = dpid;
+            this.Payload = payload;
+        }
+    }
+
     public partial class Protocol
     {
         /// <summary>
@@ -111,6 +123,20 @@ namespace PcmHacking
             byte[] padding = new byte[4];// { 0xFF, 0xFF, 0xFF, 0xFF };
             IEnumerable<byte> test = padding.Take(5 - dpid.Length);
             return new Message(header.Concat(dpid).Concat(test).ToArray());
+        }
+
+        // TODO: create a Parse method for the 6C
+        public bool TryParseRawLogData(Message message, out RawLogData rawLogData)
+        {
+            ResponseStatus unused;
+            if (!TryVerifyInitialBytes(message.GetBytes(), new byte[] { 0x8C, DeviceId.Tool, DeviceId.Pcm, 0x6A }, out unused))
+            {
+                rawLogData = null;
+                return false;
+            }
+
+            rawLogData = new RawLogData(message[4], message.GetBytes().Skip(5).Take(6).ToArray());
+            return true;
         }
     }
 }

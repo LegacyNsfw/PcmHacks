@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+
     /// <summary>
     /// From the application's perspective, this class is the API to the vehicle.
     /// </summary>
@@ -18,7 +19,6 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> StartLogging(LogProfile profile)
         {
-            byte dpid = 0xFE;
             List<byte> dpids = new List<byte>();
             foreach(ParameterGroup group in profile.ParameterGroups)
             {
@@ -26,7 +26,7 @@ namespace PcmHacking
                 foreach(ProfileParameter parameter in group.Parameters)
                 {
                     Message configurationMessage = this.protocol.ConfigureDynamicData(
-                        dpid,
+                        (byte)group.Dpid,
                         parameter.DefineBy,
                         position,
                         parameter.ByteCount,
@@ -37,12 +37,29 @@ namespace PcmHacking
                         return false;
                     }
 
-                    // TODO: sanity check the response.
+                    // Wait for a success or fail message.
+                    // TODO: move this into the protocol layer.
+                    //
+                    for (int attempt = 0; attempt < 10; attempt++)
+                    {
+                        Message responseMessage = await this.ReceiveMessage();
+                        if (responseMessage[3] == 0x6C)
+                        {
+                            this.logger.AddDebugMessage("Configured " + parameter.ToString());
+                            break;
+                        }
+
+                        if (responseMessage[3] == 0x7F && responseMessage[4] == 0x2C)
+                        {
+                            this.logger.AddUserMessage("Unable to configure " + parameter.ToString());
+                            break;
+                        }
+                    }
+
 
                     position += parameter.ByteCount;
                 }
-                dpids.Add(dpid);
-                dpid--;
+                dpids.Add((byte)group.Dpid);
             }
 
             Message startMessage = this.protocol.BeginLogging(dpids.ToArray());
@@ -52,6 +69,38 @@ namespace PcmHacking
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Read a dpid response from the PCM.
+        /// </summary>
+        public async Task<RawLogData> ReadLogData()
+        {
+            Message message;
+            RawLogData result = null;
+
+            for (int attempt = 1; attempt < 20; attempt++)
+            {
+                message = await this.ReceiveMessage();
+                if (message == null)
+                {
+                    break;
+                }
+
+                this.logger.AddDebugMessage("ReadLogData: " + message.ToString());
+
+                if (message[3] != 0x6A)
+                {
+                    continue;
+                }
+
+                if (this.protocol.TryParseRawLogData(message, out result))
+                {
+                    break;
+                }
+            } 
+
+            return result;
         }
 
         public async Task<bool> StartLogging_Old()
@@ -196,15 +245,6 @@ namespace PcmHacking
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Query the PCM's Serial Number.
-        /// </summary>
-        public async Task<string[]> ReadLogRow()
-        {
-            Message message = await this.ReceiveMessage();
-            return new string[0];
         }
     }
 }

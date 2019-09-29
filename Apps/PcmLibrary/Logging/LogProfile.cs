@@ -64,6 +64,7 @@ namespace PcmHacking
     {
         public string Name { get; set; }
         public string Expression { get; set; }
+        public string Format { get; set; }
         public override string ToString()
         {
             return Name + " (" + Expression + ")";
@@ -157,6 +158,14 @@ namespace PcmHacking
 
         public IList<ParameterGroup> ParameterGroups { get; set; }
 
+        public int ParameterCount
+        {
+            get
+            {
+                return this.ParameterGroups.Sum(x => x.Parameters.Count);
+            }
+        }
+
         public LogProfile()
         {
             this.ParameterGroups = new List<ParameterGroup>();
@@ -173,10 +182,10 @@ namespace PcmHacking
             return true;
         }
 
-        public string GetParameterNames()
+        public string GetParameterNames(string separator)
         {
             return string.Join(
-                Environment.NewLine, 
+                separator, 
                 this.ParameterGroups.SelectMany(
                     group => group.Parameters.Select(
                         parameter => parameter.Name)));

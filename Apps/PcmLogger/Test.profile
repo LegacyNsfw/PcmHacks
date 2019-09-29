@@ -67,7 +67,7 @@
                     "Name": "Engine Coolant Temperature",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0xC"
+                    "Address": "0x5"
                 },
                 {
                     "Conversion": {

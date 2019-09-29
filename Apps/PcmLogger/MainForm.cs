@@ -127,23 +127,19 @@ namespace PcmHacking
                     return;
                 }
 
-                if (!await this.Vehicle.StartLogging(this.profile))
-                {
-                    logging = false;
-                    return;
-                }
-
-                DateTime lastRequestTime = DateTime.Now;
+                Logger logger = new Logger(this.Vehicle, this.profile);
+                await logger.StartLogging();
 
                 while (!this.logStopRequested)
                 {
-                    if (DateTime.Now.Subtract(lastRequestTime) > TimeSpan.FromSeconds(2))
+                    string[] rowValues = await logger.GetNextRow();
+                    if (rowValues == null)
                     {
-                        await this.Vehicle.SendToolPresentNotification();
+                        break;
                     }
 
-                    string[] rowValues = await this.Vehicle.ReadLogRow();
-                    this.logValues.Text = string.Join(Environment.NewLine, rowValues);
+                    string formattedValues = GetFormattedValues(rowValues);
+                    this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
                 }
             }
             catch (Exception exception)
@@ -160,116 +156,141 @@ namespace PcmHacking
                     delegate ()
                     {
                         this.startStopLogging.Enabled = true;
+                        this.startStopLogging.Text = "Start &Logging";
                     });
             }
         }
 
+        private string GetFormattedValues(string[] rowValues)
+        {
+            StringBuilder builder = new StringBuilder();
+            int index = 0;
+            foreach(ParameterGroup group in this.profile.ParameterGroups)
+            {
+                foreach(ProfileParameter parameter in group.Parameters)
+                {
+                    builder.Append(rowValues[index]);
+                    builder.Append('\t');
+                    builder.Append(parameter.Conversion.Name);
+                    builder.Append('\t');
+                    builder.Append(parameter.Name);
+                }
+            }
+
+            return builder.ToString();
+        }
+
+        private bool generateTestProfile = false;
+
         private async void selectProfile_Click(object sender, EventArgs e)
         {
-            LogProfile test = new LogProfile();
-            ParameterGroup group = new ParameterGroup();
-            group.Dpid = 0xFE;
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Engine Speed",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 2,
-                    Address = 0x000c,
-                    Conversion = new Conversion { Name = "RPM", Expression = "x*.25"},
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Mass Air Flow",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 2,
-                    Address = 0x0010,
-                    Conversion = new Conversion { Name = "g/s", Expression = "x/100" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Manifold Absolute Pressure",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x000B,
-                    Conversion = new Conversion { Name = "kpa", Expression = "x" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Throttle Position Sensor",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x0011,
-                    Conversion = new Conversion { Name = "%", Expression = "x/2.56" },
-                });
-
-            test.TryAddGroup(group);
-
-            group = new ParameterGroup();
-            group.Dpid = 0xFD;
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Intake Air Temperature",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x000F,
-                    Conversion = new Conversion { Name = "C", Expression = "x-40" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Engine Coolant Temperature",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x000c,
-                    Conversion = new Conversion { Name = "C", Expression = "x-40" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Left Long Term Fuel Trim",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x0007,
-                    Conversion = new Conversion { Name = "%", Expression = "(x-128)/1.28" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Right Long Term Fuel Trim",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x0009,
-                    Conversion = new Conversion { Name = "%", Expression = "(x-128)/1.28" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Knock Retard",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x11A6,
-                    Conversion = new Conversion { Name = "Degrees", Expression = "(x*256)/22.5" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Target AFR",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x119E,
-                    Conversion = new Conversion { Name = "AFR", Expression = "x*10" },
-                });
-            test.TryAddGroup(group);
-
-            using (Stream outputStream = File.OpenWrite(@"C:\temp\test.profile"))
+            if (generateTestProfile)
             {
-                LogProfileWriter writer = new LogProfileWriter(outputStream);
-                await writer.WriteAsync(test);
+                LogProfile test = new LogProfile();
+                ParameterGroup group = new ParameterGroup();
+                group.Dpid = 0xFE;
+                group.TryAddParameter(
+                    new ProfileParameter
+                    {
+                        Name = "Engine Speed",
+                        DefineBy = DefineBy.Pid,
+                        ByteCount = 2,
+                        Address = 0x000c,
+                        Conversion = new Conversion { Name = "RPM", Expression = "x*.25" },
+                    });
+                group.TryAddParameter(
+                    new ProfileParameter
+                    {
+                        Name = "Mass Air Flow",
+                        DefineBy = DefineBy.Pid,
+                        ByteCount = 2,
+                        Address = 0x0010,
+                        Conversion = new Conversion { Name = "g/s", Expression = "x/100" },
+                    });
+                group.TryAddParameter(
+                    new ProfileParameter
+                    {
+                        Name = "Manifold Absolute Pressure",
+                        DefineBy = DefineBy.Pid,
+                        ByteCount = 1,
+                        Address = 0x000B,
+                        Conversion = new Conversion { Name = "kpa", Expression = "x" },
+                    });
+                group.TryAddParameter(
+                    new ProfileParameter
+                    {
+                        Name = "Throttle Position Sensor",
+                        DefineBy = DefineBy.Pid,
+                        ByteCount = 1,
+                        Address = 0x0011,
+                        Conversion = new Conversion { Name = "%", Expression = "x/2.56" },
+                    });
+
+                test.TryAddGroup(group);
+
+                group = new ParameterGroup();
+                group.Dpid = 0xFD;
+                group.TryAddParameter(
+                    new ProfileParameter
+                    {
+                        Name = "Intake Air Temperature",
+                        DefineBy = DefineBy.Pid,
+                        ByteCount = 1,
+                        Address = 0x000F,
+                        Conversion = new Conversion { Name = "C", Expression = "x-40" },
+                    });
+                group.TryAddParameter(
+                    new ProfileParameter
+                    {
+                        Name = "Engine Coolant Temperature",
+                        DefineBy = DefineBy.Pid,
+                        ByteCount = 1,
+                        Address = 0x000c,
+                        Conversion = new Conversion { Name = "C", Expression = "x-40" },
+                    });
+                group.TryAddParameter(
+                    new ProfileParameter
+                    {
+                        Name = "Left Long Term Fuel Trim",
+                        DefineBy = DefineBy.Pid,
+                        ByteCount = 1,
+                        Address = 0x0007,
+                        Conversion = new Conversion { Name = "%", Expression = "(x-128)/1.28" },
+                    });
+                group.TryAddParameter(
+                    new ProfileParameter
+                    {
+                        Name = "Right Long Term Fuel Trim",
+                        DefineBy = DefineBy.Pid,
+                        ByteCount = 1,
+                        Address = 0x0009,
+                        Conversion = new Conversion { Name = "%", Expression = "(x-128)/1.28" },
+                    });
+                group.TryAddParameter(
+                    new ProfileParameter
+                    {
+                        Name = "Knock Retard",
+                        DefineBy = DefineBy.Pid,
+                        ByteCount = 1,
+                        Address = 0x11A6,
+                        Conversion = new Conversion { Name = "Degrees", Expression = "(x*256)/22.5" },
+                    });
+                group.TryAddParameter(
+                    new ProfileParameter
+                    {
+                        Name = "Target AFR",
+                        DefineBy = DefineBy.Pid,
+                        ByteCount = 1,
+                        Address = 0x119E,
+                        Conversion = new Conversion { Name = "AFR", Expression = "x*10" },
+                    });
+                test.TryAddGroup(group);
+
+                using (Stream outputStream = File.OpenWrite(@"C:\temp\test.profile"))
+                {
+                    LogProfileWriter writer = new LogProfileWriter(outputStream);
+                    await writer.WriteAsync(test);
+                }
             }
 
             
@@ -294,7 +315,7 @@ namespace PcmHacking
                     }
 
                     this.profilePath.Text = dialog.FileName;
-                    this.logValues.Text = this.profile.GetParameterNames();
+                    this.logValues.Text = this.profile.GetParameterNames(Environment.NewLine);
                 }
                 catch(Exception exception)
                 {

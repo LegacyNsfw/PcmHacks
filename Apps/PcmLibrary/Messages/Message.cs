@@ -32,6 +32,17 @@ namespace PcmHacking
         private ulong error;
 
         /// <summary>
+        /// Get the Nth byte of the message.
+        /// </summary>
+        public byte this[int index]
+        {
+            get
+            {
+                return this.message[index];
+            }
+        }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         public Message(byte[] message)
