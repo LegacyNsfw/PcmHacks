@@ -11,15 +11,50 @@ namespace PcmHacking
     /// <summary>
     /// From the application's perspective, this class is the API to the vehicle.
     /// </summary>
-    /// <remarks>
-    /// Methods in this class are high-level operations like "get the VIN," or "read the contents of the EEPROM."
-    /// </remarks>
     public partial class Vehicle : IDisposable
     {
         /// <summary>
         /// Start logging
         /// </summary>
-        public async Task<bool> StartLogging()
+        public async Task<bool> StartLogging(LogProfile profile)
+        {
+            byte dpid = 0xFE;
+            List<byte> dpids = new List<byte>();
+            foreach(ParameterGroup group in profile.ParameterGroups)
+            {
+                int position = 1;
+                foreach(ProfileParameter parameter in group.Parameters)
+                {
+                    Message configurationMessage = this.protocol.ConfigureDynamicData(
+                        dpid,
+                        parameter.DefineBy,
+                        position,
+                        parameter.ByteCount,
+                        parameter.Address);
+
+                    if (!await this.SendMessage(configurationMessage))
+                    {
+                        return false;
+                    }
+
+                    // TODO: sanity check the response.
+
+                    position += parameter.ByteCount;
+                }
+                dpids.Add(dpid);
+                dpid--;
+            }
+
+            Message startMessage = this.protocol.BeginLogging(dpids.ToArray());
+            if (!await this.SendMessage(startMessage))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public async Task<bool> StartLogging_Old()
         {
             // NOT SUPPORTED (in my ROM anyway, need to try others)
             // 19F3 - transmission temprature
@@ -32,32 +67,32 @@ namespace PcmHacking
             // DPID numbers 0xF2-0xFE all work
             // 0xFE is highest priority
             // 0xFA is very slow
-            byte dipd1 = 0xFE;
+            byte dpid1 = 0xFE;
 
 
             // Load 2 bytes of SAE RPM to DPID positions 1 and 2
-            Message message = this.protocol.ConfigureDynamicData(dipd1, DefineBy.Pid, 1, 2, 0x000C);
+            Message message = this.protocol.ConfigureDynamicData(dpid1, DefineBy.Pid, 1, 2, 0x000C);
             if (!await this.SendMessage(message))
             {
                 return false;
             }
 
             // load 2 bytes from SAE MAF to positions 3 and 4
-            message = this.protocol.ConfigureDynamicData(dipd1, DefineBy.Pid, 3, 2, 0x0010);
+            message = this.protocol.ConfigureDynamicData(dpid1, DefineBy.Pid, 3, 2, 0x0010);
             if (!await this.SendMessage(message))
             {
                 return false;
             }
 
             // load 1 byte of SAE MAP to position 5
-            message = this.protocol.ConfigureDynamicData(dipd1, DefineBy.Pid, 5, 1, 0x000B);
+            message = this.protocol.ConfigureDynamicData(dpid1, DefineBy.Pid, 5, 1, 0x000B);
             if (!await this.SendMessage(message))
             {
                 return false;
             }
 
             // load 1 byte of SAE TPS to position 6
-            message = this.protocol.ConfigureDynamicData(dipd1, DefineBy.Pid, 6, 1, 0x0011);
+            message = this.protocol.ConfigureDynamicData(dpid1, DefineBy.Pid, 6, 1, 0x0011);
             if (!await this.SendMessage(message))
             {
                 return false;
@@ -154,7 +189,7 @@ namespace PcmHacking
             */
 
             // Start logging
-            message = this.protocol.BeginLogging(dipd1, dpid2);//, dpid3);
+            message = this.protocol.BeginLogging(dpid1, dpid2);//, dpid3);
             if (!await this.SendMessage(message))
             {
                 return false;

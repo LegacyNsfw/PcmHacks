@@ -31,32 +31,23 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.stopLogging = new System.Windows.Forms.Button();
-            this.startLogging = new System.Windows.Forms.Button();
+            this.startStopLogging = new System.Windows.Forms.Button();
             this.deviceDescription = new System.Windows.Forms.Label();
             this.selectButton = new System.Windows.Forms.Button();
             this.logValues = new System.Windows.Forms.TextBox();
+            this.selectProfileButton = new System.Windows.Forms.Button();
+            this.profilePath = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
-            // stopLogging
+            // startStopLogging
             // 
-            this.stopLogging.Location = new System.Drawing.Point(12, 86);
-            this.stopLogging.Name = "stopLogging";
-            this.stopLogging.Size = new System.Drawing.Size(215, 23);
-            this.stopLogging.TabIndex = 5;
-            this.stopLogging.Text = "Stop Logging";
-            this.stopLogging.UseVisualStyleBackColor = true;
-            this.stopLogging.Click += new System.EventHandler(this.stopLogging_Click);
-            // 
-            // startLogging
-            // 
-            this.startLogging.Location = new System.Drawing.Point(12, 57);
-            this.startLogging.Name = "startLogging";
-            this.startLogging.Size = new System.Drawing.Size(215, 23);
-            this.startLogging.TabIndex = 4;
-            this.startLogging.Text = "Start Logging";
-            this.startLogging.UseVisualStyleBackColor = true;
-            this.startLogging.Click += new System.EventHandler(this.startLogging_Click);
+            this.startStopLogging.Location = new System.Drawing.Point(12, 72);
+            this.startStopLogging.Name = "startStopLogging";
+            this.startStopLogging.Size = new System.Drawing.Size(215, 23);
+            this.startStopLogging.TabIndex = 4;
+            this.startStopLogging.Text = "Start &Logging";
+            this.startStopLogging.UseVisualStyleBackColor = true;
+            this.startStopLogging.Click += new System.EventHandler(this.startLogging_Click);
             // 
             // deviceDescription
             // 
@@ -79,21 +70,44 @@
             // 
             // logValues
             // 
-            this.logValues.Location = new System.Drawing.Point(237, 59);
+            this.logValues.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.logValues.Location = new System.Drawing.Point(237, 72);
             this.logValues.Multiline = true;
             this.logValues.Name = "logValues";
             this.logValues.ReadOnly = true;
-            this.logValues.Size = new System.Drawing.Size(318, 206);
+            this.logValues.Size = new System.Drawing.Size(318, 193);
             this.logValues.TabIndex = 7;
+            // 
+            // selectProfileButton
+            // 
+            this.selectProfileButton.Location = new System.Drawing.Point(12, 43);
+            this.selectProfileButton.Name = "selectProfileButton";
+            this.selectProfileButton.Size = new System.Drawing.Size(215, 23);
+            this.selectProfileButton.TabIndex = 9;
+            this.selectProfileButton.Text = "Select Log &Profile";
+            this.selectProfileButton.UseVisualStyleBackColor = true;
+            this.selectProfileButton.Click += new System.EventHandler(this.selectProfile_Click);
+            // 
+            // profilePath
+            // 
+            this.profilePath.AutoSize = true;
+            this.profilePath.Location = new System.Drawing.Point(233, 48);
+            this.profilePath.Name = "profilePath";
+            this.profilePath.Size = new System.Drawing.Size(84, 13);
+            this.profilePath.TabIndex = 10;
+            this.profilePath.Text = "[selected profile]";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(567, 277);
+            this.Controls.Add(this.profilePath);
+            this.Controls.Add(this.selectProfileButton);
             this.Controls.Add(this.logValues);
-            this.Controls.Add(this.stopLogging);
-            this.Controls.Add(this.startLogging);
+            this.Controls.Add(this.startStopLogging);
             this.Controls.Add(this.deviceDescription);
             this.Controls.Add(this.selectButton);
             this.Name = "MainForm";
@@ -106,9 +120,10 @@
 
         #endregion
 
-        private System.Windows.Forms.Button startLogging;
-        private System.Windows.Forms.Button stopLogging;
+        private System.Windows.Forms.Button startStopLogging;
         private System.Windows.Forms.TextBox logValues;
+        private System.Windows.Forms.Button selectProfileButton;
+        private System.Windows.Forms.Label profilePath;
     }
 }
 
