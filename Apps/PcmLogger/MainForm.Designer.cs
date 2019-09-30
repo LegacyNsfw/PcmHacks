@@ -65,7 +65,7 @@
             this.statusTab.Location = new System.Drawing.Point(4, 22);
             this.statusTab.Name = "statusTab";
             this.statusTab.Padding = new System.Windows.Forms.Padding(3);
-            this.statusTab.Size = new System.Drawing.Size(535, 192);
+            this.statusTab.Size = new System.Drawing.Size(622, 291);
             this.statusTab.TabIndex = 0;
             this.statusTab.Text = "Status";
             this.statusTab.UseVisualStyleBackColor = true;
@@ -77,7 +77,7 @@
             this.logValues.Multiline = true;
             this.logValues.Name = "logValues";
             this.logValues.ReadOnly = true;
-            this.logValues.Size = new System.Drawing.Size(529, 186);
+            this.logValues.Size = new System.Drawing.Size(616, 285);
             this.logValues.TabIndex = 0;
             // 
             // debugTab
@@ -129,7 +129,7 @@
             this.startStopLogging.TabIndex = 4;
             this.startStopLogging.Text = "Start &Logging";
             this.startStopLogging.UseVisualStyleBackColor = true;
-            this.startStopLogging.Click += new System.EventHandler(this.startLogging_Click);
+            this.startStopLogging.Click += new System.EventHandler(this.startStopLogging_Click);
             // 
             // deviceDescription
             // 

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
-
     /// <summary>
     /// From the application's perspective, this class is the API to the vehicle.
     /// </summary>
@@ -17,7 +16,7 @@ namespace PcmHacking
         /// <summary>
         /// Start logging
         /// </summary>
-        public async Task<byte[]> ConfigureDpids(LogProfile profile)
+        public async Task<DpidCollection> ConfigureDpids(LogProfile profile)
         {
             List<byte> dpids = new List<byte>();
             foreach (ParameterGroup group in profile.ParameterGroups)
@@ -68,7 +67,7 @@ namespace PcmHacking
                 dpids.Add((byte)group.Dpid);
             }
 
-            return dpids.ToArray();
+            return new DpidCollection(dpids.ToArray());
         }
 
         /// <summary>
@@ -78,7 +77,7 @@ namespace PcmHacking
         /// 
         /// See also the FAST_LOGGING code in the Logger class and Protocol.Logging.cs.
         /// </summary>
-        public async Task<bool> RequestDpids(byte[] dpids)
+        public async Task<bool> RequestDpids(DpidCollection dpids)
         {
             Message startMessage = this.protocol.RequestDpids(dpids);
             if (!await this.SendMessage(startMessage))

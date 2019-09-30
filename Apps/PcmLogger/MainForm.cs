@@ -16,6 +16,9 @@ namespace PcmHacking
     public partial class MainForm : MainFormBase
     {
         private LogProfile profile;
+        private bool logging;
+        private object loggingLock = new object();
+        private bool logStopRequested;
 
         /// <summary>
         /// Constructor
@@ -25,8 +28,10 @@ namespace PcmHacking
             InitializeComponent();
         }
 
-        /// Add a message to the main window.
+        /// <summary>
+        /// Not used.
         /// </summary>
+        /// <param name="message"></param>
         public override void AddUserMessage(string message)
         {
         }
@@ -47,6 +52,7 @@ namespace PcmHacking
 
         public override void ResetLogs()
         {
+            this.debugLog.Clear();
         }
 
         public override string GetAppNameAndVersion()
@@ -83,6 +89,14 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Open the last device, if possible.
+        /// </summary>
+        private async void MainForm_Load(object sender, EventArgs e)
+        {
+            await this.ResetDevice();
+        }
+
+        /// <summary>
         /// Select which interface device to use. This opens the Device-Picker dialog box.
         /// </summary>
         protected async void selectButton_Click(object sender, EventArgs e)
@@ -90,16 +104,10 @@ namespace PcmHacking
             await this.HandleSelectButtonClick();
         }
 
-        private void MainForm_Load(object sender, EventArgs e)
-        {
-            this.NoDeviceSelected();
-        }
-
-        private bool logging;
-        private object loggingLock = new object();
-        private bool logStopRequested;
-
-        private void startLogging_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Start or stop logging.
+        /// </summary>
+        private void startStopLogging_Click(object sender, EventArgs e)
         {
             if (logging)
             {
@@ -121,12 +129,10 @@ namespace PcmHacking
             }
 
         }
-
-        private void stopLogging_Click(object sender, EventArgs e)
-        {
-            this.logStopRequested = true;
-        }
-
+        
+        /// <summary>
+        /// The loop that reads data from the PCM.
+        /// </summary>
         private async void LoggingThread(object unused)
         {
             try
@@ -149,7 +155,7 @@ namespace PcmHacking
                         break;
                     }
 
-                    string formattedValues = GetFormattedValues(rowValues);
+                    string formattedValues = FormatValuesForTextBox(rowValues);
                     this.logValues.Invoke(
                         (MethodInvoker)
                         delegate ()
@@ -177,7 +183,11 @@ namespace PcmHacking
             }
         }
 
-        private string GetFormattedValues(string[] rowValues)
+        /// <summary>
+        /// Create a string that will look reasonable in the UI's main text box.
+        /// TODO: Use a grid instead.
+        /// </summary>
+        private string FormatValuesForTextBox(string[] rowValues)
         {
             StringBuilder builder = new StringBuilder();
             int index = 0;
@@ -196,120 +206,11 @@ namespace PcmHacking
             return builder.ToString();
         }
 
-        private bool generateTestProfile = false;
-
+        /// <summary>
+        /// Select a logging profile.
+        /// </summary>
         private async void selectProfile_Click(object sender, EventArgs e)
         {
-            if (generateTestProfile)
-            {
-                LogProfile test = new LogProfile();
-                ParameterGroup group = new ParameterGroup();
-                group.Dpid = 0xFE;
-                group.TryAddParameter(
-                    new ProfileParameter
-                    {
-                        Name = "Engine Speed",
-                        DefineBy = DefineBy.Pid,
-                        ByteCount = 2,
-                        Address = 0x000c,
-                        Conversion = new Conversion { Name = "RPM", Expression = "x*.25" },
-                    });
-                group.TryAddParameter(
-                    new ProfileParameter
-                    {
-                        Name = "Mass Air Flow",
-                        DefineBy = DefineBy.Pid,
-                        ByteCount = 2,
-                        Address = 0x0010,
-                        Conversion = new Conversion { Name = "g/s", Expression = "x/100" },
-                    });
-                group.TryAddParameter(
-                    new ProfileParameter
-                    {
-                        Name = "Manifold Absolute Pressure",
-                        DefineBy = DefineBy.Pid,
-                        ByteCount = 1,
-                        Address = 0x000B,
-                        Conversion = new Conversion { Name = "kpa", Expression = "x" },
-                    });
-                group.TryAddParameter(
-                    new ProfileParameter
-                    {
-                        Name = "Throttle Position Sensor",
-                        DefineBy = DefineBy.Pid,
-                        ByteCount = 1,
-                        Address = 0x0011,
-                        Conversion = new Conversion { Name = "%", Expression = "x/2.56" },
-                    });
-
-                test.TryAddGroup(group);
-
-                group = new ParameterGroup();
-                group.Dpid = 0xFD;
-                group.TryAddParameter(
-                    new ProfileParameter
-                    {
-                        Name = "Intake Air Temperature",
-                        DefineBy = DefineBy.Pid,
-                        ByteCount = 1,
-                        Address = 0x000F,
-                        Conversion = new Conversion { Name = "C", Expression = "x-40" },
-                    });
-                group.TryAddParameter(
-                    new ProfileParameter
-                    {
-                        Name = "Engine Coolant Temperature",
-                        DefineBy = DefineBy.Pid,
-                        ByteCount = 1,
-                        Address = 0x000c,
-                        Conversion = new Conversion { Name = "C", Expression = "x-40" },
-                    });
-                group.TryAddParameter(
-                    new ProfileParameter
-                    {
-                        Name = "Left Long Term Fuel Trim",
-                        DefineBy = DefineBy.Pid,
-                        ByteCount = 1,
-                        Address = 0x0007,
-                        Conversion = new Conversion { Name = "%", Expression = "(x-128)/1.28" },
-                    });
-                group.TryAddParameter(
-                    new ProfileParameter
-                    {
-                        Name = "Right Long Term Fuel Trim",
-                        DefineBy = DefineBy.Pid,
-                        ByteCount = 1,
-                        Address = 0x0009,
-                        Conversion = new Conversion { Name = "%", Expression = "(x-128)/1.28" },
-                    });
-                group.TryAddParameter(
-                    new ProfileParameter
-                    {
-                        Name = "Knock Retard",
-                        DefineBy = DefineBy.Pid,
-                        ByteCount = 1,
-                        Address = 0x11A6,
-                        Conversion = new Conversion { Name = "Degrees", Expression = "(x*256)/22.5" },
-                    });
-                group.TryAddParameter(
-                    new ProfileParameter
-                    {
-                        Name = "Target AFR",
-                        DefineBy = DefineBy.Pid,
-                        ByteCount = 1,
-                        Address = 0x119E,
-                        Conversion = new Conversion { Name = "AFR", Expression = "x*10" },
-                    });
-                test.TryAddGroup(group);
-
-                using (Stream outputStream = File.OpenWrite(@"C:\temp\test.profile"))
-                {
-                    LogProfileWriter writer = new LogProfileWriter(outputStream);
-                    await writer.WriteAsync(test);
-                }
-            }
-
-            
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.AddExtension = true;
             dialog.CheckFileExists = true;
@@ -337,6 +238,118 @@ namespace PcmHacking
                 {
                     this.logValues.Text = exception.ToString();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Create a logging profile for testing (this was also use for testing the JSON serialization / deserialization).
+        /// </summary>
+        private async void GenerateTestProfile()
+        {
+            LogProfile test = new LogProfile();
+            ParameterGroup group = new ParameterGroup();
+            group.Dpid = 0xFE;
+            group.TryAddParameter(
+                new ProfileParameter
+                {
+                    Name = "Engine Speed",
+                    DefineBy = DefineBy.Pid,
+                    ByteCount = 2,
+                    Address = 0x000c,
+                    Conversion = new Conversion { Name = "RPM", Expression = "x*.25" },
+                });
+            group.TryAddParameter(
+                new ProfileParameter
+                {
+                    Name = "Mass Air Flow",
+                    DefineBy = DefineBy.Pid,
+                    ByteCount = 2,
+                    Address = 0x0010,
+                    Conversion = new Conversion { Name = "g/s", Expression = "x/100" },
+                });
+            group.TryAddParameter(
+                new ProfileParameter
+                {
+                    Name = "Manifold Absolute Pressure",
+                    DefineBy = DefineBy.Pid,
+                    ByteCount = 1,
+                    Address = 0x000B,
+                    Conversion = new Conversion { Name = "kpa", Expression = "x" },
+                });
+            group.TryAddParameter(
+                new ProfileParameter
+                {
+                    Name = "Throttle Position Sensor",
+                    DefineBy = DefineBy.Pid,
+                    ByteCount = 1,
+                    Address = 0x0011,
+                    Conversion = new Conversion { Name = "%", Expression = "x/2.56" },
+                });
+
+            test.TryAddGroup(group);
+
+            group = new ParameterGroup();
+            group.Dpid = 0xFD;
+            group.TryAddParameter(
+                new ProfileParameter
+                {
+                    Name = "Intake Air Temperature",
+                    DefineBy = DefineBy.Pid,
+                    ByteCount = 1,
+                    Address = 0x000F,
+                    Conversion = new Conversion { Name = "C", Expression = "x-40" },
+                });
+            group.TryAddParameter(
+                new ProfileParameter
+                {
+                    Name = "Engine Coolant Temperature",
+                    DefineBy = DefineBy.Pid,
+                    ByteCount = 1,
+                    Address = 0x000c,
+                    Conversion = new Conversion { Name = "C", Expression = "x-40" },
+                });
+            group.TryAddParameter(
+                new ProfileParameter
+                {
+                    Name = "Left Long Term Fuel Trim",
+                    DefineBy = DefineBy.Pid,
+                    ByteCount = 1,
+                    Address = 0x0007,
+                    Conversion = new Conversion { Name = "%", Expression = "(x-128)/1.28" },
+                });
+            group.TryAddParameter(
+                new ProfileParameter
+                {
+                    Name = "Right Long Term Fuel Trim",
+                    DefineBy = DefineBy.Pid,
+                    ByteCount = 1,
+                    Address = 0x0009,
+                    Conversion = new Conversion { Name = "%", Expression = "(x-128)/1.28" },
+                });
+            group.TryAddParameter(
+                new ProfileParameter
+                {
+                    Name = "Knock Retard",
+                    DefineBy = DefineBy.Pid,
+                    ByteCount = 1,
+                    Address = 0x11A6,
+                    Conversion = new Conversion { Name = "Degrees", Expression = "(x*256)/22.5" },
+                });
+            group.TryAddParameter(
+                new ProfileParameter
+                {
+                    Name = "Target AFR",
+                    DefineBy = DefineBy.Pid,
+                    ByteCount = 1,
+                    Address = 0x119E,
+                    Conversion = new Conversion { Name = "AFR", Expression = "x*10" },
+                });
+            test.TryAddGroup(group);
+
+            using (Stream outputStream = File.OpenWrite(@"C:\temp\test.profile"))
+            {
+                LogProfileWriter writer = new LogProfileWriter(outputStream);
+                await writer.WriteAsync(test);
             }
         }
     }

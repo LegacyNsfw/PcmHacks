@@ -39,7 +39,7 @@ namespace PcmHacking
             // enable re-init button
             // show device name
         }
-
+        
         /// <summary>
         /// Handle clicking the "Select Interface" button
         /// </summary>

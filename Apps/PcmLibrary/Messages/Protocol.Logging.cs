@@ -38,6 +38,16 @@ namespace PcmHacking
         }
     }
 
+    public class DpidCollection
+    {
+        public byte[] Values { get; private set; }
+
+        public DpidCollection(byte[] dpids)
+        {
+            this.Values = dpids;
+        }
+    }
+
     public partial class Protocol
     {
         /// <summary>
@@ -110,7 +120,7 @@ namespace PcmHacking
         /// <summary>
         /// Create a request to read data from the PCM
         /// </summary>
-        public Message RequestDpids(params byte[] dpid)
+        public Message RequestDpids(DpidCollection dpids)
         {
 #if FAST_LOGGING
             // ResponseType values:
@@ -125,7 +135,7 @@ namespace PcmHacking
             return new Message(header.Concat(dpid).Concat(test).ToArray());
 #else
             byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, 0x01 };
-            return new Message(header.Concat(dpid).ToArray());
+            return new Message(header.Concat(dpids.Values).ToArray());
 #endif
         }
 
