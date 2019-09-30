@@ -32,6 +32,17 @@ namespace PcmHacking
         private ulong error;
 
         /// <summary>
+        /// Returns the length of the message.
+        /// </summary>
+        public int Length
+        {
+            get
+            {
+                return this.message.Length;
+            }
+        }
+
+        /// <summary>
         /// Get the Nth byte of the message.
         /// </summary>
         public byte this[int index]

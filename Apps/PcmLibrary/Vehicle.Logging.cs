@@ -17,13 +17,13 @@ namespace PcmHacking
         /// <summary>
         /// Start logging
         /// </summary>
-        public async Task<bool> StartLogging(LogProfile profile)
+        public async Task<byte[]> ConfigureDpids(LogProfile profile)
         {
             List<byte> dpids = new List<byte>();
-            foreach(ParameterGroup group in profile.ParameterGroups)
+            foreach (ParameterGroup group in profile.ParameterGroups)
             {
                 int position = 1;
-                foreach(ProfileParameter parameter in group.Parameters)
+                foreach (ProfileParameter parameter in group.Parameters)
                 {
                     Message configurationMessage = this.protocol.ConfigureDynamicData(
                         (byte)group.Dpid,
@@ -34,7 +34,7 @@ namespace PcmHacking
 
                     if (!await this.SendMessage(configurationMessage))
                     {
-                        return false;
+                        return null;
                     }
 
                     // Wait for a success or fail message.
@@ -43,6 +43,12 @@ namespace PcmHacking
                     for (int attempt = 0; attempt < 10; attempt++)
                     {
                         Message responseMessage = await this.ReceiveMessage();
+
+                        if (responseMessage.Length < 5)
+                        {
+                            continue;
+                        }
+
                         if (responseMessage[3] == 0x6C)
                         {
                             this.logger.AddDebugMessage("Configured " + parameter.ToString());
@@ -62,7 +68,19 @@ namespace PcmHacking
                 dpids.Add((byte)group.Dpid);
             }
 
-            Message startMessage = this.protocol.BeginLogging(dpids.ToArray());
+            return dpids.ToArray();
+        }
+
+        /// <summary>
+        /// I was hoping to invoke this only once, after ConfigureDpids (which was 
+        /// supposed to be named "BeginLogging") but I can't get the devices to 
+        /// relay information without periodically requesting it.
+        /// 
+        /// See also the FAST_LOGGING code in the Logger class and Protocol.Logging.cs.
+        /// </summary>
+        public async Task<bool> RequestDpids(byte[] dpids)
+        {
+            Message startMessage = this.protocol.RequestDpids(dpids);
             if (!await this.SendMessage(startMessage))
             {
                 return false;
@@ -238,7 +256,7 @@ namespace PcmHacking
             */
 
             // Start logging
-            message = this.protocol.BeginLogging(dpid1, dpid2);//, dpid3);
+            //message = this.protocol.BeginLogging(dpid1, dpid2);//, dpid3);
             if (!await this.SendMessage(message))
             {
                 return false;

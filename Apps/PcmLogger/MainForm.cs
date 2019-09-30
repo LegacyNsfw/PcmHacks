@@ -25,14 +25,24 @@ namespace PcmHacking
             InitializeComponent();
         }
 
-        public override void AddDebugMessage(string message)
-        {
-            Debug.WriteLine(message);
-        }
-
+        /// Add a message to the main window.
+        /// </summary>
         public override void AddUserMessage(string message)
         {
-            Debug.WriteLine(message);
+        }
+
+        /// <summary>
+        /// Add a message to the debug pane of the main window.
+        /// </summary>
+        public override void AddDebugMessage(string message)
+        {
+            string timestamp = DateTime.Now.ToString("hh:mm:ss:fff");
+
+            this.debugLog.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
+                });
         }
 
         public override void ResetLogs()
@@ -132,6 +142,7 @@ namespace PcmHacking
 
                 while (!this.logStopRequested)
                 {
+                    this.AddDebugMessage("Reading row...");
                     string[] rowValues = await logger.GetNextRow();
                     if (rowValues == null)
                     {
@@ -139,7 +150,12 @@ namespace PcmHacking
                     }
 
                     string formattedValues = GetFormattedValues(rowValues);
-                    this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
+                    this.logValues.Invoke(
+                        (MethodInvoker)
+                        delegate ()
+                        {
+                            this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
+                        });                    
                 }
             }
             catch (Exception exception)
@@ -169,11 +185,11 @@ namespace PcmHacking
             {
                 foreach(ProfileParameter parameter in group.Parameters)
                 {
-                    builder.Append(rowValues[index]);
+                    builder.Append(rowValues[index++]);
                     builder.Append('\t');
                     builder.Append(parameter.Conversion.Name);
                     builder.Append('\t');
-                    builder.Append(parameter.Name);
+                    builder.AppendLine(parameter.Name);
                 }
             }
 

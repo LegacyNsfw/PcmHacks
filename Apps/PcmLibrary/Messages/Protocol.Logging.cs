@@ -108,11 +108,11 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Create a request to read the PCM's operating system ID.
+        /// Create a request to read data from the PCM
         /// </summary>
-        /// <returns></returns>
-        public Message BeginLogging(params byte[] dpid)
+        public Message RequestDpids(params byte[] dpid)
         {
+#if FAST_LOGGING
             // ResponseType values:
             // 0x01 = send once
             // 0x12 = send slowly
@@ -123,13 +123,17 @@ namespace PcmHacking
             byte[] padding = new byte[4];// { 0xFF, 0xFF, 0xFF, 0xFF };
             IEnumerable<byte> test = padding.Take(5 - dpid.Length);
             return new Message(header.Concat(dpid).Concat(test).ToArray());
+#else
+            byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, 0x01 };
+            return new Message(header.Concat(dpid).ToArray());
+#endif
         }
 
         // TODO: create a Parse method for the 6C
         public bool TryParseRawLogData(Message message, out RawLogData rawLogData)
         {
             ResponseStatus unused;
-            if (!TryVerifyInitialBytes(message.GetBytes(), new byte[] { 0x8C, DeviceId.Tool, DeviceId.Pcm, 0x6A }, out unused))
+            if (!TryVerifyInitialBytes(message.GetBytes(), new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x6A }, out unused))
             {
                 rawLogData = null;
                 return false;

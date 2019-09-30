@@ -136,7 +136,11 @@ namespace PcmHacking
     {
         private Vehicle vehicle;
         private LogProfile profile;
+        private byte[] dpids;
+
+#if FAST_LOGGING
         private DateTime lastRequestTime;
+#endif
 
         public Logger(Vehicle vehicle, LogProfile profile)
         {
@@ -146,12 +150,21 @@ namespace PcmHacking
 
         public async Task<bool> StartLogging()
         {
-            if (!await this.vehicle.StartLogging(this.profile))
+            this.dpids = await this.vehicle.ConfigureDpids(this.profile);
+
+            if (this.dpids == null)
             {
                 return false;
             }
 
+#if FAST_LOGGING
+            if (!await this.vehicle.RequestDpids(this.dpids))
+            {
+                return null;
+            }
+
             this.lastRequestTime = DateTime.Now;
+#endif
             return true;
         }
 
@@ -159,13 +172,22 @@ namespace PcmHacking
         {
             LogRowParser row = new LogRowParser(this.profile);
 
+#if FAST_LOGGING
             if (DateTime.Now.Subtract(lastRequestTime) > TimeSpan.FromSeconds(2))
             {
-                await this.vehicle.SendToolPresentNotification();
+                await this.vehicle.ForceSendToolPresentNotification();
             }
+#endif
 
             while (!row.IsComplete)
             {
+#if !FAST_LOGGING
+                if (!await this.vehicle.RequestDpids(this.dpids))
+                {
+                    return null;
+                }
+#endif
+
                 RawLogData rawData = await this.vehicle.ReadLogData();
                 if (rawData == null)
                 {
