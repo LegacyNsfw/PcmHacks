@@ -19,6 +19,7 @@ namespace PcmHacking
         private bool logging;
         private object loggingLock = new object();
         private bool logStopRequested;
+        private string profileName;
 
         /// <summary>
         /// Constructor
@@ -144,30 +145,49 @@ namespace PcmHacking
                 }
 
                 Logger logger = new Logger(this.Vehicle, this.profile);
-                await logger.StartLogging();
-
-                while (!this.logStopRequested)
+                if (!await logger.StartLogging())
                 {
-                    this.AddDebugMessage("Reading row...");
-                    string[] rowValues = await logger.GetNextRow();
-                    if (rowValues == null)
-                    {
-                        break;
-                    }
+                    this.AddUserMessage("Unable to start logging.");
+                    return;
+                }
 
-                    string formattedValues = FormatValuesForTextBox(rowValues);
-                    this.logValues.Invoke(
-                        (MethodInvoker)
-                        delegate ()
+                string logFilePath = GenerateLogFilePath();
+                using (StreamWriter streamWriter = new StreamWriter(logFilePath))
+                {
+                    LogFileWriter writer = new LogFileWriter(streamWriter);
+                    await writer.WriteHeader(this.profile);
+
+                    while (!this.logStopRequested)
+                    {
+                        this.AddDebugMessage("Reading row...");
+                        string[] rowValues = await logger.GetNextRow();
+                        if (rowValues == null)
                         {
-                            this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
-                        });                    
+                            break;
+                        }
+
+                        await writer.WriteLine(rowValues);
+                        
+                        string formattedValues = FormatValuesForTextBox(rowValues);
+                        this.logValues.Invoke(
+                            (MethodInvoker)
+                            delegate ()
+                            {
+                                this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
+                            });
+                    }
                 }
             }
             catch (Exception exception)
             {
                 this.AddDebugMessage(exception.ToString());
-                this.AddUserMessage("Logging interrupted: " + exception.Message);
+                this.AddUserMessage("Logging interrupted. " + exception.Message);
+                this.logValues.Invoke(
+                    (MethodInvoker)
+                    delegate ()
+                    {
+                        this.logValues.Text = "Logging interrupted. " + exception.Message;
+                    });
             }
             finally
             {
@@ -181,6 +201,19 @@ namespace PcmHacking
                         this.startStopLogging.Text = "Start &Logging";
                     });
             }
+        }
+
+        /// <summary>
+        /// Generate a file name for the current log file.
+        /// </summary>
+        private string GenerateLogFilePath()
+        {
+            string directory = Environment.GetEnvironmentVariable("USERPROFILE");
+            string file = DateTime.Now.ToString("yyyyMMdd_HHmm") +
+                "_" +
+                this.profileName +
+                ".csv";
+            return Path.Combine(directory, file);
         }
 
         /// <summary>
@@ -232,12 +265,19 @@ namespace PcmHacking
                     }
 
                     this.profilePath.Text = dialog.FileName;
+                    this.profileName = Path.GetFileNameWithoutExtension(this.profilePath.Text);
                     this.logValues.Text = this.profile.GetParameterNames(Environment.NewLine);
                 }
                 catch(Exception exception)
                 {
                     this.logValues.Text = exception.ToString();
+                    this.profileName = null;
                 }
+            }
+            else
+            {
+                this.profile = null;
+                this.profileName = null;
             }
         }
 
