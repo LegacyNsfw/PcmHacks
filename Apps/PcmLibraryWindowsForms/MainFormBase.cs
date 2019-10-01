@@ -91,13 +91,13 @@ namespace PcmHacking
                 protocol,
                 this,
                 new ToolPresentNotifier(device, protocol, this));
-            await this.InitializeCurrentDevice(device.ToString());
+            await this.InitializeCurrentDevice();
         }
 
         /// <summary>
         /// Initialize the current device.
         /// </summary>
-        protected async Task<bool> InitializeCurrentDevice(string deviceName)
+        protected async Task<bool> InitializeCurrentDevice()
         {
             this.DisableUserInput();
 
@@ -131,7 +131,7 @@ namespace PcmHacking
                 return false;
             }
 
-            this.ValidDeviceSelected(deviceName);
+            this.ValidDeviceSelected(this.vehicle.DeviceDescription);
             this.EnableUserInput();
             return true;
         }
