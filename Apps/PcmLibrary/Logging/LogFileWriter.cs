@@ -36,13 +36,16 @@ namespace PcmHacking
         /// <summary>
         /// Call this to write each new row to the file.
         /// </summary>
-        public async Task WriteLine(string[] values)
+        public void WriteLine(string[] values)
         {
-            await this.writer.WriteAsync(DateTime.Now.ToString("u"));
-            await this.writer.WriteAsync(", ");
-            await this.writer.WriteAsync(DateTime.Now.Subtract(this.startTime).ToString());
-            await this.writer.WriteAsync(", ");
-            await this.writer.WriteLineAsync(string.Join(", ", values));
+            lock (this.writer)
+            {
+                this.writer.Write(DateTime.Now.ToString("u"));
+                this.writer.Write(", ");
+                this.writer.Write(DateTime.Now.Subtract(this.startTime).ToString());
+                this.writer.Write(", ");
+                this.writer.WriteLine(string.Join(", ", values));
+            }
         }
     }
 }

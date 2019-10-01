@@ -123,7 +123,7 @@ namespace PcmHacking
                     if (!logging)
                     {
                         logging = true;
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(LoggingThread));
+                        ThreadPool.QueueUserWorkItem(new WaitCallback(LoggingThread), TaskScheduler.FromCurrentSynchronizationContext());
                         this.startStopLogging.Text = "Stop &Logging";
                     }
                 }
@@ -136,6 +136,8 @@ namespace PcmHacking
         /// </summary>
         private async void LoggingThread(object unused)
         {
+            TaskScheduler uiThread = (TaskScheduler)unused;
+            
             try
             {
                 if (this.profile == null)
@@ -166,15 +168,23 @@ namespace PcmHacking
                             break;
                         }
 
-                        await writer.WriteLine(rowValues);
-                        
-                        string formattedValues = FormatValuesForTextBox(rowValues);
-                        this.logValues.Invoke(
-                            (MethodInvoker)
+                        // Write the data to disk on a background thread.
+                        Task background = Task.Factory.StartNew(
                             delegate ()
                             {
-                                this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
+                                writer.WriteLine(rowValues);
                             });
+                        
+                        // Display the data using a foreground thread.
+                        Task foreground = Task.Factory.StartNew(
+                            delegate ()
+                            {
+                                string formattedValues = FormatValuesForTextBox(rowValues);
+                                this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
+                            },
+                            CancellationToken.None,
+                            TaskCreationOptions.None,
+                            uiThread);
                     }
                 }
             }
