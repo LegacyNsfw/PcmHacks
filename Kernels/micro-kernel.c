@@ -11,14 +11,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-char volatile * const DLC_Configuration = (char*)0xFFF600;
-char volatile * const DLC_InterruptConfiguration = (char*)0xFFF606;
-char volatile * const DLC_Transmit_Command = (char*)0xFFF60C;
-char volatile * const DLC_Transmit_FIFO = (char*)0xFFF60D;
-char volatile * const DLC_Status = (unsigned char*)0xFFF60E;
-char volatile * const DLC_Receive_FIFO = (char*)0xFFF60F;
-char volatile * const Watchdog1 = (char*)0xFFFA27;
-char volatile * const Watchdog2 = (char*)0xFFD006;
+#define DLC_CONFIGURATION          (*(unsigned char *)0x00FFF600)
+#define DLC_INTERRUPTCONFIGURATION (*(unsigned char *)0x00FFF606)
+#define DLC_TRANSMIT_COMMAND       (*(unsigned char *)0x00FFF60C)
+#define DLC_TRANSMIT_FIFO          (*(unsigned char *)0x00FFF60D)
+#define DLC_STATUS                 (*(unsigned char *)0x00FFF60E)
+#define DLC_RECEIVE_FIFO           (*(unsigned char *)0x00FFF60F)
+#define WATCHDOG1                  (*(unsigned char *)0x00FFFA27)
+#define WATCHDOG2                  (*(unsigned char *)0x00FFD006)
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -46,10 +46,10 @@ char __attribute((section(".kerneldata"))) BreadcrumbBuffer[BreadcrumbBufferSize
 ///////////////////////////////////////////////////////////////////////////////
 void ScratchWatchdog()
 {
-	*Watchdog1 = 0x55;
-	*Watchdog1 = 0xAA;
-	*Watchdog2 = *Watchdog2 & 0x7F;
-	*Watchdog2 = *Watchdog2 | 0x80;
+	WATCHDOG1 = 0x55;
+	WATCHDOG1 = 0xAA;
+	WATCHDOG2 &= 0x7F;
+	WATCHDOG2 |= 0x80;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -120,8 +120,8 @@ void WriteMessage(int length, int breadcrumbs)
 	int breadcrumbIndex = 2;
 #endif
 
-	*DLC_Transmit_Command = 0x14;
-	
+	DLC_TRANSMIT_COMMAND = 0x14;
+
 	int lastIndex = length - 1;
 
 	unsigned char status;
@@ -132,12 +132,12 @@ void WriteMessage(int length, int breadcrumbs)
 	// Send message
 	for (int index = 0; index < lastIndex; index++)
 	{
-		*DLC_Transmit_FIFO = MessageBuffer[index];
+		DLC_TRANSMIT_FIFO = MessageBuffer[index];
 		ScratchWatchdog();
 
 		// Status 2 means the transmit buffer is almost full.
 		// In that case, pause until there's room in the buffer.
-		status = *DLC_Status & 0x03;
+		status = DLC_STATUS & 0x03;
 
 		// TODO: try looping around 0x02 (almost full) rather than 0x03 (full)
 		int loopCount = 0;
@@ -162,7 +162,7 @@ void WriteMessage(int length, int breadcrumbs)
 			}
 
 			ScratchWatchdog();
-			status = *DLC_Status & 0x03;
+			status = DLC_STATUS & 0x03;
 		}
 
 
@@ -176,20 +176,20 @@ void WriteMessage(int length, int breadcrumbs)
 	}
 
 	// Send last byte
-	*DLC_Transmit_Command = 0x0C;
-	*DLC_Transmit_FIFO = MessageBuffer[length - 1];
+	DLC_TRANSMIT_COMMAND = 0x0C;
+	DLC_TRANSMIT_FIFO = MessageBuffer[length - 1];
 
-	// Send checksum? 
+	// Send checksum?
 	WasteTime();
-	*DLC_Transmit_Command = 0x03;
-	*DLC_Transmit_FIFO = 0x00;
+	DLC_TRANSMIT_COMMAND = 0x03;
+	DLC_TRANSMIT_FIFO = 0x00;
 
 	// Wait for the message to be flushed.
 	//
 	// This seems to work as it should, however note that, as per the DLC spec,
 	// we'll get a series of 0x03 status values (buffer full) before the status
 	// changes immediately to zero. There's no 0x02 (almost full) in between.
-	status = *DLC_Status & 0x03;
+	status = DLC_STATUS & 0x03;
 	int loopCount = 0;
 	while (status != 0 && loopCount < 250)
 	{
@@ -197,7 +197,7 @@ void WriteMessage(int length, int breadcrumbs)
 
 		// Set the max iterations in the following loop to 100 if you uncomment this line.
 		// BreadcrumbBuffer[breadcrumbIndex++] = status;
-		
+
 		for (int iterations = 0; iterations < 25; iterations++)
 		{
 			ScratchWatchdog();
@@ -205,7 +205,7 @@ void WriteMessage(int length, int breadcrumbs)
 		}
 
 		ScratchWatchdog();
-		status = *DLC_Status & 0x03;
+		status = DLC_STATUS & 0x03;
 	}
 
 
@@ -226,7 +226,7 @@ int ReadMessage(char *completionCode, char *readState)
 
 #ifdef RECEIVE_BREADCRUMBS
 	ClearBreadcrumbBuffer();
-	int breadcrumbIndex = 0; 
+	int breadcrumbIndex = 0;
 #endif
 
 	int length = 0;
@@ -239,8 +239,8 @@ int ReadMessage(char *completionCode, char *readState)
 			return length;
 		}
 
-		status = (*DLC_Status & 0xE0) >> 5;
-		
+		status = (DLC_STATUS & 0xE0) >> 5;
+
 #ifdef RECEIVE_BREADCRUMBS
 		// Another artificial limit just for debugging.
 		if (breadcrumbIndex == BreadcrumbBufferSize)
@@ -261,20 +261,20 @@ int ReadMessage(char *completionCode, char *readState)
 		case 1: // Buffer contains data bytes.
 		case 2: // Buffer contains data followed by a completion code.
 		case 4:  // Buffer contains just one data byte.
-			MessageBuffer[length] = *DLC_Receive_FIFO;
+			MessageBuffer[length] = DLC_RECEIVE_FIFO;
 			length++;
 			break;
 
 		case 5: // Buffer contains a completion code, followed by more data bytes.
 		case 6: // Buffer contains a completion code, followed by a full frame.
 		case 7: // Buffer contains a completion code only.
-			*completionCode = *DLC_Receive_FIFO;
+			*completionCode = DLC_RECEIVE_FIFO;
 
 			// Not sure if this is necessary - the code works without it, but it seems
 			// like a good idea according to 5.1.3.2. of the DLC data sheet.
-			*DLC_Transmit_Command = 0x02;
+			DLC_TRANSMIT_COMMAND = 0x02;
 
-			// If we return here when the length is zero, we'll never return 
+			// If we return here when the length is zero, we'll never return
 			// any message data at all. Not sure why.
 			if (length == 0)
 			{
@@ -295,9 +295,9 @@ int ReadMessage(char *completionCode, char *readState)
 
 		case 3:  // Buffer overflow. What do do here?
 			// Just throw the message away and hope the tool sends again?
-			while (*DLC_Status & 0xE0 == 0x60)
+			while (DLC_STATUS & 0xE0 == 0x60)
 			{
-				char unused = *DLC_Receive_FIFO;
+				char unused = DLC_RECEIVE_FIFO;
 			}
 			*readState = 0x0B;
 			return 0;
@@ -368,12 +368,12 @@ KernelStart(void)
 
 	ScratchWatchdog();
 
-	*DLC_InterruptConfiguration = 0x00;
+	DLC_INTERRUPTCONFIGURATION = 0x00;
 	LongSleepWithWatchdog();
 
 	// Flush the DLC
-	*DLC_Transmit_Command = 0x03;
-	*DLC_Transmit_FIFO = 0x00;
+	DLC_TRANSMIT_COMMAND = 0x03;
+	DLC_TRANSMIT_FIFO = 0x00;
 
 	ClearMessageBuffer();
 
@@ -383,7 +383,7 @@ KernelStart(void)
 
 	// This loop runs out quickly, to force the PCM to reboot, to speed up testing.
 	// The real kernel should probably loop for a much longer time (possibly forever),
-	// to allow the app to recover from any failures. 
+	// to allow the app to recover from any failures.
 	// If we choose to loop forever we need a good story for how to get out of that state.
 	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
 	for(int iterations = 0; iterations < 100; iterations++)
@@ -399,16 +399,16 @@ KernelStart(void)
 		{
 			// If no message received, sent a tool-present message with a couple
 			// of extra bytes to help us understand what's going on in the DLC.
-			toolPresent[4] = *DLC_Status;
+			toolPresent[4] = DLC_STATUS;
 			toolPresent[5] = completionCode;
 			toolPresent[6] = readState;
 			CopyToMessageBuffer(toolPresent, 7, 0);
-			
+
 			WriteMessage(7, 0);
 			ClearMessageBuffer();
 
 			// Enable this for breadcrumb debugging.
-			// It gives insight into the code, but it causes side-effects in the 
+			// It gives insight into the code, but it causes side-effects in the
 			// tool and in the kernel TX/RX behavior. Partly by keeping the DLC
 			// busy, and partly due to the long sleeps that are needed to make sure
 			// the breadcrumb message gets sent out reliably.
@@ -444,24 +444,27 @@ KernelStart(void)
 			Reboot(0xEE);
 		}
 
-		// Support the ping message used by Dimented's kernel.
-		if (MessageBuffer[3] == 0x36 && MessageBuffer[4] == 0xE0)
+		// Support the version request used by the PCM Hammer app
+		if (MessageBuffer[3] == 0x3D && MessageBuffer[4] == 0x00)
 		{
 			MessageBuffer[0] = 0x6C;
 			MessageBuffer[1] = 0xF0;
 			MessageBuffer[2] = 0x10;
-			MessageBuffer[3] = 0x36;
-			MessageBuffer[4] = 0xE0;
-			MessageBuffer[5] = 0x80;
+			MessageBuffer[3] = 0x7D;
+			MessageBuffer[4] = 0x00;
+			MessageBuffer[5] = 0x01;
+			MessageBuffer[6] = 0x00;
+			MessageBuffer[7] = 0x00;
+			MessageBuffer[8] = 0xDD;
 
-			WriteMessage(6, 0);
+			WriteMessage(9, 0);
 			LongSleepWithWatchdog();
 			LongSleepWithWatchdog();
 			continue;
 		}
 
-		// Echo the received message 
-		int offset = 7; 
+		// Echo the received message
+		int offset = 7;
 		CopyToMessageBuffer(MessageBuffer, length, offset);
 		MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
@@ -476,7 +479,7 @@ KernelStart(void)
 		ClearMessageBuffer();
 
 		// Enable this for breadcrumb debugging.
-		// It gives insight into the code, but it causes side-effects in the 
+		// It gives insight into the code, but it causes side-effects in the
 		// tool and in the kernel TX/RX behavior. Partly by keeping the DLC
 		// busy, and partly due to the long sleeps that are needed to make sure
 		// the breadcrumb message gets sent out reliably.
