@@ -31,6 +31,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.loggerProgress = new System.Windows.Forms.ProgressBar();
             this.tabs = new System.Windows.Forms.TabControl();
             this.statusTab = new System.Windows.Forms.TabPage();
             this.logValues = new System.Windows.Forms.TextBox();
@@ -45,6 +46,18 @@
             this.statusTab.SuspendLayout();
             this.debugTab.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // loggerProgress
+            // 
+            this.loggerProgress.Enabled = false;
+            this.loggerProgress.Location = new System.Drawing.Point(237, 72);
+            this.loggerProgress.MarqueeAnimationSpeed = 0;
+            this.loggerProgress.Name = "loggerProgress";
+            this.loggerProgress.Size = new System.Drawing.Size(126, 23);
+            this.loggerProgress.Step = 0;
+            this.loggerProgress.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+            this.loggerProgress.TabIndex = 6;
+            this.loggerProgress.Visible = false;
             // 
             // tabs
             // 
@@ -123,6 +136,7 @@
             // 
             // startStopLogging
             // 
+            this.startStopLogging.Enabled = false;
             this.startStopLogging.Location = new System.Drawing.Point(12, 72);
             this.startStopLogging.Name = "startStopLogging";
             this.startStopLogging.Size = new System.Drawing.Size(215, 23);
@@ -155,6 +169,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(654, 430);
+            this.Controls.Add(this.loggerProgress);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.profilePath);
             this.Controls.Add(this.selectProfileButton);
@@ -184,6 +199,7 @@
         private System.Windows.Forms.TabPage debugTab;
         private System.Windows.Forms.TextBox logValues;
         private System.Windows.Forms.TextBox debugLog;
+        private System.Windows.Forms.ProgressBar loggerProgress;
     }
 }
 

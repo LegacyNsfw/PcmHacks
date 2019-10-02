@@ -120,6 +120,12 @@ namespace PcmHacking
             {
                 lock (loggingLock)
                 {
+                    if (this.profile == null)
+                    {
+                        this.logValues.Text = "Please select a log profile.";
+                        return;
+                    }
+
                     if (!logging)
                     {
                         logging = true;
@@ -134,17 +140,19 @@ namespace PcmHacking
         /// <summary>
         /// The loop that reads data from the PCM.
         /// </summary>
-        private async void LoggingThread(object unused)
+        private async void LoggingThread(object threadContext)
         {
-            TaskScheduler uiThread = (TaskScheduler)unused;
-            
+            TaskScheduler uiThreadScheduler = (TaskScheduler)threadContext;
+
             try
             {
-                if (this.profile == null)
-                {
-                    this.logValues.Text = "Please select a log profile.";
-                    return;
-                }
+                this.loggerProgress.Invoke(
+                    (MethodInvoker)
+                    delegate ()
+                    {
+                        this.loggerProgress.Value = 0;
+                        this.loggerProgress.Visible = true;
+                    });
 
                 Logger logger = new Logger(this.Vehicle, this.profile);
                 if (!await logger.StartLogging())
@@ -152,6 +160,13 @@ namespace PcmHacking
                     this.AddUserMessage("Unable to start logging.");
                     return;
                 }
+
+                this.loggerProgress.Invoke(
+                    (MethodInvoker)
+                    delegate ()
+                    {
+                        this.loggerProgress.MarqueeAnimationSpeed = 150;
+                    });
 
                 string logFilePath = GenerateLogFilePath();
                 using (StreamWriter streamWriter = new StreamWriter(logFilePath))
@@ -184,7 +199,7 @@ namespace PcmHacking
                             },
                             CancellationToken.None,
                             TaskCreationOptions.None,
-                            uiThread);
+                            uiThreadScheduler);
                     }
                 }
             }
@@ -207,6 +222,8 @@ namespace PcmHacking
                     (MethodInvoker)
                     delegate ()
                     {
+                        this.loggerProgress.MarqueeAnimationSpeed = 0;
+                        this.loggerProgress.Visible = false;
                         this.startStopLogging.Enabled = true;
                         this.startStopLogging.Text = "Start &Logging";
                     });
@@ -277,17 +294,20 @@ namespace PcmHacking
                     this.profilePath.Text = dialog.FileName;
                     this.profileName = Path.GetFileNameWithoutExtension(this.profilePath.Text);
                     this.logValues.Text = this.profile.GetParameterNames(Environment.NewLine);
+                    this.startStopLogging.Enabled = true;
                 }
                 catch(Exception exception)
                 {
                     this.logValues.Text = exception.ToString();
                     this.profileName = null;
+                    this.startStopLogging.Enabled = false;
                 }
             }
             else
             {
                 this.profile = null;
                 this.profileName = null;
+                this.startStopLogging.Enabled = false;
             }
         }
 
