@@ -44,7 +44,7 @@ namespace PcmHacking
         /// Handle clicking the "Select Interface" button
         /// </summary>
         /// <returns></returns>
-        public async Task HandleSelectButtonClick()
+        public async Task<bool> HandleSelectButtonClick()
         {
             if (this.vehicle != null)
             {
@@ -62,13 +62,13 @@ namespace PcmHacking
                 Configuration.SerialPortDeviceType = picker.SerialPortDeviceType;
             }
 
-            await this.ResetDevice();
+            return await this.ResetDevice();
         }
 
         /// <summary>
         /// Close the old interface device and open a new one.
         /// </summary>
-        protected async Task ResetDevice()
+        protected async Task<bool> ResetDevice()
         {
             if (this.vehicle != null)
             {
@@ -82,7 +82,7 @@ namespace PcmHacking
                 this.NoDeviceSelected();
                 this.DisableUserInput();
                 this.EnableInterfaceSelection();
-                return;
+                return false;
             }
 
             Protocol protocol = new Protocol();
@@ -91,7 +91,13 @@ namespace PcmHacking
                 protocol,
                 this,
                 new ToolPresentNotifier(device, protocol, this));
-            await this.InitializeCurrentDevice();
+            if (!await this.InitializeCurrentDevice())
+            {
+                this.vehicle = null;
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>

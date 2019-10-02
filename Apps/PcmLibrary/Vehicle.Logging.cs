@@ -39,9 +39,14 @@ namespace PcmHacking
                     // Wait for a success or fail message.
                     // TODO: move this into the protocol layer.
                     //
-                    for (int attempt = 0; attempt < 10; attempt++)
+                    for (int attempt = 0; attempt < 3; attempt++)
                     {
                         Message responseMessage = await this.ReceiveMessage();
+
+                        if (responseMessage == null)
+                        {
+                            continue;
+                        }
 
                         if (responseMessage.Length < 5)
                         {

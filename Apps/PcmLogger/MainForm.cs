@@ -63,7 +63,8 @@ namespace PcmHacking
 
         protected override void DisableUserInput()
         {
-            this.startStopLogging.Enabled = false;
+            this.selectButton.Enabled = false;
+            this.selectProfileButton.Enabled = false;
             this.startStopLogging.Enabled = false;
         }
 
@@ -74,7 +75,8 @@ namespace PcmHacking
 
         protected override void EnableUserInput()
         {
-            this.startStopLogging.Enabled = true;
+            this.selectButton.Enabled = true;
+            this.selectProfileButton.Enabled = true;
             this.startStopLogging.Enabled = true;
         }
 
@@ -103,6 +105,15 @@ namespace PcmHacking
         protected async void selectButton_Click(object sender, EventArgs e)
         {
             await this.HandleSelectButtonClick();
+            this.UpdateStartStopButtonState();
+        }
+
+        /// <summary>
+        /// Enable or disble the start/stop button.
+        /// </summary>
+        private void UpdateStartStopButtonState()
+        {
+            this.startStopLogging.Enabled = this.Vehicle != null && this.profile != null;
         }
 
         /// <summary>
@@ -166,8 +177,17 @@ namespace PcmHacking
                     delegate ()
                     {
                         this.loggerProgress.MarqueeAnimationSpeed = 150;
+                        this.selectButton.Enabled = false;
+                        this.selectProfileButton.Enabled = false;
                     });
 
+#if Vpw4x
+                if (!await this.Vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
+                {
+                    this.AddUserMessage("Unable to switch to 4x.");
+                    return;
+                }
+#endif
                 string logFilePath = GenerateLogFilePath();
                 using (StreamWriter streamWriter = new StreamWriter(logFilePath))
                 {
@@ -216,6 +236,13 @@ namespace PcmHacking
             }
             finally
             {
+#if Vpw4x
+                if (!await this.Vehicle.VehicleSetVPW4x(VpwSpeed.Standard))
+                {
+                    // Try twice...
+                    await this.Vehicle.VehicleSetVPW4x(VpwSpeed.Standard);
+                }
+#endif
                 this.logStopRequested = false;
                 this.logging = false;
                 this.startStopLogging.Invoke(
@@ -226,6 +253,9 @@ namespace PcmHacking
                         this.loggerProgress.Visible = false;
                         this.startStopLogging.Enabled = true;
                         this.startStopLogging.Text = "Start &Logging";
+
+                        this.selectButton.Enabled = true;
+                        this.selectProfileButton.Enabled = true;
                     });
             }
         }
@@ -294,21 +324,20 @@ namespace PcmHacking
                     this.profilePath.Text = dialog.FileName;
                     this.profileName = Path.GetFileNameWithoutExtension(this.profilePath.Text);
                     this.logValues.Text = this.profile.GetParameterNames(Environment.NewLine);
-                    this.startStopLogging.Enabled = true;
                 }
                 catch(Exception exception)
                 {
                     this.logValues.Text = exception.ToString();
                     this.profileName = null;
-                    this.startStopLogging.Enabled = false;
                 }
             }
             else
             {
                 this.profile = null;
                 this.profileName = null;
-                this.startStopLogging.Enabled = false;
             }
+
+            this.UpdateStartStopButtonState();
         }
 
         /// <summary>
