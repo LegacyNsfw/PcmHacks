@@ -1,0 +1,197 @@
+{
+  "Parameters": [
+    {
+      "Name": "Engine Speed",
+      "DefineBy": "PID",
+      "ByteCount": "2",
+      "Address": "0x000C",
+      "Conversions": [
+        {
+          "Name": "RPM",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Mass Air Flow",
+      "DefineBy": "PID",
+      "ByteCount": "2",
+      "Address": "0x0010",
+      "Conversions": [
+        {
+          "Name": "g/a",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Manifold Absolute Pressure",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x000B",
+      "Conversions": [
+        {
+          "Name": "kpa",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Throttle Position Sensor",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x0011",
+      "Conversions": [
+        {
+          "Name": "Percent",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Intake Air Temperature",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x000C",
+      "Conversions": [
+        {
+          "Name": "F",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Engine Coolant Temperature",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x0005",
+      "Conversions": [
+        {
+          "Name": "F",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Transmission Temperature Sensor",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x19AD",
+      "Conversions": [
+        {
+          "Name": "v",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Vehicle Speed",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x000D",
+      "Conversions": [
+        {
+          "Name": "kph",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Knock",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x11A6",
+      "Conversions": [
+        {
+          "Name": "Count",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Fueling Status",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x1105",
+      "Conversions": [
+        {
+          "Name": "Status",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Left Long Term Fuel Trie",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x0007",
+      "Conversions": [
+        {
+          "Name": "%",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Right Long Term Fuel Trim",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x0009",
+      "Conversions": [
+        {
+          "Name": "%",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Target AFR",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x119E",
+      "Conversions": [
+        {
+          "Name": "AFR",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Battery Voltage",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x1141",
+      "Conversions": [
+        {
+          "Name": "Volts",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "TBD",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x1190",
+      "Conversions": [
+        {
+          "Name": "x",
+          "Expression": "x"
+        }
+      ]
+    },
+    {
+      "Name": "Normalized Throttle Position Sensor",
+      "DefineBy": "PID",
+      "ByteCount": "1",
+      "Address": "0x1151",
+      "Conversions": [
+        {
+          "Name": "%",
+          "Expression": "x"
+        }
+      ]
+    }
+
+  ]
+}
