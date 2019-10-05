@@ -160,14 +160,11 @@ namespace PcmHacking
 
             // collect bytes until we hit the end of the buffer or see a CR or LF
             int i = 0;
-            byte[] b = new byte[1]; // FIXME: If I dont copy to this buffer, and instead use buffer[i] inline in the next loop, the test for '>' does not work in the while clause.
             do
             {
-                await this.Port.Receive(b, 0, 1);
-                //this.Logger.AddDebugMessage("Byte: " + b[0].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(b));
-                buffer[i] = b[0];
-                i++;
-            } while ((i < buffersize) && (b[0] != '>')); // continue until the next prompt
+                await this.Port.Receive(buffer, i, 1);
+                //this.Logger.AddDebugMessage("Byte: " + buffer[i].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(buffer));
+            } while ((i <= buffersize) && (buffer[i++] != '>')); // continue until the next prompt
 
             //this.Logger.AddDebugMessage("Found terminator '>'");
 
@@ -192,8 +189,7 @@ namespace PcmHacking
             {
                 if (buffer[k] >= 32 && buffer[k] <= 126 && buffer[k] != '>') // do we want THIS byte?
                 {
-                    b[0] = buffer[k];
-                    //this.Logger.AddDebugMessage("Filtered Byte: " + buffer[k].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(b));
+                    //this.Logger.AddDebugMessage("Filtered Byte: " + buffer[k].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(buffer));
                     filtered[j++] = buffer[k];  // save it, and increment the pointer in the filtered buffer
                 }
             }
