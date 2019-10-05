@@ -363,6 +363,15 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Enable 'Select Device' button
+        /// </summary>
+        protected override void EnableInterfaceSelection()
+        {
+            this.interfaceBox.Enabled = true;
+            this.selectButton.Enabled = true;
+        }
+
+        /// <summary>
         /// Select which interface device to use. This opens the Device-Picker dialog box.
         /// </summary>
         private async void selectButton_Click(object sender, EventArgs e)
