@@ -15,9 +15,10 @@ namespace PcmHacking
     {
         private LogProfile profile;
         private Dictionary<byte, byte[]> responseData = new Dictionary<byte, byte[]>();
-        private byte lastId;
+        private HashSet<byte> dpidsReceived = new HashSet<byte>();
+        private int dpidsInProfile;
 
-        public bool IsComplete { get; private set; }
+        public bool IsComplete { get { return this.dpidsInProfile == this.dpidsReceived.Count; } }
 
         /// <summary>
         /// Constructor.
@@ -26,12 +27,13 @@ namespace PcmHacking
         {
             this.profile = profile;
 
-            // Create a place to put response data, and get the ID of the last group.
+            // Create a place to put response data.
             foreach (ParameterGroup group in this.profile.ParameterGroups)
             {
-                this.lastId = (byte)(uint)group.Dpid;
-                responseData[this.lastId] = new byte[6];
+                responseData[(byte)group.Dpid] = new byte[6];
             }
+
+            this.dpidsInProfile = this.profile.ParameterGroups.Count;
         }
 
         /// <summary>
@@ -46,11 +48,7 @@ namespace PcmHacking
             }
 
             this.responseData[rawData.Dpid] = rawData.Payload;
-
-            if (rawData.Dpid == this.lastId)
-            {
-                this.IsComplete = true;
-            }
+            this.dpidsReceived.Add(rawData.Dpid);
         }
 
         /// <summary>

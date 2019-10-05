@@ -20,6 +20,8 @@ namespace PcmHacking
         private object loggingLock = new object();
         private bool logStopRequested;
         private string profileName;
+        private TaskScheduler uiThreadScheduler;
+        private static DateTime lastLogTime;
 
         /// <summary>
         /// Constructor
@@ -44,11 +46,14 @@ namespace PcmHacking
         {
             string timestamp = DateTime.Now.ToString("hh:mm:ss:fff");
 
-            this.debugLog.Invoke(
-                (MethodInvoker)delegate ()
+            Task foreground = Task.Factory.StartNew(
+                delegate ()
                 {
                     this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
-                });
+                },
+                CancellationToken.None,
+                TaskCreationOptions.None,
+                uiThreadScheduler);
         }
 
         public override void ResetLogs()
@@ -96,6 +101,7 @@ namespace PcmHacking
         /// </summary>
         private async void MainForm_Load(object sender, EventArgs e)
         {
+            this.uiThreadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             await this.ResetDevice();
         }
 
@@ -140,12 +146,11 @@ namespace PcmHacking
                     if (!logging)
                     {
                         logging = true;
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(LoggingThread), TaskScheduler.FromCurrentSynchronizationContext());
+                        ThreadPool.QueueUserWorkItem(new WaitCallback(LoggingThread), null);
                         this.startStopLogging.Text = "Stop &Logging";
                     }
                 }
             }
-
         }
         
         /// <summary>
@@ -153,8 +158,6 @@ namespace PcmHacking
         /// </summary>
         private async void LoggingThread(object threadContext)
         {
-            TaskScheduler uiThreadScheduler = (TaskScheduler)threadContext;
-
             try
             {
                 this.loggerProgress.Invoke(
@@ -172,15 +175,6 @@ namespace PcmHacking
                     return;
                 }
 
-                this.loggerProgress.Invoke(
-                    (MethodInvoker)
-                    delegate ()
-                    {
-                        this.loggerProgress.MarqueeAnimationSpeed = 150;
-                        this.selectButton.Enabled = false;
-                        this.selectProfileButton.Enabled = false;
-                    });
-
 #if Vpw4x
                 if (!await this.Vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
                 {
@@ -194,9 +188,20 @@ namespace PcmHacking
                     LogFileWriter writer = new LogFileWriter(streamWriter);
                     await writer.WriteHeader(this.profile);
 
+                    lastLogTime = DateTime.Now;
+
+                    this.loggerProgress.Invoke(
+                        (MethodInvoker)
+                        delegate ()
+                        {
+                            this.loggerProgress.MarqueeAnimationSpeed = 150;
+                            this.selectButton.Enabled = false;
+                            this.selectProfileButton.Enabled = false;
+                        });
+
                     while (!this.logStopRequested)
                     {
-                        this.AddDebugMessage("Reading row...");
+                        this.AddDebugMessage("Requesting row...");
                         string[] rowValues = await logger.GetNextRow();
                         if (rowValues == null)
                         {
@@ -292,6 +297,10 @@ namespace PcmHacking
                     builder.AppendLine(parameter.Name);
                 }
             }
+
+            DateTime now = DateTime.Now;
+            builder.AppendLine((now - lastLogTime).TotalMilliseconds.ToString("0.00") + "\tms\tQuery time");
+            lastLogTime = now;
 
             return builder.ToString();
         }
