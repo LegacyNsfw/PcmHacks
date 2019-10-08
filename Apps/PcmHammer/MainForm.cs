@@ -362,6 +362,11 @@ namespace PcmHacking
             this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true; });
         }
 
+        protected override void EnableInterfaceSelection()
+        {
+            this.interfaceBox.Enabled = true;
+        }
+
         /// <summary>
         /// Select which interface device to use. This opens the Device-Picker dialog box.
         /// </summary>
