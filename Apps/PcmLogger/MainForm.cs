@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define Vpw4x
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -152,7 +154,7 @@ namespace PcmHacking
                 }
             }
         }
-        
+
         /// <summary>
         /// The loop that reads data from the PCM.
         /// </summary>

@@ -129,5 +129,66 @@ namespace PcmHacking
             rawLogData = new RawLogData(message[4], message.GetBytes().Skip(5).Take(6).ToArray());
             return true;
         }
+
+        /// <summary>
+        /// Create a request for a single PID.
+        /// </summary>
+        public Message CreatePidRequest(UInt32 pid)
+        {
+            Message request;
+
+            /* Using OBD2 "Functional" addressing - doesn't work well with the rest of the code.
+            if (pid <= 0xFFFF)
+            {
+                request = new Message(new byte[] { 0x68, 0x6A, 0xF1, (byte)(pid >> 8), (byte)pid });
+            }
+            else if (pid <= 0xFFFFFF)
+            {
+                request = new Message(new byte[] { 0x68, 0x6A, 0xF1, (byte)(pid >> 16), (byte)(pid >> 8), (byte)pid });
+            }
+            else
+            {
+                request = new Message(new byte[] { 0x68, 0x6A, 0xF1, (byte)(pid >> 24), (byte)(pid >> 16), (byte)(pid >> 8), (byte)pid });
+            }
+            */
+
+            // Using OBD2 "Physical" addressing.
+            request = new Message(new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, 0x22, (byte)(pid >> 8), (byte)pid, 0x01 });
+
+            return request;
+        }
+
+        /// <summary>
+        /// Parse the value of the requested PID.
+        /// </summary>
+        public Response<int> ParsePidResponse(Message message)
+        {
+            ResponseStatus status;
+            if (!this.TryVerifyInitialBytes(
+                message.GetBytes(), 
+                new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x62 }, out status))
+            {
+                return Response.Create(status, 0);    
+            }
+
+            int value;
+            switch (message.Length)
+            {
+                case 7:
+                    value = message[6];
+                    break;
+
+                case 8:
+                    value = message[6];
+                    value <<= 8;
+                    value |= message[7];
+                    break;
+
+                default:
+                    throw new UnsupportedFormatException("Only 1 and 2 byte PIDs are supported for now.");
+            }
+
+            return Response.Create(ResponseStatus.Success, value);
+        }
     }
 }
