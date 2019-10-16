@@ -207,7 +207,7 @@ namespace PcmHacking
                         string[] rowValues = await logger.GetNextRow();
                         if (rowValues == null)
                         {
-                            break;
+                            continue;
                         }
 
                         // Write the data to disk on a background thread.
