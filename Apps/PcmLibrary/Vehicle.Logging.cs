@@ -101,7 +101,7 @@ namespace PcmHacking
             Message message;
             RawLogData result = null;
 
-            for (int attempt = 1; attempt < 20; attempt++)
+            for (int attempt = 1; attempt < 3; attempt++)
             {
                 message = await this.ReceiveMessage();
                 if (message == null)

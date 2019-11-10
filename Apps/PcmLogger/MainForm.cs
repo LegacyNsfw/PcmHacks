@@ -51,7 +51,14 @@ namespace PcmHacking
             Task foreground = Task.Factory.StartNew(
                 delegate ()
                 {
-                    this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
+                    try
+                    {
+                        this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // This will happen if the window is closing. Just ignore it.
+                    }
                 },
                 CancellationToken.None,
                 TaskCreationOptions.None,
@@ -105,6 +112,11 @@ namespace PcmHacking
         {
             this.uiThreadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             await this.ResetDevice();
+            string profilePath = LoggerConfiguration.ProfilePath;
+            if (!string.IsNullOrEmpty(profilePath))
+            {
+                await this.LoadProfile(profilePath);
+            }
         }
 
         /// <summary>
@@ -114,6 +126,59 @@ namespace PcmHacking
         {
             await this.HandleSelectButtonClick();
             this.UpdateStartStopButtonState();
+        }
+
+        /// <summary>
+        /// Select a logging profile.
+        /// </summary>
+        private async void selectProfile_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.AddExtension = true;
+            dialog.CheckFileExists = true;
+            dialog.AutoUpgradeEnabled = true;
+            dialog.CheckPathExists = true;
+            dialog.DefaultExt = ".profile";
+            dialog.Multiselect = false;
+            dialog.ValidateNames = true;
+            dialog.Filter = "Logging profiles (*.profile)|*.profile";
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                await this.LoadProfile(dialog.FileName);
+            }
+            else
+            {
+                this.profile = null;
+                this.profileName = null;
+            }
+
+            this.UpdateStartStopButtonState();
+        }
+
+        /// <summary>
+        /// Load the profile from the given path.
+        /// </summary>
+        private async Task LoadProfile(string path)
+        {
+            try
+            {
+                using (Stream stream = File.OpenRead(path))
+                {
+                    LogProfileReader reader = new LogProfileReader(stream);
+                    this.profile = await reader.ReadAsync();
+                }
+
+                this.profilePath.Text = path;
+                this.profileName = Path.GetFileNameWithoutExtension(this.profilePath.Text);
+                this.logValues.Text = this.profile.GetParameterNames(Environment.NewLine);
+                LoggerConfiguration.ProfilePath = path;
+            }
+            catch (Exception exception)
+            {
+                this.logValues.Text = exception.ToString();
+                this.profileName = null;
+            }
         }
 
         /// <summary>
@@ -305,50 +370,6 @@ namespace PcmHacking
             lastLogTime = now;
 
             return builder.ToString();
-        }
-
-        /// <summary>
-        /// Select a logging profile.
-        /// </summary>
-        private async void selectProfile_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.AddExtension = true;
-            dialog.CheckFileExists = true;
-            dialog.AutoUpgradeEnabled = true;
-            dialog.CheckPathExists = true;
-            dialog.DefaultExt = ".profile";
-            dialog.Multiselect = false;
-            dialog.ValidateNames = true;
-            dialog.Filter = "Logging profiles (*.profile)|*.profile";
-
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                try
-                {
-                    using (Stream stream = File.OpenRead(dialog.FileName))
-                    {
-                        LogProfileReader reader = new LogProfileReader(stream);
-                        this.profile = await reader.ReadAsync();
-                    }
-
-                    this.profilePath.Text = dialog.FileName;
-                    this.profileName = Path.GetFileNameWithoutExtension(this.profilePath.Text);
-                    this.logValues.Text = this.profile.GetParameterNames(Environment.NewLine);
-                }
-                catch(Exception exception)
-                {
-                    this.logValues.Text = exception.ToString();
-                    this.profileName = null;
-                }
-            }
-            else
-            {
-                this.profile = null;
-                this.profileName = null;
-            }
-
-            this.UpdateStartStopButtonState();
         }
 
         /// <summary>
