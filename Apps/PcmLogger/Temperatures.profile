@@ -25,69 +25,89 @@
                 },
                 {
                     "Conversion": {
-                        "Name": "Raw",
-                        "Expression": "x"
+                        "Name": "C",
+                        "Expression": "x-40"
                     },
-                    "Name": "PID 1105; 128=DFCO",
+                    "Name": "Coolant Temperature",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0x1105"
+                    "Address": "0x5"
+                },
+                {
+                    "Conversion": {
+                        "Name": "C",
+                        "Expression": "x-40"
+                    },
+                    "Name": "Intake Air Temperature",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0xF"
+                }
+            ],
+            "TotalBytes": 6
+        },
+        {
+            "Dpid": "0xFD",
+            "Parameters": [
+                {
+                    "Conversion": {
+                        "Name": "psi",
+                        "Expression": "x"
+                    },
+                    "Name": "Engine Oil Pressure",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x115C"
                 },
                 {
                     "Conversion": {
                         "Name": "RPM",
                         "Expression": "x*12.5"
                     },
-                    "Name": "Desired Idle Speed",
+                    "Name": "Target idle speed",
                     "DefineBy": 1,
                     "ByteCount": 1,
                     "Address": "0x1192"
-                }
-            ],
-            "TotalBytes": 6
-        },
-        { 
-            "Dpid": "0xFD",
-            "Parameters": [
-                 {
+                },
+                {
                     "Conversion": {
-                        "Name": "kpa",
-                        "Expression": "x"
+                        "Name": "percent",
+                        "Expression": "x/2.56"
                     },
-                    "Name": "Manifold Absolute Pressure",
+                    "Name": "target throttle position - fail",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0xB"
+                    "Address": "0x1464"
                 },
                 {
                     "Conversion": {
                         "Name": "%",
-                        "Expression": "(x-128)\/1.28"
+                        "Expression": "x/2.56"
                     },
-                    "Name": "Left Long Term Fuel Trim",
+                    "Name": "EGR DC",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0x7"
+                    "Address": "0x1172"
                 },
                 {
                     "Conversion": {
-                        "Name": "Mode",
+                        "Name": "Seconds",
                         "Expression": "x"
                     },
-                    "Name": "Fueling Mode",
+                    "Name": "Engine Off Time - fail",
                     "DefineBy": 1,
-                    "ByteCount": 2,
-                    "Address": "0x3"
+                    "ByteCount": 1,
+                    "Address": "0x13B5"
                 },
                 {
                     "Conversion": {
-                        "Name": "Degrees",
-                        "Expression": "x*(100.0/255.0)"
+                        "Name": "C",
+                        "Expression": "(x+40)*(256/192)"
                     },
-                    "Name": "Throttle Position",
+                    "Name": "Transmission Oil Temp",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0x11"
+                    "Address": "0x1949"
                 },
             ],
             "TotalBytes": 6
