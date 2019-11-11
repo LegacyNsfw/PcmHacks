@@ -176,7 +176,9 @@ namespace PcmHacking
             }
             catch (Exception exception)
             {
-                this.logValues.Text = exception.ToString();
+                this.logValues.Text = exception.Message;
+                this.AddDebugMessage(exception.ToString());
+                this.profilePath.Text = "[no profile loaded]";
                 this.profileName = null;
             }
         }

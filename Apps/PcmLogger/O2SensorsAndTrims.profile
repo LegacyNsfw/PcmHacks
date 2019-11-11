@@ -23,17 +23,17 @@
                     "ByteCount": 2,
                     "Address": "0x10"
                 },
-				{
+                {
                     "Conversion": {
-                        "Name": "Percent",
-                        "Expression": "x * 0.0234"
+                        "Name": "Mode",
+                        "Expression": "x"
                     },
-                    "Name": "Volumetric Efficiency",
+                    "Name": "Fueling Mode",
                     "DefineBy": 1,
                     "ByteCount": 2,
-                    "Address": "0x13B0"
+                    "Address": "0x3"
                 },
-            ],
+			],
             "TotalBytes": 6
         },
         {
@@ -58,20 +58,19 @@
                     "Name": "Right Front O2 Sensor Voltage",
                     "DefineBy": 1,
                     "ByteCount": 2,
-                    "Address": "0x18"
+                    "Address": "0x16"
                 },
 
                 {
                     "Conversion": {
                         "Name": "Degrees",
-                        "Expression": "x*0.390625"
+                        "Expression": "x*(100.0/255.0)"
                     },
                     "Name": "Throttle Position",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0x12B1"
+                    "Address": "0x11"
                 },
-
                 {
                     "Conversion": {
                         "Name": "Degrees",
@@ -82,13 +81,12 @@
                     "ByteCount": 1,
                     "Address": "0xE"
                 },
-			]
+			],
 			"TotalBytes": 6
 		},
 		{
             "Dpid": "0xFC",
             "Parameters": [
-			{
                 {
                     "Conversion": {
                         "Name": "%",
@@ -129,7 +127,7 @@
                     "ByteCount": 1,
                     "Address": "0xF"
                 },
-			]
+			],
 			"TotalBytes": 6
         }
     ]
