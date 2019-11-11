@@ -28,10 +28,10 @@
                         "Name": "Raw",
                         "Expression": "x"
                     },
-                    "Name": "PID 1105, 128=DFCO",
+                    "Name": "PID 1105; 128=DFCO",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0xF"
+                    "Address": "0x1105"
                 },
                 {
                     "Conversion": {
@@ -52,7 +52,7 @@
                 {
                     "Conversion": {
                         "Name": "g/s",
-                        "Expression": "x*0.00009765625"
+                        "Expression": "x*0.0009765625"
                     },
                     "Name": "Desired Idle Airflow",
                     "DefineBy": 1,
@@ -81,13 +81,13 @@
                 },
                 {
                     "Conversion": {
-                        "Name": "RPM",
-                        "Expression": "x*12.5"
+                        "Name": "Degrees",
+                        "Expression": "x*(100.0/255.0)"
                     },
-                    "Name": "Target idle speed",
+                    "Name": "Throttle Position",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0x1192"
+                    "Address": "0x11"
                 },
             ],
             "TotalBytes": 6
