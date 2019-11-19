@@ -41,6 +41,8 @@ namespace PcmHacking
                 return false;
             }
 
+            await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadProperty);
+
 #if FAST_LOGGING
             if (!await this.vehicle.RequestDpids(this.dpids))
             {
@@ -66,15 +68,15 @@ namespace PcmHacking
                 await this.vehicle.ForceSendToolPresentNotification();
             }
 #endif
+#if !FAST_LOGGING
+            if (!await this.vehicle.RequestDpids(this.dpids))
+            {
+                return null;
+            }
+#endif
 
             while (!row.IsComplete)
             {
-#if !FAST_LOGGING
-                if (!await this.vehicle.RequestDpids(this.dpids))
-                {
-                    return null;
-                }
-#endif
 
                 RawLogData rawData = await this.vehicle.ReadLogData();
                 if (rawData == null)

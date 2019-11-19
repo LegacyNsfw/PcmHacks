@@ -16,5 +16,6 @@ SECTIONS
 		read-kernel.o (.kernelstart)
 		read-kernel.o (.text)
 		common.o (.text)
+		common-readwrite.o (.text)
 	}
 }

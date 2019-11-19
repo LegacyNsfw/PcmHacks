@@ -101,7 +101,7 @@ namespace PcmHacking
             Message message;
             RawLogData result = null;
 
-            for (int attempt = 1; attempt < 20; attempt++)
+            for (int attempt = 1; attempt < 3; attempt++)
             {
                 message = await this.ReceiveMessage();
                 if (message == null)
@@ -123,6 +123,23 @@ namespace PcmHacking
             } 
 
             return result;
+        }
+
+        public async Task<Response<int>> GetPid(UInt32 pid)
+        {
+            Message request = this.protocol.CreatePidRequest(pid);
+            if(!await this.TrySendMessage(request, "PID request"))
+            {
+                return Response.Create(ResponseStatus.Error, 0);
+            }
+
+            Message responseMessage = await this.ReceiveMessage();
+            if (responseMessage == null)
+            {
+                return Response.Create(ResponseStatus.Error, 0);
+            }
+
+            return this.protocol.ParsePidResponse(responseMessage);
         }
 
         public async Task<bool> StartLogging_Old()

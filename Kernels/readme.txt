@@ -1,27 +1,9 @@
-PCM Hammer uploads 68k code to the PCM to read and write flash memory.
-
-The code here is somewhat out-of-date, however. Due to shady behavior of certain
-individuals, we are keeping those portion of the project closed-source and not-
-for-redistribution for now. This will become open source eventually, probably
-in a few months or so. 
-
-We just don't want other people taking credit for our hard work (again).
-
---
-
-build.bat encapsulates the options needed to convert C code into kernel binaries.
-(Perhaps this should use a makefile, but that would require installing make.)
+build.bat encapsulates the options needed to convert C code into kernel binaries on Windows machines.
 
 gcc.bat is mostly just for experimenting with gcc options before
 moving those options into the build.bat script.
 
 disasm.bat can be run on .o files or a.out to inspect the contents.
-
-The build script produces a .S file, and the SRecordToKernel.exe utility 
-uses the .S file to create a .bin file which contains only the kernel, and
-none of the boilerplate code for Windows/Linux executables.
-The source code to the SRecordToKernel utility is in this same repository,
-in the DevTools\SRecordToKernel directory.
 
 --
 
