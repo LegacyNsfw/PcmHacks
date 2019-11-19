@@ -31,5 +31,5 @@ C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe -d -S write-kernel.elf > write-kerne
 
 c:\mingw\bin\g++ -o test.exe test.cpp crc.c
 
-copy *-kernel.bin ..\PcmHacks\Apps\PcmHammer\bin\debug
+copy *-kernel.bin ..\Apps\PcmHammer\bin\debug
 dir *.bin

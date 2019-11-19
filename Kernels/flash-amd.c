@@ -47,8 +47,6 @@ uint8_t Amd_EraseBlock(uint32_t address)
 	// Return zero if successful, anything else is an error code.
 	unsigned short status = 0;
 
-	FlashUnlock();
-
 	uint16_t volatile * flashBase = (uint16_t*)address;
 
 	// Tell the chip to erase the given block.
@@ -106,8 +104,6 @@ uint8_t Amd_EraseBlock(uint32_t address)
 	*flashBase = 0xF0F0;
 	*flashBase = 0xF0F0;
 
-	FlashLock();
-
 	return status;
 }
 
@@ -120,11 +116,6 @@ uint8_t Amd_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAd
 {
 	char errorCode = 0;
 	unsigned short status;
-
-	if (!testWrite)
-	{
-		FlashUnlock();
-	}
 
 	unsigned short* payloadArray = (unsigned short*) payloadBytes;
 	unsigned short* flashArray = (unsigned short*) startAddress;
@@ -180,7 +171,6 @@ uint8_t Amd_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAd
 		unsigned short* address = (unsigned short*)startAddress;
 		*address = 0xF0F0;
 		*address = 0xF0F0;
-		FlashLock();
 	}
 
 	return 0;

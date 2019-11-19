@@ -58,12 +58,16 @@ void HandleFlashChipQuery()
 	// Try the Intel method first
 	flashIdentifier = Intel_GetFlashId();
 
+	ScratchWatchdog();
+
 	// If the ID query is unsuccessful, we wont get the Intel ID, so try AMD
 	if ((flashIdentifier >> 16) != 0x0089)
 	{
 		// Try the AMD method next
 		flashIdentifier = Amd_GetFlashId();
 	}
+
+	ScratchWatchdog();
 
 	// The AllPro and ScanTool devices need a short delay to switch from
 	// sending to receiving. Otherwise they'll miss the response.
@@ -421,8 +425,9 @@ KernelStart(void)
 	ClearMessageBuffer();
 	WasteTime();
 
-	SendToolPresent(1, 2, 3, 4);
+	SendToolPresent(2, 2, 3, 3);
 	LongSleepWithWatchdog();
+	SendToolPresent(2, 3, 4, 5);
 
 	// This loop runs out quickly, to force the PCM to reboot, to speed up testing.
 	// The real kernel should probably loop for a much longer time (possibly forever),

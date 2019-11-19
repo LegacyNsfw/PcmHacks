@@ -925,12 +925,6 @@ namespace PcmHacking
                     }
                 }
 
-                if (image.Length == 1024 * 1024)
-                {
-                    this.AddUserMessage("1MB write support is disabled because it doesn't work reliably yet. Sorry.");
-                    return;
-                }
-
                 // Sanity checks. 
                 FileValidator validator = new FileValidator(image, this);
                 if (!validator.IsValid())
