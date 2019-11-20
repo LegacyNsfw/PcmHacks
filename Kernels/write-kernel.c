@@ -144,9 +144,9 @@ void HandleCrcQuery()
 	else
 	{
 		// This is an abuse of the protocol, but I want to keep these
-			// messages short, and using 7F 3D 02 would make it hard to tell
-			// whether CRC is in progress or the kernel just isn't loaded.
-			// So this reply has a legitimate mode, and a bogus submode.
+		// messages short, and using 7F 3D 02 would make it hard to tell
+		// whether CRC is in progress or the kernel just isn't loaded.
+		// So this reply has a legitimate mode, and a bogus submode.
 		MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
 		MessageBuffer[2] = 0x10;
@@ -424,10 +424,14 @@ KernelStart(void)
 
 	ClearMessageBuffer();
 	WasteTime();
+	ScratchWatchdog();
 
-	SendToolPresent(2, 2, 3, 3);
+	// The factory code jumps into the kernel before sending this message
+	SendWriteSuccess(0);
+	
+	// This message proves that the kernel is now running (if you're watching the data bus).
+	SendToolPresent(1, 2, 3, 4);
 	LongSleepWithWatchdog();
-	SendToolPresent(2, 3, 4, 5);
 
 	// This loop runs out quickly, to force the PCM to reboot, to speed up testing.
 	// The real kernel should probably loop for a much longer time (possibly forever),

@@ -109,6 +109,11 @@ void ClearMessageBuffer()
 {
 	for (int index = 0; index < MessageBufferSize; index++)
 	{
+		if (index % 500 == 0)
+		{
+			ScratchWatchdog();
+		}
+
 		MessageBuffer[index] = 0;
 	}
 }
