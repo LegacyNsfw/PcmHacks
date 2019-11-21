@@ -103,6 +103,19 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Reset the user and debug logs.
+        /// </summary>
+        public override void ResetLogs()
+        {
+            this.userLog.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.userLog.Text = string.Empty;
+                    this.debugLog.Text = string.Empty;
+                });
+        }
+
+        /// <summary>
         /// Show the save-as dialog box (after a full read has completed).
         /// </summary>
         private string ShowSaveAsDialog()

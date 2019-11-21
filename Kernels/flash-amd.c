@@ -16,7 +16,7 @@ uint32_t Amd_GetFlashId()
 	SIM_CSBAR0 = 0x0006;
 	SIM_CSORBT = 0x6820;
 
-	// flash chip 12v A9 enable
+	// flash chip 12v A9 enable - not sure why this is needed, but the PCM reboots without it.
 	SIM_CSOR0 = 0x7060;
 
 	// Switch to flash into ID-query mode.
@@ -50,12 +50,13 @@ uint8_t Amd_EraseBlock(uint32_t address)
 	uint16_t volatile * flashBase = (uint16_t*)address;
 
 	// Tell the chip to erase the given block.
+	SIM_CSOR0 = 0x7060;
 	COMMAND_REG_AAA = 0xAAAA;
 	COMMAND_REG_554 = 0x5555;
 	COMMAND_REG_AAA = 0x8080;
-
 	COMMAND_REG_AAA = 0xAAAA;
 	COMMAND_REG_554 = 0x5555;
+
 	*flashBase = 0x3030;
 
 	uint16_t read1 = 0;
@@ -103,6 +104,7 @@ uint8_t Amd_EraseBlock(uint32_t address)
 	// Return to array mode.
 	*flashBase = 0xF0F0;
 	*flashBase = 0xF0F0;
+	SIM_CSOR0 = 0x1060;
 
 	return status;
 }
@@ -110,7 +112,6 @@ uint8_t Amd_EraseBlock(uint32_t address)
 ///////////////////////////////////////////////////////////////////////////////
 // Write data to flash memory.
 // This is invoked by HandleWriteMode36 in common-readwrite.c
-// read-kernel.c has a stub to keep the compiler happy until this is released.
 ///////////////////////////////////////////////////////////////////////////////
 uint8_t Amd_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite)
 {
@@ -127,6 +128,7 @@ uint8_t Amd_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAd
 
 		if (!testWrite)
 		{
+			SIM_CSOR0 = 0x7060;
 			COMMAND_REG_AAA = 0xAAAA;
 			COMMAND_REG_554 = 0x5555;
 			COMMAND_REG_AAA = 0xA0A0;
@@ -171,6 +173,7 @@ uint8_t Amd_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAd
 		unsigned short* address = (unsigned short*)startAddress;
 		*address = 0xF0F0;
 		*address = 0xF0F0;
+		SIM_CSOR0 = 0x1060;
 	}
 
 	return 0;
