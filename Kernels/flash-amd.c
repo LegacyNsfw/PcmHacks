@@ -16,10 +16,8 @@ uint32_t Amd_GetFlashId()
 	SIM_CSBAR0 = 0x0006;
 	SIM_CSORBT = 0x6820;
 
-	// flash chip 12v A9 enable - not sure why this is needed, but the PCM reboots without it.
-	SIM_CSOR0 = 0x7060;
-
 	// Switch to flash into ID-query mode.
+	SIM_CSOR0 = 0x7060;
 	COMMAND_REG_AAA = 0xAAAA;
 	COMMAND_REG_554 = 0x5555;
 	COMMAND_REG_AAA = 0x9090;
@@ -32,8 +30,6 @@ uint32_t Amd_GetFlashId()
 
 	// Switch back to standard mode.
 	FLASH_BASE = READ_ARRAY_COMMAND;
-
-	// flash chip 12v A9 disable
 	SIM_CSOR0 = 0x1060;
 
 	return id;

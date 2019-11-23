@@ -71,7 +71,7 @@ void PrivateSleep(int outerLoop, int innerLoop)
 ///////////////////////////////////////////////////////////////////////////////
 void LongSleepWithWatchdog()
 {
-	PrivateSleep(25 * 1000, 2);
+	PrivateSleep(10 * 1000, 5);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -109,6 +109,7 @@ void ClearMessageBuffer()
 {
 	for (int index = 0; index < MessageBufferSize; index++)
 	{
+		// This is not needed for P01, but P59 will reboot without it.
 		if (index % 500 == 0)
 		{
 			ScratchWatchdog();
