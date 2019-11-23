@@ -103,6 +103,19 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Reset the user and debug logs.
+        /// </summary>
+        public override void ResetLogs()
+        {
+            this.userLog.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.userLog.Text = string.Empty;
+                    this.debugLog.Text = string.Empty;
+                });
+        }
+
+        /// <summary>
         /// Show the save-as dialog box (after a full read has completed).
         /// </summary>
         private string ShowSaveAsDialog()
@@ -923,12 +936,6 @@ namespace PcmHacking
                         this.AddUserMessage("Unable to load file.");
                         return;
                     }
-                }
-
-                if (image.Length == 1024 * 1024)
-                {
-                    this.AddUserMessage("1MB write support is disabled because it doesn't work reliably yet. Sorry.");
-                    return;
                 }
 
                 // Sanity checks. 

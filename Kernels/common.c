@@ -109,6 +109,12 @@ void ClearMessageBuffer()
 {
 	for (int index = 0; index < MessageBufferSize; index++)
 	{
+		// This is not needed for P01, but P59 will reboot without it.
+		if (index % 500 == 0)
+		{
+			ScratchWatchdog();
+		}
+
 		MessageBuffer[index] = 0;
 	}
 }

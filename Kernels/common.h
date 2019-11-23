@@ -98,6 +98,7 @@ void ClearBreadcrumbBuffer();
 void HandleReadMode35();
 void HandleWriteRequestMode34();
 void HandleWriteMode36();
+void SendWriteSuccess(unsigned char code);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Indicates whether the buffer passed to WriteMessage contains the beginning,

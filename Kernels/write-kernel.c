@@ -58,12 +58,16 @@ void HandleFlashChipQuery()
 	// Try the Intel method first
 	flashIdentifier = Intel_GetFlashId();
 
+	ScratchWatchdog();
+
 	// If the ID query is unsuccessful, we wont get the Intel ID, so try AMD
 	if ((flashIdentifier >> 16) != 0x0089)
 	{
 		// Try the AMD method next
 		flashIdentifier = Amd_GetFlashId();
 	}
+
+	ScratchWatchdog();
 
 	// The AllPro and ScanTool devices need a short delay to switch from
 	// sending to receiving. Otherwise they'll miss the response.
@@ -140,9 +144,9 @@ void HandleCrcQuery()
 	else
 	{
 		// This is an abuse of the protocol, but I want to keep these
-			// messages short, and using 7F 3D 02 would make it hard to tell
-			// whether CRC is in progress or the kernel just isn't loaded.
-			// So this reply has a legitimate mode, and a bogus submode.
+		// messages short, and using 7F 3D 02 would make it hard to tell
+		// whether CRC is in progress or the kernel just isn't loaded.
+		// So this reply has a legitimate mode, and a bogus submode.
 		MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
 		MessageBuffer[2] = 0x10;
@@ -420,7 +424,12 @@ KernelStart(void)
 
 	ClearMessageBuffer();
 	WasteTime();
+	ScratchWatchdog();
 
+	// The factory code jumps into the kernel before sending this message
+	SendWriteSuccess(0);
+	
+	// This message proves that the kernel is now running (if you're watching the data bus).
 	SendToolPresent(1, 2, 3, 4);
 	LongSleepWithWatchdog();
 
