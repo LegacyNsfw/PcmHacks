@@ -394,6 +394,9 @@ namespace PcmHacking
             return false;
         }
 
+        /// <summary>
+        /// Send and receive a read-memory request.
+        /// </summary>
         public async Task<Response<byte[]>> ReadMemory(
             Func<Message> messageFactory,
             Func<Message, Response<byte[]>> messageParser,

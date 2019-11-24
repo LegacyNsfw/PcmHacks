@@ -753,141 +753,144 @@ namespace PcmHacking
         /// </summary>
         private async void readFullContents_BackgroundThread()
         {
-            try
+            using (new AwayMode())
             {
-                this.Invoke((MethodInvoker)delegate ()
+                try
                 {
-                    this.DisableUserInput();
-                    this.cancelButton.Enabled = true;
-                });
+                    this.Invoke((MethodInvoker)delegate ()
+                    {
+                        this.DisableUserInput();
+                        this.cancelButton.Enabled = true;
+                    });
 
-                if (this.Vehicle == null)
-                {
-                    // This shouldn't be possible - it would mean the buttons 
-                    // were enabled when they shouldn't be.
-                    return;
-                }
+                    if (this.Vehicle == null)
+                    {
+                        // This shouldn't be possible - it would mean the buttons 
+                        // were enabled when they shouldn't be.
+                        return;
+                    }
 
-                // Get the path to save the image to.
-                string path = "";
-                this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
-                if (path == null)
-                {
-                    this.AddUserMessage("Save canceled.");
-                    return;
-                }
+                    // Get the path to save the image to.
+                    string path = "";
+                    this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
+                    if (path == null)
+                    {
+                        this.AddUserMessage("Save canceled.");
+                        return;
+                    }
 
-                this.AddUserMessage("Will save to " + path);
+                    this.AddUserMessage("Will save to " + path);
 
-                this.cancellationTokenSource = new CancellationTokenSource();
+                    this.cancellationTokenSource = new CancellationTokenSource();
 
-                this.AddUserMessage("Querying operating system of current PCM.");
-                Response<uint> osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
-                if (osidResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("Operating system query failed, will retry: " + osidResponse.Status);
-                    await this.Vehicle.ExitKernel();
-
-                    osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
+                    this.AddUserMessage("Querying operating system of current PCM.");
+                    Response<uint> osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
                     if (osidResponse.Status != ResponseStatus.Success)
                     {
-                        this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
-                    }
-                }
+                        this.AddUserMessage("Operating system query failed, will retry: " + osidResponse.Status);
+                        await this.Vehicle.ExitKernel();
 
-                PcmInfo info;
-                if (osidResponse.Status == ResponseStatus.Success)
-                {
-                    // Look up the information about this PCM, based on the OSID;
-                    this.AddUserMessage("OSID: " + osidResponse.Value);
-                    info = new PcmInfo(osidResponse.Value);
-                }
-                else
-                {
-                    // TODO: prompt the user - 512kb or 1mb?
-                    this.AddUserMessage("Will assume this is a 512kb PCM in recovery mode.");
-                    info = new PcmInfo(0);
-                }
-
-                await this.Vehicle.SuppressChatter();
-
-                bool unlocked = await this.Vehicle.UnlockEcu(info.KeyAlgorithm);
-                if (!unlocked)
-                {
-                    this.AddUserMessage("Unlock was not successful.");
-                    return;
-                }
-
-                this.AddUserMessage("Unlock succeeded.");
-
-                if (cancellationTokenSource.Token.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                // Do the actual reading.
-                DateTime start = DateTime.Now;
-
-                CKernelReader reader = new CKernelReader(
-                    this.Vehicle, 
-                    this);
-
-                Response<Stream> readResponse = await reader.ReadContents(
-                    info, 
-                    cancellationTokenSource.Token);
-
-                this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
-                if (readResponse.Status != ResponseStatus.Success)
-                {
-                    this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
-                    return;
-                }
-
-                // Save the contents to the path that the user provided.
-                bool success = false;
-                do
-                {
-                    try
-                    {
-                        this.AddUserMessage("Saving contents to " + path);
-
-                        readResponse.Value.Position = 0;
-
-                        using (Stream output = File.Open(path, FileMode.Create))
+                        osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
+                        if (osidResponse.Status != ResponseStatus.Success)
                         {
-                            await readResponse.Value.CopyToAsync(output);
-                        }
-
-                        success = true;
-                    }
-                    catch (IOException exception)
-                    {
-                        this.AddUserMessage("Unable to save file: " + exception.Message);
-                        this.AddDebugMessage(exception.ToString());
-
-                        this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
-                        if (path == null)
-                        {
-                            this.AddUserMessage("Save canceled.");
-                            return;
+                            this.AddUserMessage("Operating system query failed: " + osidResponse.Status);
                         }
                     }
-                } while (!success);
-            }
-            catch (Exception exception)
-            {
-                this.AddUserMessage("Read failed: " + exception.ToString());
-            }
-            finally
-            {
-                this.Invoke((MethodInvoker)delegate ()
-                {
-                    this.EnableUserInput();
-                    this.cancelButton.Enabled = false;
-                });
 
-                // The token / token-source can only be cancelled once, so we need to make sure they won't be re-used.
-                this.cancellationTokenSource = null;
+                    PcmInfo info;
+                    if (osidResponse.Status == ResponseStatus.Success)
+                    {
+                        // Look up the information about this PCM, based on the OSID;
+                        this.AddUserMessage("OSID: " + osidResponse.Value);
+                        info = new PcmInfo(osidResponse.Value);
+                    }
+                    else
+                    {
+                        // TODO: prompt the user - 512kb or 1mb?
+                        this.AddUserMessage("Will assume this is a 512kb PCM in recovery mode.");
+                        info = new PcmInfo(0);
+                    }
+
+                    await this.Vehicle.SuppressChatter();
+
+                    bool unlocked = await this.Vehicle.UnlockEcu(info.KeyAlgorithm);
+                    if (!unlocked)
+                    {
+                        this.AddUserMessage("Unlock was not successful.");
+                        return;
+                    }
+
+                    this.AddUserMessage("Unlock succeeded.");
+
+                    if (cancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    // Do the actual reading.
+                    DateTime start = DateTime.Now;
+
+                    CKernelReader reader = new CKernelReader(
+                        this.Vehicle,
+                        this);
+
+                    Response<Stream> readResponse = await reader.ReadContents(
+                        info,
+                        cancellationTokenSource.Token);
+
+                    this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
+                    if (readResponse.Status != ResponseStatus.Success)
+                    {
+                        this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
+                        return;
+                    }
+
+                    // Save the contents to the path that the user provided.
+                    bool success = false;
+                    do
+                    {
+                        try
+                        {
+                            this.AddUserMessage("Saving contents to " + path);
+
+                            readResponse.Value.Position = 0;
+
+                            using (Stream output = File.Open(path, FileMode.Create))
+                            {
+                                await readResponse.Value.CopyToAsync(output);
+                            }
+
+                            success = true;
+                        }
+                        catch (IOException exception)
+                        {
+                            this.AddUserMessage("Unable to save file: " + exception.Message);
+                            this.AddDebugMessage(exception.ToString());
+
+                            this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
+                            if (path == null)
+                            {
+                                this.AddUserMessage("Save canceled.");
+                                return;
+                            }
+                        }
+                    } while (!success);
+                }
+                catch (Exception exception)
+                {
+                    this.AddUserMessage("Read failed: " + exception.ToString());
+                }
+                finally
+                {
+                    this.Invoke((MethodInvoker)delegate ()
+                    {
+                        this.EnableUserInput();
+                        this.cancelButton.Enabled = false;
+                    });
+
+                    // The token / token-source can only be cancelled once, so we need to make sure they won't be re-used.
+                    this.cancellationTokenSource = null;
+                }
             }
         }
 
@@ -896,114 +899,74 @@ namespace PcmHacking
         /// </summary>
         private async void write_BackgroundThread(WriteType writeType)
         {
-            try
+            using (new AwayMode())
             {
-                this.currentWriteType = writeType;
-
-                if (this.Vehicle == null)
+                try
                 {
-                    // This shouldn't be possible - it would mean the buttons 
-                    // were enabled when they shouldn't be.
-                    return;
-                }
+                    this.currentWriteType = writeType;
 
-                this.cancellationTokenSource = new CancellationTokenSource();
-
-                string path = null;
-                this.Invoke((MethodInvoker)delegate ()
-                {
-                    this.DisableUserInput();
-                    this.cancelButton.Enabled = true;
-
-                    path = this.ShowOpenDialog();
-                });
-
-                if (path == null)
-                {
-                    return;
-                }
-
-                this.AddUserMessage(path);
-
-                byte[] image;
-                using (Stream stream = File.OpenRead(path))
-                {
-                    image = new byte[stream.Length];
-                    int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
-                    if (bytesRead != stream.Length)
+                    if (this.Vehicle == null)
                     {
-                        // If this happens too much, we should try looping rather than reading the whole file in one shot.
-                        this.AddUserMessage("Unable to load file.");
-                        return;
-                    }
-                }
-
-                // Sanity checks. 
-                FileValidator validator = new FileValidator(image, this);
-                if (!validator.IsValid())
-                {
-                    this.AddUserMessage("This file is corrupt. It would render your PCM unusable.");
-                    return;
-                }
-
-                UInt32 kernelVersion = 0;
-                bool needUnlock;
-                int keyAlgorithm = 1;
-                UInt32 pcmOperatingSystemId = 0;
-                bool needToCheckOperatingSystem = writeType != WriteType.Full;
-
-                this.AddUserMessage("Requesting operating system ID...");
-                Response<uint> osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
-                if (osidResponse.Status == ResponseStatus.Success)
-                {
-                    pcmOperatingSystemId = osidResponse.Value;
-                    PcmInfo info = new PcmInfo(pcmOperatingSystemId);
-                    keyAlgorithm = info.KeyAlgorithm;
-                    needUnlock = true;
-
-                    if (needToCheckOperatingSystem && !validator.IsSameOperatingSystem(pcmOperatingSystemId))
-                    {
-                        this.AddUserMessage("Flashing this file could render your PCM unusable.");
+                        // This shouldn't be possible - it would mean the buttons 
+                        // were enabled when they shouldn't be.
                         return;
                     }
 
-                    needToCheckOperatingSystem = false;
-                }
-                else
-                {
-                    if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                    this.cancellationTokenSource = new CancellationTokenSource();
+
+                    string path = null;
+                    this.Invoke((MethodInvoker)delegate ()
+                    {
+                        this.DisableUserInput();
+                        this.cancelButton.Enabled = true;
+
+                        path = this.ShowOpenDialog();
+                    });
+
+                    if (path == null)
                     {
                         return;
                     }
 
-                    this.AddUserMessage("Operating system request failed, checking for a live kernel...");
+                    this.AddUserMessage(path);
 
-                    kernelVersion = await this.Vehicle.GetKernelVersion();
-                    if (kernelVersion == 0)
+                    byte[] image;
+                    using (Stream stream = File.OpenRead(path))
                     {
-                        this.AddUserMessage("Checking for recovery mode...");
-                        bool recoveryMode = await this.Vehicle.IsInRecoveryMode();
-
-                        if (recoveryMode)
+                        image = new byte[stream.Length];
+                        int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
+                        if (bytesRead != stream.Length)
                         {
-                            this.AddUserMessage("PCM is in recovery mode.");
-                            needUnlock = true;
-                        }
-                        else
-                        {
-                            this.AddUserMessage("PCM is not responding to OSID, kernel version, or recovery mode checks.");
-                            this.AddUserMessage("Unlock may not work, but we'll try...");
-                            needUnlock = true;
+                            // If this happens too much, we should try looping rather than reading the whole file in one shot.
+                            this.AddUserMessage("Unable to load file.");
+                            return;
                         }
                     }
-                    else
+
+                    // Sanity checks. 
+                    FileValidator validator = new FileValidator(image, this);
+                    if (!validator.IsValid())
                     {
-                        needUnlock = false;
+                        this.AddUserMessage("This file is corrupt. It would render your PCM unusable.");
+                        return;
+                    }
 
-                        this.AddUserMessage("Kernel version: " + kernelVersion.ToString("X8"));
+                    UInt32 kernelVersion = 0;
+                    bool needUnlock;
+                    int keyAlgorithm = 1;
+                    UInt32 pcmOperatingSystemId = 0;
+                    bool needToCheckOperatingSystem = writeType != WriteType.Full;
 
-                        this.AddUserMessage("Asking kernel for the PCM's operating system ID...");
-                        if (needToCheckOperatingSystem && !await this.Vehicle.IsSameOperatingSystemAccordingToKernel(validator, this.cancellationTokenSource.Token))
+                    this.AddUserMessage("Requesting operating system ID...");
+                    Response<uint> osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
+                    if (osidResponse.Status == ResponseStatus.Success)
+                    {
+                        pcmOperatingSystemId = osidResponse.Value;
+                        PcmInfo info = new PcmInfo(pcmOperatingSystemId);
+                        keyAlgorithm = info.KeyAlgorithm;
+                        needUnlock = true;
+
+                        if (needToCheckOperatingSystem && !validator.IsSameOperatingSystem(pcmOperatingSystemId))
                         {
                             this.AddUserMessage("Flashing this file could render your PCM unusable.");
                             return;
@@ -1011,58 +974,100 @@ namespace PcmHacking
 
                         needToCheckOperatingSystem = false;
                     }
-                }
-
-                await this.Vehicle.SuppressChatter();
-
-                if (needUnlock)
-                {
-
-                    bool unlocked = await this.Vehicle.UnlockEcu(keyAlgorithm);
-                    if (!unlocked)
+                    else
                     {
-                        this.AddUserMessage("Unlock was not successful.");
-                        return;
+                        if (this.cancellationTokenSource.Token.IsCancellationRequested)
+                        {
+                            return;
+                        }
+
+                        this.AddUserMessage("Operating system request failed, checking for a live kernel...");
+
+                        kernelVersion = await this.Vehicle.GetKernelVersion();
+                        if (kernelVersion == 0)
+                        {
+                            this.AddUserMessage("Checking for recovery mode...");
+                            bool recoveryMode = await this.Vehicle.IsInRecoveryMode();
+
+                            if (recoveryMode)
+                            {
+                                this.AddUserMessage("PCM is in recovery mode.");
+                                needUnlock = true;
+                            }
+                            else
+                            {
+                                this.AddUserMessage("PCM is not responding to OSID, kernel version, or recovery mode checks.");
+                                this.AddUserMessage("Unlock may not work, but we'll try...");
+                                needUnlock = true;
+                            }
+                        }
+                        else
+                        {
+                            needUnlock = false;
+
+                            this.AddUserMessage("Kernel version: " + kernelVersion.ToString("X8"));
+
+                            this.AddUserMessage("Asking kernel for the PCM's operating system ID...");
+                            if (needToCheckOperatingSystem && !await this.Vehicle.IsSameOperatingSystemAccordingToKernel(validator, this.cancellationTokenSource.Token))
+                            {
+                                this.AddUserMessage("Flashing this file could render your PCM unusable.");
+                                return;
+                            }
+
+                            needToCheckOperatingSystem = false;
+                        }
                     }
 
-                    this.AddUserMessage("Unlock succeeded.");
+                    await this.Vehicle.SuppressChatter();
+
+                    if (needUnlock)
+                    {
+
+                        bool unlocked = await this.Vehicle.UnlockEcu(keyAlgorithm);
+                        if (!unlocked)
+                        {
+                            this.AddUserMessage("Unlock was not successful.");
+                            return;
+                        }
+
+                        this.AddUserMessage("Unlock succeeded.");
+                    }
+
+                    DateTime start = DateTime.Now;
+
+                    CKernelWriter writer = new CKernelWriter(
+                        this.Vehicle,
+                        new Protocol(),
+                        this);
+
+                    await writer.Write(
+                        image,
+                        writeType,
+                        kernelVersion,
+                        validator,
+                        needToCheckOperatingSystem,
+                        this.cancellationTokenSource.Token);
+
+                    this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
                 }
-
-                DateTime start = DateTime.Now;
-
-                CKernelWriter writer = new CKernelWriter(
-                    this.Vehicle,
-                    new Protocol(),
-                    this);
-
-                await writer.Write(
-                    image,
-                    writeType,
-                    kernelVersion,
-                    validator,
-                    needToCheckOperatingSystem,
-                    this.cancellationTokenSource.Token);
-
-                this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
-            }
-            catch (IOException exception)
-            {
-                this.AddUserMessage(exception.ToString());
-            }
-            finally
-            {
-                this.currentWriteType = WriteType.None;
-
-                this.Invoke((MethodInvoker)delegate ()
+                catch (IOException exception)
                 {
-                    this.EnableUserInput();
-                    this.cancelButton.Enabled = false;
-                });
+                    this.AddUserMessage(exception.ToString());
+                }
+                finally
+                {
+                    this.currentWriteType = WriteType.None;
 
-                // The token / token-source can only be cancelled once, so we need to make sure they won't be re-used.
-                this.cancellationTokenSource = null;
+                    this.Invoke((MethodInvoker)delegate ()
+                    {
+                        this.EnableUserInput();
+                        this.cancelButton.Enabled = false;
+                    });
+
+                    // The token / token-source can only be cancelled once, so we need to make sure they won't be re-used.
+                    this.cancellationTokenSource = null;
+                }
             }
-
         }
 
         /// <summary>
