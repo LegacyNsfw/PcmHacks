@@ -205,11 +205,11 @@ namespace PcmHacking
             // TODO: Move the device types lookup to a function in Misc/FlashChips.cs
             // known chips in the P01 and P59
             // http://ftp1.digi.com/support/documentation/jtag_v410_flashes.pdf
-            string Amd     = "AMD";               // 0001
-            string Intel   = "Intel";             // 0089
-            string I4471   = "28F400B5-B 512Kb";  // 4471
-            string A2258   = "Am29F800B 1Mbyte";  // 2258
-            string I889D   = "28F800B5-B 1Mbyte"; // 889D
+            string Amd = "AMD";               // 0001
+            string Intel = "Intel";             // 0089
+            string I4471 = "28F400B5-B 512Kb";  // 4471
+            string A2258 = "Am29F800B 1Mbyte";  // 2258
+            string I889D = "28F800B5-B 1Mbyte"; // 889D
             string unknown = "unknown";           // default case
 
             logger.AddUserMessage("Flash memory ID code: " + chipIdResponse.Value.ToString("X8"));
@@ -217,23 +217,23 @@ namespace PcmHacking
             switch ((chipIdResponse.Value >> 16))
             {
                 case 0x0001: logger.AddUserMessage("Flash memory manufactuer: " + Amd);
-                             break;
+                    break;
                 case 0x0089: logger.AddUserMessage("Flash memory manufactuer: " + Intel);
-                             break;
-                default:     logger.AddUserMessage("Flash memory manufactuer: " + unknown);
-                             break;
+                    break;
+                default: logger.AddUserMessage("Flash memory manufactuer: " + unknown);
+                    break;
             }
 
             switch (chipIdResponse.Value & 0xFFFF)
             {
                 case 0x4471: logger.AddUserMessage("Flash memory type: " + I4471);
-                             break;
+                    break;
                 case 0x2258: logger.AddUserMessage("Flash memory type: " + A2258);
-                             break;
+                    break;
                 case 0x889D: logger.AddUserMessage("Flash memory type: " + I889D);
-                             break;
-                default:     logger.AddUserMessage("Flash memory type: " + unknown);
-                             break;
+                    break;
+                default: logger.AddUserMessage("Flash memory type: " + unknown);
+                    break;
             }
 
             await this.vehicle.SendToolPresentNotification();
@@ -250,104 +250,128 @@ namespace PcmHacking
                 this.protocol,
                 this.logger);
 
-            if (await verifier.CompareRanges(
-                ranges,
-                image,
-                relevantBlocks,
-                cancellationToken))
+            bool allRangesMatch = false;
+            bool writeAttempted = false;
+
+            for (int attempt = 1; attempt <= 5; attempt++)
             {
-                // Don't stop here if the user just wants to test their cable.
-                if (writeType != WriteType.TestWrite)
+                if (await verifier.CompareRanges(
+                    ranges,
+                    image,
+                    relevantBlocks,
+                    cancellationToken))
                 {
-                    this.logger.AddUserMessage("All ranges are identical.");
+                    allRangesMatch = true;
+
+                    // Don't stop here if the user just wants to test their cable.
+                    if (writeType == WriteType.TestWrite)
+                    {
+                        if (attempt == 1)
+                        {
+                            this.logger.AddUserMessage("Beginning test.");
+                        }
+                    }
+                    else
+                    {
+                        this.logger.AddUserMessage("All ranges are identical.");
+                        return true;
+                    }
+                }
+
+                if ((writeType == WriteType.TestWrite) && (attempt > 1))
+                {
+                    // TODO: the app should know if any errors were encountered. The user shouldn't need to check.
+                    this.logger.AddUserMessage("Test complete. Were any errors logged above?");
                     return true;
                 }
-            }
 
-            // Stop now if the user only requested a comparison.
-            if (writeType == WriteType.Compare)
-            {
-                this.logger.AddUserMessage("Note that mismatched Parameter blocks are to be expected.");
-                this.logger.AddUserMessage("Parameter data can change every time the PCM is used.");
-                return true;
-            }
-
-            // Erase and rewrite the required memory ranges.
-            await this.vehicle.SetDeviceTimeout(TimeoutScenario.Maximum);
-            foreach (MemoryRange range in ranges)
-            {
-                // We'll send a tool-present message during the erase request.
-                if ((range.ActualCrc == range.DesiredCrc) && (writeType != WriteType.TestWrite))
+                // Stop now if the user only requested a comparison.
+                if (writeType == WriteType.Compare)
                 {
-                    continue;
+                    this.logger.AddUserMessage("Note that mismatched Parameter blocks are to be expected.");
+                    this.logger.AddUserMessage("Parameter data can change every time the PCM is used.");
+                    return true;
                 }
 
-                if ((range.Type & relevantBlocks) == 0)
+                writeAttempted = true;
+
+                // Erase and rewrite the required memory ranges.
+                await this.vehicle.SetDeviceTimeout(TimeoutScenario.Maximum);
+                foreach (MemoryRange range in ranges)
                 {
-                    continue;
-                }
-
-                this.logger.AddUserMessage(
-                    string.Format(
-                        "Processing range {0:X6}-{1:X6}",
-                        range.Address,
-                        range.Address + (range.Size - 1)));
-
-                if (writeType != WriteType.TestWrite)
-                {
-                    this.logger.AddUserMessage("Erasing");
-
-                    Query<byte> eraseRequest = this.vehicle.CreateQuery<byte>(
-                         () => this.protocol.CreateFlashEraseBlockRequest(range.Address),
-                         this.protocol.ParseFlashEraseBlock,
-                         cancellationToken);
-
-                    eraseRequest.MaxTimeouts = 5; // Reduce this when we know how many are likely to be needed.
-                    Response<byte> eraseResponse = await eraseRequest.Execute();
-
-                    if (eraseResponse.Status != ResponseStatus.Success)
+                    // We'll send a tool-present message during the erase request.
+                    if ((range.ActualCrc == range.DesiredCrc) && (writeType != WriteType.TestWrite))
                     {
-                        this.logger.AddUserMessage("Unable to erase flash memory: " + eraseResponse.Status.ToString());
-                        this.RequestDebugLogs(cancellationToken);
-                        return false;
+                        continue;
                     }
 
-                    if (eraseResponse.Value != 0x00)
+                    if ((range.Type & relevantBlocks) == 0)
                     {
-                        this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
-                        this.RequestDebugLogs(cancellationToken);
-                        return false;
+                        continue;
                     }
-                }
 
-                if (writeType == WriteType.TestWrite)
-                {
-                    this.logger.AddUserMessage("Testing...");
-                }
-                else
-                {
-                    this.logger.AddUserMessage("Writing...");
-                }
+                    this.logger.AddUserMessage(
+                        string.Format(
+                            "Processing range {0:X6}-{1:X6}",
+                            range.Address,
+                            range.Address + (range.Size - 1)));
 
-                await this.vehicle.SendToolPresentNotification();
+                    if (writeType == WriteType.TestWrite)
+                    {
+                        this.logger.AddUserMessage("Pretending to erase.");
+                    }
+                    else
+                    {
+                        this.logger.AddUserMessage("Erasing.");
 
-                await WriteMemoryRange(
-                    range,
-                    image,
-                    writeType == WriteType.TestWrite,
-                    cancellationToken);
+                        Query<byte> eraseRequest = this.vehicle.CreateQuery<byte>(
+                             () => this.protocol.CreateFlashEraseBlockRequest(range.Address),
+                             this.protocol.ParseFlashEraseBlock,
+                             cancellationToken);
+
+                        eraseRequest.MaxTimeouts = 5; // Reduce this when we know how many are likely to be needed.
+                        Response<byte> eraseResponse = await eraseRequest.Execute();
+
+                        if (eraseResponse.Status != ResponseStatus.Success)
+                        {
+                            this.logger.AddUserMessage("Unable to erase flash memory: " + eraseResponse.Status.ToString());
+                            this.RequestDebugLogs(cancellationToken);
+                            return false;
+                        }
+
+                        if (eraseResponse.Value != 0x00)
+                        {
+                            this.logger.AddUserMessage("Unable to erase flash memory. Code: " + eraseResponse.Value.ToString("X2"));
+                            this.RequestDebugLogs(cancellationToken);
+                            return false;
+                        }
+                    }
+
+                    if (writeType == WriteType.TestWrite)
+                    {
+                        this.logger.AddUserMessage("Pretending to write...");
+                    }
+                    else
+                    {
+                        this.logger.AddUserMessage("Writing...");
+                    }
+
+                    await this.vehicle.SendToolPresentNotification();
+
+                    await WriteMemoryRange(
+                        range,
+                        image,
+                        writeType == WriteType.TestWrite,
+                        cancellationToken);
+                }
             }
 
-            bool match = await verifier.CompareRanges(ranges, image, relevantBlocks, cancellationToken);
-
-            if (writeType == WriteType.TestWrite)
+            if (!writeAttempted)
             {
-                // TODO: the app should know if any errors were encountered. The user shouldn't need to check.
-                this.logger.AddUserMessage("Test complete. Were any errors logged above?");
-                return true;
+                this.logger.AddUserMessage("Assertion failed. WriteAttempted should be true.");
             }
 
-            if (match)
+            if (allRangesMatch)
             {
                 this.logger.AddUserMessage("Flash successful!");
                 return true;
@@ -367,8 +391,6 @@ namespace PcmHacking
             else
             {
                 this.logger.AddUserMessage("Don't panic. Also, don't try to drive this car.");
-                this.logger.AddUserMessage("Please try flashing again. Preferably now.");
-                this.logger.AddUserMessage("In most cases, the second try will succeed.");
                 this.logger.AddUserMessage("");
                 this.logger.AddUserMessage("If this happens three times in a row, please");
                 this.logger.AddUserMessage("start a new thread at pcmhacking.net, and");
