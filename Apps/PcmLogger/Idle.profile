@@ -31,7 +31,7 @@
                     "Name": "PID 1105, 128=DFCO",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0xF"
+                    "Address": "0x1105"
                 },
                 {
                     "Conversion": {
@@ -74,7 +74,7 @@
                         "Name": "bogons",
                         "Expression": "x/655.0"
                     },
-                    "Name": "Target throttle area",
+                    "Name": "Target throttle area (worthless)",
                     "DefineBy": 2,
                     "ByteCount": 2,
                     "Address": "0xFC40"

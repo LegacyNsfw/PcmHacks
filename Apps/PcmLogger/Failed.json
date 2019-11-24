@@ -1,0 +1,88 @@
+1154 failed
+
+ 
+
+                {
+                    "Conversion": {
+                        "Name": "C",
+                        "Expression": "x*5/255"
+                    },
+                    "Name": "Exhaust Gas Temperature",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x1515"
+                },
+
+
+
+                {
+                    "Conversion": {
+                        "Name": "C",
+                        "Expression": "x-40"
+                    },
+                    "Name": "Engine Oil Temp 2",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x153E"
+                },
+
+
+
+                {
+                    "Conversion": {
+                        "Name": "C",
+                        "Expression": "x+40/0.75"
+                    },
+                    "Name": "Transmission Temperature",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x1603"
+                },
+
+
+               {
+                    "Conversion": {
+                        "Name": "C",
+                        "Expression": "(X+40)*(256/192)"
+                    },
+                    "Name": "Transmission Oil Temp",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x1949"
+                },
+ 
+
+                {
+                    "Conversion": {
+                        "Name": "steps",
+                        "Expression": "x"
+                    },
+                    "Name": "IAC position",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x1179"
+                },
+
+
+                {
+                    "Conversion": {
+                        "Name": "RPM",
+                        "Expression": "x*8"
+                    },
+                    "Name": "Target idle speed 2",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x11C9"
+                },
+
+
+                {
+                    "Conversion": {
+                        "Name": "Seconds",
+                        "Expression": "x"
+                    },
+                    "Name": "Engine Off Time",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x13B5"
+                },
