@@ -116,6 +116,22 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Invoked when a device is selected but NOT successfully initalized.
+        /// </summary>
+        protected override void NoDeviceSelected()
+        {
+            this.deviceDescription.Text = "No device selected.";
+        }
+
+        /// <summary>
+        /// Invoked when a device is selected and successfully initialized.
+        /// </summary>
+        protected override void ValidDeviceSelected(string deviceName)
+        {
+            this.deviceDescription.Text = deviceName;
+        }
+
+        /// <summary>
         /// Show the save-as dialog box (after a full read has completed).
         /// </summary>
         private string ShowSaveAsDialog()
