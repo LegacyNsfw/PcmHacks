@@ -15,7 +15,7 @@ namespace PcmHacking
         /// <summary>
         /// Device type for use in the Device Picker dialog box, and for internal comparisons.
         /// </summary>
-        public const string DeviceType = "ObdLink SX";
+        public const string DeviceType = "ObdLink ScanTool";
         
         /// <summary>
         /// Constructor.
