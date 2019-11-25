@@ -227,6 +227,7 @@ namespace PcmHacking
         /// </summary>
         private async void LoggingThread(object threadContext)
         {
+            using (AwayMode lockScreenSuppressor = new AwayMode())
             try
             {
                 this.loggerProgress.Invoke(
@@ -267,7 +268,7 @@ namespace PcmHacking
                             this.selectButton.Enabled = false;
                             this.selectProfileButton.Enabled = false;
                         });
-
+                        
                     while (!this.logStopRequested)
                     {
                         this.AddDebugMessage("Requesting row...");

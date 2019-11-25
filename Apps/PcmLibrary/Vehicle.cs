@@ -381,19 +381,22 @@ namespace PcmHacking
                 }
 
                 Response<bool> response = filter(message);
-                if (response.Status != ResponseStatus.Success)
+                if ((response.Status != ResponseStatus.Success) && (response.Status != ResponseStatus.Refused))
                 {
                     this.logger.AddDebugMessage("Ignoring message: " + response.Status);
                     continue;
                 }
 
-                this.logger.AddDebugMessage("Found response, " + (response.Value ? "succeeded." : "failed."));
+                this.logger.AddDebugMessage("Found response, " + response.Status);
                 return response.Value;
             }
 
             return false;
         }
 
+        /// <summary>
+        /// Send and receive a read-memory request.
+        /// </summary>
         public async Task<Response<byte[]>> ReadMemory(
             Func<Message> messageFactory,
             Func<Message, Response<byte[]>> messageParser,

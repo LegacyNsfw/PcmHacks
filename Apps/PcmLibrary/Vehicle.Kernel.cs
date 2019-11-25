@@ -344,6 +344,14 @@ namespace PcmHacking
             // Now we send a series of full upload packets
             for (int chunkIndex = chunkCount; chunkIndex > 0; chunkIndex--)
             {
+                int bytesSent = payload.Length - offset;
+                int percentDone = bytesSent * 100 / payload.Length;
+
+                this.logger.AddUserMessage(
+                    string.Format(
+                        "Kernel upload {0}% complete.",
+                        percentDone));
+
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return false;
@@ -371,15 +379,9 @@ namespace PcmHacking
                     logger.AddDebugMessage("Could not upload kernel to PCM, payload not accepted.");
                     return false;
                 }
-
-                int bytesSent = payload.Length - offset;
-                int percentDone = bytesSent * 100 / payload.Length;
-
-                this.logger.AddUserMessage(
-                    string.Format(
-                        "Kernel upload {0}% complete.",
-                        percentDone));
             }
+
+            this.logger.AddUserMessage("Kernel upload 100% complete.");
 
             // Consider: return kernel version rather than boolean?
             UInt32 kernelVersion = await this.GetKernelVersion();
@@ -419,6 +421,9 @@ namespace PcmHacking
                     return false;
                 }
 
+                // Since we had some issue with other modules not staying quiet...
+                await this.ForceSendToolPresentNotification();
+
                 Message broadcast = this.protocol.CreateBeginHighSpeed(DeviceId.Broadcast);
                 await this.device.SendMessage(broadcast);
 
@@ -450,6 +455,9 @@ namespace PcmHacking
 
             // Request the device to change
             await device.SetVpwSpeed(newSpeed);
+
+            // Since we had some issue with other modules not staying quiet...
+            await this.ForceSendToolPresentNotification();
 
             TimeoutScenario scenario = newSpeed == VpwSpeed.Standard ? TimeoutScenario.ReadProperty : TimeoutScenario.ReadMemoryBlock;
             await device.SetTimeout(scenario);

@@ -15,7 +15,7 @@ namespace PcmHacking
         /// <summary>
         /// Device type for use in the Device Picker dialog box, and for internal comparisons.
         /// </summary>
-        public const string DeviceType = "ObdLink SX";
+        public const string DeviceType = "ObdLink ScanTool";
         
         /// <summary>
         /// Constructor.
@@ -111,7 +111,7 @@ namespace PcmHacking
         {
             byte[] messageBytes = message.GetBytes();
 
-            bool useSTPX = false; // messageBytes.Length > 4;
+            bool useSTPX = messageBytes.Length > 4;
 
             // Not sure why, but STPX is flaky with the clear-codes message at the end of the flash.
             // So we'll fall back to the old approach for very short messages. 
