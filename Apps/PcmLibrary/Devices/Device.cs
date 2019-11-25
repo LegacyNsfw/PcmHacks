@@ -14,6 +14,9 @@ namespace PcmHacking
         ReadCrc,
         SendKernel,
         ReadMemoryBlock,
+        DataLogging1,
+        DataLogging2,
+        DataLogging3,
         Maximum,
     }
 
@@ -262,6 +265,20 @@ namespace PcmHacking
 
                 case TimeoutScenario.SendKernel:
                     packetSize = this.MaxSendSize + 20;
+                    break;
+
+                case TimeoutScenario.DataLogging1:
+                    packetSize = 30;
+                    break;
+                
+                // This one was tuned by hand to avoid timeouts with STPX.
+                // 1 and 3 probably still need tuning.
+                case TimeoutScenario.DataLogging2:
+                    packetSize = 47;
+                    break;
+
+                case TimeoutScenario.DataLogging3:
+                    packetSize = 64;
                     break;
 
                 case TimeoutScenario.Maximum:

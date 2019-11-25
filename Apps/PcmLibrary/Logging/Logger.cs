@@ -41,7 +41,9 @@ namespace PcmHacking
                 return false;
             }
 
-            await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadProperty);
+            int scenario = ((int)TimeoutScenario.DataLogging1 - 1);
+            scenario += this.profile.ParameterGroups.Count;
+            await this.vehicle.SetDeviceTimeout((TimeoutScenario)scenario);
 
 #if FAST_LOGGING
             if (!await this.vehicle.RequestDpids(this.dpids))
