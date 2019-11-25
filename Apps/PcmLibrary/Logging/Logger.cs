@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define FAST_LOGGING
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -48,7 +50,7 @@ namespace PcmHacking
 #if FAST_LOGGING
             if (!await this.vehicle.RequestDpids(this.dpids))
             {
-                return null;
+                return false;
             }
 
             this.lastRequestTime = DateTime.Now;
@@ -65,7 +67,7 @@ namespace PcmHacking
             LogRowParser row = new LogRowParser(this.profile);
 
 #if FAST_LOGGING
-            if (DateTime.Now.Subtract(lastRequestTime) > TimeSpan.FromSeconds(2))
+//            if (DateTime.Now.Subtract(lastRequestTime) > TimeSpan.FromSeconds(2))
             {
                 await this.vehicle.ForceSendToolPresentNotification();
             }
