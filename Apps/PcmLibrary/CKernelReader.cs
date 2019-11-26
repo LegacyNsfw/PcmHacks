@@ -53,7 +53,7 @@ namespace PcmHacking
                 await this.vehicle.SendToolPresentNotification();
 
                 // execute read kernel
-                Response<byte[]> response = await vehicle.LoadKernelFromFile("read-kernel.bin");
+                Response<byte[]> response = await vehicle.LoadKernelFromFile("kernel.bin");
                 if (response.Status != ResponseStatus.Success)
                 {
                     logger.AddUserMessage("Failed to load kernel from file.");
