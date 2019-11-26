@@ -25,23 +25,23 @@
                 },
                 {
                     "Conversion": {
-                        "Name": "C",
-                        "Expression": "x-40"
+                        "Name": "kpa",
+                        "Expression": "x"
                     },
-                    "Name": "Coolant Temperature",
+                    "Name": "Manifold Absolute Pressure",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0x5"
+                    "Address": "0xB"
                 },
                 {
                     "Conversion": {
-                        "Name": "C",
-                        "Expression": "x-40"
+                        "Name": "%",
+                        "Expression": "x\/2.56"
                     },
-                    "Name": "Intake Air Temperature",
+                    "Name": "Throttle Position Sensor",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0xF"
+                    "Address": "0x11"
                 }
             ],
             "TotalBytes": 6
@@ -51,64 +51,64 @@
             "Parameters": [
                 {
                     "Conversion": {
-                        "Name": "psi",
-                        "Expression": "x"
+                        "Name": "C",
+                        "Expression": "x-40"
                     },
-                    "Name": "Engine Oil Pressure",
+                    "Name": "Intake Air Temperature",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0x115C"
-                },
-                {
-                    "Conversion": {
-                        "Name": "RPM",
-                        "Expression": "x*12.5"
-                    },
-                    "Name": "Target idle speed",
-                    "DefineBy": 1,
-                    "ByteCount": 1,
-                    "Address": "0x1192"
-                },
-                {
-                    "Conversion": {
-                        "Name": "percent",
-                        "Expression": "x/2.56"
-                    },
-                    "Name": "target throttle position - fail",
-                    "DefineBy": 1,
-                    "ByteCount": 1,
-                    "Address": "0x1464"
-                },
-                {
-                    "Conversion": {
-                        "Name": "%",
-                        "Expression": "x/2.56"
-                    },
-                    "Name": "EGR DC",
-                    "DefineBy": 1,
-                    "ByteCount": 1,
-                    "Address": "0x1172"
-                },
-                {
-                    "Conversion": {
-                        "Name": "Seconds",
-                        "Expression": "x"
-                    },
-                    "Name": "Engine Off Time - fail",
-                    "DefineBy": 1,
-                    "ByteCount": 1,
-                    "Address": "0x13B5"
+                    "Address": "0xF"
                 },
                 {
                     "Conversion": {
                         "Name": "C",
-                        "Expression": "(x+40)*(256/192)"
+                        "Expression": "x-40"
                     },
-                    "Name": "Transmission Oil Temp",
+                    "Name": "Engine Coolant Temperature",
                     "DefineBy": 1,
                     "ByteCount": 1,
-                    "Address": "0x1949"
+                    "Address": "0x5"
                 },
+                {
+                    "Conversion": {
+                        "Name": "%",
+                        "Expression": "(x-128)\/1.28"
+                    },
+                    "Name": "Left Long Term Fuel Trim",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x7"
+                },
+                {
+                    "Conversion": {
+                        "Name": "%",
+                        "Expression": "(x-128)\/1.28"
+                    },
+                    "Name": "Right Long Term Fuel Trim",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x9"
+                },
+                {
+                    "Conversion": {
+                        "Name": "Degrees",
+                        "Expression": "(x*256)\/22.5"
+                    },
+                    "Name": "Knock Retard",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x11A6"
+                },
+                {
+                    "Conversion": {
+                        "Name": "AFR",
+                        "Expression": "x*10"
+                    },
+                    "Name": "Target AFR",
+                    "DefineBy": 1,
+                    "ByteCount": 1,
+                    "Address": "0x119E"
+                }
             ],
             "TotalBytes": 6
         }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define FAST_LOGGING
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
@@ -102,12 +104,13 @@ namespace PcmHacking
             // 0x01 = send once
             // 0x12 = send slowly
             // 0x13 = send medium
+            // 0x14 = send medium
             // 0x24 = send fast
-            byte responseType = 0x24;
+            byte responseType = 0x01;
             byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, responseType };
             byte[] padding = new byte[4];// { 0xFF, 0xFF, 0xFF, 0xFF };
-            IEnumerable<byte> test = padding.Take(5 - dpid.Length);
-            return new Message(header.Concat(dpid).Concat(test).ToArray());
+            IEnumerable<byte> test = padding.Take(5 - dpids.Values.Length);
+            return new Message(header.Concat(dpids.Values).Concat(test).ToArray());
 #else
             byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, 0x01 };
             return new Message(header.Concat(dpids.Values).ToArray());
