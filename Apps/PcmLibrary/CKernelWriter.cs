@@ -65,7 +65,7 @@ namespace PcmHacking
                         return false;
                     }
 
-                    Response<byte[]> response = await this.vehicle.LoadKernelFromFile("write-kernel.bin");
+                    Response<byte[]> response = await this.vehicle.LoadKernelFromFile("kernel.bin");
                     if (response.Status != ResponseStatus.Success)
                     {
                         logger.AddUserMessage("Failed to load kernel from file.");
