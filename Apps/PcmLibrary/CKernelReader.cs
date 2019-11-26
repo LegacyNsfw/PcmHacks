@@ -123,6 +123,48 @@ namespace PcmHacking
                     startAddress += blockSize;
                 }
 
+                logger.AddUserMessage("Read complete. Starting verification...");
+                Query<UInt32> chipIdQuery = this.vehicle.CreateQuery<UInt32>(
+                    this.protocol.CreateFlashMemoryTypeQuery,
+                    this.protocol.ParseFlashMemoryType,
+                    cancellationToken);
+
+                Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
+
+                if (chipIdResponse.Status == ResponseStatus.Success)
+                {
+                    IList<MemoryRange> ranges = FlashChips.GetMemoryRanges(chipIdResponse.Value, this.logger);
+                    if (ranges != null)
+                    {
+                        CKernelVerifier verifier = new CKernelVerifier(
+                            image,
+                            ranges,
+                            this.vehicle,
+                            this.protocol,
+                            this.logger);
+
+                        if (await verifier.CompareRanges(
+                            ranges,
+                            image,
+                            BlockType.All,
+                            cancellationToken))
+                        {
+                            logger.AddUserMessage("The PCM was read without errors.");
+                        }
+                        else
+                        {
+                            logger.AddUserMessage("##############################################################################");
+                            logger.AddUserMessage("There are errors in the data that was read from the PCM. Do not use this file.");
+                            logger.AddUserMessage("##############################################################################");
+                        }
+                    }
+                }
+                else
+                {
+                    logger.AddUserMessage("Unable to determine which flash chip is in this PCM.");
+                    logger.AddUserMessage("That prevents us from validating the results of this operation.");
+                }
+
                 await this.vehicle.Cleanup(); // Not sure why this does not get called in the finally block on successfull read?
 
                 MemoryStream stream = new MemoryStream(image);
