@@ -1,8 +1,0 @@
-This is a read only application that lets you view all 3C ID values without having to use a serial terminal. While it will be compatible with most Elm327 Bluetooth devices it will not work with all of them. It has been my experience that devices costing under $10-$12 dollars generally do not have all the required circuits within the device or are using counter fit Elm software that is not compatible with the necessary commands to read this type of data. 
-
-This app has only been tested on Samsung brand phones and may not display properly on all devices, Handsets with screens larger than 5.3 inches or smaller than 4.8 inches may also experience graphical display errors however the visual impact should not affect the functionality of the applications on any device. 
-
-When you connect to your Elm device the applications will send a couple of “setup” commands to configure the device for reading the pcm’s ID values.  The commands sent are not permanent and will be cleared from your Elm device once it is disconnected from the vehicle. 
-While the app is running there is a “Watch Dog” in the background to make sure that the application will end the connection if your Elm327 is having trouble retrieving the pcm’s ID data. If you experience this error constantly then that your Elm device is likely incompatible due to its design or programming.  Consider trying this application with another type of Elm327 and see if you still encounter the same type of disconnect error. 
-
-No data is written or altered in the PCM by this application. 
