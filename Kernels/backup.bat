@@ -1,1 +1,0 @@
-xcopy /s *.* \\server\incoming\PCM\WriteKernel

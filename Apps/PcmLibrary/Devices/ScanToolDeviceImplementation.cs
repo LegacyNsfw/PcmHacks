@@ -123,7 +123,19 @@ namespace PcmHacking
                 builder.Append(messageBytes[0].ToString("X2"));
                 builder.Append(messageBytes[1].ToString("X2"));
                 builder.Append(messageBytes[2].ToString("X2"));
-                builder.Append(", R:1");
+
+                int responses = 1;
+                if (this.TimeoutScenario == TimeoutScenario.DataLogging2)
+                {
+                    responses += 1;
+                }
+
+                if (this.TimeoutScenario == TimeoutScenario.DataLogging3)
+                {
+                    responses += 2;
+                }
+
+                builder.AppendFormat(", R:{0}", responses);
                 builder.Append(", L:");
                 int dataLength = messageBytes.Length - 3;
                 builder.Append(dataLength.ToString());

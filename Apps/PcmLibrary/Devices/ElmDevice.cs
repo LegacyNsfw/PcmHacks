@@ -156,6 +156,8 @@ namespace PcmHacking
             int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 255);
             string value = parameter.ToString("X2");
             await this.implementation.SendAndVerify("AT ST " + value, "OK");
+            this.currentTimeout = scenario;
+            this.implementation.TimeoutScenario = scenario;
         }
 
         /// <summary>

@@ -22,6 +22,8 @@ namespace PcmHacking
 
         public bool Supports4X { get; protected set; }
 
+        public TimeoutScenario TimeoutScenario { get; set; }
+
         protected readonly Action<Message> enqueue;
 
         protected readonly Func<int> getRecievedMessageCount;
