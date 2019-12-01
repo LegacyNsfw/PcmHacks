@@ -79,7 +79,8 @@ namespace PcmHacking
                 }
                 else if (stID.Contains("STN1155") || // LX
                     stID.Contains("STN1150") || // MX version 1
-                    stID.Contains("STN1151")) // MX version 2
+                    stID.Contains("STN1151") || // MX version 2
+                    stID.Contains("STN2255")) // MX+
                 {
                     this.MaxSendSize = 2048 + 12;
                     this.MaxReceiveSize = 2048 + 12;
