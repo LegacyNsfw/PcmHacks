@@ -971,7 +971,8 @@ namespace PcmHacking
                     bool needUnlock;
                     int keyAlgorithm = 1;
                     UInt32 pcmOperatingSystemId = 0;
-                    bool needToCheckOperatingSystem = writeType != WriteType.Full;
+                    bool needToCheckOperatingSystem =
+                        (writeType != WriteType.Full) && (writeType != WriteType.TestWrite);
 
                     this.AddUserMessage("Requesting operating system ID...");
                     Response<uint> osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);

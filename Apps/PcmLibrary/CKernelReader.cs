@@ -80,6 +80,8 @@ namespace PcmHacking
 
                 logger.AddUserMessage("kernel uploaded to PCM succesfully. Requesting data...");
 
+                // TODO: Get chip ID, use that to get image size. Remove PcmInfo parameter.
+
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadMemoryBlock);
 
                 int startAddress = info.ImageBaseAddress;

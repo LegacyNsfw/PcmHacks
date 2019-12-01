@@ -70,6 +70,7 @@ namespace PcmHacking
                     };
                     break;
 
+                // AM29F800BB   
                 case 0x00012258:
                     result = new MemoryRange[]
                     {
@@ -94,6 +95,11 @@ namespace PcmHacking
                         new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
                     };
                     break;
+
+                // Both of these have eight 8kb blocks at the low end, the rest 64kb
+                // Not sure if they're needed though.
+                case 0x00898893: // Intel 2F008B3 
+                case 0x008988C1: // Intel 2F800C3 
 
                 default:
                     logger.AddUserMessage(

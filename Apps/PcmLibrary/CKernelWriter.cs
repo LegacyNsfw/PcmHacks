@@ -202,7 +202,8 @@ namespace PcmHacking
                 return false;
             }
 
-            // TODO: Move the device types lookup to a function in Misc/FlashChips.cs
+            // TODO: Create a FlashChipInfo class, to encapsulate chip IDs, names, memory ranges, sizes.
+            // TODO: And move this code into that class.
             // known chips in the P01 and P59
             // http://ftp1.digi.com/support/documentation/jtag_v410_flashes.pdf
             string Amd = "AMD";               // 0001
@@ -242,6 +243,8 @@ namespace PcmHacking
             {
                 return false;
             }
+
+            // TODO: confirm that the image and the flash chip are the same size
 
             CKernelVerifier verifier = new CKernelVerifier(
                 image,
