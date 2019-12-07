@@ -156,7 +156,7 @@ uint8_t Amd_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAd
 			{
 				*address = 0xF0F0;
 				*address = 0xF0F0;
-				FlashLock();
+				SIM_CSOR0 = 0x1060;
 			}
 
 			return errorCode;

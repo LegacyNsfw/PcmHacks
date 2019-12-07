@@ -179,8 +179,6 @@ void WriteMessage(unsigned char *start, unsigned short length, Segment segment)
 	unsigned char status;
 	unsigned char lastbyte;
 
-	int stopUsing = 0;
-
 	unsigned short checksum = StartChecksum();
 
 	// Send a message body

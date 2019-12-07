@@ -41,7 +41,6 @@ namespace PcmHacking
         /// Compare CRCs from the file to CRCs from the PCM.
         /// </summary>
         public async Task<bool> CompareRanges(
-            IList<MemoryRange> ranges, 
             byte[] image, 
             BlockType blockTypes,
             CancellationToken cancellationToken)
@@ -66,7 +65,7 @@ namespace PcmHacking
             bool successForAllRanges = true;
 
             logger.AddUserMessage("\tRange\t\tFile CRC\t\tPCM CRC\tVerdict\tPurpose");
-            foreach (MemoryRange range in ranges)
+            foreach (MemoryRange range in this.ranges)
             {
                 string formatString = "{0:X6}-{1:X6}\t{2:X8}\t{3:X8}\t{4}\t{5}";
 
@@ -156,7 +155,7 @@ namespace PcmHacking
 
             await this.vehicle.SendToolPresentNotification();
 
-            foreach (MemoryRange range in ranges)
+            foreach (MemoryRange range in this.ranges)
             {
                 if ((range.Type & blockTypes) == 0)
                 {

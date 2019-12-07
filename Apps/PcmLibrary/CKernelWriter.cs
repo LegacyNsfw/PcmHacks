@@ -189,63 +189,13 @@ namespace PcmHacking
 
             // Which flash chip?
             await this.vehicle.SendToolPresentNotification();
-            await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadProperty);
-            Query<UInt32> chipIdQuery = this.vehicle.CreateQuery<UInt32>(
-                this.protocol.CreateFlashMemoryTypeQuery,
-                this.protocol.ParseFlashMemoryType,
-                cancellationToken);
-            Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
-
-            if (chipIdResponse.Status != ResponseStatus.Success)
-            {
-                logger.AddUserMessage("Unable to determine which flash chip is in this PCM");
-                return false;
-            }
-
-            // TODO: Move the device types lookup to a function in Misc/FlashChips.cs
-            // known chips in the P01 and P59
-            // http://ftp1.digi.com/support/documentation/jtag_v410_flashes.pdf
-            string Amd = "AMD";               // 0001
-            string Intel = "Intel";             // 0089
-            string I4471 = "28F400B5-B 512Kb";  // 4471
-            string A2258 = "Am29F800B 1Mbyte";  // 2258
-            string I889D = "28F800B5-B 1Mbyte"; // 889D
-            string unknown = "unknown";           // default case
-
-            logger.AddUserMessage("Flash memory ID code: " + chipIdResponse.Value.ToString("X8"));
-
-            switch ((chipIdResponse.Value >> 16))
-            {
-                case 0x0001: logger.AddUserMessage("Flash memory manufactuer: " + Amd);
-                    break;
-                case 0x0089: logger.AddUserMessage("Flash memory manufactuer: " + Intel);
-                    break;
-                default: logger.AddUserMessage("Flash memory manufactuer: " + unknown);
-                    break;
-            }
-
-            switch (chipIdResponse.Value & 0xFFFF)
-            {
-                case 0x4471: logger.AddUserMessage("Flash memory type: " + I4471);
-                    break;
-                case 0x2258: logger.AddUserMessage("Flash memory type: " + A2258);
-                    break;
-                case 0x889D: logger.AddUserMessage("Flash memory type: " + I889D);
-                    break;
-                default: logger.AddUserMessage("Flash memory type: " + unknown);
-                    break;
-            }
-
-            await this.vehicle.SendToolPresentNotification();
-            IList<MemoryRange> ranges = FlashChips.GetMemoryRanges(chipIdResponse.Value, this.logger);
-            if (ranges == null)
-            {
-                return false;
-            }
+            UInt32 chipId = await this.vehicle.QueryFlashChipId(cancellationToken);
+            FlashChip flashChip = FlashChip.Create(chipId, this.logger);
+            logger.AddUserMessage("Flash chip: " + flashChip.ToString());
 
             CKernelVerifier verifier = new CKernelVerifier(
                 image,
-                ranges,
+                flashChip.MemoryRanges,
                 this.vehicle,
                 this.protocol,
                 this.logger);
@@ -253,10 +203,10 @@ namespace PcmHacking
             bool allRangesMatch = false;
             bool writeAttempted = false;
 
+            await this.vehicle.SendToolPresentNotification();
             for (int attempt = 1; attempt <= 5; attempt++)
             {
                 if (await verifier.CompareRanges(
-                    ranges,
                     image,
                     relevantBlocks,
                     cancellationToken))
@@ -297,7 +247,7 @@ namespace PcmHacking
 
                 // Erase and rewrite the required memory ranges.
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.Maximum);
-                foreach (MemoryRange range in ranges)
+                foreach (MemoryRange range in flashChip.MemoryRanges)
                 {
                     // We'll send a tool-present message during the erase request.
                     if ((range.ActualCrc == range.DesiredCrc) && (writeType != WriteType.TestWrite))
@@ -367,7 +317,7 @@ namespace PcmHacking
                 this.logger.AddUserMessage("Erasing Calibration to force recovery mode.");
                 this.logger.AddUserMessage("");
 
-                foreach(MemoryRange range in ranges)
+                foreach(MemoryRange range in flashChip.MemoryRanges)
                 {
                     if (range.Type == BlockType.Calibration)
                     {
