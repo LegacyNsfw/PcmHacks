@@ -1,8 +1,4 @@
-This is a work in progress.
-
-Our goal is to be able to read and write the contents of GM Powertrain Control Modules, such as the 12200411.
-
-Reading is working well for the P01 and P59 families of PCMs.
+These tools are a work in progress. We aim to support reading, writing, and data logging with General Motors P01 and P59 Powertrain Control Modules (PCMs). The 12200411 is best known variant, but there are several and we aim to support all of them.
 
 Writing is working well enoughto try it on your project car, but you probably shouldn't try that with your daily driver until it has proven itself a little more. 
 
