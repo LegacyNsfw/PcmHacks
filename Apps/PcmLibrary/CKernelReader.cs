@@ -33,9 +33,9 @@ namespace PcmHacking
 
         /// <summary>
         /// Read the full contents of the PCM.
-        /// Assumes the PCM is unlocked an were ready to go
+        /// Assumes the PCM is unlocked and we're ready to go.
         /// </summary>
-        public async Task<Response<Stream>> ReadContents(PcmInfo info, CancellationToken cancellationToken)
+        public async Task<Response<Stream>> ReadContents(CancellationToken cancellationToken)
         {
             try
             {
@@ -80,14 +80,20 @@ namespace PcmHacking
 
                 logger.AddUserMessage("kernel uploaded to PCM succesfully. Requesting data...");
 
+                // Which flash chip?
+                await this.vehicle.SendToolPresentNotification();
+                UInt32 chipId = await this.vehicle.QueryFlashChipId(cancellationToken);
+                FlashChip flashChip = FlashChip.Create(chipId, this.logger);
+                logger.AddUserMessage("Flash chip: " + flashChip.ToString());
+
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadMemoryBlock);
 
-                int startAddress = info.ImageBaseAddress;
-                int endAddress = info.ImageBaseAddress + info.ImageSize;
-                int bytesRemaining = info.ImageSize;
+                int startAddress = 0;
+                int endAddress = (int) flashChip.Size;
+                int bytesRemaining = (int) flashChip.Size;
                 int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
 
-                byte[] image = new byte[info.ImageSize];
+                byte[] image = new byte[flashChip.Size];
 
                 while (startAddress < endAddress)
                 {
@@ -133,30 +139,25 @@ namespace PcmHacking
 
                 if (chipIdResponse.Status == ResponseStatus.Success)
                 {
-                    IList<MemoryRange> ranges = FlashChips.GetMemoryRanges(chipIdResponse.Value, this.logger);
-                    if (ranges != null)
-                    {
-                        CKernelVerifier verifier = new CKernelVerifier(
-                            image,
-                            ranges,
-                            this.vehicle,
-                            this.protocol,
-                            this.logger);
+                    CKernelVerifier verifier = new CKernelVerifier(
+                        image,
+                        flashChip.MemoryRanges,
+                        this.vehicle,
+                        this.protocol,
+                        this.logger);
 
-                        if (await verifier.CompareRanges(
-                            ranges,
-                            image,
-                            BlockType.All,
-                            cancellationToken))
-                        {
-                            logger.AddUserMessage("The PCM was read without errors.");
-                        }
-                        else
-                        {
-                            logger.AddUserMessage("##############################################################################");
-                            logger.AddUserMessage("There are errors in the data that was read from the PCM. Do not use this file.");
-                            logger.AddUserMessage("##############################################################################");
-                        }
+                    if (await verifier.CompareRanges(
+                        image,
+                        BlockType.All,
+                        cancellationToken))
+                    {
+                        logger.AddUserMessage("The PCM was read without errors.");
+                    }
+                    else
+                    {
+                        logger.AddUserMessage("##############################################################################");
+                        logger.AddUserMessage("There are errors in the data that was read from the PCM. Do not use this file.");
+                        logger.AddUserMessage("##############################################################################");
                     }
                 }
                 else
@@ -210,7 +211,7 @@ namespace PcmHacking
                 byte[] payload = readResponse.Value;
                 Buffer.BlockCopy(payload, 0, image, startAddress, length);
 
-                int percentDone = (startAddress * 100) / image.Length;
+                int percentDone = (int)((startAddress * 100) / image.Length);
                 this.logger.AddUserMessage(string.Format("Recieved block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));
 
                 return true;

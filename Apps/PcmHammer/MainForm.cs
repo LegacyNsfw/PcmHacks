@@ -850,9 +850,7 @@ namespace PcmHacking
                         this.Vehicle,
                         this);
 
-                    Response<Stream> readResponse = await reader.ReadContents(
-                        info,
-                        cancellationTokenSource.Token);
+                    Response<Stream> readResponse = await reader.ReadContents(cancellationTokenSource.Token);
 
                     this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
                     if (readResponse.Status != ResponseStatus.Success)
@@ -971,7 +969,8 @@ namespace PcmHacking
                     bool needUnlock;
                     int keyAlgorithm = 1;
                     UInt32 pcmOperatingSystemId = 0;
-                    bool needToCheckOperatingSystem = writeType != WriteType.Full;
+                    bool needToCheckOperatingSystem =
+                        (writeType != WriteType.Full) && (writeType != WriteType.TestWrite);
 
                     this.AddUserMessage("Requesting operating system ID...");
                     Response<uint> osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
