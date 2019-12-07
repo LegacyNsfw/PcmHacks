@@ -35,7 +35,7 @@ namespace PcmHacking
         /// Read the full contents of the PCM.
         /// Assumes the PCM is unlocked an were ready to go
         /// </summary>
-        public async Task<Response<Stream>> ReadContents(PcmInfo info, CancellationToken cancellationToken)
+        public async Task<Response<Stream>> ReadContents(PcmInfo __info, CancellationToken cancellationToken)
         {
             try
             {
@@ -80,16 +80,19 @@ namespace PcmHacking
 
                 logger.AddUserMessage("kernel uploaded to PCM succesfully. Requesting data...");
 
-                // TODO: Get chip ID, use that to get image size. Remove PcmInfo parameter.
+                // Which flash chip?
+                await this.vehicle.SendToolPresentNotification();
+                UInt32 chipId = await this.vehicle.QueryFlashChipId(cancellationToken);
+                FlashChip flashChip = FlashChip.Create(chipId, this.logger);
 
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadMemoryBlock);
 
-                int startAddress = info.ImageBaseAddress;
-                int endAddress = info.ImageBaseAddress + info.ImageSize;
-                int bytesRemaining = info.ImageSize;
+                int startAddress = 0;
+                int endAddress = (int) flashChip.Size;
+                int bytesRemaining = (int) flashChip.Size;
                 int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
 
-                byte[] image = new byte[info.ImageSize];
+                byte[] image = new byte[flashChip.Size];
 
                 while (startAddress < endAddress)
                 {
@@ -170,7 +173,7 @@ namespace PcmHacking
                 byte[] payload = readResponse.Value;
                 Buffer.BlockCopy(payload, 0, image, startAddress, length);
 
-                int percentDone = (startAddress * 100) / image.Length;
+                int percentDone = (int)((startAddress * 100) / image.Length);
                 this.logger.AddUserMessage(string.Format("Recieved block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));
 
                 return true;

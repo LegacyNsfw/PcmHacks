@@ -231,6 +231,27 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Ask the kernel for the ID of the flash chip.
+        /// </summary>
+        public async Task<UInt32> QueryFlashChipId(CancellationToken cancellationToken)
+        {
+            await this.SetDeviceTimeout(TimeoutScenario.ReadProperty);
+            Query<UInt32> chipIdQuery = this.CreateQuery<UInt32>(
+                this.protocol.CreateFlashMemoryTypeQuery,
+                this.protocol.ParseFlashMemoryType,
+                cancellationToken);
+            Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
+
+            if (chipIdResponse.Status != ResponseStatus.Success)
+            {
+                logger.AddUserMessage("Unable to determine which flash chip is in this PCM");
+                return 0;
+            }
+
+            return chipIdResponse.Value;
+        }
+
+        /// <summary>
         /// Check for a running kernel.
         /// </summary>
         /// <returns></returns>

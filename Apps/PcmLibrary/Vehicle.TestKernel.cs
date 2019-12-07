@@ -164,7 +164,7 @@ namespace PcmHacking
         /// </summary>
         private async Task InvestigateCrc(CancellationToken cancellationToken)
         {
-            IList<MemoryRange> ranges = FlashChips.GetMemoryRanges(0x00894471, this.logger);
+            ICollection<MemoryRange> ranges = FlashChip.Create(0x00894471, this.logger).MemoryRanges;
 
             logger.AddUserMessage("Requesting CRCs from PCM...");
             foreach (MemoryRange range in ranges)
