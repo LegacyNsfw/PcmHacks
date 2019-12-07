@@ -1,1 +1,1 @@
-Thanks for using PCM Hammer.
+This release is no longer supported. Please upgrade as soon as possible.
