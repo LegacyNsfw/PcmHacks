@@ -4,8 +4,6 @@ This particular OS offers support for regular gas OR E85. This OS is easy to fin
 
 With this OS any combination of engine, trans, dbw, dbc, flex fuel are available with ONE operating system. 
 
-1,2,3 bar custom OS's can also be found for the 12587603 OS.
-
 12587603 OS was updated by GM to 12606960 in ½ ton truck applications, SPS has never had an update for the 2500/3500 Truck/Van.
 
 Example Vin for flashing with SPS: 1GCEK19T94Z133425
