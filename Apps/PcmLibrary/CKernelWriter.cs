@@ -191,6 +191,7 @@ namespace PcmHacking
             await this.vehicle.SendToolPresentNotification();
             UInt32 chipId = await this.vehicle.QueryFlashChipId(cancellationToken);
             FlashChip flashChip = FlashChip.Create(chipId, this.logger);
+            logger.AddUserMessage("Flash chip: " + flashChip.ToString());
 
             CKernelVerifier verifier = new CKernelVerifier(
                 image,

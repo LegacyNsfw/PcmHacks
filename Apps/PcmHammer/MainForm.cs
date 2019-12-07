@@ -850,9 +850,7 @@ namespace PcmHacking
                         this.Vehicle,
                         this);
 
-                    Response<Stream> readResponse = await reader.ReadContents(
-                        info,
-                        cancellationTokenSource.Token);
+                    Response<Stream> readResponse = await reader.ReadContents(cancellationTokenSource.Token);
 
                     this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
                     if (readResponse.Status != ResponseStatus.Success)
