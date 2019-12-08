@@ -193,6 +193,28 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Choose which directory to create log files in.
+        /// </summary>
+        private void setDirectory_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+            dialog.SelectedPath = LoggerConfiguration.LogDirectory;
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                LoggerConfiguration.LogDirectory = dialog.SelectedPath;
+                this.logFilePath.Text = dialog.SelectedPath;
+            }
+        }
+
+        /// <summary>
+        /// Open a File Explorer window in the log directory.
+        /// </summary>
+        private void openDirectory_Click(object sender, EventArgs e)
+        {
+            Process.Start(LoggerConfiguration.LogDirectory);
+        }
+
+        /// <summary>
         /// Enable or disble the start/stop button.
         /// </summary>
         private void UpdateStartStopButtonState()
@@ -386,134 +408,6 @@ namespace PcmHacking
             lastLogTime = now;
 
             return builder.ToString();
-        }
-
-        /// <summary>
-        /// Create a logging profile for testing (this was also use for testing the JSON serialization / deserialization).
-        /// </summary>
-        private async void GenerateTestProfile()
-        {
-            LogProfile test = new LogProfile();
-            ParameterGroup group = new ParameterGroup();
-            group.Dpid = 0xFE;
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Engine Speed",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 2,
-                    Address = 0x000c,
-                    Conversion = new Conversion { Name = "RPM", Expression = "x*.25" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Mass Air Flow",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 2,
-                    Address = 0x0010,
-                    Conversion = new Conversion { Name = "g/s", Expression = "x/100" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Manifold Absolute Pressure",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x000B,
-                    Conversion = new Conversion { Name = "kpa", Expression = "x" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Throttle Position Sensor",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x0011,
-                    Conversion = new Conversion { Name = "%", Expression = "x/2.56" },
-                });
-
-            test.TryAddGroup(group);
-
-            group = new ParameterGroup();
-            group.Dpid = 0xFD;
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Intake Air Temperature",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x000F,
-                    Conversion = new Conversion { Name = "C", Expression = "x-40" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Engine Coolant Temperature",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x000c,
-                    Conversion = new Conversion { Name = "C", Expression = "x-40" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Left Long Term Fuel Trim",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x0007,
-                    Conversion = new Conversion { Name = "%", Expression = "(x-128)/1.28" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Right Long Term Fuel Trim",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x0009,
-                    Conversion = new Conversion { Name = "%", Expression = "(x-128)/1.28" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Knock Retard",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x11A6,
-                    Conversion = new Conversion { Name = "Degrees", Expression = "(x*256)/22.5" },
-                });
-            group.TryAddParameter(
-                new ProfileParameter
-                {
-                    Name = "Target AFR",
-                    DefineBy = DefineBy.Pid,
-                    ByteCount = 1,
-                    Address = 0x119E,
-                    Conversion = new Conversion { Name = "AFR", Expression = "x*10" },
-                });
-            test.TryAddGroup(group);
-
-            using (Stream outputStream = File.OpenWrite(@"C:\temp\test.profile"))
-            {
-                LogProfileWriter writer = new LogProfileWriter(outputStream);
-                await writer.WriteAsync(test);
-            }
-        }
-
-        private void ChooseDirectory_Click(object sender, EventArgs e)
-        {
-            FolderBrowserDialog dialog = new FolderBrowserDialog();
-            dialog.SelectedPath = LoggerConfiguration.LogDirectory;
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                LoggerConfiguration.LogDirectory = dialog.SelectedPath;
-                this.logFilePath.Text = dialog.SelectedPath;
-            }
-        }
-
-        private void openDirectory_Click(object sender, EventArgs e)
-        {
-            Process.Start(LoggerConfiguration.LogDirectory);
         }
     }
 }

@@ -187,7 +187,7 @@
             this.setDirectory.TabIndex = 6;
             this.setDirectory.Text = "Set &Folder";
             this.setDirectory.UseVisualStyleBackColor = true;
-            this.setDirectory.Click += new System.EventHandler(this.ChooseDirectory_Click);
+            this.setDirectory.Click += new System.EventHandler(this.setDirectory_Click);
             // 
             // openDirectory
             // 
