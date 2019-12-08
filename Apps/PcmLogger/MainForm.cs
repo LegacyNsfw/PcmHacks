@@ -117,6 +117,15 @@ namespace PcmHacking
             {
                 await this.LoadProfile(profilePath);
             }
+
+            string logDirectory = LoggerConfiguration.LogDirectory;
+            if (string.IsNullOrWhiteSpace(logDirectory))
+            {
+                logDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                LoggerConfiguration.LogDirectory = logDirectory;
+            }
+
+            this.logFilePath.Text = logDirectory;
         }
 
         /// <summary>
@@ -230,13 +239,17 @@ namespace PcmHacking
             using (AwayMode lockScreenSuppressor = new AwayMode())
             try
             {
+                string logFilePath = GenerateLogFilePath();
+
                 this.loggerProgress.Invoke(
-                    (MethodInvoker)
-                    delegate ()
-                    {
-                        this.loggerProgress.Value = 0;
-                        this.loggerProgress.Visible = true;
-                    });
+                (MethodInvoker)
+                delegate ()
+                {
+                    this.loggerProgress.Value = 0;
+                    this.loggerProgress.Visible = true;
+                    this.logFilePath.Text = logFilePath;
+                    this.setDirectory.Enabled = false;
+                });
 
                 Logger logger = new Logger(this.Vehicle, this.profile);
                 if (!await logger.StartLogging())
@@ -251,8 +264,7 @@ namespace PcmHacking
                     this.AddUserMessage("Unable to switch to 4x.");
                     return;
                 }
-#endif
-                string logFilePath = GenerateLogFilePath();
+#endif                
                 using (StreamWriter streamWriter = new StreamWriter(logFilePath))
                 {
                     LogFileWriter writer = new LogFileWriter(streamWriter);
@@ -328,6 +340,8 @@ namespace PcmHacking
                         this.loggerProgress.Visible = false;
                         this.startStopLogging.Enabled = true;
                         this.startStopLogging.Text = "Start &Logging";
+                        this.logFilePath.Text = LoggerConfiguration.LogDirectory;
+                        this.setDirectory.Enabled = true;
 
                         this.selectButton.Enabled = true;
                         this.selectProfileButton.Enabled = true;
@@ -340,12 +354,11 @@ namespace PcmHacking
         /// </summary>
         private string GenerateLogFilePath()
         {
-            string directory = Environment.GetEnvironmentVariable("USERPROFILE");
             string file = DateTime.Now.ToString("yyyyMMdd_HHmm") +
                 "_" +
                 this.profileName +
                 ".csv";
-            return Path.Combine(directory, file);
+            return Path.Combine(LoggerConfiguration.LogDirectory, file);
         }
 
         /// <summary>
@@ -485,6 +498,22 @@ namespace PcmHacking
                 LogProfileWriter writer = new LogProfileWriter(outputStream);
                 await writer.WriteAsync(test);
             }
+        }
+
+        private void ChooseDirectory_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+            dialog.SelectedPath = LoggerConfiguration.LogDirectory;
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                LoggerConfiguration.LogDirectory = dialog.SelectedPath;
+                this.logFilePath.Text = dialog.SelectedPath;
+            }
+        }
+
+        private void openDirectory_Click(object sender, EventArgs e)
+        {
+            Process.Start(LoggerConfiguration.LogDirectory);
         }
     }
 }

@@ -85,17 +85,28 @@ namespace PcmHacking
             int startIndex = 0;
             foreach (ProfileParameter parameter in group.Parameters)
             {
-                int value;
+                int value = 0;
                 switch (parameter.ByteCount)
                 {
                     case 1:
-                        value = payload[startIndex++];
+                        if (startIndex < payload.Length)
+                        {
+                            value = payload[startIndex++];
+                        }
                         break;
 
                     case 2:
-                        value = payload[startIndex++];
+                        if (startIndex < payload.Length)
+                        {
+                            value = payload[startIndex++];
+                        }
+
                         value <<= 8;
-                        value |= payload[startIndex++];
+
+                        if (startIndex < payload.Length)
+                        {
+                            value |= payload[startIndex++];
+                        }
                         break;
 
                     default:

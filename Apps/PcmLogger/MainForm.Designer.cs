@@ -42,6 +42,9 @@
             this.startStopLogging = new System.Windows.Forms.Button();
             this.deviceDescription = new System.Windows.Forms.Label();
             this.selectButton = new System.Windows.Forms.Button();
+            this.logFilePath = new System.Windows.Forms.Label();
+            this.setDirectory = new System.Windows.Forms.Button();
+            this.openDirectory = new System.Windows.Forms.Button();
             this.tabs.SuspendLayout();
             this.statusTab.SuspendLayout();
             this.debugTab.SuspendLayout();
@@ -49,14 +52,16 @@
             // 
             // loggerProgress
             // 
+            this.loggerProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.loggerProgress.Enabled = false;
             this.loggerProgress.Location = new System.Drawing.Point(237, 72);
             this.loggerProgress.MarqueeAnimationSpeed = 0;
             this.loggerProgress.Name = "loggerProgress";
-            this.loggerProgress.Size = new System.Drawing.Size(126, 23);
+            this.loggerProgress.Size = new System.Drawing.Size(519, 23);
             this.loggerProgress.Step = 0;
             this.loggerProgress.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
-            this.loggerProgress.TabIndex = 6;
+            this.loggerProgress.TabIndex = 5;
             this.loggerProgress.Visible = false;
             // 
             // tabs
@@ -66,11 +71,11 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabs.Controls.Add(this.statusTab);
             this.tabs.Controls.Add(this.debugTab);
-            this.tabs.Location = new System.Drawing.Point(12, 101);
+            this.tabs.Location = new System.Drawing.Point(12, 130);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(630, 317);
-            this.tabs.TabIndex = 5;
+            this.tabs.Size = new System.Drawing.Size(751, 363);
+            this.tabs.TabIndex = 8;
             // 
             // statusTab
             // 
@@ -78,7 +83,7 @@
             this.statusTab.Location = new System.Drawing.Point(4, 22);
             this.statusTab.Name = "statusTab";
             this.statusTab.Padding = new System.Windows.Forms.Padding(3);
-            this.statusTab.Size = new System.Drawing.Size(622, 291);
+            this.statusTab.Size = new System.Drawing.Size(743, 337);
             this.statusTab.TabIndex = 0;
             this.statusTab.Text = "Status";
             this.statusTab.UseVisualStyleBackColor = true;
@@ -90,7 +95,7 @@
             this.logValues.Multiline = true;
             this.logValues.Name = "logValues";
             this.logValues.ReadOnly = true;
-            this.logValues.Size = new System.Drawing.Size(616, 285);
+            this.logValues.Size = new System.Drawing.Size(737, 331);
             this.logValues.TabIndex = 0;
             // 
             // debugTab
@@ -99,7 +104,7 @@
             this.debugTab.Location = new System.Drawing.Point(4, 22);
             this.debugTab.Name = "debugTab";
             this.debugTab.Padding = new System.Windows.Forms.Padding(3);
-            this.debugTab.Size = new System.Drawing.Size(622, 291);
+            this.debugTab.Size = new System.Drawing.Size(743, 337);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -112,13 +117,13 @@
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.debugLog.Size = new System.Drawing.Size(616, 285);
+            this.debugLog.Size = new System.Drawing.Size(737, 331);
             this.debugLog.TabIndex = 0;
             // 
             // profilePath
             // 
             this.profilePath.AutoSize = true;
-            this.profilePath.Location = new System.Drawing.Point(233, 48);
+            this.profilePath.Location = new System.Drawing.Point(234, 48);
             this.profilePath.Name = "profilePath";
             this.profilePath.Size = new System.Drawing.Size(84, 13);
             this.profilePath.TabIndex = 3;
@@ -164,11 +169,44 @@
             this.selectButton.UseVisualStyleBackColor = true;
             this.selectButton.Click += new System.EventHandler(this.selectButton_Click);
             // 
+            // logFilePath
+            // 
+            this.logFilePath.AutoSize = true;
+            this.logFilePath.BackColor = System.Drawing.Color.Transparent;
+            this.logFilePath.Location = new System.Drawing.Point(234, 106);
+            this.logFilePath.Name = "logFilePath";
+            this.logFilePath.Size = new System.Drawing.Size(49, 13);
+            this.logFilePath.TabIndex = 7;
+            this.logFilePath.Text = "Directory";
+            // 
+            // setDirectory
+            // 
+            this.setDirectory.Location = new System.Drawing.Point(12, 101);
+            this.setDirectory.Name = "setDirectory";
+            this.setDirectory.Size = new System.Drawing.Size(105, 23);
+            this.setDirectory.TabIndex = 6;
+            this.setDirectory.Text = "Set &Folder";
+            this.setDirectory.UseVisualStyleBackColor = true;
+            this.setDirectory.Click += new System.EventHandler(this.ChooseDirectory_Click);
+            // 
+            // openDirectory
+            // 
+            this.openDirectory.Location = new System.Drawing.Point(123, 101);
+            this.openDirectory.Name = "openDirectory";
+            this.openDirectory.Size = new System.Drawing.Size(104, 23);
+            this.openDirectory.TabIndex = 9;
+            this.openDirectory.Text = "&Open Folder";
+            this.openDirectory.UseVisualStyleBackColor = true;
+            this.openDirectory.Click += new System.EventHandler(this.openDirectory_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(654, 430);
+            this.ClientSize = new System.Drawing.Size(775, 505);
+            this.Controls.Add(this.openDirectory);
+            this.Controls.Add(this.setDirectory);
+            this.Controls.Add(this.logFilePath);
             this.Controls.Add(this.loggerProgress);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.profilePath);
@@ -200,6 +238,9 @@
         private System.Windows.Forms.TextBox logValues;
         private System.Windows.Forms.TextBox debugLog;
         private System.Windows.Forms.ProgressBar loggerProgress;
+        private System.Windows.Forms.Label logFilePath;
+        private System.Windows.Forms.Button setDirectory;
+        private System.Windows.Forms.Button openDirectory;
     }
 }
 
