@@ -124,15 +124,20 @@ namespace PcmHacking
                 builder.Append(messageBytes[1].ToString("X2"));
                 builder.Append(messageBytes[2].ToString("X2"));
 
-                int responses = 1;
-                if (this.TimeoutScenario == TimeoutScenario.DataLogging2)
+                int responses;
+                switch (this.TimeoutScenario)
                 {
-                    responses += 1;
-                }
+                    case TimeoutScenario.DataLogging3:
+                        responses = 3;
+                        break;
 
-                if (this.TimeoutScenario == TimeoutScenario.DataLogging3)
-                {
-                    responses += 2;
+                    case TimeoutScenario.DataLogging2:
+                        responses = 2;
+                        break;
+
+                    default:
+                        responses = 1;
+                        break;
                 }
 
                 builder.AppendFormat(", R:{0}", responses);

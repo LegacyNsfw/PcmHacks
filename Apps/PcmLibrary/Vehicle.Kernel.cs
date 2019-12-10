@@ -533,20 +533,18 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Sends the provided message retries times, with a small delay on fail. 
+        /// Sends the provided message, with a retry loop. 
         /// </summary>
-        /// <remarks>
-        /// Returns a succsefull Response on the first successful attempt, or the failed Response if we run out of tries.
-        /// </remarks>
         public async Task<Response<bool>> WritePayload(Message message, CancellationToken cancellationToken)
         {
-            for (int i = MaxSendAttempts; i>0; i--)
+            int retryCount = 0;
+            for (; retryCount < MaxSendAttempts; retryCount++)
             {
                 await this.notifier.Notify();
 
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    return Response.Create(ResponseStatus.Cancelled, false);
+                    return Response.Create(ResponseStatus.Cancelled, false, retryCount);
                 }
 
                 if (!await device.SendMessage(message))
@@ -557,14 +555,16 @@ namespace PcmHacking
 
                 if (await this.WaitForSuccess(this.protocol.ParseUploadResponse, cancellationToken))
                 {
-                    return Response.Create(ResponseStatus.Success, true);
+                    return Response.Create(ResponseStatus.Success, true, retryCount);
                 }
 
                 this.logger.AddDebugMessage("WritePayload: Upload request failed.");
+                await Task.Delay(100);
+                await this.SendToolPresentNotification();
             }
 
             this.logger.AddDebugMessage("WritePayload: Giving up.");
-            return Response.Create(ResponseStatus.Error, false); // this should be response from the loop but the compiler thinks the response variable isnt in scope here????
+            return Response.Create(ResponseStatus.Error, false, retryCount);
         }
     }
 }

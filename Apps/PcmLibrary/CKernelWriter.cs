@@ -201,8 +201,7 @@ namespace PcmHacking
                 this.logger);
 
             bool allRangesMatch = false;
-            bool writeAttempted = false;
-
+            int messageRetryCount = 0;
             await this.vehicle.SendToolPresentNotification();
             for (int attempt = 1; attempt <= 5; attempt++)
             {
@@ -228,10 +227,11 @@ namespace PcmHacking
                     }
                 }
 
+                // For test writes, report results after the first iteration, then we're done.
                 if ((writeType == WriteType.TestWrite) && (attempt > 1))
                 {
-                    // TODO: the app should know if any errors were encountered. The user shouldn't need to check.
-                    this.logger.AddUserMessage("Test complete. Were any errors logged above?");
+                    logger.AddUserMessage("Test write complete.");
+                    Utility.ReportRetryCount("write", messageRetryCount, flashChip.Size, this.logger);
                     return true;
                 }
 
@@ -243,8 +243,6 @@ namespace PcmHacking
                     return true;
                 }
 
-                writeAttempted = true;
-
                 // Erase and rewrite the required memory ranges.
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.Maximum);
                 foreach (MemoryRange range in flashChip.MemoryRanges)
@@ -255,6 +253,7 @@ namespace PcmHacking
                         continue;
                     }
 
+                    // Skip irrelevant blocks.
                     if ((range.Type & relevantBlocks) == 0)
                     {
                         continue;
@@ -289,25 +288,34 @@ namespace PcmHacking
 
                     await this.vehicle.SendToolPresentNotification();
 
-                    await WriteMemoryRange(
+                    Response<bool> writeResponse = await WriteMemoryRange(
                         range,
                         image,
                         writeType == WriteType.TestWrite,
                         cancellationToken);
-                }
-            }
 
-            if (!writeAttempted)
-            {
-                this.logger.AddUserMessage("Assertion failed. WriteAttempted should be true.");
+                    if (writeResponse.RetryCount > 0)
+                    {
+                        this.logger.AddUserMessage("Retry count for this block: " + writeResponse.RetryCount);
+                        messageRetryCount += writeResponse.RetryCount;
+                    }
+                }
             }
 
             if (allRangesMatch)
             {
                 this.logger.AddUserMessage("Flash successful!");
+
+                if (messageRetryCount > 2)
+                {
+                    logger.AddUserMessage("Write request messages had to be re-sent " + messageRetryCount + " times.");
+                }
+
                 return true;
             }
 
+            // During a test write, we will return from the middle of the loop above.
+            // So if we made it here, a real write has failed.
             this.logger.AddUserMessage("===============================================");
             this.logger.AddUserMessage("THE CHANGES WERE -NOT- WRITTEN SUCCESSFULLY");
             this.logger.AddUserMessage("===============================================");
@@ -358,7 +366,7 @@ namespace PcmHacking
                  this.protocol.ParseFlashEraseBlock,
                  cancellationToken);
 
-            eraseRequest.MaxTimeouts = 5; // Reduce this when we know how many are likely to be needed.
+            eraseRequest.MaxTimeouts = 3;
             Response<byte> eraseResponse = await eraseRequest.Execute();
 
             if (eraseResponse.Status != ResponseStatus.Success)
@@ -381,18 +389,19 @@ namespace PcmHacking
         /// <summary>
         /// Copy a single memory range to the PCM.
         /// </summary>
-        private async Task<bool> WriteMemoryRange(
+        private async Task<Response<bool>> WriteMemoryRange(
             MemoryRange range,
             byte[] image,
             bool justTestWrite,
             CancellationToken cancellationToken)
         {
+            int retryCount = 0;
             int devicePayloadSize = vehicle.DeviceMaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
             for (int index = 0; index < range.Size; index += devicePayloadSize)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    return false;
+                    return Response.Create(ResponseStatus.Cancelled, false, retryCount);
                 }
 
                 await this.vehicle.SendToolPresentNotification();
@@ -414,14 +423,17 @@ namespace PcmHacking
                         startAddress,
                         thisPayloadSize));
 
-                await this.vehicle.WritePayload(payloadMessage, cancellationToken);
+                // WritePayload contains a retry loop, so if it fails, we don't need to retry at this layer.
+                Response<bool> response = await this.vehicle.WritePayload(payloadMessage, cancellationToken);
+                if (response.Status != ResponseStatus.Success)
+                {
+                    return Response.Create(ResponseStatus.Error, false, response.RetryCount);
+                }
 
-                // Not checking the success or failure here.
-                // The debug pane will show if anything goes wrong, and the CRC check at the end will alert the user.
-                // TODO: log errors during test writes!
+                retryCount += response.RetryCount;
             }
 
-            return true;
+            return Response.Create(ResponseStatus.Success, true, retryCount);
         }
 
         /// <summary>

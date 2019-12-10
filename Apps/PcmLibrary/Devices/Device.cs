@@ -267,18 +267,19 @@ namespace PcmHacking
                     packetSize = this.MaxSendSize + 20;
                     break;
 
+                // Not tuned manually yet.
                 case TimeoutScenario.DataLogging1:
                     packetSize = 30;
                     break;
                 
-                // This one was tuned by hand to avoid timeouts with STPX.
-                // 1 and 3 probably still need tuning.
+                // This one was tuned by hand to avoid timeouts with STPX, and it work well for the AllPro too.
                 case TimeoutScenario.DataLogging2:
                     packetSize = 47;
                     break;
 
+                // 64 works for the LX, but the AllPro needs 70.
                 case TimeoutScenario.DataLogging3:
-                    packetSize = 64;
+                    packetSize = 70;
                     break;
 
                 case TimeoutScenario.Maximum:
