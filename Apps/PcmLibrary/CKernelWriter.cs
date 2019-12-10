@@ -230,21 +230,8 @@ namespace PcmHacking
                 // For test writes, report results after the first iteration, then we're done.
                 if ((writeType == WriteType.TestWrite) && (attempt > 1))
                 {
-                    if (messageRetryCount == 0)
-                    {
-                        this.logger.AddUserMessage("All write-request messages succeeded on the first try. You have an excellent connection to the PCM.");
-                    }
-                    else if (messageRetryCount < 3)
-                    {
-                        this.logger.AddUserMessage("Write-request messages had to be re-sent " + (messageRetryCount == 1 ? "once." : "twice."));
-                    }
-                    else
-                    {
-                        this.logger.AddUserMessage("Write request messages had to be re-sent " + messageRetryCount + " times.");
-                    }
-
-                    this.logger.AddUserMessage("We're not sure how much retrying is normal. Please help by sharing your results in the PCM Hammer thread at pcmhacking.net.");
-                    this.logger.AddUserMessage("Test complete.");
+                    logger.AddUserMessage("Test write complete.");
+                    Utility.ReportRetryCount("write", messageRetryCount, flashChip.Size, this.logger);
                     return true;
                 }
 
