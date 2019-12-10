@@ -94,7 +94,7 @@ namespace PcmHacking
                 int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
 
                 byte[] image = new byte[flashChip.Size];
-
+                int retryCount = 0;
                 while (startAddress < endAddress)
                 {
                     if (cancellationToken.IsCancellationRequested)
@@ -115,8 +115,9 @@ namespace PcmHacking
                         this.logger.AddUserMessage("Image download complete");
                         break;
                     }
-                    
-                    if (!await TryReadBlock(image, blockSize, startAddress, cancellationToken))
+
+                    Response<bool> readResponse = await TryReadBlock(image, blockSize, startAddress, cancellationToken);
+                    if (readResponse.Status != ResponseStatus.Success)
                     {
                         this.logger.AddUserMessage(
                             string.Format(
@@ -127,43 +128,32 @@ namespace PcmHacking
                     }
 
                     startAddress += blockSize;
+                    retryCount += readResponse.RetryCount;
                 }
 
-                logger.AddUserMessage("Read complete. Starting verification...");
-                Query<UInt32> chipIdQuery = this.vehicle.CreateQuery<UInt32>(
-                    this.protocol.CreateFlashMemoryTypeQuery,
-                    this.protocol.ParseFlashMemoryType,
-                    cancellationToken);
+                logger.AddUserMessage("Read complete.");
+                logger.AddUserMessage("Read request retry count: " + retryCount + ".");
+                logger.AddUserMessage("Starting verification...");
 
-                Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
+                CKernelVerifier verifier = new CKernelVerifier(
+                    image,
+                    flashChip.MemoryRanges,
+                    this.vehicle,
+                    this.protocol,
+                    this.logger);
 
-                if (chipIdResponse.Status == ResponseStatus.Success)
+                if (await verifier.CompareRanges(
+                    image,
+                    BlockType.All,
+                    cancellationToken))
                 {
-                    CKernelVerifier verifier = new CKernelVerifier(
-                        image,
-                        flashChip.MemoryRanges,
-                        this.vehicle,
-                        this.protocol,
-                        this.logger);
-
-                    if (await verifier.CompareRanges(
-                        image,
-                        BlockType.All,
-                        cancellationToken))
-                    {
-                        logger.AddUserMessage("The PCM was read without errors.");
-                    }
-                    else
-                    {
-                        logger.AddUserMessage("##############################################################################");
-                        logger.AddUserMessage("There are errors in the data that was read from the PCM. Do not use this file.");
-                        logger.AddUserMessage("##############################################################################");
-                    }
+                    logger.AddUserMessage("The contents of the file match the contents of the PCM.");
                 }
                 else
                 {
-                    logger.AddUserMessage("Unable to determine which flash chip is in this PCM.");
-                    logger.AddUserMessage("That prevents us from validating the results of this operation.");
+                    logger.AddUserMessage("##############################################################################");
+                    logger.AddUserMessage("There are errors in the data that was read from the PCM. Do not use this file.");
+                    logger.AddUserMessage("##############################################################################");
                 }
 
                 await this.vehicle.Cleanup(); // Not sure why this does not get called in the finally block on successfull read?
@@ -187,11 +177,12 @@ namespace PcmHacking
         /// <summary>
         /// Try to read a block of PCM memory.
         /// </summary>
-        private async Task<bool> TryReadBlock(byte[] image, int length, int startAddress, CancellationToken cancellationToken)
+        private async Task<Response<bool>> TryReadBlock(byte[] image, int length, int startAddress, CancellationToken cancellationToken)
         {
             this.logger.AddDebugMessage(string.Format("Reading from {0} / 0x{0:X}, length {1} / 0x{1:X}", startAddress, length));
 
-            for (int sendAttempt = 1; sendAttempt <= Vehicle.MaxSendAttempts; sendAttempt++)
+            int retryCount = 0;
+            for (; retryCount < Vehicle.MaxSendAttempts; retryCount++)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -205,19 +196,20 @@ namespace PcmHacking
 
                 if(readResponse.Status != ResponseStatus.Success)
                 {
+                    this.logger.AddDebugMessage("Unable to read segment: " + readResponse.Status);
                     continue;
                 }
 
                 byte[] payload = readResponse.Value;
                 Buffer.BlockCopy(payload, 0, image, startAddress, length);
 
-                int percentDone = (int)((startAddress * 100) / image.Length);
+                int percentDone = (startAddress * 100) / image.Length;
                 this.logger.AddUserMessage(string.Format("Recieved block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));
 
-                return true;
+                return Response.Create(ResponseStatus.Success, true, retryCount);
             }
 
-            return false;
+            return Response.Create(ResponseStatus.Error, false, retryCount);
         }
     }
 }

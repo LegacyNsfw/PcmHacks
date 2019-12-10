@@ -822,8 +822,7 @@ namespace PcmHacking
                     }
                     else
                     {
-                        // TODO: prompt the user - 512kb or 1mb?
-                        this.AddUserMessage("Will assume this is a 512kb PCM in recovery mode.");
+                        this.AddUserMessage("Unable to get operating system ID. Will assume this can be unlocked with the default seed/key algorithm.");
                         info = new PcmInfo(0);
                     }
 

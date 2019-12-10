@@ -46,7 +46,7 @@ namespace PcmHacking
             System.Buffer.BlockCopy(Header, 0, Buffer, 0, Header.Length);
             System.Buffer.BlockCopy(Payload, Offset, Buffer, Header.Length, Length);
 
-            return new Message(AddBlockChecksum(Buffer));
+            return new Message(VpwUtilities.AddBlockChecksum(Buffer));
         }
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace PcmHacking
                 }
 
                 // Verify block checksum
-                UInt16 ValidSum = CalcBlockChecksum(actual);
+                UInt16 ValidSum = VpwUtilities.CalcBlockChecksum(actual);
                 int PayloadSum = (actual[rlen + 10] << 8) + actual[rlen + 11];
                 Buffer.BlockCopy(actual, 10, result, 0, length);
                 if (PayloadSum != ValidSum) return Response.Create(ResponseStatus.Error, result);
@@ -174,41 +174,6 @@ namespace PcmHacking
             }
 
             return Response.Create(ResponseStatus.Success, result);
-        }
-
-        //TODO: use the copy of this function in VPW.cs
-        public UInt16 CalcBlockChecksum(byte[] Block)
-        {
-            UInt16 Sum = 0;
-            int PayloadLength = (Block[5] << 8) + Block[6];
-
-            for (int i = 4; i < PayloadLength + 10; i++) // start after prio, dest, src, mode, stop at end of payload
-            {
-                Sum += Block[i];
-            }
-
-            return Sum;
-        }
-
-        /// <summary>
-        /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array
-        /// </summary>
-        /// <remarks>
-        /// Overwrites the last 2 bytes at the end of the array with the sum
-        /// </remarks>
-        public byte[] AddBlockChecksum(byte[] Block)
-        {
-            UInt16 Sum = 0;
-
-            for (int i = 4; i < Block.Length - 2; i++) // skip prio, dest, src, mode
-            {
-                Sum += Block[i];
-            }
-
-            Block[Block.Length - 2] = unchecked((byte)(Sum >> 8));
-            Block[Block.Length - 1] = unchecked((byte)(Sum & 0xFF));
-
-            return Block;
         }
     }
 }

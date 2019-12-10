@@ -128,7 +128,7 @@ namespace PcmHacking
     }
 
     /// <summary>
-    /// Defines Modes
+    /// Mode values.
     /// </summary>
     public static class Mode
     {
@@ -150,6 +150,9 @@ namespace PcmHacking
         public const byte HighSpeed = 0xA1;
     }
 
+    /// <summary>
+    /// Sub-mode values. Note that the sub-modes vary by mode.
+    /// </summary>
     public static class SubMode
     {
         public const byte Null = 0x00;
@@ -163,20 +166,20 @@ namespace PcmHacking
         public const byte UploadOK = 0x00;
     }
 
-    public class VPWUtils
+    /// <summary>
+    /// General-purpose VPW utilities.
+    /// </summary>
+    public class VpwUtilities
     {
         /// <summary>
-        /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array
+        /// Calculate the checksum for a given block of VPW data.
         /// </summary>
-        /// <remarks>
-        /// Caller to provide valid array
-        /// </remarks>
         public static UInt16 CalcBlockChecksum(byte[] Block)
         {
             UInt16 Sum = 0;
             int PayloadLength = (Block[5] << 8) + Block[6];
 
-            for (int i = 4; i < PayloadLength; i++) // skip prio, dest, src, mode
+            for (int i = 4; i < PayloadLength + 10; i++) // start after prio, dest, src, mode, stop at end of payload
             {
                 Sum += Block[i];
             }
@@ -185,38 +188,23 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Write a 16 bit sum to the end of a block, returns a Message, as a byte array
+        /// Write a 16 bit sum at the end of a block.
         /// </summary>
         /// <remarks>
-        /// 
-        /// TODO: Move this into the Message class.
-        /// 
-        /// Appends 2 bytes at the end of the array with the sum
-        /// TODO: Throw an error if the input data is not valid?
-        /// 
-        /// 6C|10|F0|36/80|03 F1|FF 91 50 .... CA CS
-        /// 0  1  2  3  4  5  6  7  8  9
-        /// 1  2  3  4  5  6  7  8  9  10      11 12
+        /// Overwrites the last 2 bytes at the end of the array with the sum
         /// </remarks>
         public static byte[] AddBlockChecksum(byte[] Block)
         {
             UInt16 Sum = 0;
-            int PayloadLength;
 
-            // Only generate the sum and append to the block if the length is right
-            if (Block.Length > 6) // Do we have a length?
+            for (int i = 4; i < Block.Length - 2; i++) // skip prio, dest, src, mode
             {
-                PayloadLength = (Block[5] << 8) + Block[6];
-                if (Block.Length == PayloadLength + 12) // Correct block size?
-                {
-                    Sum = CalcBlockChecksum(Block);
-
-                    Block[Block.Length - 2] = unchecked((byte)(Sum >> 8));
-                    Block[Block.Length - 1] = unchecked((byte)(Sum & 0xFF));
-
-                    return Block;
-                }
+                Sum += Block[i];
             }
+
+            Block[Block.Length - 2] = unchecked((byte)(Sum >> 8));
+            Block[Block.Length - 1] = unchecked((byte)(Sum & 0xFF));
+
             return Block;
         }
     }

@@ -60,9 +60,9 @@ namespace PcmHacking
         /// <remarks>
         /// This just makes the calling code simpler because you don't have to specify T explicitly.
         /// </remarks>
-        public static Response<T> Create<T>(ResponseStatus status, T value)
+        public static Response<T> Create<T>(ResponseStatus status, T value, int retryCount = -1)
         {
-            return new Response<T>(status, value);
+            return new Response<T>(status, value, retryCount);
         }
     }
 
@@ -81,6 +81,11 @@ namespace PcmHacking
         public ResponseStatus Status { get; private set; }
 
         /// <summary>
+        /// Indicates how many times the operation had to be retried.
+        /// </summary>
+        public int RetryCount { get; private set; }
+
+        /// <summary>
         /// The value that came from the PCM.
         /// </summary>
         /// <remarks>
@@ -95,12 +100,11 @@ namespace PcmHacking
         /// <summary>
         /// Create a Response object with the given status and value.
         /// </summary>
-        /// <param name="status"></param>
-        /// <param name="value"></param>
-        public Response(ResponseStatus status, T value)
+        public Response(ResponseStatus status, T value, int retryCount = -1)
         {
             this.Status = status;
             this.Value = value;
+            this.RetryCount = retryCount;
         }
 
         /// <summary>
