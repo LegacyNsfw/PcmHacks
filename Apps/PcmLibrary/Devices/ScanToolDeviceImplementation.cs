@@ -146,6 +146,7 @@ namespace PcmHacking
             }
 
             // Special case for tool-present broadcast messages.
+            // TODO: Create a new TimeoutScenario value, maybe call it "TransmitOnly" or something like that.
             if (Utility.CompareArrays(messageBytes, 0x8C, 0xFE, 0xF0, 0x3F))
             {
                 responses = 0;
@@ -165,7 +166,15 @@ namespace PcmHacking
                 string dataResponse = await this.SendRequest(builder.ToString());
                 if (!this.ProcessResponse(dataResponse, "STPX with data", allowEmpty: responses == 0))
                 {
-                    this.Logger.AddUserMessage("Unexpected response to STPX with data: " + dataResponse);
+                    if (dataResponse == string.Empty || dataResponse == "STOPPED" || dataResponse == "?")
+                    {
+                        // These will happen if the bus is quiet, for example right after uploading the kernel.
+                        // They are traced during the SendRequest code. No need to repeat that message.
+                    }
+                    else
+                    {
+                        this.Logger.AddUserMessage("Unexpected response to STPX with data: " + dataResponse);
+                    }
                     return false;
                 }
             }
