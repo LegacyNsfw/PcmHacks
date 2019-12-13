@@ -299,7 +299,6 @@ namespace PcmHacking
                 return false;
             }
 
-            await this.notifier.ForceNotify();
             Message request = protocol.CreateUploadRequest(address, claimedSize);
 
             if(!await TrySendMessage(request, "upload request"))
@@ -396,7 +395,7 @@ namespace PcmHacking
 
             this.logger.AddUserMessage("Kernel upload 100% complete.");
 
-            await this.notifier.Notify();
+            // Consider: return kernel version rather than boolean?
             UInt32 kernelVersion = await this.GetKernelVersion();
             this.logger.AddUserMessage("Kernel Version: " + kernelVersion.ToString("X8"));
 
