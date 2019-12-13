@@ -48,9 +48,9 @@ namespace PcmHacking
         /// <summary>
         /// Not needed.
         /// </summary>
-        public override Task SetTimeout(TimeoutScenario scenario)
+        public override Task<TimeoutScenario> SetTimeout(TimeoutScenario scenario)
         {
-            return Task.FromResult(0);
+            return Task.FromResult(this.currentTimeoutScenario);
         }
 
         /// <summary>
