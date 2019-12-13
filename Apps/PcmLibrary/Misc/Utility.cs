@@ -159,6 +159,35 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Compare the two operating system IDs, report on the ramifications, set a flag if the write should be halted.
+        /// </summary>
+        public static void ReportOperatingSystems(UInt32 fileOs, UInt32 pcmOs, WriteType writeType, ILogger logger, out bool shouldHalt)
+        {
+            shouldHalt = false;
+            if (fileOs == pcmOs)
+            {
+                logger.AddUserMessage("PCM and image file are both operating system " + fileOs);
+            }
+            else
+            {
+                if (writeType == WriteType.Full)
+                {
+                    logger.AddUserMessage("Changing PCM to operating system" + fileOs);
+                }
+                else if (writeType == WriteType.TestWrite)
+                {
+                    logger.AddUserMessage("PCM and image file are different operating systems.");
+                    logger.AddUserMessage("But we'll ignore that because this is just a test write.");
+                }
+                else
+                {
+                    logger.AddUserMessage("Flashing this file could render your PCM unusable.");
+                    shouldHalt = true;
+                }
+            }
+        }
+
+        /// <summary>
         /// Print out the number of retries, and beg the user to share.
         /// </summary>
         public static void ReportRetryCount(string operation, int retryCount, UInt32 flashChipSize, ILogger logger)

@@ -210,27 +210,6 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Ask the kernel which OS is installed, fail if it doesn't match the one in the file.
-        /// </summary>
-        public async Task<bool> IsSameOperatingSystemAccordingToKernel(FileValidator validator, CancellationToken cancellationToken)
-        {
-            Response<uint> osidResponse = await this.QueryOperatingSystemIdFromKernel(cancellationToken);
-            if (osidResponse.Status != ResponseStatus.Success)
-            {
-                // The kernel seems broken. This shouldn't happen, but if it does, halt.
-                this.logger.AddUserMessage("The kernel did not respond to operating system ID query.");
-                return false;
-            }
-
-            if (!validator.IsSameOperatingSystem(osidResponse.Value))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Ask the kernel for the ID of the flash chip.
         /// </summary>
         public async Task<UInt32> QueryFlashChipId(CancellationToken cancellationToken)

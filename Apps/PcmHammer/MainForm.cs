@@ -967,7 +967,7 @@ namespace PcmHacking
                     UInt32 kernelVersion = 0;
                     bool needUnlock;
                     int keyAlgorithm = 1;
-                    UInt32 pcmOperatingSystemId = 0;
+                    bool shouldHalt;
                     bool needToCheckOperatingSystem =
                         (writeType != WriteType.Full) && (writeType != WriteType.TestWrite);
 
@@ -975,15 +975,17 @@ namespace PcmHacking
                     Response<uint> osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
                     if (osidResponse.Status == ResponseStatus.Success)
                     {
-                        pcmOperatingSystemId = osidResponse.Value;
-                        PcmInfo info = new PcmInfo(pcmOperatingSystemId);
+                        PcmInfo info = new PcmInfo(osidResponse.Value);
                         keyAlgorithm = info.KeyAlgorithm;
                         needUnlock = true;
 
-                        if (needToCheckOperatingSystem && !validator.IsSameOperatingSystem(pcmOperatingSystemId))
+                        if (!validator.IsSameOperatingSystem(osidResponse.Value))
                         {
-                            this.AddUserMessage("Flashing this file could render your PCM unusable.");
-                            return;
+                            Utility.ReportOperatingSystems(validator.GetOsidFromImage(), osidResponse.Value, writeType, this, out shouldHalt);
+                            if (shouldHalt)
+                            {
+                                return;
+                            }
                         }
 
                         needToCheckOperatingSystem = false;
@@ -1022,10 +1024,22 @@ namespace PcmHacking
                             this.AddUserMessage("Kernel version: " + kernelVersion.ToString("X8"));
 
                             this.AddUserMessage("Asking kernel for the PCM's operating system ID...");
-                            if (needToCheckOperatingSystem && !await this.Vehicle.IsSameOperatingSystemAccordingToKernel(validator, this.cancellationTokenSource.Token))
+
+                            if (needToCheckOperatingSystem)
                             {
-                                this.AddUserMessage("Flashing this file could render your PCM unusable.");
-                                return;
+                                osidResponse = await this.Vehicle.QueryOperatingSystemIdFromKernel(this.cancellationTokenSource.Token);
+                                if (osidResponse.Status != ResponseStatus.Success)
+                                {
+                                    // The kernel seems broken. This shouldn't happen, but if it does, halt.
+                                    this.AddUserMessage("The kernel did not respond to operating system ID query.");
+                                    return;
+                                }
+
+                                Utility.ReportOperatingSystems(validator.GetOsidFromImage(), osidResponse.Value, writeType, this, out shouldHalt);
+                                if (shouldHalt)
+                                {
+                                    return;
+                                }
                             }
 
                             needToCheckOperatingSystem = false;
