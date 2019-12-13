@@ -165,11 +165,13 @@ namespace PcmHacking
             byte[] b = new byte[1]; // FIXME: If I dont copy to this buffer, and instead use buffer[i] inline in the next loop, the test for '>' does not work in the while clause.
             do
             {
+                // TODO: check for -1 return value
                 await this.Port.Receive(b, 0, 1);
+
                 //this.Logger.AddDebugMessage("Byte: " + b[0].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(b));
                 buffer[i] = b[0];
                 i++;
-            } while ((i < buffersize) && (b[0] != '>')); // continue until the next prompt
+            } while ((i < buffersize) && (b[0] != '>')); // continue until the next prompt. TODO: try checking for \r here as well, see Issue #114 at GitHub.
 
             //this.Logger.AddDebugMessage("Found terminator '>'");
 
