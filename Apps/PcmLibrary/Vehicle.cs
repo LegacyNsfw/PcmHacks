@@ -410,7 +410,7 @@ namespace PcmHacking
                 return Response.Create<byte[]>(ResponseStatus.Error, new byte[0]);
             }
 
-            ResponseStatus lastStatus = ResponseStatus.Success;
+            ResponseStatus lastStatus = ResponseStatus.Error;
             for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
             {
                 if (cancellationToken.IsCancellationRequested)
