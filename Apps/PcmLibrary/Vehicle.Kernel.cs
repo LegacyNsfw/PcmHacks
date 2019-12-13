@@ -182,12 +182,13 @@ namespace PcmHacking
             // The response is not checked because the priority byte and destination address are odd.
             // Different devices will handle this differently. Scantool won't recieve it.
             // so we send it twice just to be sure.
-            Message clearCodesRequest = this.protocol.CreateClearDiagnosticTroubleCodesRequest();                        
+            Message clearCodesRequest = this.protocol.CreateClearDiagnosticTroubleCodesRequest();
             await this.device.SendMessage(clearCodesRequest);
             await this.device.SendMessage(clearCodesRequest);
 
             // This is a conventional message, but the response from the PCM might get lost 
             // among the responses from other modules on the bus, so again we just send it twice.
+            await Task.Delay(500);
             Message clearDiagnosticInformationRequest = this.protocol.CreateClearDiagnosticInformationRequest();
             await this.device.SendMessage(clearDiagnosticInformationRequest);
             await this.device.SendMessage(clearDiagnosticInformationRequest);
@@ -214,20 +215,30 @@ namespace PcmHacking
         /// </summary>
         public async Task<UInt32> QueryFlashChipId(CancellationToken cancellationToken)
         {
-            await this.SetDeviceTimeout(TimeoutScenario.ReadProperty);
-            Query<UInt32> chipIdQuery = this.CreateQuery<UInt32>(
-                this.protocol.CreateFlashMemoryTypeQuery,
-                this.protocol.ParseFlashMemoryType,
-                cancellationToken);
-            Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
-
-            if (chipIdResponse.Status != ResponseStatus.Success)
+            for (int retries = 0; retries < 3; retries++)
             {
-                logger.AddUserMessage("Unable to determine which flash chip is in this PCM");
-                return 0;
+                await this.SetDeviceTimeout(TimeoutScenario.ReadProperty);
+                Query<UInt32> chipIdQuery = this.CreateQuery<UInt32>(
+                    this.protocol.CreateFlashMemoryTypeQuery,
+                    this.protocol.ParseFlashMemoryType,
+                    cancellationToken);
+                Response<UInt32> chipIdResponse = await chipIdQuery.Execute();
+
+                if (chipIdResponse.Status != ResponseStatus.Success)
+                {
+                    continue;
+                }
+
+                if (chipIdResponse.Value == 0)
+                {
+                    continue;
+                }
+
+                return chipIdResponse.Value;
             }
 
-            return chipIdResponse.Value;
+            logger.AddUserMessage("Unable to determine which flash chip is in this PCM");
+            return 0;
         }
 
         /// <summary>
@@ -237,23 +248,23 @@ namespace PcmHacking
         public async Task<UInt32> GetKernelVersion()
         {
             Message query = this.protocol.CreateKernelVersionQuery();
-            for (int attempt = 0; attempt < 2; attempt++)
+            for (int retryCount = 0; retryCount < 5; retryCount++)
             {
                 if (!await this.device.SendMessage(query))
                 {
-                    await Task.Delay(250);
+                    await Task.Delay(100);
                     continue;
                 }
 
                 Message reply = await this.device.ReceiveMessage();
                 if (reply == null)
                 {
-                    await Task.Delay(250);
+                    await Task.Delay(100);
                     continue;
                 }
 
                 Response<UInt32> response = this.protocol.ParseKernelVersion(reply);
-                if (response.Status == ResponseStatus.Success)
+                if ((response.Status == ResponseStatus.Success) && (response.Value != 0))
                 {
                     return response.Value;
                 }
@@ -263,7 +274,7 @@ namespace PcmHacking
                     return 0;
                 }
 
-                await Task.Delay(250);
+                await Task.Delay(100);
             }
 
             return 0;
@@ -288,6 +299,7 @@ namespace PcmHacking
                 return false;
             }
 
+            await this.notifier.ForceNotify();
             Message request = protocol.CreateUploadRequest(address, claimedSize);
 
             if(!await TrySendMessage(request, "upload request"))
@@ -342,6 +354,7 @@ namespace PcmHacking
             }
 
             // Now we send a series of full upload packets
+            // Note that there's a notifier.Notify() call inside the WritePayload() call in this loop.
             for (int chunkIndex = chunkCount; chunkIndex > 0; chunkIndex--)
             {
                 int bytesSent = payload.Length - offset;
@@ -383,7 +396,7 @@ namespace PcmHacking
 
             this.logger.AddUserMessage("Kernel upload 100% complete.");
 
-            // Consider: return kernel version rather than boolean?
+            await this.notifier.Notify();
             UInt32 kernelVersion = await this.GetKernelVersion();
             this.logger.AddUserMessage("Kernel Version: " + kernelVersion.ToString("X8"));
 
