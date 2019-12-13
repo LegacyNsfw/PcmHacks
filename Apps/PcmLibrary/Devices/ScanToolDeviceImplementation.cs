@@ -82,8 +82,9 @@ namespace PcmHacking
                     stID.Contains("STN1151") || // MX version 2
                     stID.Contains("STN2255")) // MX+
                 {
-                    this.MaxSendSize = 2048 + 12;
-                    this.MaxReceiveSize = 2048 + 12;
+                    // 2048 works, but doesn't write measurably faster.
+                    this.MaxSendSize = 1024 + 12;
+                    this.MaxReceiveSize = 1024 + 12;
                 }
                 else
                 {
@@ -93,6 +94,11 @@ namespace PcmHacking
                     this.MaxSendSize = 128 + 12;
                     this.MaxReceiveSize = 128 + 12;
                 }
+
+                // Setting timeout to maximum. Since we use STPX commands, the device will stop
+                // listening when it receives the expected number of responses, rather than 
+                // waiting for the timeout.
+                this.Logger.AddDebugMessage(await this.SendRequest("AT ST FF"));
 
             }
             catch (Exception exception)
@@ -104,43 +110,68 @@ namespace PcmHacking
 
             return true;
         }
-        
+
         /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>
+        /// <remarks>
+        /// This initially used standard ELM commands, however the ScanTool family
+        /// of devices supports an "STPX" command that simplifies things a lot.
+        /// Timeout adjustements are no longer needed, and longer packets are supported.
+        /// </remarks>
         public override async Task<bool> SendMessage(Message message)
         {
             byte[] messageBytes = message.GetBytes();
 
-            bool useSTPX = messageBytes.Length > 4;
+            StringBuilder builder = new StringBuilder();
+            builder.Append("STPX H:");
+            builder.Append(messageBytes[0].ToString("X2"));
+            builder.Append(messageBytes[1].ToString("X2"));
+            builder.Append(messageBytes[2].ToString("X2"));
 
-            // Not sure why, but STPX is flaky with the clear-codes message at the end of the flash.
-            // So we'll fall back to the old approach for very short messages. 
-            if (useSTPX)
-            {                
-                StringBuilder builder = new StringBuilder();
-                builder.Append("STPX H:");
-                builder.Append(messageBytes[0].ToString("X2"));
-                builder.Append(messageBytes[1].ToString("X2"));
-                builder.Append(messageBytes[2].ToString("X2"));
+            int responses;
+            switch (this.TimeoutScenario)
+            {
+                case TimeoutScenario.DataLogging3:
+                    responses = 3;
+                    break;
 
-                int responses;
-                switch (this.TimeoutScenario)
+                case TimeoutScenario.DataLogging2:
+                    responses = 2;
+                    break;
+
+                default:
+                    responses = 1;
+                    break;
+            }
+
+            // Special case for tool-present broadcast messages.
+            if (Utility.CompareArrays(messageBytes, 0x8C, 0xFE, 0xF0, 0x3F))
+            {
+                responses = 0;
+            }
+
+            builder.AppendFormat(", R:{0}", responses);
+
+            if (messageBytes.Length < 200)
+            {
+                // Short messages can be sent with a single write to the ScanTool.
+                builder.Append(", D:");
+                for(int index = 3; index < messageBytes.Length; index++)
                 {
-                    case TimeoutScenario.DataLogging3:
-                        responses = 3;
-                        break;
-
-                    case TimeoutScenario.DataLogging2:
-                        responses = 2;
-                        break;
-
-                    default:
-                        responses = 1;
-                        break;
+                    builder.Append(messageBytes[index].ToString("X2"));
                 }
 
-                builder.AppendFormat(", R:{0}", responses);
+                string dataResponse = await this.SendRequest(builder.ToString());
+                if (!this.ProcessResponse(dataResponse, "STPX with data", allowEmpty: responses == 0))
+                {
+                    this.Logger.AddUserMessage("Unexpected response to STPX with data: " + dataResponse);
+                    return false;
+                }
+            }
+            else
+            {
+                // Long messages need to be sent in two steps: first the STPX command, then the data payload.
                 builder.Append(", L:");
                 int dataLength = messageBytes.Length - 3;
                 builder.Append(dataLength.ToString());
@@ -167,53 +198,15 @@ namespace PcmHacking
                 string data = builder.ToString();
                 string dataResponse = await this.SendRequest(data);
 
-                if (!this.ProcessResponse(dataResponse, "STPX data", true))
+                if (!this.ProcessResponse(dataResponse, "STPX payload", responses == 0))
                 {
-                    this.Logger.AddUserMessage("Unexpected response to STPX data: " + dataResponse);
+                    this.Logger.AddUserMessage("Unexpected response to STPX payload: " + dataResponse);
                     return false;
                 }
-            }
-            else
-            {
-                string header;
-                string payload;
-                this.ParseMessage(messageBytes, out header, out payload);
-
-                if (header != this.currentHeader)
-                {
-                    string setHeaderResponse = await this.SendRequest("AT SH " + header);
-                    this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
-
-                    if (setHeaderResponse == "STOPPED")
-                    {
-                        // Does it help to retry once?
-                        setHeaderResponse = await this.SendRequest("AT SH " + header);
-                        this.Logger.AddDebugMessage("Set header response: " + setHeaderResponse);
-                    }
-
-                    if (!this.ProcessResponse(setHeaderResponse, "set-header command"))
-                    {
-                        return false;
-                    }
-
-                    this.currentHeader = header;
-                }
-
-                payload = payload.Replace(" ", "");
-
-                string sendMessageResponse = await this.SendRequest(payload + " ");
-                if (!this.ProcessResponse(sendMessageResponse, "message content"))
-                {
-                    return false;
-                }
-
-                return true;
             }
 
             return true;
         }
-
-        private string currentHeader = "no header specified";
 
         /// <summary>
         /// Borrowed from the AllPro class just for testing. Should be removed after STPX is working.
