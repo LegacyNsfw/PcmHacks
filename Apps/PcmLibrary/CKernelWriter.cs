@@ -88,24 +88,22 @@ namespace PcmHacking
                     logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
                 }
 
-                if (needToCheckOperatingSystem)
+                // Confirm operating system match
+                await this.vehicle.SendToolPresentNotification();
+                await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadProperty);
+                Response<UInt32> osidResponse = await this.vehicle.QueryOperatingSystemIdFromKernel(cancellationToken);
+                if (needToCheckOperatingSystem && (osidResponse.Status != ResponseStatus.Success))
                 {
-                    await this.vehicle.SendToolPresentNotification();
-                    await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadProperty);
-                    Response<UInt32> osidResponse = await this.vehicle.QueryOperatingSystemIdFromKernel(cancellationToken);
-                    if (osidResponse.Status != ResponseStatus.Success)
-                    {
-                        // The kernel seems broken. This shouldn't happen, but if it does, halt.
-                        this.logger.AddUserMessage("The kernel did not respond to operating system ID query.");
-                        return false;
-                    }
+                    // The kernel seems broken. This shouldn't happen, but if it does, halt.
+                    this.logger.AddUserMessage("The kernel did not respond to operating system ID query.");
+                    return false;
+                }
 
-                    bool shouldHalt;
-                    Utility.ReportOperatingSystems(validator.GetOsidFromImage(), osidResponse.Value, writeType, this.logger, out shouldHalt);
-                    if (shouldHalt)
-                    {
-                        return false;
-                    }
+                bool shouldHalt;
+                Utility.ReportOperatingSystems(validator.GetOsidFromImage(), osidResponse.Value, writeType, this.logger, out shouldHalt);
+                if (needToCheckOperatingSystem && shouldHalt)
+                {
+                    return false;
                 }
 
                 success = await this.Write(cancellationToken, image, writeType);
