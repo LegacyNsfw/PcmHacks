@@ -201,7 +201,18 @@ namespace PcmHacking
                 }
 
                 byte[] payload = readResponse.Value;
-                Buffer.BlockCopy(payload, 0, image, startAddress, length);
+
+                if (payload.Length != length)
+                {
+                    this.logger.AddUserMessage(
+                        string.Format(
+                            "Expected {0} bytes, received {1} bytes.",
+                            length,
+                            payload.Length));
+                    return Response.Create(ResponseStatus.Truncated, false);
+                }
+
+                Buffer.BlockCopy(payload, 0, image, startAddress, payload.Length);
 
                 int percentDone = (startAddress * 100) / image.Length;
                 this.logger.AddUserMessage(string.Format("Recieved block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));

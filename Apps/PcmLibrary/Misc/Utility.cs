@@ -79,7 +79,7 @@ namespace PcmHacking
         /// <summary>
         /// Indicate whether the two arrays are identical or not.
         /// </summary>
-        public static bool CompareArrays(byte[] actual, byte[] expected)
+        public static bool CompareArrays(byte[] actual, params byte[] expected)
         {
             if (actual.Length != expected.Length)
             {
