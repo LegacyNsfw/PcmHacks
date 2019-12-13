@@ -385,7 +385,7 @@ namespace PcmHacking
             this.quickComparisonButton.Invoke((MethodInvoker)delegate () { this.quickComparisonButton.Enabled = true; });
             this.testWriteButton.Invoke((MethodInvoker)delegate () { this.testWriteButton.Enabled = true; });
             this.writeCalibrationButton.Invoke((MethodInvoker)delegate () { this.writeCalibrationButton.Enabled = true; });
-            this.writeParametersButton.Invoke((MethodInvoker)delegate () { this.writeParametersButton.Enabled = true; });
+//            this.writeParametersButton.Invoke((MethodInvoker)delegate () { this.writeParametersButton.Enabled = true; });
             this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true; });
             this.exitKernelButton.Invoke((MethodInvoker)delegate () { this.exitKernelButton.Enabled = true; });
             this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true; });
