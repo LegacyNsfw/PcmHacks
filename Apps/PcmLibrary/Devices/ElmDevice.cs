@@ -20,12 +20,6 @@ namespace PcmHacking
         public const string DeviceType = "ObdLink or AllPro";
 
         /// <summary>
-        /// Timeout periods vary depending on the current usage scenario.
-        /// This indicates which scenariow was configured most recently.
-        /// </summary>
-        private TimeoutScenario currentTimeout = TimeoutScenario.Undefined;
-
-        /// <summary>
         /// This will be initalized after discovering which device is actually connected at the moment.
         /// </summary>
         private ElmDeviceImplementation implementation = null;
@@ -132,11 +126,11 @@ namespace PcmHacking
         /// <summary>
         /// Set the amount of time that we'll wait for a message to arrive.
         /// </summary>
-        public override async Task SetTimeout(TimeoutScenario scenario)
+        public override async Task<TimeoutScenario> SetTimeout(TimeoutScenario scenario)
         {
-            if (this.currentTimeout == scenario)
+            if (this.currentTimeoutScenario == scenario)
             {
-                return;
+                return this.currentTimeoutScenario;
             }
 
             int milliseconds = this.GetVpwTimeoutMilliseconds(scenario);
@@ -156,8 +150,11 @@ namespace PcmHacking
             int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 255);
             string value = parameter.ToString("X2");
             await this.implementation.SendAndVerify("AT ST " + value, "OK");
-            this.currentTimeout = scenario;
+
+            TimeoutScenario result = this.currentTimeoutScenario;
+            this.currentTimeoutScenario = scenario;
             this.implementation.TimeoutScenario = scenario;
+            return result;
         }
 
         /// <summary>

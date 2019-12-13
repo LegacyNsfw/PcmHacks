@@ -50,7 +50,16 @@ namespace PcmHacking
     /// </summary>
     public abstract class Device : IDisposable
     {
+        /// <summary>
+        /// Max transmit size.
+        /// </summary>
         private int maxSendSize;
+
+        /// <summary>
+        /// For the AllPro, we need to tell the interface how long to listen for incoming messages.
+        /// For other devices this is not so critical, however I suspect it might still be useful to set serial-port timeouts.
+        /// </summary>
+        protected TimeoutScenario currentTimeoutScenario = TimeoutScenario.Undefined;
 
         /// <summary>
         /// Provides access to the Results and Debug panes.
@@ -142,7 +151,7 @@ namespace PcmHacking
         /// <summary>
         /// Set the timeout period to wait for responses to incoming messages.
         /// </summary>
-        public abstract Task SetTimeout(TimeoutScenario scenario);
+        public abstract Task<TimeoutScenario> SetTimeout(TimeoutScenario scenario);
 
         /// <summary>
         /// Send a message.
