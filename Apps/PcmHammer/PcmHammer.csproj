@@ -139,6 +139,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
     <Content Include="0411_256px.ico" />
+    <EmbeddedResource Include="start.txt" />
     <EmbeddedResource Include="credits.html" />
     <EmbeddedResource Include="help.html" />
   </ItemGroup>

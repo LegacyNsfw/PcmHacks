@@ -118,6 +118,7 @@ namespace PcmHacking
                         stream.Position = 0;
                     }
 
+                    this.logger.AddDebugMessage("Loaded " + this.fileName + " from network.");
                     return stream;
                 }
                 else
@@ -141,7 +142,9 @@ namespace PcmHacking
             string path = GetCacheFilePath();
             try
             {
-                return File.OpenRead(path);
+                Stream result = File.OpenRead(path);
+                this.logger.AddDebugMessage("Loaded " + this.fileName + " from cache.");
+                return result;
             }
             catch (Exception exception)
             {
