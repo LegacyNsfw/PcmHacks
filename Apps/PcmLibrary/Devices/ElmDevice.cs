@@ -144,13 +144,23 @@ namespace PcmHacking
             // Consider increasing if STOPPED / NO DATA is still a problem. 
             this.Port.SetTimeout(milliseconds + 250);
 
+            // This code is so problematic that I've left it here as a warning. The app is
+            // unable to receive the response to the erase command if this code is enabled.
+            // 
+            //if (this.implementation is ScanToolDeviceImplementation)
+            //{
+            //    TimeoutScenario old = this.currentTimeoutScenario;
+            //    this.currentTimeoutScenario = scenario;
+            //    return old;
+            //}
+
             // I briefly tried hard-coding timeout values for the AT ST command,
             // but that's a recipe for failure. If the port timeout is shorter
             // than the device timeout, reads will consistently fail.
             int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 255);
             string value = parameter.ToString("X2");
             await this.implementation.SendAndVerify("AT ST " + value, "OK");
-
+            
             TimeoutScenario result = this.currentTimeoutScenario;
             this.currentTimeoutScenario = scenario;
             this.implementation.TimeoutScenario = scenario;

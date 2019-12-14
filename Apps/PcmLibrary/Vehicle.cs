@@ -140,7 +140,14 @@ namespace PcmHacking
         /// <returns></returns>
         public async Task SendToolPresentNotification()
         {
-            await this.notifier.Notify();
+            if (!this.device.Supports4X && (this.device.MaxSendSize > 600 || this.device.MaxReceiveSize > 600))
+            {
+                await this.notifier.ForceNotify();
+            }
+            else
+            {
+                await this.notifier.Notify();
+            }
         }
 
         /// <summary>
@@ -156,9 +163,9 @@ namespace PcmHacking
         /// <summary>
         /// Change the device's timeout.
         /// </summary>
-        public async Task SetDeviceTimeout(TimeoutScenario scenario)
+        public async Task<TimeoutScenario> SetDeviceTimeout(TimeoutScenario scenario)
         {
-            await this.device.SetTimeout(scenario);
+            return await this.device.SetTimeout(scenario);
         }
 
         /// <summary>
