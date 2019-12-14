@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ContentLoader.cs" />
     <Compile Include="Devices\DeviceFactory.cs" />
     <Compile Include="Devices\J2534Device.cs" />
     <Compile Include="Devices\J2534DeviceFinder.cs" />

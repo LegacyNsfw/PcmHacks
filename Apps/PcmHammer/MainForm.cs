@@ -218,105 +218,66 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Get the URL to a file on github, using the release branch or the develop branch.
-        /// </summary>
-        private string GetFileUrl(string path)
-        {
-            string urlBase = "https://raw.githubusercontent.com/LegacyNsfw/PcmHacks/";
-            string branch = AppVersion == null ? "develop" : "Release/" + AppVersion;
-            string result = urlBase + branch + path;
-            return result;
-        }
-
-        /// <summary>
-        /// The Help content is loaded after the window appears, so that it doesn't slow down app initialization.
+        /// The startup message is loaded after the window appears, so that it doesn't slow down app initialization.
         /// </summary>
         private async void LoadStartMessage(object unused)
         {
-            try
+            ContentLoader loader = new ContentLoader("start.txt", AppVersion, Assembly.GetExecutingAssembly(), this);
+            using (Stream content = await loader.GetContentStream())
             {
-                HttpRequestMessage request = new HttpRequestMessage(
-                    HttpMethod.Get,
-                    GetFileUrl("/Apps/PcmHammer/start.txt"));
-
-                request.Headers.Add("Cache-Control", "no-cache");
-                HttpClient client = new HttpClient();
-                var response = await client.SendAsync(request);
-
-                if (response.StatusCode == HttpStatusCode.OK)
+                try
                 {
-                    string message = await response.Content.ReadAsStringAsync();
-                    this.AddUserMessage(message);                    
+                    StreamReader reader = new StreamReader(content);
+                    string message = reader.ReadToEnd();
+                    this.AddUserMessage(message);
                 }
-            }
-            catch (Exception exception)
-            {
-                this.AddDebugMessage("Unable to fetch the startup message: " + exception.Message);
+                catch (Exception exception)
+                {
+                    this.AddDebugMessage("Unable to display startup message: " + exception.ToString());
+                }
             }
         }
 
         /// <summary>
-        /// The Help content is loaded after the window appears, so that it doesn't slow down app initialization.
+        /// The Help page is loaded after the window appears, so that it doesn't slow down app initialization.
         /// </summary>
         private async void LoadHelp(object unused)
         {
-            try
-            {
-                HttpRequestMessage request = new HttpRequestMessage(
-                    HttpMethod.Get,
-                    GetFileUrl("/Apps/PcmHammer/help.html"));
-
-                request.Headers.Add("Cache-Control", "no-cache");
-                HttpClient client = new HttpClient();
-                var response = await client.SendAsync(request);
-
-                Stream stream;
-                if (response.StatusCode == HttpStatusCode.OK)
+            ContentLoader loader = new ContentLoader("help.html", AppVersion, Assembly.GetExecutingAssembly(), this);
+            Stream content = await loader.GetContentStream();
+            this.helpWebBrowser.Invoke(
+                (MethodInvoker)delegate ()
                 {
-                    stream = await response.Content.ReadAsStreamAsync();
-                }
-                else
-                {
-                    var assembly = Assembly.GetExecutingAssembly();
-                    var resourceName = "PcmHacking.help.html";
-                    stream = assembly.GetManifestResourceStream(resourceName);
-                }
-
-                this.helpWebBrowser.Invoke((MethodInvoker)delegate ()
-                {
-                    this.helpWebBrowser.DocumentStream = stream;
+                    try
+                    {
+                        this.helpWebBrowser.DocumentStream = content;
+                    }
+                    catch (Exception exception)
+                    {
+                        this.AddDebugMessage("Unable to load help content: " + exception.ToString());
+                    }
                 });
-            }
-            catch (Exception exception)
-            {
-                this.AddDebugMessage("Unable to fetch updated help content.");
-                this.AddDebugMessage("This exception can safely be ignored.");
-                this.AddDebugMessage(exception.ToString());
-            }
         }
 
         /// <summary>
-        /// The Help content is loaded after the window appears, so that it doesn't slow down app initialization.
+        /// The credits page is loaded after the window appears, so that it doesn't slow down app initialization.
         /// </summary>
-        private void LoadCredits(object unused)
+        private async void LoadCredits(object unused)
         {
-            try
-            {
-                var assembly = Assembly.GetExecutingAssembly();
-                var resourceName = "PcmHacking.credits.html";
-                var stream = assembly.GetManifestResourceStream(resourceName);
-
-                this.helpWebBrowser.Invoke((MethodInvoker)delegate ()
+            ContentLoader loader = new ContentLoader("credits.html", AppVersion, Assembly.GetExecutingAssembly(), this);
+            Stream content = await loader.GetContentStream();
+            this.helpWebBrowser.Invoke(
+                (MethodInvoker)delegate ()
                 {
-                    this.creditsWebBrowser.DocumentStream = stream;
+                    try
+                    {
+                        this.creditsWebBrowser.DocumentStream = content;
+                    }
+                    catch (Exception exception)
+                    {
+                        this.AddDebugMessage("Unable load content for Credits tab: " + exception.ToString());
+                    }
                 });
-            }
-            catch (Exception exception)
-            {
-                this.AddDebugMessage("Unable load content for Credits tab.");
-                this.AddDebugMessage("This exception can safely be ignored.");
-                this.AddDebugMessage(exception.ToString());
-            }
         }
 
         /// <summary>
