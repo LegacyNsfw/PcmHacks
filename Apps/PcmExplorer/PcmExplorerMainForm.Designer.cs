@@ -37,6 +37,9 @@
             this.selectButton = new System.Windows.Forms.Button();
             this.testPid = new System.Windows.Forms.Button();
             this.pid = new System.Windows.Forms.TextBox();
+            this.displayText = new System.Windows.Forms.TextBox();
+            this.displayTextButton = new System.Windows.Forms.Button();
+            this.displayTextLength = new System.Windows.Forms.Label();
             this.tabs.SuspendLayout();
             this.statusTab.SuspendLayout();
             this.debugTab.SuspendLayout();
@@ -49,10 +52,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabs.Controls.Add(this.statusTab);
             this.tabs.Controls.Add(this.debugTab);
-            this.tabs.Location = new System.Drawing.Point(12, 101);
+            this.tabs.Location = new System.Drawing.Point(12, 133);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(730, 337);
+            this.tabs.Size = new System.Drawing.Size(730, 305);
             this.tabs.TabIndex = 8;
             // 
             // statusTab
@@ -61,7 +64,7 @@
             this.statusTab.Location = new System.Drawing.Point(4, 22);
             this.statusTab.Name = "statusTab";
             this.statusTab.Padding = new System.Windows.Forms.Padding(3);
-            this.statusTab.Size = new System.Drawing.Size(722, 311);
+            this.statusTab.Size = new System.Drawing.Size(722, 279);
             this.statusTab.TabIndex = 0;
             this.statusTab.Text = "Status";
             this.statusTab.UseVisualStyleBackColor = true;
@@ -73,7 +76,7 @@
             this.userLog.Multiline = true;
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
-            this.userLog.Size = new System.Drawing.Size(716, 305);
+            this.userLog.Size = new System.Drawing.Size(716, 273);
             this.userLog.TabIndex = 0;
             // 
             // debugTab
@@ -134,11 +137,41 @@
             this.pid.Size = new System.Drawing.Size(126, 20);
             this.pid.TabIndex = 10;
             // 
+            // displayText
+            // 
+            this.displayText.Location = new System.Drawing.Point(234, 77);
+            this.displayText.Name = "displayText";
+            this.displayText.Size = new System.Drawing.Size(191, 20);
+            this.displayText.TabIndex = 12;
+            this.displayText.TextChanged += new System.EventHandler(this.displayText_TextChanged);
+            // 
+            // displayTextButton
+            // 
+            this.displayTextButton.Location = new System.Drawing.Point(12, 74);
+            this.displayTextButton.Name = "displayTextButton";
+            this.displayTextButton.Size = new System.Drawing.Size(216, 25);
+            this.displayTextButton.TabIndex = 11;
+            this.displayTextButton.Text = "&Display Text";
+            this.displayTextButton.UseVisualStyleBackColor = true;
+            this.displayTextButton.Click += new System.EventHandler(this.displayTextButton_Click);
+            // 
+            // displayTextLength
+            // 
+            this.displayTextLength.AutoSize = true;
+            this.displayTextLength.Location = new System.Drawing.Point(431, 80);
+            this.displayTextLength.Name = "displayTextLength";
+            this.displayTextLength.Size = new System.Drawing.Size(52, 13);
+            this.displayTextLength.TabIndex = 13;
+            this.displayTextLength.Text = "Length: 0";
+            // 
             // PcmExplorerMainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(754, 450);
+            this.Controls.Add(this.displayTextLength);
+            this.Controls.Add(this.displayText);
+            this.Controls.Add(this.displayTextButton);
             this.Controls.Add(this.pid);
             this.Controls.Add(this.testPid);
             this.Controls.Add(this.tabs);
@@ -168,6 +201,9 @@
         private System.Windows.Forms.Button selectButton;
         private System.Windows.Forms.Button testPid;
         private System.Windows.Forms.TextBox pid;
+        private System.Windows.Forms.TextBox displayText;
+        private System.Windows.Forms.Button displayTextButton;
+        private System.Windows.Forms.Label displayTextLength;
     }
 }
 

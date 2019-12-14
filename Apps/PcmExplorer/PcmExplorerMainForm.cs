@@ -130,5 +130,20 @@ namespace PcmHacking
             await this.HandleSelectButtonClick();
             //this.UpdateStartStopButtonState();
         }
+
+        private void displayText_TextChanged(object sender, EventArgs e)
+        {
+            this.displayTextLength.Text = string.Format("Length: {0}", this.displayText.Text.Length);
+        }
+
+        private async void displayTextButton_Click(object sender, EventArgs e)
+        {
+            if (displayText.Text.Length != 19)
+            {
+                this.AddUserMessage("Text must be 19 characters.");
+            }
+
+            await this.Vehicle.DisplayText(this.displayText.Text);
+        }
     }
 }

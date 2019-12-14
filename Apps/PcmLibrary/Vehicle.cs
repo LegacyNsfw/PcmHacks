@@ -193,6 +193,28 @@ namespace PcmHacking
                 this.notifier);
         }
 
+        /// <summary>
+        /// Display text on the Driver Information Center (DIC) display.
+        /// </summary>
+        public async Task DisplayText(string text)
+        {
+            if (text.Length != 19)
+            {
+                throw new ArgumentException("Text length must be 19. Pad with spaces if necessary.");
+            }
+
+            Message begin = this.protocol.CreateBeginDisplayRequest();
+            await this.TrySendMessage(begin, "begin display text");
+
+            for(int chunkIndex = 0; chunkIndex < 4; chunkIndex++)
+            {
+                int index = chunkIndex * 5;
+                string segment = text.Substring(index, Math.Min(5, text.Length - index));
+                Message display = this.protocol.CreateDisplayRequest(segment);
+                await this.TrySendMessage(display, "display text");
+            }
+        }
+
         public async Task<bool> SendMessage(Message message)
         {
             return await this.device.SendMessage(message);
