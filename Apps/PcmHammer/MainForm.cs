@@ -528,13 +528,6 @@ namespace PcmHacking
         /// </summary>
         private void readFullContentsButton_Click(object sender, EventArgs e)
         {
-            DelayDialogBox dialogBox = new DelayDialogBox();
-            DialogResult dialogResult = dialogBox.ShowDialog();
-            if (dialogResult == DialogResult.Cancel)
-            {
-                return;
-            }
-
             if (!BackgroundWorker.IsAlive)
             {
                 BackgroundWorker = new System.Threading.Thread(() => readFullContents_BackgroundThread());
@@ -548,13 +541,6 @@ namespace PcmHacking
         /// </summary>
         private void writeCalibrationButton_Click(object sender, EventArgs e)
         {
-            DelayDialogBox dialogBox = new DelayDialogBox();
-            DialogResult dialogResult = dialogBox.ShowDialog();
-            if (dialogResult == DialogResult.Cancel)
-            {
-                return;
-            }
-
             if (!BackgroundWorker.IsAlive)
             {
                 DialogResult result = MessageBox.Show(
@@ -584,13 +570,6 @@ namespace PcmHacking
         /// </summary>
         private void writeParametersButton_Click(object sender, EventArgs e)
         {
-            DelayDialogBox dialogBox = new DelayDialogBox();
-            DialogResult dialogResult = dialogBox.ShowDialog();
-            if (dialogResult == DialogResult.Cancel)
-            {
-                return;
-            }
-
             if (!BackgroundWorker.IsAlive)
             {
                 DialogResult result = MessageBox.Show(
@@ -620,13 +599,6 @@ namespace PcmHacking
         /// </summary>
         private void writeFullContentsButton_Click(object sender, EventArgs e)
         {
-            DelayDialogBox dialogBox = new DelayDialogBox();
-            DialogResult dialogResult = dialogBox.ShowDialog();
-            if (dialogResult == DialogResult.Cancel)
-            {
-                return;
-            }
-
             if (!BackgroundWorker.IsAlive)
             {
                 DialogResult result = MessageBox.Show(
@@ -656,13 +628,6 @@ namespace PcmHacking
         /// </summary>
         private void quickComparisonButton_Click(object sender, EventArgs e)
         {
-            DelayDialogBox dialogBox = new DelayDialogBox();
-            DialogResult dialogResult = dialogBox.ShowDialog();
-            if (dialogResult == DialogResult.Cancel)
-            {
-                return;
-            }
-
             if (!BackgroundWorker.IsAlive)
             {
                 BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Compare));
@@ -673,13 +638,6 @@ namespace PcmHacking
 
         private void testWriteButton_Click(object sender, EventArgs e)
         {
-            DelayDialogBox dialogBox = new DelayDialogBox();
-            DialogResult dialogResult = dialogBox.ShowDialog();
-            if (dialogResult == DialogResult.Cancel)
-            {
-                return;
-            }
-
             if (!BackgroundWorker.IsAlive)
             {
                 BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.TestWrite));
@@ -757,6 +715,13 @@ namespace PcmHacking
                     }
 
                     this.AddUserMessage("Will save to " + path);
+
+                    DelayDialogBox dialogBox = new DelayDialogBox();
+                    DialogResult dialogResult = dialogBox.ShowDialog();
+                    if (dialogResult == DialogResult.Cancel)
+                    {
+                        return;
+                    }
 
                     this.cancellationTokenSource = new CancellationTokenSource();
 
@@ -903,6 +868,13 @@ namespace PcmHacking
                     }
 
                     this.AddUserMessage(path);
+
+                    DelayDialogBox dialogBox = new DelayDialogBox();
+                    DialogResult dialogResult = dialogBox.ShowDialog();
+                    if (dialogResult == DialogResult.Cancel)
+                    {
+                        return;
+                    }
 
                     byte[] image;
                     using (Stream stream = File.OpenRead(path))
