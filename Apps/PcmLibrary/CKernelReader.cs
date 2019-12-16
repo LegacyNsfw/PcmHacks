@@ -39,7 +39,8 @@ namespace PcmHacking
         {
             try
             {
-                await this.vehicle.SendToolPresentNotification();
+                // Start with known state.
+                await this.vehicle.ForceSendToolPresentNotification();
                 this.vehicle.ClearDeviceMessageQueue();
 
                 // switch to 4x, if possible. But continue either way.

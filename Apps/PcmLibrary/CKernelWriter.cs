@@ -51,7 +51,8 @@ namespace PcmHacking
 
             try
             {
-                await    this.vehicle.SendToolPresentNotification();
+                // Start with known state.
+                await this.vehicle.ForceSendToolPresentNotification();
                 this.vehicle.ClearDeviceMessageQueue();
 
                 // TODO: install newer version if available.

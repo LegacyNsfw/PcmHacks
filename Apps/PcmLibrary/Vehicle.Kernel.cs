@@ -300,7 +300,6 @@ namespace PcmHacking
             }
 
             Message request = protocol.CreateUploadRequest(address, claimedSize);
-
             if(!await TrySendMessage(request, "upload request"))
             {
                 return false;

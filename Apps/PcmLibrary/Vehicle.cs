@@ -384,6 +384,7 @@ namespace PcmHacking
                 Message message = await this.device.ReceiveMessage();
                 if(message == null)
                 {
+                    await this.SendToolPresentNotification();
                     continue;
                 }
 
