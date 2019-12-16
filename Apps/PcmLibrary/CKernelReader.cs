@@ -94,8 +94,12 @@ namespace PcmHacking
                 int bytesRemaining = (int) flashChip.Size;
                 int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
 
+                DateTime startTime = DateTime.MaxValue;
                 byte[] image = new byte[flashChip.Size];
                 int retryCount = 0;
+
+                this.logger.AddUserMessage("% Done\tTime Remaining");
+
                 while (startAddress < endAddress)
                 {
                     if (cancellationToken.IsCancellationRequested)
@@ -117,7 +121,17 @@ namespace PcmHacking
                         break;
                     }
 
-                    Response<bool> readResponse = await TryReadBlock(image, blockSize, startAddress, cancellationToken);
+                    if (startTime == DateTime.MaxValue)
+                    {
+                        startTime = DateTime.Now;
+                    }
+
+                    Response<bool> readResponse = await TryReadBlock(
+                        image, 
+                        blockSize, 
+                        startAddress,
+                        startTime,
+                        cancellationToken);
                     if (readResponse.Status != ResponseStatus.Success)
                     {
                         this.logger.AddUserMessage(
@@ -178,7 +192,12 @@ namespace PcmHacking
         /// <summary>
         /// Try to read a block of PCM memory.
         /// </summary>
-        private async Task<Response<bool>> TryReadBlock(byte[] image, int length, int startAddress, CancellationToken cancellationToken)
+        private async Task<Response<bool>> TryReadBlock(
+            byte[] image, 
+            int length, 
+            int startAddress, 
+            DateTime startTime,
+            CancellationToken cancellationToken)
         {
             this.logger.AddDebugMessage(string.Format("Reading from {0} / 0x{0:X}, length {1} / 0x{1:X}", startAddress, length));
 
@@ -216,7 +235,34 @@ namespace PcmHacking
                 Buffer.BlockCopy(payload, 0, image, startAddress, payload.Length);
 
                 int percentDone = (startAddress * 100) / image.Length;
-                this.logger.AddUserMessage(string.Format("Recieved block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));
+                TimeSpan elapsed = DateTime.Now - startTime;
+                string timeRemaining;
+
+                if (elapsed.TotalSeconds > 0)
+                {
+                    UInt32 bytesPerSecond = (UInt32)(startAddress / elapsed.TotalSeconds);
+                    UInt32 bytesRemaining = (UInt32)(image.Length - startAddress);
+
+                    if (bytesPerSecond > 0)
+                    {
+                        UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
+                        timeRemaining = TimeSpan.FromSeconds(secondsRemaining).ToString("mm\\:ss");
+                    }
+                    else
+                    {
+                        timeRemaining = "??:??";
+                    }
+                }
+                else
+                {
+                    timeRemaining = "??:??";
+                }
+
+                logger.AddUserMessage(
+                    string.Format(
+                        "{0}%\t\t{1}",
+                        startAddress * 100 / image.Length,
+                        timeRemaining));
 
                 return Response.Create(ResponseStatus.Success, true, retryCount);
             }
