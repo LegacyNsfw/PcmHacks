@@ -147,7 +147,8 @@ namespace PcmHacking
 
             // Special case for tool-present broadcast messages.
             // TODO: Create a new TimeoutScenario value, maybe call it "TransmitOnly" or something like that.
-            if (Utility.CompareArrays(messageBytes, 0x8C, 0xFE, 0xF0, 0x3F))
+            if (Utility.CompareArrays(messageBytes, 0x8C, 0xFE, 0xF0, 0x3F) ||
+                messageBytes[0] == 0x8A)
             {
                 responses = 0;
             }

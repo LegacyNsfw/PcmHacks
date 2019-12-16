@@ -108,7 +108,7 @@ namespace PcmHacking
                 throw new ArgumentNullException();
             }
 
-            if (!(text.Length == 4) || (text.Length == 5))
+            if (!((text.Length == 4) || (text.Length == 5)))
             {
                 throw new ArgumentException("Text must be at 4 or 5 characters.");
             }
@@ -118,14 +118,9 @@ namespace PcmHacking
 
             byte[] ascii = System.Text.Encoding.ASCII.GetBytes(text);
 
-            if (ascii.Length == 5)
-            {
-                return new Message(ascii.ToArray());
-            }
-            else
-            {
-                return new Message(ascii.Concat(new byte[] { 0x04 }).ToArray());
-            }
+            byte[] header = new byte[] { 0x8A, 0xEB, 0x10, alternate, 0x01, 0x11 };
+            IEnumerable<byte> payload = ascii.Length == 5 ? ascii : ascii.Concat(new byte[] { 0x04 });
+            return new Message(header.Concat(payload).ToArray());
         }
     }
 }
