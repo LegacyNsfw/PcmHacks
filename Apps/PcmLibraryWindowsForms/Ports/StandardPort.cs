@@ -94,6 +94,7 @@ namespace PcmHacking
         /// </summary>
         async Task IPort.Send(byte[] buffer)
         {
+            // TODO: enforce a time-out
             await this.port.BaseStream.WriteAsync(buffer, 0, buffer.Length);
 
             // This flush is probably not strictly necessary, but just in case...
