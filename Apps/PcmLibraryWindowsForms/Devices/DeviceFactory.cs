@@ -47,8 +47,8 @@ namespace PcmHacking
                 Device device;
                 switch (serialPortDeviceType)
                 {
-                    case DviDevice.DeviceType:
-                        device = new DviDevice(port, logger);
+                    case OBDXProDevice.DeviceType:
+                        device = new OBDXProDevice(port, logger);
                         break;
 
                     case AvtDevice.DeviceType:

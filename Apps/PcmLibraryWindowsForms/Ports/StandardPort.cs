@@ -47,7 +47,6 @@ namespace PcmHacking
             {
                 this.port.Dispose();
             }
-
             SerialPortConfiguration config = configuration as SerialPortConfiguration;
             this.port = new SerialPort(this.name);
             this.port.BaudRate = config.BaudRate;
@@ -56,6 +55,8 @@ namespace PcmHacking
             this.port.StopBits = StopBits.One;
             if (config.Timeout == 0) config.Timeout = 1000; // default to 1 second but allow override.
             this.port.ReadTimeout = config.Timeout;
+
+            if (this.port.IsOpen == true) this.port.Close();
 
 /*            if (config.DataReceived != null)
             {
