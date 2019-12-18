@@ -89,13 +89,16 @@ namespace PcmHacking
 
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadMemoryBlock);
 
-                int startAddress = 0;
-                int endAddress = (int) flashChip.Size;
-                int bytesRemaining = (int) flashChip.Size;
-                int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
+                this.logger.AddUserMessage("Address\t% Done\tTime Remaining");
 
                 byte[] image = new byte[flashChip.Size];
                 int retryCount = 0;
+                int startAddress = 0;
+                int endAddress = (int)flashChip.Size;
+                int bytesRemaining = (int)flashChip.Size;
+                int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
+
+                DateTime startTime = DateTime.MaxValue;
                 while (startAddress < endAddress)
                 {
                     if (cancellationToken.IsCancellationRequested)
@@ -117,7 +120,17 @@ namespace PcmHacking
                         break;
                     }
 
-                    Response<bool> readResponse = await TryReadBlock(image, blockSize, startAddress, cancellationToken);
+                    if (startTime == DateTime.MaxValue)
+                    {
+                        startTime = DateTime.Now;
+                    }
+
+                    Response<bool> readResponse = await TryReadBlock(
+                        image, 
+                        blockSize, 
+                        startAddress,
+                        startTime,
+                        cancellationToken);
                     if (readResponse.Status != ResponseStatus.Success)
                     {
                         this.logger.AddUserMessage(
@@ -178,7 +191,12 @@ namespace PcmHacking
         /// <summary>
         /// Try to read a block of PCM memory.
         /// </summary>
-        private async Task<Response<bool>> TryReadBlock(byte[] image, int length, int startAddress, CancellationToken cancellationToken)
+        private async Task<Response<bool>> TryReadBlock(
+            byte[] image, 
+            int length, 
+            int startAddress, 
+            DateTime startTime,
+            CancellationToken cancellationToken)
         {
             this.logger.AddDebugMessage(string.Format("Reading from {0} / 0x{0:X}, length {1} / 0x{1:X}", startAddress, length));
 
@@ -216,7 +234,37 @@ namespace PcmHacking
                 Buffer.BlockCopy(payload, 0, image, startAddress, payload.Length);
 
                 int percentDone = (startAddress * 100) / image.Length;
-                this.logger.AddUserMessage(string.Format("Recieved block starting at {0} / 0x{0:X}. {1}%", startAddress, percentDone));
+                TimeSpan elapsed = DateTime.Now - startTime;
+                string timeRemaining;
+
+                // Wait 10 seconds before showing time estimate.
+                if (elapsed.TotalSeconds < 10)
+                {
+                    timeRemaining = "Measuring read speed...";
+                }
+                else
+                {
+                    UInt32 bytesPerSecond = (UInt32)(startAddress / elapsed.TotalSeconds);
+                    UInt32 bytesRemaining = (UInt32)(image.Length - startAddress);
+
+                    // Don't divide by zero.
+                    if (bytesPerSecond > 0)
+                    {
+                        UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
+                        timeRemaining = TimeSpan.FromSeconds(secondsRemaining).ToString("mm\\:ss");
+                    }
+                    else
+                    {
+                        timeRemaining = "??:??";
+                    }
+                }
+
+                logger.AddUserMessage(
+                    string.Format(
+                        "0x{0:X6}\t{1}%\t{2}",
+                        startAddress,
+                        startAddress * 100 / image.Length,
+                        timeRemaining));
 
                 return Response.Create(ResponseStatus.Success, true, retryCount);
             }

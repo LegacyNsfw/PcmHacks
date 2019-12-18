@@ -26,12 +26,14 @@ namespace PcmHacking
     {
         private readonly Vehicle vehicle;
         private readonly Protocol protocol;
+        private readonly WriteType writeType;
         private readonly ILogger logger;
 
-        public CKernelWriter(Vehicle vehicle, Protocol protocol, ILogger logger)
+        public CKernelWriter(Vehicle vehicle, Protocol protocol, WriteType writeType, ILogger logger)
         {
             this.vehicle = vehicle;
             this.protocol = protocol;
+            this.writeType = writeType;
             this.logger = logger;
         }
 
@@ -41,7 +43,6 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> Write(
             byte[] image,
-            WriteType writeType, 
             UInt32 kernelVersion, 
             FileValidator validator,
             bool needToCheckOperatingSystem,
@@ -101,13 +102,13 @@ namespace PcmHacking
                 }
 
                 bool shouldHalt;
-                Utility.ReportOperatingSystems(validator.GetOsidFromImage(), osidResponse.Value, writeType, this.logger, out shouldHalt);
+                Utility.ReportOperatingSystems(validator.GetOsidFromImage(), osidResponse.Value, this.writeType, this.logger, out shouldHalt);
                 if (needToCheckOperatingSystem && shouldHalt)
                 {
                     return false;
                 }
 
-                success = await this.Write(cancellationToken, image, writeType);
+                success = await this.Write(cancellationToken, image);
 
                 // We only do cleanup after a successful write.
                 // If the kernel remains running, the user can try to flash again without rebooting and reloading.
@@ -124,7 +125,7 @@ namespace PcmHacking
             {
                 if (!success)
                 {
-                    switch (writeType)
+                    switch (this.writeType)
                     {
                         case WriteType.None:
                         case WriteType.Compare:
@@ -156,12 +157,12 @@ namespace PcmHacking
         /// <summary>
         /// Write the calibration blocks.
         /// </summary>
-        private async Task<bool> Write(CancellationToken cancellationToken, byte[] image, WriteType writeType)
+        private async Task<bool> Write(CancellationToken cancellationToken, byte[] image)
         {
             await this.vehicle.SendToolPresentNotification();
 
             BlockType relevantBlocks;
-            switch (writeType)
+            switch (this.writeType)
             {
                 case WriteType.Compare:
                     relevantBlocks = BlockType.All;
@@ -194,7 +195,7 @@ namespace PcmHacking
                     break;
 
                 default:
-                    throw new InvalidDataException("Unsuppported operation type: " + writeType.ToString());
+                    throw new InvalidDataException("Unsuppported operation type: " + this.writeType.ToString());
             }
 
             // Which flash chip?
@@ -223,7 +224,7 @@ namespace PcmHacking
                     allRangesMatch = true;
 
                     // Don't stop here if the user just wants to test their cable.
-                    if (writeType == WriteType.TestWrite)
+                    if (this.writeType == WriteType.TestWrite)
                     {
                         if (attempt == 1)
                         {
@@ -238,7 +239,7 @@ namespace PcmHacking
                 }
 
                 // For test writes, report results after the first iteration, then we're done.
-                if ((writeType == WriteType.TestWrite) && (attempt > 1))
+                if ((this.writeType == WriteType.TestWrite) && (attempt > 1))
                 {
                     logger.AddUserMessage("Test write complete.");
                     Utility.ReportRetryCount("write", messageRetryCount, flashChip.Size, this.logger);
@@ -246,7 +247,7 @@ namespace PcmHacking
                 }
 
                 // Stop now if the user only requested a comparison.
-                if (writeType == WriteType.Compare)
+                if (this.writeType == WriteType.Compare)
                 {
                     this.logger.AddUserMessage("Note that mismatched Parameter blocks are to be expected.");
                     this.logger.AddUserMessage("Parameter data can change every time the PCM is used.");
@@ -255,16 +256,14 @@ namespace PcmHacking
 
                 // Erase and rewrite the required memory ranges.
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.Maximum);
+
+                DateTime startTime = DateTime.Now;
+                UInt32 totalSize = this.GetTotalSize(flashChip, relevantBlocks);
+                UInt32 bytesRemaining = totalSize;
                 foreach (MemoryRange range in flashChip.MemoryRanges)
                 {
                     // We'll send a tool-present message during the erase request.
-                    if ((range.ActualCrc == range.DesiredCrc) && (writeType != WriteType.TestWrite))
-                    {
-                        continue;
-                    }
-
-                    // Skip irrelevant blocks.
-                    if ((range.Type & relevantBlocks) == 0)
+                    if (!this.ShouldProcess(range, relevantBlocks))
                     {
                         continue;
                     }
@@ -275,7 +274,7 @@ namespace PcmHacking
                             range.Address,
                             range.Address + (range.Size - 1)));
 
-                    if (writeType == WriteType.TestWrite)
+                    if (this.writeType == WriteType.TestWrite)
                     {
                         this.logger.AddUserMessage("Pretending to erase.");
                     }
@@ -287,7 +286,7 @@ namespace PcmHacking
                         }
                     }
 
-                    if (writeType == WriteType.TestWrite)
+                    if (this.writeType == WriteType.TestWrite)
                     {
                         this.logger.AddUserMessage("Pretending to write...");
                     }
@@ -298,16 +297,26 @@ namespace PcmHacking
 
                     await this.vehicle.SendToolPresentNotification();
 
+                    this.logger.AddUserMessage("Address\t% Done\tTime Remaining");
+
                     Response<bool> writeResponse = await WriteMemoryRange(
                         range,
                         image,
-                        writeType == WriteType.TestWrite,
+                        this.writeType == WriteType.TestWrite,
+                        startTime,
+                        totalSize,
+                        bytesRemaining,
                         cancellationToken);
 
                     if (writeResponse.RetryCount > 0)
                     {
                         this.logger.AddUserMessage("Retry count for this block: " + writeResponse.RetryCount);
                         messageRetryCount += writeResponse.RetryCount;
+                    }
+
+                    if (writeResponse.Value)
+                    {
+                        bytesRemaining -= range.Size;
                     }
                 }
             }
@@ -330,7 +339,7 @@ namespace PcmHacking
             this.logger.AddUserMessage("THE CHANGES WERE -NOT- WRITTEN SUCCESSFULLY");
             this.logger.AddUserMessage("===============================================");
 
-            if (writeType == WriteType.Calibration)
+            if (this.writeType == WriteType.Calibration)
             {
                 this.logger.AddUserMessage("Erasing Calibration to force recovery mode.");
                 this.logger.AddUserMessage("");
@@ -362,6 +371,36 @@ namespace PcmHacking
             }
 
             return false;
+        }
+
+        private UInt32 GetTotalSize(FlashChip chip, BlockType relevantBlocks)
+        {
+            UInt32 result = 0;
+            foreach(MemoryRange range in chip.MemoryRanges)
+            {
+                if (this.ShouldProcess(range, relevantBlocks))
+                {
+                    result += range.Size;
+                }
+            }
+
+            return result;
+        }
+
+        private bool ShouldProcess(MemoryRange range, BlockType relevantBlocks)
+        {
+            if ((range.ActualCrc == range.DesiredCrc) && (this.writeType != WriteType.TestWrite))
+            {
+                return false;
+            }
+
+            // Skip irrelevant blocks.
+            if ((range.Type & relevantBlocks) == 0)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -403,6 +442,9 @@ namespace PcmHacking
             MemoryRange range,
             byte[] image,
             bool justTestWrite,
+            DateTime startTime,
+            UInt32 totalSize,
+            UInt32 bytesRemaining,
             CancellationToken cancellationToken)
         {
             int retryCount = 0;
@@ -417,21 +459,54 @@ namespace PcmHacking
                 await this.vehicle.SendToolPresentNotification();
 
                 int startAddress = (int)(range.Address + index);
-                int thisPayloadSize = Math.Min(devicePayloadSize, (int)range.Size - index);
+                UInt32 thisPayloadSize = (UInt32) Math.Min(devicePayloadSize, (int)range.Size - index);
 
-                Message payloadMessage = protocol.CreateBlockMessage(
-                    image,
-                    startAddress,
-                    thisPayloadSize,
-                    startAddress,
-                    justTestWrite ? BlockCopyType.TestWrite : BlockCopyType.Copy);
-
-                logger.AddUserMessage(
+                logger.AddDebugMessage(
                     string.Format(
                         "Sending payload with offset 0x{0:X4}, start address 0x{1:X6}, length 0x{2:X4}.",
                         index,
                         startAddress,
                         thisPayloadSize));
+
+                Message payloadMessage = protocol.CreateBlockMessage(
+                    image,
+                    startAddress,
+                    (int)thisPayloadSize,
+                    startAddress,
+                    justTestWrite ? BlockCopyType.TestWrite : BlockCopyType.Copy);
+
+                string timeRemaining;
+
+                TimeSpan elapsed = DateTime.Now - startTime;
+                UInt32 totalWritten = totalSize - bytesRemaining;
+
+                // Wait 10 seconds before showing estimates.
+                if (elapsed.TotalSeconds < 10)
+                {
+                    timeRemaining = "Measuring write speed...";
+                }
+                else
+                {
+                    UInt32 bytesPerSecond = (UInt32)(totalWritten / elapsed.TotalSeconds);
+
+                    // Don't divide by zero.
+                    if (bytesPerSecond > 0)
+                    {
+                        UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
+                        timeRemaining = TimeSpan.FromSeconds(secondsRemaining).ToString("mm\\:ss");
+                    }
+                    else
+                    {
+                        timeRemaining = "??:??";
+                    }
+                }
+
+                logger.AddUserMessage(
+                    string.Format(
+                        "0x{0:X6}\t{1}%\t{2}",
+                        startAddress,
+                        totalWritten * 100 / totalSize,
+                        timeRemaining));
 
                 // WritePayload contains a retry loop, so if it fails, we don't need to retry at this layer.
                 Response<bool> response = await this.vehicle.WritePayload(payloadMessage, cancellationToken);
@@ -440,6 +515,7 @@ namespace PcmHacking
                     return Response.Create(ResponseStatus.Error, false, response.RetryCount);
                 }
 
+                bytesRemaining -= thisPayloadSize;
                 retryCount += response.RetryCount;
             }
 

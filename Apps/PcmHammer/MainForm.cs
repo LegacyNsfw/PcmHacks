@@ -999,11 +999,11 @@ namespace PcmHacking
                     CKernelWriter writer = new CKernelWriter(
                         this.Vehicle,
                         new Protocol(),
+                        writeType,
                         this);
 
                     await writer.Write(
                         image,
-                        writeType,
                         kernelVersion,
                         validator,
                         needToCheckOperatingSystem,
