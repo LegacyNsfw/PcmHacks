@@ -188,7 +188,7 @@ namespace PcmHacking
                 separator, 
                 this.ParameterGroups.SelectMany(
                     group => group.Parameters.Select(
-                        parameter => parameter.Name)));
+                        parameter => string.Format("{0} ({1})", parameter.Name, parameter.Conversion.Name))));
         }
     }
 }

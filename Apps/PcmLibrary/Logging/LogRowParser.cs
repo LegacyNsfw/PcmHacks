@@ -113,19 +113,27 @@ namespace PcmHacking
                         throw new InvalidOperationException("ByteCount must be 1 or 2");
                 }
 
-                Interpreter interpreter = new Interpreter();
-                interpreter.SetVariable("x", value);
-                double converted = interpreter.Eval<double>(parameter.Conversion.Expression);
-
-                string format = parameter.Conversion.Format;
-                if (string.IsNullOrWhiteSpace(format))
+                if (parameter.Conversion.Expression == "0x")
                 {
-                    format = "0.00";
+                    string format = parameter.ByteCount == 1 ? "X2" : "X4";
+                    result.Add(value.ToString(format));
                 }
+                else
+                {
+                    Interpreter interpreter = new Interpreter();
+                    interpreter.SetVariable("x", value);
+                    double convertedValue = interpreter.Eval<double>(parameter.Conversion.Expression);
 
-                string strung = converted.ToString(format);
+                    string format = parameter.Conversion.Format;
+                    if (string.IsNullOrWhiteSpace(format))
+                    {
+                        format = "0.00";
+                    }
 
-                result.Add(strung);
+                    string formatted = convertedValue.ToString(format);
+
+                    result.Add(formatted);
+                }
             }
         }
     }
