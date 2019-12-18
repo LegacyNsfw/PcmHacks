@@ -107,8 +107,8 @@
                 },
                 {
                     "Conversion": {
-                        "Name": "C",
-                        "Expression": "x-40"
+                        "Name": "F",
+                        "Expression": "((x-40)*1.8)+32"
                     },
                     "Name": "Intake Air Temperature",
                     "DefineBy": 1,
@@ -117,8 +117,8 @@
                 },
                 {
                     "Conversion": {
-                        "Name": "C",
-                        "Expression": "x-40"
+                        "Name": "F",
+                        "Expression": "((x-40)*1.8)+32"
                     },
                     "Name": "Engine Coolant Temperature",
                     "DefineBy": 1,
@@ -128,7 +128,7 @@
 				{
                     "Conversion": {
                         "Name": "Degrees",
-                        "Expression": "(x*256)\/22.5"
+                        "Expression": "(x\/256)*22.5"
                     },
                     "Name": "Knock Retard",
                     "DefineBy": 1,
@@ -138,7 +138,7 @@
                 {
                     "Conversion": {
                         "Name": "AFR",
-                        "Expression": "x*10"
+                        "Expression": "x\/10"
                     },
                     "Name": "Target AFR",
                     "DefineBy": 1,
