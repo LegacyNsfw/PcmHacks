@@ -254,12 +254,12 @@ namespace PcmHacking
                     return true;
                 }
 
+                // Erase and rewrite the required memory ranges.
+                await this.vehicle.SetDeviceTimeout(TimeoutScenario.Maximum);
+
                 DateTime startTime = DateTime.Now;
                 UInt32 totalSize = this.GetTotalSize(flashChip, relevantBlocks);
                 UInt32 bytesRemaining = totalSize;
-
-                // Erase and rewrite the required memory ranges.
-                await this.vehicle.SetDeviceTimeout(TimeoutScenario.Maximum);
                 foreach (MemoryRange range in flashChip.MemoryRanges)
                 {
                     // We'll send a tool-present message during the erase request.
@@ -297,7 +297,7 @@ namespace PcmHacking
 
                     await this.vehicle.SendToolPresentNotification();
 
-                    this.logger.AddUserMessage("% Done\tTime Remaining");
+                    this.logger.AddUserMessage("Address\t% Done\tTime Remaining");
 
                     Response<bool> writeResponse = await WriteMemoryRange(
                         range,
@@ -479,10 +479,17 @@ namespace PcmHacking
 
                 TimeSpan elapsed = DateTime.Now - startTime;
                 UInt32 totalWritten = totalSize - bytesRemaining;
-                if (elapsed.TotalSeconds > 0)
+
+                // Wait 10 seconds before showing estimates.
+                if (elapsed.TotalSeconds < 10)
+                {
+                    timeRemaining = "Measuring write speed...";
+                }
+                else
                 {
                     UInt32 bytesPerSecond = (UInt32)(totalWritten / elapsed.TotalSeconds);
 
+                    // Don't divide by zero.
                     if (bytesPerSecond > 0)
                     {
                         UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
@@ -493,14 +500,11 @@ namespace PcmHacking
                         timeRemaining = "??:??";
                     }
                 }
-                else
-                {
-                    timeRemaining = "??:??";
-                }
 
                 logger.AddUserMessage(
                     string.Format(
-                        "{0}%\t\t{1}",
+                        "0x{0:X6}\t{1}%\t{2}",
+                        startAddress,
                         totalWritten * 100 / totalSize,
                         timeRemaining));
 

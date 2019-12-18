@@ -89,17 +89,16 @@ namespace PcmHacking
 
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadMemoryBlock);
 
+                this.logger.AddUserMessage("Address\t% Done\tTime Remaining");
+
+                byte[] image = new byte[flashChip.Size];
+                int retryCount = 0;
                 int startAddress = 0;
-                int endAddress = (int) flashChip.Size;
-                int bytesRemaining = (int) flashChip.Size;
+                int endAddress = (int)flashChip.Size;
+                int bytesRemaining = (int)flashChip.Size;
                 int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
 
                 DateTime startTime = DateTime.MaxValue;
-                byte[] image = new byte[flashChip.Size];
-                int retryCount = 0;
-
-                this.logger.AddUserMessage("% Done\tTime Remaining");
-
                 while (startAddress < endAddress)
                 {
                     if (cancellationToken.IsCancellationRequested)
@@ -238,11 +237,17 @@ namespace PcmHacking
                 TimeSpan elapsed = DateTime.Now - startTime;
                 string timeRemaining;
 
-                if (elapsed.TotalSeconds > 0)
+                // Wait 10 seconds before showing time estimate.
+                if (elapsed.TotalSeconds < 10)
+                {
+                    timeRemaining = "Measuring read speed...";
+                }
+                else
                 {
                     UInt32 bytesPerSecond = (UInt32)(startAddress / elapsed.TotalSeconds);
                     UInt32 bytesRemaining = (UInt32)(image.Length - startAddress);
 
+                    // Don't divide by zero.
                     if (bytesPerSecond > 0)
                     {
                         UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
@@ -253,14 +258,11 @@ namespace PcmHacking
                         timeRemaining = "??:??";
                     }
                 }
-                else
-                {
-                    timeRemaining = "??:??";
-                }
 
                 logger.AddUserMessage(
                     string.Format(
-                        "{0}%\t\t{1}",
+                        "0x{0:X6}\t{1}%\t{2}",
+                        startAddress,
                         startAddress * 100 / image.Length,
                         timeRemaining));
 
