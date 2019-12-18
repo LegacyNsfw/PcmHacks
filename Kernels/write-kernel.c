@@ -294,6 +294,7 @@ unsigned char WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 	switch (flashIdentifier)
 	{
 	case FLASH_ID_INTEL_512:
+	case FLASH_ID_INTEL_1024:
 		return Intel_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
 
 	case FLASH_ID_AMD_1024:
