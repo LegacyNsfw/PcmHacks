@@ -1,0 +1,3 @@
+  <MathValues>
+    <MathValue XParameter="Mass Air Flow" XConversion="g/s" YParameter="Engine Speed" YConversion="RPM" Formula="x*60.0/y" Name="Load (g/cyl)"/>
+  </MathValues>

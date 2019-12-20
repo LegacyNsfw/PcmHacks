@@ -281,26 +281,29 @@ namespace PcmHacking
         private async void LoggingThread(object threadContext)
         {
             using (AwayMode lockScreenSuppressor = new AwayMode())
-            try
             {
-                string logFilePath = GenerateLogFilePath();
-
-                this.loggerProgress.Invoke(
-                (MethodInvoker)
-                delegate ()
+                try
                 {
-                    this.loggerProgress.Value = 0;
-                    this.loggerProgress.Visible = true;
-                    this.logFilePath.Text = logFilePath;
-                    this.setDirectory.Enabled = false;
-                });
+                    string logFilePath = GenerateLogFilePath();
 
-                Logger logger = new Logger(this.Vehicle, this.profile);
-                if (!await logger.StartLogging())
-                {
-                    this.AddUserMessage("Unable to start logging.");
-                    return;
-                }
+                    this.loggerProgress.Invoke(
+                    (MethodInvoker)
+                    delegate ()
+                    {
+                        this.loggerProgress.Value = 0;
+                        this.loggerProgress.Visible = true;
+                        this.logFilePath.Text = logFilePath;
+                        this.setDirectory.Enabled = false;
+                    });
+
+                    MathValueConfigurationLoader loader = new MathValueConfigurationLoader(this);
+                    loader.Initialize();
+                    Logger logger = new Logger(this.Vehicle, this.profile, loader.Configuration);
+                    if (!await logger.StartLogging())
+                    {
+                        this.AddUserMessage("Unable to start logging.");
+                        return;
+                    }
 
 #if Vpw4x
                 if (!await this.Vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
@@ -308,65 +311,65 @@ namespace PcmHacking
                     this.AddUserMessage("Unable to switch to 4x.");
                     return;
                 }
-#endif                
-                using (StreamWriter streamWriter = new StreamWriter(logFilePath))
+#endif
+                    using (StreamWriter streamWriter = new StreamWriter(logFilePath))
+                    {
+                        LogFileWriter writer = new LogFileWriter(streamWriter);
+                        await writer.WriteHeader(this.profile);
+
+                        lastLogTime = DateTime.Now;
+
+                        this.loggerProgress.Invoke(
+                            (MethodInvoker)
+                            delegate ()
+                            {
+                                this.loggerProgress.MarqueeAnimationSpeed = 150;
+                                this.selectButton.Enabled = false;
+                                this.selectProfileButton.Enabled = false;
+                            });
+
+                        while (!this.logStopRequested)
+                        {
+                            this.AddDebugMessage("Requesting row...");
+                            string[] rowValues = await logger.GetNextRow();
+                            if (rowValues == null)
+                            {
+                                continue;
+                            }
+
+                            // Write the data to disk on a background thread.
+                            Task background = Task.Factory.StartNew(
+                                delegate ()
+                                {
+                                    writer.WriteLine(rowValues);
+                                });
+
+                            // Display the data using a foreground thread.
+                            Task foreground = Task.Factory.StartNew(
+                                delegate ()
+                                {
+                                    string formattedValues = FormatValuesForTextBox(rowValues);
+                                    this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
+                                },
+                                CancellationToken.None,
+                                TaskCreationOptions.None,
+                                uiThreadScheduler);
+                        }
+                    }
+                }
+                catch (Exception exception)
                 {
-                    LogFileWriter writer = new LogFileWriter(streamWriter);
-                    await writer.WriteHeader(this.profile);
-
-                    lastLogTime = DateTime.Now;
-
-                    this.loggerProgress.Invoke(
+                    this.AddDebugMessage(exception.ToString());
+                    this.AddUserMessage("Logging interrupted. " + exception.Message);
+                    this.logValues.Invoke(
                         (MethodInvoker)
                         delegate ()
                         {
-                            this.loggerProgress.MarqueeAnimationSpeed = 150;
-                            this.selectButton.Enabled = false;
-                            this.selectProfileButton.Enabled = false;
+                            this.logValues.Text = "Logging interrupted. " + exception.Message;
                         });
-                        
-                    while (!this.logStopRequested)
-                    {
-                        this.AddDebugMessage("Requesting row...");
-                        string[] rowValues = await logger.GetNextRow();
-                        if (rowValues == null)
-                        {
-                            continue;
-                        }
-
-                        // Write the data to disk on a background thread.
-                        Task background = Task.Factory.StartNew(
-                            delegate ()
-                            {
-                                writer.WriteLine(rowValues);
-                            });
-                        
-                        // Display the data using a foreground thread.
-                        Task foreground = Task.Factory.StartNew(
-                            delegate ()
-                            {
-                                string formattedValues = FormatValuesForTextBox(rowValues);
-                                this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
-                            },
-                            CancellationToken.None,
-                            TaskCreationOptions.None,
-                            uiThreadScheduler);
-                    }
                 }
-            }
-            catch (Exception exception)
-            {
-                this.AddDebugMessage(exception.ToString());
-                this.AddUserMessage("Logging interrupted. " + exception.Message);
-                this.logValues.Invoke(
-                    (MethodInvoker)
-                    delegate ()
-                    {
-                        this.logValues.Text = "Logging interrupted. " + exception.Message;
-                    });
-            }
-            finally
-            {
+                finally
+                {
 #if Vpw4x
                 if (!await this.Vehicle.VehicleSetVPW4x(VpwSpeed.Standard))
                 {
@@ -374,22 +377,23 @@ namespace PcmHacking
                     await this.Vehicle.VehicleSetVPW4x(VpwSpeed.Standard);
                 }
 #endif
-                this.logStopRequested = false;
-                this.logging = false;
-                this.startStopLogging.Invoke(
-                    (MethodInvoker)
-                    delegate ()
-                    {
-                        this.loggerProgress.MarqueeAnimationSpeed = 0;
-                        this.loggerProgress.Visible = false;
-                        this.startStopLogging.Enabled = true;
-                        this.startStopLogging.Text = "Start &Logging";
-                        this.logFilePath.Text = LoggerConfiguration.LogDirectory;
-                        this.setDirectory.Enabled = true;
+                    this.logStopRequested = false;
+                    this.logging = false;
+                    this.startStopLogging.Invoke(
+                        (MethodInvoker)
+                        delegate ()
+                        {
+                            this.loggerProgress.MarqueeAnimationSpeed = 0;
+                            this.loggerProgress.Visible = false;
+                            this.startStopLogging.Enabled = true;
+                            this.startStopLogging.Text = "Start &Logging";
+                            this.logFilePath.Text = LoggerConfiguration.LogDirectory;
+                            this.setDirectory.Enabled = true;
 
-                        this.selectButton.Enabled = true;
-                        this.selectProfileButton.Enabled = true;
-                    });
+                            this.selectButton.Enabled = true;
+                            this.selectProfileButton.Enabled = true;
+                        });
+                }
             }
         }
 

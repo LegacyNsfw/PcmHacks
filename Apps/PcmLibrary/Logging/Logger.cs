@@ -14,9 +14,11 @@ namespace PcmHacking
     /// </summary>
     public class Logger
     {
-        private Vehicle vehicle;
-        private LogProfile profile;
+        private readonly Vehicle vehicle;
+        private readonly LogProfile profile;
+        private readonly MathValueConfiguration mathValueConfiguration;
         private DpidCollection dpids;
+        private MathValueProcessor mathValueProcessor;
 
 #if FAST_LOGGING
         private DateTime lastRequestTime;
@@ -25,10 +27,14 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Logger(Vehicle vehicle, LogProfile profile)
+        public Logger(Vehicle vehicle, LogProfile profile, MathValueConfiguration mathValueConfiguration)
         {
             this.vehicle = vehicle;
             this.profile = profile;
+            this.mathValueConfiguration = mathValueConfiguration;
+            this.mathValueProcessor = new MathValueProcessor(
+                this.profile, 
+                this.mathValueConfiguration);
         }
 
         /// <summary>
@@ -64,7 +70,7 @@ namespace PcmHacking
         /// <returns></returns>
         public async Task<string[]> GetNextRow()
         {
-            LogRowParser row = new LogRowParser(this.profile);
+            LogRowParser row = new LogRowParser(this.profile, this.mathValueConfiguration);
 
 #if FAST_LOGGING
 //            if (DateTime.Now.Subtract(lastRequestTime) > TimeSpan.FromSeconds(2))
@@ -91,7 +97,14 @@ namespace PcmHacking
                 row.ParseData(rawData);
             }
 
-            return row.Evaluate();
+            DpidValues dpidValues = row.Evaluate();
+
+            IEnumerable<string> mathValues = this.mathValueProcessor.GetMathValues(dpidValues);
+
+            return dpidValues
+                    .Select(x => x.Value.ValueAsString)
+                    .Concat(mathValues)
+                    .ToArray();
         }
     }
 }

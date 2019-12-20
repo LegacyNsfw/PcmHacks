@@ -246,6 +246,19 @@ namespace PcmHacking
             }
         }
 
+        [XmlIgnore]
+        public IList<ProfileParameter> AllParameters
+        {
+            get
+            {
+                List<ProfileParameter> allParameters = new List<ProfileParameter>();
+                this.ParameterGroups
+                    .ForEach(group => group.Parameters
+                    .ForEach(parameter => allParameters.Add(parameter)));
+                return allParameters;
+            }
+        }
+
         public LogProfile()
         {
             this.ParameterGroups = new List<ParameterGroup>();
