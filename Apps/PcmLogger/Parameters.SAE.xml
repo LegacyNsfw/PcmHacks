@@ -1,0 +1,11 @@
+<Parameters>
+	<Parameter DefineBy="SAE" Name="Fuel System Status" Address="0x3">
+		<Conversion Name="Raw" Value="0x"/>
+	</Parameter>
+	<Parameter DefineBy="SAE" Name="Engine Load" Address="0x4">
+		<Conversion Name="Percentage" Value="x * 100.0 / 255.0"/>
+	</Parameter>
+	<Parameter DefineBy="SAE" Name="Coolant Temperature" Address="0x5">
+		<Conversion Name="C" Value="x-40.0"/>
+	</Parameter>
+<Parameters>

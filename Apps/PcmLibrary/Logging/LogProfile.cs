@@ -5,11 +5,45 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace PcmHacking
 {
+    public static class UnsignedHex
+    {
+        public static string GetUnsignedHex(UInt32 value)
+        {
+            return "0x" + value.ToString("X");
+        }
+
+        public static UInt32 GetUnsignedHex(string rawValue)
+        {
+            if (string.IsNullOrEmpty(rawValue))
+            {
+                return 0;
+            }
+
+            if (!rawValue.StartsWith("0x"))
+                throw new XmlSchemaException("Unexpected format of unsigned hex value: " + rawValue);
+
+            uint result;
+            if (uint.TryParse(
+                rawValue.Substring(2),
+                NumberStyles.HexNumber,
+                CultureInfo.CurrentCulture,
+                out result))
+            {
+                return result;
+            }
+
+            throw new JsonSerializationException("Unable to parse hex value: " + rawValue);
+        }
+    }
+
     public struct UnsignedHexValue
     {
         private uint value;
@@ -25,6 +59,7 @@ namespace PcmHacking
 
         public static implicit operator uint(UnsignedHexValue hex) { return hex.value; }
         public static implicit operator UnsignedHexValue(uint x) { return new UnsignedHexValue(x); }
+        
     }
 
     public class UnsignedHexValueConverter :JsonConverter<UnsignedHexValue>
@@ -62,9 +97,15 @@ namespace PcmHacking
     //[DataContract]
     public class Conversion
     {
+        [XmlAttribute]
         public string Name { get; set; }
+
+        [XmlAttribute]
         public string Expression { get; set; }
+
+        [XmlAttribute]
         public string Format { get; set; }
+
         public override string ToString()
         {
             return Name + " (" + Expression + ")";
@@ -77,13 +118,31 @@ namespace PcmHacking
     //[DataContract]
     public class Parameter
     {
+        [XmlAttribute]
         public string Name { get; set; }
 
+        [XmlAttribute]
         public DefineBy DefineBy { get; set; }
 
+        [XmlAttribute]
         public int ByteCount { get; set; }
 
+        [XmlIgnore]
         public UnsignedHexValue Address { get; set; }
+
+        [XmlAttribute(AttributeName = "Address")]
+        public string AddressAttributeValue
+        {
+            get
+            {
+                return UnsignedHex.GetUnsignedHex(this.Address);
+            }
+
+            set
+            {
+                this.Address = UnsignedHex.GetUnsignedHex(value);
+            }
+        }
 
         public override string ToString()
         {
@@ -93,13 +152,15 @@ namespace PcmHacking
 
     //[DataContract]
     public class DatabaseParameter : Parameter
-    { 
+    {
+        [XmlElement]
         public List<Conversion> Conversions { get; set; }
     }
 
     //[DataContract]
     public class ProfileParameter : Parameter
     {
+        [XmlElement]
         public Conversion Conversion { get; set; }
 
         public override string ToString()
@@ -113,15 +174,32 @@ namespace PcmHacking
     {
         public const int MaxBytes = 6;
 
+        [XmlIgnore]
         public UnsignedHexValue Dpid { get; set; }
 
-        public IList<ProfileParameter> Parameters { get; set; }
+        [XmlAttribute(AttributeName = "Dpid")]
+        public string DpidAttributeValue
+        {
+            get
+            {
+                return UnsignedHex.GetUnsignedHex((UInt32)this.Dpid);
+            }
+
+            set
+            {
+                this.Dpid = (byte)UnsignedHex.GetUnsignedHex(value);
+            }
+        }
+
+        [XmlElement("Parameter")]
+        public List<ProfileParameter> Parameters { get; set; }
 
         public ParameterGroup()
         {
             this.Parameters = new List<ProfileParameter>();
         }
 
+        [XmlAttribute]
         public int TotalBytes
         {
             get
@@ -156,8 +234,10 @@ namespace PcmHacking
     {
         public const int MaxGroups = 3;
 
-        public IList<ParameterGroup> ParameterGroups { get; set; }
+        [XmlElement("ParameterGroup")]
+        public List<ParameterGroup> ParameterGroups { get; set; }
 
+        [XmlIgnore]
         public int ParameterCount
         {
             get

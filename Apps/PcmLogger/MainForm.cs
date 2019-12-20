@@ -117,7 +117,7 @@ namespace PcmHacking
             {
                 await this.LoadProfile(profilePath);
             }
-
+            
             string logDirectory = LoggerConfiguration.LogDirectory;
             if (string.IsNullOrWhiteSpace(logDirectory))
             {
@@ -172,10 +172,32 @@ namespace PcmHacking
         {
             try
             {
-                using (Stream stream = File.OpenRead(path))
+                if (path.EndsWith(".json.profile"))
                 {
-                    LogProfileReader reader = new LogProfileReader(stream);
-                    this.profile = await reader.ReadAsync();
+                    using (Stream stream = File.OpenRead(path))
+                    {
+                        LogProfileReader reader = new LogProfileReader(stream);
+                        this.profile = await reader.ReadAsync();
+                    }
+
+                    string newPath = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(path)) + ".xml.profile";
+                    using (Stream xml = File.OpenWrite(newPath))
+                    {
+                        LogProfileXmlWriter writer = new LogProfileXmlWriter(xml);
+                        writer.Write(this.profile);
+                    }
+                }
+                else if (path.EndsWith(".xml.profile"))
+                {
+                    using (Stream stream = File.OpenRead(path))
+                    {
+                        LogProfileXmlReader reader = new LogProfileXmlReader(stream);
+                        this.profile = reader.Read();
+                    }
+                }
+                else
+                {
+                    return;
                 }
 
                 this.profilePath.Text = path;
