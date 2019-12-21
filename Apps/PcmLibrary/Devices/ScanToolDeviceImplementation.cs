@@ -77,10 +77,11 @@ namespace PcmHacking
                     this.MaxSendSize = 192 + 12;
                     this.MaxReceiveSize = 500 + 12;
                 }
-                else if (stID.Contains("STN1155") || // LX
+                else if (stID.Contains("STN1110") || // SparkFun OBD-II UART
                     stID.Contains("STN1150") || // MX version 1
                     stID.Contains("STN1151") || // MX version 2
-                    stID.Contains("STN2255")) // MX+
+                    stID.Contains("STN1155") || // LX
+                    stID.Contains("STN2255"))   // MX+
                 {
                     // 2048 works, but doesn't write measurably faster.
                     this.MaxSendSize = 1024 + 12;
