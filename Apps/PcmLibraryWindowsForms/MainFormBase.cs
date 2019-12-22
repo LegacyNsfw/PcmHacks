@@ -60,9 +60,9 @@ namespace PcmHacking
                 Configuration.J2534DeviceType = picker.J2534DeviceType;
                 Configuration.SerialPort = picker.SerialPort;
                 Configuration.SerialPortDeviceType = picker.SerialPortDeviceType;
+                return await this.ResetDevice();
             }
-
-            return await this.ResetDevice();
+            return false;
         }
 
         /// <summary>
