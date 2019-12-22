@@ -29,7 +29,7 @@ namespace PcmHacking
         }
     }
 
-    internal class MathValueProcessor
+    public class MathValueProcessor
     {
         private readonly LogProfile profile;
         private List<MathValueAndDependencies> mathValues;
