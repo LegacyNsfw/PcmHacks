@@ -34,7 +34,7 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public LogRowParser(LogProfile profile, MathValueConfiguration math)
+        public LogRowParser(LogProfile profile)
         {
             this.profile = profile;
 

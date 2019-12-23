@@ -39,7 +39,7 @@ namespace PcmHacking
             this.profile = profile;
             this.mathValues = new List<MathValueAndDependencies>();
 
-            foreach (MathValue mathValue in mathValueConfiguration.Values)
+            foreach (MathValue mathValue in mathValueConfiguration.MathValues)
             {
                 ProfileParameter xParameter = null;
                 Conversion xConversion = null;
@@ -83,6 +83,11 @@ namespace PcmHacking
         public IEnumerable<string> GetHeaders()
         {
             return this.mathValues.Select(x => x.MathValue.Name);
+        }
+
+        public IEnumerable<MathValue> GetMathValues()
+        {
+            return this.mathValues.Select(x => x.MathValue);
         }
 
         public IEnumerable<string> GetMathValues(DpidValues dpidValues)

@@ -25,10 +25,10 @@ namespace PcmHacking
         /// <summary>
         /// Call this once to write the file header.
         /// </summary>
-        public async Task WriteHeader(LogProfile profile)
+        public async Task WriteHeader(IEnumerable<string> columnNames)
         {
             this.startTime = DateTime.Now;
-            string text = profile.GetParameterNames(", ");
+            string text = string.Join(", ", columnNames);  
             await this.writer.WriteAsync("Clock Time, Elapsed Time, ");
             await this.writer.WriteLineAsync(text);
         }
@@ -36,7 +36,7 @@ namespace PcmHacking
         /// <summary>
         /// Call this to write each new row to the file.
         /// </summary>
-        public void WriteLine(string[] values)
+        public void WriteLine(IEnumerable<string> values)
         {
             lock (this.writer)
             {

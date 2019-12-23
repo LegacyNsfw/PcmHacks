@@ -17,7 +17,7 @@ namespace PcmHacking
 {
     public partial class MainForm : MainFormBase
     {
-        private LogProfile profile;
+        private LogProfileAndMath profileAndMath;
         private bool logging;
         private object loggingLock = new object();
         private bool logStopRequested;
@@ -158,7 +158,7 @@ namespace PcmHacking
             }
             else
             {
-                this.profile = null;
+                this.profileAndMath = null;
                 this.profileName = null;
             }
 
@@ -172,19 +172,20 @@ namespace PcmHacking
         {
             try
             {
+                LogProfile profile;
                 if (path.EndsWith(".json.profile"))
                 {
                     using (Stream stream = File.OpenRead(path))
                     {
                         LogProfileReader reader = new LogProfileReader(stream);
-                        this.profile = await reader.ReadAsync();
+                        profile = await reader.ReadAsync();
                     }
 
                     string newPath = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(path)) + ".xml.profile";
                     using (Stream xml = File.OpenWrite(newPath))
                     {
                         LogProfileXmlWriter writer = new LogProfileXmlWriter(xml);
-                        writer.Write(this.profile);
+                        writer.Write(profile);
                     }
                 }
                 else if (path.EndsWith(".xml.profile"))
@@ -192,7 +193,7 @@ namespace PcmHacking
                     using (Stream stream = File.OpenRead(path))
                     {
                         LogProfileXmlReader reader = new LogProfileXmlReader(stream);
-                        this.profile = reader.Read();
+                        profile = reader.Read();
                     }
                 }
                 else
@@ -202,7 +203,11 @@ namespace PcmHacking
 
                 this.profilePath.Text = path;
                 this.profileName = Path.GetFileNameWithoutExtension(this.profilePath.Text);
-                this.logValues.Text = this.profile.GetParameterNames(Environment.NewLine);
+
+                MathValueConfigurationLoader loader = new MathValueConfigurationLoader(this);
+                loader.Initialize();
+                this.profileAndMath = new LogProfileAndMath(profile, loader.Configuration);
+                this.logValues.Text = string.Join(Environment.NewLine, this.profileAndMath.GetColumnNames());
                 LoggerConfiguration.ProfilePath = path;
             }
             catch (Exception exception)
@@ -241,7 +246,7 @@ namespace PcmHacking
         /// </summary>
         private void UpdateStartStopButtonState()
         {
-            this.startStopLogging.Enabled = this.Vehicle != null && this.profile != null;
+            this.startStopLogging.Enabled = this.Vehicle != null && this.profileAndMath != null;
         }
 
         /// <summary>
@@ -259,7 +264,7 @@ namespace PcmHacking
             {
                 lock (loggingLock)
                 {
-                    if (this.profile == null)
+                    if (this.profileAndMath == null)
                     {
                         this.logValues.Text = "Please select a log profile.";
                         return;
@@ -298,7 +303,7 @@ namespace PcmHacking
 
                     MathValueConfigurationLoader loader = new MathValueConfigurationLoader(this);
                     loader.Initialize();
-                    Logger logger = new Logger(this.Vehicle, this.profile, loader.Configuration);
+                    Logger logger = new Logger(this.Vehicle, this.profileAndMath, loader.Configuration);
                     if (!await logger.StartLogging())
                     {
                         this.AddUserMessage("Unable to start logging.");
@@ -315,7 +320,8 @@ namespace PcmHacking
                     using (StreamWriter streamWriter = new StreamWriter(logFilePath))
                     {
                         LogFileWriter writer = new LogFileWriter(streamWriter);
-                        await writer.WriteHeader(this.profile);
+                        IEnumerable<string> columnNames = this.profileAndMath.GetColumnNames();
+                        await writer.WriteHeader(columnNames);
 
                         lastLogTime = DateTime.Now;
 
@@ -331,7 +337,7 @@ namespace PcmHacking
                         while (!this.logStopRequested)
                         {
                             this.AddDebugMessage("Requesting row...");
-                            string[] rowValues = await logger.GetNextRow();
+                            IEnumerable<string> rowValues = await logger.GetNextRow();
                             if (rowValues == null)
                             {
                                 continue;
@@ -413,20 +419,31 @@ namespace PcmHacking
         /// Create a string that will look reasonable in the UI's main text box.
         /// TODO: Use a grid instead.
         /// </summary>
-        private string FormatValuesForTextBox(string[] rowValues)
+        private string FormatValuesForTextBox(IEnumerable<string> rowValues)
         {
             StringBuilder builder = new StringBuilder();
-            int index = 0;
-            foreach(ParameterGroup group in this.profile.ParameterGroups)
+            IEnumerator<string> rowValueEnumerator = rowValues.GetEnumerator();
+            foreach(ParameterGroup group in this.profileAndMath.Profile.ParameterGroups)
             {
                 foreach(ProfileParameter parameter in group.Parameters)
                 {
-                    builder.Append(rowValues[index++]);
+                    rowValueEnumerator.MoveNext();
+                    builder.Append(rowValueEnumerator.Current);
                     builder.Append('\t');
                     builder.Append(parameter.Conversion.Name);
                     builder.Append('\t');
                     builder.AppendLine(parameter.Name);
                 }
+            }
+
+            foreach(MathValue mathValue in this.profileAndMath.MathValueProcessor.GetMathValues())
+            {
+                rowValueEnumerator.MoveNext();
+                builder.Append(rowValueEnumerator.Current);
+                builder.Append('\t');
+                builder.Append(mathValue.Units);
+                builder.Append('\t');
+                builder.AppendLine(mathValue.Name);
             }
 
             DateTime now = DateTime.Now;

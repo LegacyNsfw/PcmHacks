@@ -11,6 +11,9 @@ namespace PcmHacking
         public string Name { get; set; }
 
         [XmlAttribute]
+        public string Units { get; set; }
+
+        [XmlAttribute]
         public string XParameter { get; set; }
 
         [XmlAttribute]
@@ -32,7 +35,7 @@ namespace PcmHacking
     public class MathValueConfiguration
     {
         [XmlElement("MathValue")]
-        public List<MathValue> Values;
+        public List<MathValue> MathValues;
     }
 
     public class MathValueConfigurationLoader

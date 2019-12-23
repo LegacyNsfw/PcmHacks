@@ -275,13 +275,11 @@ namespace PcmHacking
             return true;
         }
 
-        public string GetParameterNames(string separator)
+        public IEnumerable<string> GetParameterNames()
         {
-            return string.Join(
-                separator, 
-                this.ParameterGroups.SelectMany(
+            return this.ParameterGroups.SelectMany(
                     group => group.Parameters.Select(
-                        parameter => string.Format("{0} ({1})", parameter.Name, parameter.Conversion.Name))));
+                        parameter => string.Format("{0} ({1})", parameter.Name, parameter.Conversion.Name)));
         }
     }
 }
