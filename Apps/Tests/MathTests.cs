@@ -49,19 +49,19 @@ namespace Tests
             //MathValueConfigurationLoader loader = new MathValueConfigurationLoader();
             //loader.Initialize();
             MathValueConfiguration mathValueConfiguration = new MathValueConfiguration();
-            mathValueConfiguration.Values = new List<MathValue>();
-            mathValueConfiguration.Values.Add(load);
+            mathValueConfiguration.MathValues = new List<MathValue>();
+            mathValueConfiguration.MathValues.Add(load);
 
             DpidValues dpidValues = new DpidValues();
-            dpidValues.Add(rpm, new ParameterValue() { ValueAsString = "1000", ValueAsDouble = 1000.0 });
-            dpidValues.Add(maf, new ParameterValue() { ValueAsString = "100", ValueAsDouble = 100.0 });
+            dpidValues.Add(rpm, new ParameterValue() { RawValue = 1000 });
+            dpidValues.Add(maf, new ParameterValue() { RawValue = 100 });
             
             MathValueProcessor processor = new MathValueProcessor(profile, mathValueConfiguration);
             IEnumerable<string> mathValues = processor.GetMathValues(dpidValues);
 
             Assert.AreEqual(1, mathValues.Count(), "Number of math values.");
             string loadValue = mathValues.First();
-            Assert.AreEqual("6.0", load, "Load value.");
+            Assert.AreEqual("6.00", loadValue, "Load value.");
         }
     }
 }

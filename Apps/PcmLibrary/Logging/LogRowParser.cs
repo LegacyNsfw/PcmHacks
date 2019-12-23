@@ -11,6 +11,7 @@ namespace PcmHacking
 {
     public class ParameterValue
     {
+        public double RawValue { get; set; }
         public string ValueAsString { get; set; }
         public double ValueAsDouble { get; set; }
     }
@@ -132,6 +133,7 @@ namespace PcmHacking
                         parameter,
                         new ParameterValue()
                         {
+                            RawValue = value,
                             ValueAsDouble = value,
                             ValueAsString = value.ToString(format)
                         });
@@ -154,6 +156,7 @@ namespace PcmHacking
                         parameter,
                         new ParameterValue()
                         {
+                            RawValue = value,
                             ValueAsDouble = convertedValue,
                             ValueAsString = formatted
                         });

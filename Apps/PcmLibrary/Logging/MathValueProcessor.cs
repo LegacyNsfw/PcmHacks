@@ -95,12 +95,12 @@ namespace PcmHacking
             List<string> result = new List<string>();
             foreach(MathValueAndDependencies value in this.mathValues)
             {
-                double xParameterValue = dpidValues[value.XParameter].ValueAsDouble;
+                double xParameterValue = dpidValues[value.XParameter].RawValue;
                 Interpreter xConverter = new Interpreter();
                 xConverter.SetVariable("x", xParameterValue);
                 double xConverted = xConverter.Eval<double>(value.XConversion.Expression);
 
-                double yParameterValue = dpidValues[value.YParameter].ValueAsDouble;
+                double yParameterValue = dpidValues[value.YParameter].RawValue;
                 Interpreter yConverter = new Interpreter();
                 xConverter.SetVariable("x", yParameterValue);
                 double YConverted = xConverter.Eval<double>(value.YConversion.Expression);
