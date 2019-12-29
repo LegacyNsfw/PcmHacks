@@ -14,8 +14,8 @@ namespace PcmHacking
     /// </summary>
     public class Logger
     {
-        private Vehicle vehicle;
-        private LogProfile profile;
+        private readonly Vehicle vehicle;
+        private readonly LogProfileAndMath profileAndMath;
         private DpidCollection dpids;
 
 #if FAST_LOGGING
@@ -25,10 +25,10 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Logger(Vehicle vehicle, LogProfile profile)
+        public Logger(Vehicle vehicle, LogProfileAndMath profileAndMath, MathValueConfiguration mathValueConfiguration)
         {
             this.vehicle = vehicle;
-            this.profile = profile;
+            this.profileAndMath = profileAndMath;
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> StartLogging()
         {
-            this.dpids = await this.vehicle.ConfigureDpids(this.profile);
+            this.dpids = await this.vehicle.ConfigureDpids(this.profileAndMath.Profile);
 
             if (this.dpids == null)
             {
@@ -44,7 +44,7 @@ namespace PcmHacking
             }
 
             int scenario = ((int)TimeoutScenario.DataLogging1 - 1);
-            scenario += this.profile.ParameterGroups.Count;
+            scenario += this.profileAndMath.Profile.ParameterGroups.Count;
             await this.vehicle.SetDeviceTimeout((TimeoutScenario)scenario);
 
 #if FAST_LOGGING
@@ -62,9 +62,9 @@ namespace PcmHacking
         /// Invoke this repeatedly to get each row of data from the PCM.
         /// </summary>
         /// <returns></returns>
-        public async Task<string[]> GetNextRow()
+        public async Task<IEnumerable<string>> GetNextRow()
         {
-            LogRowParser row = new LogRowParser(this.profile);
+            LogRowParser row = new LogRowParser(this.profileAndMath.Profile);
 
 #if FAST_LOGGING
 //            if (DateTime.Now.Subtract(lastRequestTime) > TimeSpan.FromSeconds(2))
@@ -91,7 +91,14 @@ namespace PcmHacking
                 row.ParseData(rawData);
             }
 
-            return row.Evaluate();
+            DpidValues dpidValues = row.Evaluate();
+
+            IEnumerable<string> mathValues = this.profileAndMath.MathValueProcessor.GetMathValues(dpidValues);
+
+            return dpidValues
+                    .Select(x => x.Value.ValueAsString)
+                    .Concat(mathValues)
+                    .ToArray();
         }
     }
 }
