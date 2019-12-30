@@ -308,7 +308,7 @@ unsigned char WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 ///////////////////////////////////////////////////////////////////////////////
 // Process an incoming message.
 ///////////////////////////////////////////////////////////////////////////////
-void ProcessMessage()
+void ProcessMessage(int iterations)
 {
 	if ((MessageBuffer[1] != 0x10) && (MessageBuffer[1] != 0xFE))
 	{
@@ -324,6 +324,11 @@ void ProcessMessage()
 
 	switch (MessageBuffer[3])
 	{
+	case 0x20:
+		LongSleepWithWatchdog();
+		Reboot(0xCC000000 | iterations);
+		break;
+
 	case 0x34:
 		HandleWriteRequestMode34();
 		ClearBreadcrumbBuffer();
@@ -434,12 +439,6 @@ KernelStart(void)
 	SendToolPresent(1, 2, 3, 4);
 	LongSleepWithWatchdog();
 
-	// This loop runs out quickly, to force the PCM to reboot, to speed up testing.
-	// The real kernel should probably loop for a much longer time (possibly forever),
-	// to allow the app to recover from any failures.
-	// If we choose to loop forever we need a good story for how to get out of that state.
-	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
-	// for(int iterations = 0; iterations < 100; iterations++)
 	uint32_t iterations = 0;
 	uint32_t timeout = 2500; // Timeout of 2500 = 2.2 seconds between messages. 5,000 = 3.9 seconds.
 	uint32_t lastMessage = (iterations - timeout) + 1;
@@ -494,14 +493,7 @@ KernelStart(void)
 		lastMessage = iterations;
 		lastActivity = iterations;
 
-		// Did the tool just request a reboot?
-		if (MessageBuffer[3] == 0x20)
-		{
-			LongSleepWithWatchdog();
-			Reboot(0xCC000000 | iterations);
-		}
-
-		ProcessMessage();
+		ProcessMessage(iterations);
 	}
 
 	// This shouldn't happen. But, just in case...
