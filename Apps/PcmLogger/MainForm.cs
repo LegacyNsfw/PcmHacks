@@ -92,6 +92,7 @@ namespace PcmHacking
             this.selectButton.Enabled = true;
             this.selectProfileButton.Enabled = true;
             this.startStopLogging.Enabled = true;
+            this.startStopLogging.Focus();
         }
 
         protected override void NoDeviceSelected()
@@ -299,6 +300,7 @@ namespace PcmHacking
                         this.loggerProgress.Visible = true;
                         this.logFilePath.Text = logFilePath;
                         this.setDirectory.Enabled = false;
+						this.startStopLogging.Focus();
                     });
 
                     MathValueConfigurationLoader loader = new MathValueConfigurationLoader(this);
@@ -372,6 +374,7 @@ namespace PcmHacking
                         delegate ()
                         {
                             this.logValues.Text = "Logging interrupted. " + exception.Message;
+							this.startStopLogging.Focus();
                         });
                 }
                 finally
@@ -398,6 +401,7 @@ namespace PcmHacking
 
                             this.selectButton.Enabled = true;
                             this.selectProfileButton.Enabled = true;
+							this.startStopLogging.Focus();
                         });
                 }
             }
