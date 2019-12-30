@@ -59,12 +59,19 @@ namespace PcmHacking
                 // TODO: install newer version if available.
                 if (kernelVersion == 0)
                 {
-                    // switch to 4x, if possible. But continue either way.
-                    // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                    if (!await this.vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
+                    // Switch to 4x, if possible. But continue either way.
+                    if (Configuration.Enable4xReadWrite)
                     {
-                        this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
-                        return false;
+                        // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
+                        if (!await this.vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
+                        {
+                            this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        this.logger.AddUserMessage("4X communications disabled by configuration.");
                     }
 
                     Response<byte[]> response = await this.vehicle.LoadKernelFromFile("kernel.bin");
