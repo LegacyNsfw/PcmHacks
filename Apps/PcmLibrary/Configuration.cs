@@ -35,17 +35,19 @@ namespace PcmHacking
         /// </summary>
         public class Constants
         {
-            public const string DeviceCategorySetting = "DeviceCategory";
+            public const string DeviceCategory = "DeviceCategory";
 
-            public const string SerialPortSetting = "SerialPort";
+            public const string SerialPort = "SerialPort";
 
-            public const string SerialPortDeviceTypeSetting = "SerialPortDeviceType";
+            public const string SerialPortDeviceType = "SerialPortDeviceType";
 
-            public const string J2534DeviceTypeSetting = "J2534DeviceType";
+            public const string J2534DeviceType = "J2534DeviceType";
 
             public const string DeviceCategorySerial = "Serial";
 
             public const string DeviceCategoryJ2534 = "J2534";
+
+            public const string Enable4xReadWrite = "Enable4xReadWrite";
         }
 
         /// <summary>
@@ -55,12 +57,12 @@ namespace PcmHacking
         {
             get
             {
-                return Read(Constants.DeviceCategorySetting);
+                return Read(Constants.DeviceCategory);
             }
 
             set
             {
-                Write(Constants.DeviceCategorySetting, value);
+                Write(Constants.DeviceCategory, value);
             }
         }
 
@@ -71,12 +73,12 @@ namespace PcmHacking
         {
             get
             {
-                return Read(Constants.SerialPortSetting);
+                return Read(Constants.SerialPort);
             }
 
             set
             {
-                Write(Constants.SerialPortSetting, value);
+                Write(Constants.SerialPort, value);
             }
         }
 
@@ -87,12 +89,12 @@ namespace PcmHacking
         {
             get
             {
-                return Read(Constants.SerialPortDeviceTypeSetting);
+                return Read(Constants.SerialPortDeviceType);
             }
 
             set
             {
-                Write(Constants.SerialPortDeviceTypeSetting, value);
+                Write(Constants.SerialPortDeviceType, value);
             }
         }
 
@@ -103,15 +105,38 @@ namespace PcmHacking
         {
             get
             {
-                return Read(Constants.J2534DeviceTypeSetting);
+                return Read(Constants.J2534DeviceType);
             }
 
             set
             {
-                Write(Constants.J2534DeviceTypeSetting, value);
+                Write(Constants.J2534DeviceType, value);
             }
         }
-        
+
+        /// <summary>
+        /// J2534 device type.
+        /// </summary>
+        public static bool Enable4xReadWrite
+        {
+            get
+            {
+                string raw = Read(Constants.Enable4xReadWrite);
+                bool result;
+                if (bool.TryParse(raw, out result))
+                {
+                    return result;
+                }
+
+                return true;
+            }
+
+            set
+            {
+                Write(Constants.Enable4xReadWrite, value.ToString());
+            }
+        }
+
         /// <summary>
         /// Set the configuration accessor to use for this process.
         /// </summary>
