@@ -25,13 +25,15 @@ namespace PcmHacking
     public class CKernelWriter
     {
         private readonly Vehicle vehicle;
+        private readonly PcmInfo pcmInfo;
         private readonly Protocol protocol;
         private readonly WriteType writeType;
         private readonly ILogger logger;
 
-        public CKernelWriter(Vehicle vehicle, Protocol protocol, WriteType writeType, ILogger logger)
+        public CKernelWriter(Vehicle vehicle, PcmInfo pcmInfo, Protocol protocol, WriteType writeType, ILogger logger)
         {
             this.vehicle = vehicle;
+            this.pcmInfo = pcmInfo;
             this.protocol = protocol;
             this.writeType = writeType;
             this.logger = logger;
@@ -74,7 +76,7 @@ namespace PcmHacking
                         this.logger.AddUserMessage("4X communications disabled by configuration.");
                     }
 
-                    Response<byte[]> response = await this.vehicle.LoadKernelFromFile("kernel.bin");
+                    Response<byte[]> response = await this.vehicle.LoadKernelFromFile(this.pcmInfo.KernelFileName);
                     if (response.Status != ResponseStatus.Success)
                     {
                         logger.AddUserMessage("Failed to load kernel from file.");
@@ -87,7 +89,7 @@ namespace PcmHacking
                     }
 
                     // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await this.vehicle.PCMExecute(response.Value, 0xFF8000, cancellationToken))
+                    if (!await this.vehicle.PCMExecute(response.Value, this.pcmInfo.KernelBaseAddress, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 

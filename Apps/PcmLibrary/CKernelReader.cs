@@ -14,12 +14,14 @@ namespace PcmHacking
     public class CKernelReader
     {
         private readonly Vehicle vehicle;
+        private readonly PcmInfo pcmInfo;
         private readonly Protocol protocol;
         private readonly ILogger logger;
 
-        public CKernelReader(Vehicle vehicle, ILogger logger)
+        public CKernelReader(Vehicle vehicle, PcmInfo pcmInfo, ILogger logger)
         {
             this.vehicle = vehicle;
+            this.pcmInfo = pcmInfo;
 
             // This seems wrong... Some alternatives:
             // a) Have the caller pass in the message factory and message-parser methods
@@ -61,7 +63,7 @@ namespace PcmHacking
                 await this.vehicle.SendToolPresentNotification();
 
                 // execute read kernel
-                Response<byte[]> response = await vehicle.LoadKernelFromFile("kernel.bin");
+                Response<byte[]> response = await vehicle.LoadKernelFromFile(this.pcmInfo.KernelFileName);
                 if (response.Status != ResponseStatus.Success)
                 {
                     logger.AddUserMessage("Failed to load kernel from file.");
@@ -77,7 +79,7 @@ namespace PcmHacking
 
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
                 // TODO: choose kernel at run time? Because now it's FF8000...
-                if (!await this.vehicle.PCMExecute(response.Value, 0xFF8000, cancellationToken))
+                if (!await this.vehicle.PCMExecute(response.Value, this.pcmInfo.KernelBaseAddress, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 

@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+    public enum ValidationMethod
+    {
+        Undefined = 0,
+        P01_P59,
+        P04
+    }
+
     /// <summary>
     /// This combines various metadata about whatever PCM we've connected to.
     /// </summary>
@@ -28,6 +35,16 @@ namespace PcmHacking
         /// Indicates whether this PCM is supported by the app.
         /// </summary>
         public bool IsSupported { get; private set; }
+
+        /// <summary>
+        /// Indicates how to validate files before writing.
+        /// </summary>
+        public ValidationMethod ValidationMethod { get; private set; }
+
+        /// <summary>
+        /// Name of the kernel file to use.
+        /// </summary>
+        public string KernelFileName { get; private set; }
 
         /// <summary>
         /// Base address to begin writing the kernel to.
@@ -56,6 +73,12 @@ namespace PcmHacking
         {
             this.OSID = osid;
 
+            // These defaults work for P01 and P59 hardware.
+            // They will need to be overwriten for others.
+            this.KernelFileName = "kernel.bin";
+            this.KernelBaseAddress = 0xFF8000;
+            this.ValidationMethod = ValidationMethod.P01_P59;
+            
             // This will be overwritten for known-to-be-unsupported operating systems.
             this.IsSupported = true;
 
