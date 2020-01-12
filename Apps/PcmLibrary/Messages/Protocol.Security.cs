@@ -38,8 +38,8 @@ namespace PcmHacking
                 return Response.Create(ResponseStatus.Error, result);
             }
 
-            // Converting to Unsigned Int 16 bits reverses the endianess
-            result = BitConverter.ToUInt16(response, 5);
+            // Let's not reverse endianess
+            result = (UInt16)((response[5] << 8) | response[6]);
 
             return Response.Create(ResponseStatus.Success, result);
         }
