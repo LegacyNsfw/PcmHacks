@@ -6,6 +6,16 @@ namespace PcmHacking
 {
     public partial class Protocol
     {
+        class Security
+        {
+            public const byte Denied  = 0x33; // Security Access Denied
+            public const byte Allowed = 0x34; // Security Access Allowed
+            public const byte Invalid = 0x35; // Invalid Key
+            public const byte TooMany = 0x36; // Exceed Number of Attempts
+            public const byte Delay  = 0x37; // Required Time Delay Not Expired
+        }
+
+
         /// <summary>
         /// Create a request to retrieve a 'seed' value from the PCM
         /// </summary>
@@ -25,7 +35,7 @@ namespace PcmHacking
             UInt16 result = 0;
 
             byte[] unlocked = { Priority.Physical0, 0x70, DeviceId.Pcm, Mode.Seed + Mode.Response, 0x01, 0x37 };
-            byte[] seed = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, 0x67, 0x01, };
+            byte[] seed = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.Seed + Mode.Response, 0x01, };
 
             if (TryVerifyInitialBytes(response, unlocked, out status))
             {
@@ -68,24 +78,30 @@ namespace PcmHacking
 
             byte unlockCode = unlockResponse[5];
 
-            if (unlockCode == 0x34)
-            {
-                errorMessage = null;
-                return Response.Create(ResponseStatus.Success, true);
-            }
-
             switch (unlockCode)
             {
-                case 0x36:
+                case Security.Allowed:
+                    errorMessage = null;
+                    return Response.Create(ResponseStatus.Success, true);
+
+                case Security.Denied:
+                    errorMessage = $"The PCM refused to unlock";
+                    return Response.Create(ResponseStatus.Error, false);
+
+                case Security.Invalid:
                     errorMessage = $"The PCM didn't accept the unlock key value";
                     return Response.Create(ResponseStatus.Error, false);
 
-                case 0x37:
-                    errorMessage = $"This PCM is enforcing timeout lock";
-                    return Response.Create(ResponseStatus.Timeout, false);
+                case Security.TooMany:
+                    errorMessage = $"The PCM did not accept the key - too many attempts";
+                    return Response.Create(ResponseStatus.Error, false);
 
+                case Security.Delay:
+                    errorMessage = $"The PCM is enforcing timeout lock";
+                    return Response.Create(ResponseStatus.Timeout, false);
+                    
                 default:
-                    errorMessage = $"Unknown unlock code 0x{unlockCode}";
+                    errorMessage = $"Unknown unlock response code: 0x{unlockCode:X2}";
                     return Response.Create(ResponseStatus.UnexpectedResponse, false);
             }
         }
@@ -96,7 +112,7 @@ namespace PcmHacking
         public bool IsUnlocked(byte[] response)
         {
             ResponseStatus status;
-            byte[] unlocked = { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, 0x67, 0x01, 0x37 };
+            byte[] unlocked = { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.Seed + Mode.Response, 0x01, 0x37 };
 
             if (TryVerifyInitialBytes(response, unlocked, out status))
             {
