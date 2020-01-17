@@ -122,9 +122,14 @@ void ClearMessageBuffer()
 ///////////////////////////////////////////////////////////////////////////////
 // The 'breadcrumb' buffer helps give insight into what happened.
 ///////////////////////////////////////////////////////////////////////////////
+
 void ClearBreadcrumbBuffer()
 {
-	for (int index = 0; index < BreadcrumbBufferSize; index++)
+	// This is not really volatile, but declaring it as such prevents
+	// the optimizer from substituting memset() here. 
+	// Actually using memset() might be preferable though.
+	volatile int index = 0;
+	for (;index < BreadcrumbBufferSize; index++)
 	{
 		BreadcrumbBuffer[index] = 0;
 	}
@@ -367,12 +372,7 @@ void Reboot(unsigned int value)
 ///////////////////////////////////////////////////////////////////////////////
 void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3, unsigned char b4)
 {
-	unsigned char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00, 0x00, 0x00 };
-	toolPresent[4] = b1;
-	toolPresent[5] = b2;
-	toolPresent[6] = b3;
-	toolPresent[7] = b4;
-
+	unsigned char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, b1, b2, b3, b4 };
 	WriteMessage(toolPresent, 8, Complete);
 	ClearMessageBuffer();
 }
