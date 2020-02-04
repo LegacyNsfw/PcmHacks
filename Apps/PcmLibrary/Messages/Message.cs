@@ -56,7 +56,7 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Message(byte[] message)
+        public Message(params byte[] message)
         {
             this.message = message;
         }

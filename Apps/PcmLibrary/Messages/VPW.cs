@@ -18,6 +18,11 @@ namespace PcmHacking
         public const byte Pcm = 0x10;
 
         /// <summary>
+        /// Electronic Brake Control Module
+        /// </summary>
+        public const byte Ebcm = 0x28;
+
+        /// <summary>
         /// OBD2 Device ID for the tool
         /// </summary>
         public const byte Tool = 0xF0;

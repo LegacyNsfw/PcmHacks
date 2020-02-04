@@ -109,7 +109,8 @@ namespace PcmHacking
 
             try
             {
-                Response<int> response = await this.Vehicle.GetPid(pid);
+                byte deviceId = DeviceId.Ebcm;
+                Response<int> response = await this.Vehicle.GetPid(deviceId, pid);
                 if (response.Status == ResponseStatus.Success)
                 {
                     this.AddUserMessage(string.Format("{0:X4} = {1}", pid, response.Value));
@@ -129,6 +130,39 @@ namespace PcmHacking
         {
             await this.HandleSelectButtonClick();
             //this.UpdateStartStopButtonState();
+        }
+
+        private async void testFirmwareRead_Click(object sender, EventArgs e)
+        {
+            int length = 256;
+            CancellationToken cancellationToken = new CancellationTokenSource().Token;
+            for (int address = 0x0; address < 512 * 1024; address += length)
+            {
+                Response<byte[]> readResponse = await this.Vehicle.ReadMemory(
+                     () => this.Vehicle.ProtocolHack.CreateReadRequest(address, length),
+                    (payloadMessage) => this.Vehicle.ProtocolHack.ParsePayload(payloadMessage, length, address),
+                    cancellationToken);
+
+                if (readResponse.Status != ResponseStatus.Success)
+                {
+                    this.AddDebugMessage("Unable to read segment: " + readResponse.Status);
+                    continue;
+                }
+
+                byte[] payload = readResponse.Value;
+
+                if (payload.Length != length)
+                {
+                    this.AddUserMessage(
+                        string.Format(
+                            "Expected {0} bytes, received {1} bytes.",
+                            length,
+                            payload.Length));
+                    continue;
+                }
+
+                this.AddUserMessage("Received " + payload.ToHex(length));
+            }
         }
     }
 }

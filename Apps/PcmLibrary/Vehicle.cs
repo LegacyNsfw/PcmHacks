@@ -41,7 +41,7 @@ namespace PcmHacking
         /// This class knows how to generate message to send to the PCM.
         /// </summary>
         private Protocol protocol;
-        
+
         /// <summary>
         /// This is how we send user-friendly status messages and developer-oriented debug messages to the UI.
         /// </summary>
@@ -79,6 +79,11 @@ namespace PcmHacking
             {
                 return this.device.MaxReceiveSize;
             }
+        }
+
+        public Protocol ProtocolHack
+        {
+            get { return this.protocol; }
         }
 
         /// <summary>

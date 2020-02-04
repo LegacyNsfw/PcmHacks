@@ -136,7 +136,7 @@ namespace PcmHacking
         /// <summary>
         /// Create a request for a single PID.
         /// </summary>
-        public Message CreatePidRequest(UInt32 pid)
+        public Message CreatePidRequest(byte deviceId, UInt32 pid)
         {
             Message request;
 
@@ -156,7 +156,7 @@ namespace PcmHacking
             */
 
             // Using OBD2 "Physical" addressing.
-            request = new Message(new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, 0x22, (byte)(pid >> 8), (byte)pid, 0x01 });
+            request = new Message(new byte[] { Priority.Physical0, deviceId, DeviceId.Tool, 0x22, (byte)(pid >> 8), (byte)pid, 0x01 });
 
             return request;
         }
@@ -181,14 +181,11 @@ namespace PcmHacking
                     value = message[6];
                     break;
 
-                case 8:
+                default:
                     value = message[6];
                     value <<= 8;
                     value |= message[7];
                     break;
-
-                default:
-                    throw new UnsupportedFormatException("Only 1 and 2 byte PIDs are supported for now.");
             }
 
             return Response.Create(ResponseStatus.Success, value);

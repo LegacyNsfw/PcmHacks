@@ -125,9 +125,9 @@ namespace PcmHacking
             return result;
         }
 
-        public async Task<Response<int>> GetPid(UInt32 pid)
+        public async Task<Response<int>> GetPid(byte deviceId, UInt32 pid)
         {
-            Message request = this.protocol.CreatePidRequest(pid);
+            Message request = this.protocol.CreatePidRequest(deviceId, pid);
             if(!await this.TrySendMessage(request, "PID request"))
             {
                 return Response.Create(ResponseStatus.Error, 0);

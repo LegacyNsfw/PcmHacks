@@ -80,7 +80,8 @@ namespace PcmHacking
             byte[] actual = message.GetBytes();
             ResponseStatus status;
 
-            byte[] success = new byte[] { priority, DeviceId.Tool, DeviceId.Pcm, (byte)(mode + 0x40), };
+            byte[] success = new byte[] { priority, DeviceId.Tool, DeviceId.Ebcm, (byte)(mode + 0x40), };
+
             if (this.TryVerifyInitialBytes(actual, success, out status))
             {
                 if (data != null && data.Length > 0)
