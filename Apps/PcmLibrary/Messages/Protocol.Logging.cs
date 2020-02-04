@@ -140,23 +140,14 @@ namespace PcmHacking
         {
             Message request;
 
-            /* Using OBD2 "Functional" addressing - doesn't work well with the rest of the code.
-            if (pid <= 0xFFFF)
-            {
-                request = new Message(new byte[] { 0x68, 0x6A, 0xF1, (byte)(pid >> 8), (byte)pid });
-            }
-            else if (pid <= 0xFFFFFF)
-            {
-                request = new Message(new byte[] { 0x68, 0x6A, 0xF1, (byte)(pid >> 16), (byte)(pid >> 8), (byte)pid });
-            }
-            else
-            {
-                request = new Message(new byte[] { 0x68, 0x6A, 0xF1, (byte)(pid >> 24), (byte)(pid >> 16), (byte)(pid >> 8), (byte)pid });
-            }
-            */
+            // Using OBD2 "Physical" addressing - doesn't work with EBCM.
+            request = new Message(new byte[] { Priority.Physical0, deviceId, DeviceId.Tool, 0x22, 0x00, (byte)pid, 0x01 });
 
-            // Using OBD2 "Physical" addressing.
-            request = new Message(new byte[] { Priority.Physical0, deviceId, DeviceId.Tool, 0x22, (byte)(pid >> 8), (byte)pid, 0x01 });
+            // Try to request a "static DPID" ? - no luck with this either.
+            //request = new Message(new byte[] { Priority.Physical0, DeviceId.Ebcm, DeviceId.Tool, Mode.SendDynamicData, 0x01, 0x01 });
+
+            // Get all diagnostic trouble codes - this actually works with the EBCM!
+            //request = new Message(Priority.Physical0, DeviceId.Ebcm, DeviceId.Tool, 0x19, 0xFF, 0xFF, 0x00);
 
             return request;
         }
@@ -189,6 +180,29 @@ namespace PcmHacking
             }
 
             return Response.Create(ResponseStatus.Success, value);
+        }
+
+
+        /// <summary>
+        /// Parse the value of the requested PID.
+        /// </summary>
+        public Response<byte[]> ParsePidResponse2(Message message)
+        {
+            ResponseStatus status;
+            if (!this.TryVerifyInitialBytes(
+                message.GetBytes(),
+                new byte[] { 0x6C, DeviceId.Tool, DeviceId.Ebcm, 0x62 }, out status))
+            {
+                return Response.Create(status, new byte[0]);
+            }
+
+            byte[] result = new byte[message.Length - 6];
+            for(int index = 6; index < message.Length; index++)
+            {
+                result[index - 6] = message[6];
+            }
+            
+            return Response.Create(ResponseStatus.Success, result);
         }
     }
 }

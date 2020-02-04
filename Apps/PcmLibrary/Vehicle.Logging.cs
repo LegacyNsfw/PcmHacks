@@ -142,6 +142,22 @@ namespace PcmHacking
             return this.protocol.ParsePidResponse(responseMessage);
         }
 
+        public async Task<Response<byte[]>> GetPid2(byte deviceId, UInt32 pid)
+        {
+            Message request = this.protocol.CreatePidRequest(deviceId, pid);
+            if (!await this.TrySendMessage(request, "PID request"))
+            {
+                return Response.Create(ResponseStatus.Error, new byte[0]);
+            }
+
+            Message responseMessage = await this.ReceiveMessage();
+            if (responseMessage == null)
+            {
+                return Response.Create(ResponseStatus.Error, new byte[0]);
+            }
+
+            return this.protocol.ParsePidResponse2(responseMessage);
+        }
         public async Task<bool> StartLogging_Old()
         {
             // NOT SUPPORTED (in my ROM anyway, need to try others)

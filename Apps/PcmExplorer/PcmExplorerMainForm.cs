@@ -107,22 +107,25 @@ namespace PcmHacking
                 return;
             }
 
-            try
+            //for (int pid = 1; pid <= 0x60; pid++)
             {
-                byte deviceId = DeviceId.Ebcm;
-                Response<int> response = await this.Vehicle.GetPid(deviceId, pid);
-                if (response.Status == ResponseStatus.Success)
+                try
                 {
-                    this.AddUserMessage(string.Format("{0:X4} = {1}", pid, response.Value));
+                    byte deviceId = DeviceId.Ebcm;
+                    Response<byte[]> response = await this.Vehicle.GetPid2(deviceId, pid);
+                    if (response.Status == ResponseStatus.Success)
+                    {
+                        this.AddUserMessage(string.Format("{0:X4} = {1}", pid, response.Value.ToHex()));
+                    }
+                    else
+                    {
+                        this.AddUserMessage(string.Format("{0:X4} = {1}", pid, response.Status));
+                    }
                 }
-                else
+                catch (Exception exception)
                 {
-                    this.AddUserMessage(string.Format("{0:X4} = {1}", pid, response.Status));
+                    this.AddUserMessage(exception.ToString());
                 }
-            }
-            catch(Exception exception)
-            {
-                this.AddUserMessage(exception.ToString());
             }
         }
 

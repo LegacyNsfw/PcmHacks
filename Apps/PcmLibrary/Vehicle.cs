@@ -424,7 +424,7 @@ namespace PcmHacking
             }
 
             ResponseStatus lastStatus = ResponseStatus.Error;
-            for (int receiveAttempt = 1; receiveAttempt <= MaxReceiveAttempts; receiveAttempt++)
+            for (int receiveAttempt = 1; receiveAttempt <= 1; receiveAttempt++)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
