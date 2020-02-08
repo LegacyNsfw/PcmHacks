@@ -358,6 +358,51 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Attempts to UnLock PCM by trying each known Algorithm.
+        /// </summary>
+        private async Task<bool> UnLockAlgorithmSearch()
+        {
+            string title = "Algorithm Search";
+            string message = "Search known Algorithms?" + Environment.NewLine + Environment.NewLine + "Searching could take upwards of 60 minutes.";
+            DialogResult result = MessageBox.Show(this, message, title, MessageBoxButtons.YesNo);
+            if (result == System.Windows.Forms.DialogResult.Yes)
+            {
+                bool unlocked = false;
+
+                DateTime start = DateTime.Now;
+
+                for (int i = 0; i < 256; i++)
+                {
+                    Thread.Sleep(10000);
+                    unlocked = false;
+                    this.AddUserMessage("Processing Algorithm Index " + i);
+
+                    if (cancellationTokenSource.Token.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    unlocked = await this.Vehicle.UnlockEcu(i);
+                    if (!unlocked)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        this.AddUserMessage("Unlock succeeded with Index " + i);
+                        this.AddUserMessage("Unlock search elapsed time " + DateTime.Now.Subtract(start));
+                        return true;
+                    }
+                }
+                this.AddUserMessage("Unlock was not successful.");
+                this.AddUserMessage("Unlock search elapsed time " + DateTime.Now.Subtract(start));
+                return false;
+            }
+            this.AddUserMessage("Unlock was not successful.");
+            return false;
+        }
+
+        /// <summary>
         /// Select which interface device to use. This opens the Device-Picker dialog box.
         /// </summary>
         private async void selectButton_Click(object sender, EventArgs e)
@@ -501,8 +546,14 @@ namespace PcmHacking
                     bool unlocked = await this.Vehicle.UnlockEcu(info.KeyAlgorithm);
                     if (!unlocked)
                     {
-                        this.AddUserMessage("Unable to unlock PCM.");
-                        return;
+                        if (!await UnLockAlgorithmSearch())
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        this.AddUserMessage("Unlock succeeded.");
                     }
 
                     Response<bool> vinmodified = await this.Vehicle.UpdateVin(vinForm.Vin.Trim());
@@ -682,7 +733,7 @@ namespace PcmHacking
             this.AddUserMessage("Cancel button clicked.");
             this.cancellationTokenSource?.Cancel();
         }
-        
+
         /// <summary>
         /// Read the entire contents of the flash.
         /// </summary>
@@ -757,11 +808,15 @@ namespace PcmHacking
                     bool unlocked = await this.Vehicle.UnlockEcu(info.KeyAlgorithm);
                     if (!unlocked)
                     {
-                        this.AddUserMessage("Unlock was not successful.");
-                        return;
+                        if (!await UnLockAlgorithmSearch())
+                        {
+                            return;
+                        }
                     }
-
-                    this.AddUserMessage("Unlock succeeded.");
+                    else
+                    {
+                        this.AddUserMessage("Unlock succeeded.");
+                    }
 
                     if (cancellationTokenSource.Token.IsCancellationRequested)
                     {
