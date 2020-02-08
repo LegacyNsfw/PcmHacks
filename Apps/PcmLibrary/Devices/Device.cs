@@ -69,16 +69,11 @@ namespace PcmHacking
         /// <summary>
         /// Maximum size of sent messages.
         /// </summary>
-        /// <remarks>
-        /// Max send size is currently limited to 2k, because the kernel
-        /// crashes at startup with a 4k buffer.
-        /// TODO: Make the kernel happy with a 4k buffer, remove this limit.
-        /// </remarks>
         public int MaxSendSize
         {
             get
             {
-                return Math.Min(2048+12, this.maxSendSize);
+                return this.maxSendSize;
             }
 
             protected set
