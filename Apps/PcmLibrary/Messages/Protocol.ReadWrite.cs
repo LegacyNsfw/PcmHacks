@@ -131,7 +131,9 @@ namespace PcmHacking
                 return Response.Create(status, new byte[0]);
             }
 
-            if (actual.Length < 10) // 7 byte header, 2 byte sum
+            // Reject truncated packets.
+            int dataLength = (actual[5] << 8) + actual[6];
+            if ((dataLength != actual.Length - 12) || (actual.Length < 10)) // 7 byte header, 2 byte sum
             {
                 return Response.Create(ResponseStatus.Truncated, new byte[0]);
             }
@@ -142,37 +144,37 @@ namespace PcmHacking
                 return Response.Create(ResponseStatus.UnexpectedResponse, new byte[0]);
             }
 
-            byte[] result = new byte[length];
+            byte[] result = new byte[dataLength];
 
             // Normal read
             if (actual[4] == 1)
             {
                 //Regular encoding should be an exact match for size
-                int rlen = (actual[5] << 8) + actual[6];
-                if (rlen != length) // did we get the expected length?
+                if (dataLength != length) // did we get the expected length?
                 {
                     return Response.Create(ResponseStatus.Truncated, new byte[0]);
                 }
 
                 // Verify block checksum
                 UInt16 ValidSum = VpwUtilities.CalcBlockChecksum(actual);
-                int PayloadSum = (actual[rlen + 10] << 8) + actual[rlen + 11];
-                Buffer.BlockCopy(actual, 10, result, 0, length);
-                if (PayloadSum != ValidSum) return Response.Create(ResponseStatus.Error, result);
+                int PayloadSum = (actual[dataLength + 10] << 8) + actual[dataLength + 11];
+                Buffer.BlockCopy(actual, 10, result, 0, dataLength);
+                if (PayloadSum != ValidSum)
+                {
+                    return Response.Create(ResponseStatus.Error, result);
+                }
             }
             // RLE block
-            else if (actual[4] == 2) // TODO check length
+            else if (actual[4] == 2)
             {
                 // This isnt going to work with existing kernels... need to support variable length.
-                int runLength = actual[5] << 8 + actual[6];
                 byte value = actual[10];
-                for (int index = 0; index < runLength; index++)
+                for (int index = 0; index < dataLength; index++)
                 {
                     result[index] = value;
                 }
                 return Response.Create(ResponseStatus.Error, result);
             }
-
             return Response.Create(ResponseStatus.Success, result);
         }
     }
