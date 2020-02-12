@@ -290,7 +290,7 @@ namespace PcmHacking
                 case 12593359:
                 case 12597506:
                 case 16253027:
-                    this.KeyAlgorithm = 1;
+                    this.KeyAlgorithm = 40;
                     this.Description = "9354896";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
@@ -306,7 +306,7 @@ namespace PcmHacking
                 case 12221588:
                 case 12225074: // main 2003/2004 OS
                 case 12593358:
-                    this.KeyAlgorithm = 1;
+                    this.KeyAlgorithm = 40;
                     this.Description = "12200411";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
@@ -361,7 +361,7 @@ namespace PcmHacking
                 case 04073003:
                 case 04110002:
                 case 05120002:
-                    this.KeyAlgorithm = 1;
+                    this.KeyAlgorithm = 40;
                     string type = osid.ToString(); // Originally: PCMOSID.Text.Substring(PCMOSID.Text.Length - 2, 2);
                     switch (Convert.ToInt32(type, 10))
                     {
@@ -392,7 +392,7 @@ namespace PcmHacking
                 case 12593555:
                 case 12606961:
                 case 12612115:
-                    this.KeyAlgorithm = 1;
+                    this.KeyAlgorithm = 40;
                     this.Description = "12589463";
                     this.ImageSize = 1024 * 1024;
                     break;
@@ -407,14 +407,14 @@ namespace PcmHacking
                 case 12592433: //Aussie
                 case 12606960:
                 case 12612114:
-                    this.KeyAlgorithm = 1;
+                    this.KeyAlgorithm = 40;
                     this.Description = "12586242";
                     this.ImageSize = 1024 * 1024;
                     break;
                 // usa 12586243
                 case 12587603:
                 case 12587604:
-                    this.KeyAlgorithm = 1;
+                    this.KeyAlgorithm = 40;
                     this.Description = "12586243";
                     this.ImageSize = 1024 * 1024;
                     break;
@@ -423,7 +423,7 @@ namespace PcmHacking
                 case 12579405:
                 case 12580055:
                 case 12593058:
-                    this.KeyAlgorithm = 1;
+                    this.KeyAlgorithm = 40;
                     this.Description = "12582605";
                     this.ImageSize = 1024 * 1024;
                     break;
@@ -436,7 +436,7 @@ namespace PcmHacking
                 case 12613246:
                 case 12613247:
                 case 12619623:
-                    this.KeyAlgorithm = 1;
+                    this.KeyAlgorithm = 40;
                     this.Description = "12582811";
                     this.ImageSize = 1024 * 1024;
                     break;
@@ -444,7 +444,7 @@ namespace PcmHacking
                 case 12597120:
                 case 12613248:
                 case 12619624:
-                    this.KeyAlgorithm = 1;
+                    this.KeyAlgorithm = 40;
                     this.Description = "12602802";
                     this.ImageSize = 1024 * 1024;
                     break;
@@ -458,10 +458,12 @@ namespace PcmHacking
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+                case 12201465:
+                case 12201463:
 
                 default:
                     // this.IsSupported = false; // Not sure what the default should be...
-                    this.KeyAlgorithm = 1;
+                    this.KeyAlgorithm = 40;
                     this.Description = "Unknown";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
