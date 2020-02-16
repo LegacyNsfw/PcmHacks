@@ -65,11 +65,11 @@ namespace PcmHacking
             }
         }
 
-        public int DeviceMaxSendSize
+        public int DeviceMaxFlashWriteSendSize
         {
             get
             {
-                return this.device.MaxSendSize;
+                return this.device.MaxFlashWriteSendSize;
             }
         }
 
@@ -140,7 +140,7 @@ namespace PcmHacking
         /// <returns></returns>
         public async Task SendToolPresentNotification()
         {
-            if (!this.device.Supports4X && (this.device.MaxSendSize > 600 || this.device.MaxReceiveSize > 600))
+            if (!this.device.Supports4X && (this.device.MaxFlashWriteSendSize > 600 || this.device.MaxReceiveSize > 600))
             {
                 await this.notifier.ForceNotify();
             }

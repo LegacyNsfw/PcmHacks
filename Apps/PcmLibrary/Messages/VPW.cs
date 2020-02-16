@@ -174,14 +174,15 @@ namespace PcmHacking
         /// <summary>
         /// Calculate the checksum for a given block of VPW data.
         /// </summary>
-        public static UInt16 CalcBlockChecksum(byte[] Block)
+        public static UInt16 CalcBlockChecksum(byte[] block)
         {
             UInt16 Sum = 0;
-            int PayloadLength = (Block[5] << 8) + Block[6];
+            int expectedLength = (block[5] << 8) + block[6];
+            if (expectedLength != (block.Length -2))
 
-            for (int i = 4; i < PayloadLength + 10; i++) // start after prio, dest, src, mode, stop at end of payload
+            for (int i = 4; i < expectedLength + 10; i++) // start after prio, dest, src, mode, stop at end of payload
             {
-                Sum += Block[i];
+                Sum += block[i];
             }
 
             return Sum;

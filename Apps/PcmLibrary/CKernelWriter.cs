@@ -455,7 +455,7 @@ namespace PcmHacking
             CancellationToken cancellationToken)
         {
             int retryCount = 0;
-            int devicePayloadSize = vehicle.DeviceMaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
+            int devicePayloadSize = vehicle.DeviceMaxFlashWriteSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
             for (int index = 0; index < range.Size; index += devicePayloadSize)
             {
                 if (cancellationToken.IsCancellationRequested)
