@@ -121,7 +121,7 @@ namespace PcmHacking
         /// <remarks>
         /// It is the callers responsability to check the ResponseStatus for errors
         /// </remarks>
-        public Response<byte[]> ParsePayload(Message message, int length, int address)
+        public Response<byte[]> ParsePayload(Message message, int length, int expectedAddress)
         {
             ResponseStatus status;
             byte[] actual = message.GetBytes();
@@ -131,26 +131,29 @@ namespace PcmHacking
                 return Response.Create(status, new byte[0]);
             }
 
-            // Reject truncated packets.
-            int dataLength = (actual[5] << 8) + actual[6];
-            if ((dataLength != actual.Length - 12) || (actual.Length < 10)) // 7 byte header, 2 byte sum
+            // Ensure that we can read the data length and start address from the message.
+            if (actual.Length < 10) 
             {
                 return Response.Create(ResponseStatus.Truncated, new byte[0]);
             }
 
-            int raddr = ((actual[7] << 16) + (actual[8] << 8) + actual[9]);
-            if (raddr != address)
+            // Read the data length.
+            int dataLength = (actual[5] << 8) + actual[6];
+
+            // Read and validate the data start address.
+            int actualAddress = ((actual[7] << 16) + (actual[8] << 8) + actual[9]);
+            if (actualAddress != expectedAddress)
             {
                 return Response.Create(ResponseStatus.UnexpectedResponse, new byte[0]);
             }
 
             byte[] result = new byte[dataLength];
 
-            // Normal read
+            // Normal block
             if (actual[4] == 1)
             {
-                //Regular encoding should be an exact match for size
-                if (dataLength != length) // did we get the expected length?
+                // With normal encoding, data length should be actual length minus header size
+                if (dataLength != actual.Length - 12)
                 {
                     return Response.Create(ResponseStatus.Truncated, new byte[0]);
                 }
@@ -163,6 +166,8 @@ namespace PcmHacking
                 {
                     return Response.Create(ResponseStatus.Error, result);
                 }
+
+                return Response.Create(ResponseStatus.Success, result);
             }
             // RLE block
             else if (actual[4] == 2)
@@ -173,9 +178,13 @@ namespace PcmHacking
                 {
                     result[index] = value;
                 }
+
                 return Response.Create(ResponseStatus.Error, result);
             }
-            return Response.Create(ResponseStatus.Success, result);
+            else
+            {
+                return Response.Create(ResponseStatus.Error, result);
+            }
         }
     }
 }
