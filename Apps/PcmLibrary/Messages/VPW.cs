@@ -177,9 +177,8 @@ namespace PcmHacking
         public static UInt16 CalcBlockChecksum(byte[] Block)
         {
             UInt16 Sum = 0;
-            int PayloadLength = (Block[5] << 8) + Block[6];
 
-            for (int i = 4; i < PayloadLength + 10; i++) // start after prio, dest, src, mode, stop at end of payload
+            for (int i = 4; i < Block.Length - 2; i++) // start after prio, dest, src, mode, stop at end of payload
             {
                 Sum += Block[i];
             }
