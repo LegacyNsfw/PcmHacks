@@ -215,7 +215,7 @@ void HandleEraseBlock()
 
 		default:
 			VariableSleep(2);
-			SendReply(0, 0x05, 0xFF, 0xFF);
+			SendReply(0, 0x05, 0xFF, 0xFE);
 			return;
 		}
 	}
@@ -234,7 +234,8 @@ void HandleEraseBlock()
 			break;
 
 		default:
-			status = 0xFF;
+			VariableSleep(2);
+			SendReply(0, 0x05, 0xFF, 0xFF);
 			return;
 	}
 
