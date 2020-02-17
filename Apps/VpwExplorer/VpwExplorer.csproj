@@ -46,15 +46,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PcmExplorerMainForm.cs" />
-    <Compile Include="PcmExplorerMainForm.Designer.cs">
-      <DependentUpon>PcmExplorerMainForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="PcmExplorerMainForm.resx">
-      <DependentUpon>PcmExplorerMainForm.cs</DependentUpon>
-    </EmbeddedResource>
+    <Compile Include="VpwExplorerMainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="VpwExplorerMainForm.Designer.cs">
+      <DependentUpon>VpwExplorerMainForm.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -64,6 +63,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="VpwExplorerMainForm.resx">
+      <DependentUpon>VpwExplorerMainForm.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
