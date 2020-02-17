@@ -46,9 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PcmExplorerMainForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="PcmExplorerMainForm.cs" />
     <Compile Include="PcmExplorerMainForm.Designer.cs">
       <DependentUpon>PcmExplorerMainForm.cs</DependentUpon>
     </Compile>
