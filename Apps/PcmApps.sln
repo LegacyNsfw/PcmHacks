@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PcmLogger", "PcmLogger\PcmL
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PcmLibraryWindowsForms", "PcmLibraryWindowsForms\PcmLibraryWindowsForms.csproj", "{4ADB5D87-D4D5-4D12-8681-A9E2D4C52DF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PcmExplorer", "PcmExplorer\PcmExplorer.csproj", "{2B57ABC7-9994-4DB3-9403-B22471A0DDA1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VpwExplorer", "VpwExplorer\VpwExplorer.csproj", "{2B57ABC7-9994-4DB3-9403-B22471A0DDA1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
