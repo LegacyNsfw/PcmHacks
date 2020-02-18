@@ -4,12 +4,15 @@ These tools are a work in progress. We aim to support reading, writing, and data
 Writing is working well enough to try it on your project car, but you probably shouldn't try that with your daily driver until it has proven itself a little more. 
 
 
-See also:
+Links that you might find useful:
 
-https://github.com/LegacyNsfw/PcmHacks/wiki (The wiki)
+[The wiki for this project](https://github.com/LegacyNsfw/PcmHacks/wiki)
 
-https://pcmhacking.net/forums/viewforum.php?f=42 (The GM section of pcmhacking.net)
+[The GM section of pcmhacking.net](https://pcmhacking.net/forums/viewforum.php?f=42)
 
-https://www.facebook.com/PcmHammer (announcements)
+[.bin files (for flashing) and .xdf files (for tuning)](https://github.com/BoredTruckOwner/LS_Based_Engine_Repository)
 
-http://pcmhammer.org (a shortcut to this GitHub page)
+[Announcements on Facebook](https://www.facebook.com/PcmHammer)
+
+[A shortcut to the project's GitHub page](http://pcmhammer.org/)
+
