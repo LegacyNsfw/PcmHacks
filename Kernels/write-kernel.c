@@ -201,25 +201,6 @@ void HandleEraseBlock()
 	address <<= 8;
 	address |= MessageBuffer[7];
 
-	// Only allow known addresses for AMD.
-	// Intel full write is tested
-	if ((flashIdentifier >> 16) == 1) {
-		switch (address)
-		{
-		//	case 0: // Boot
-		case 0x004000: // Parameters
-		case 0x006000: // Parameters
-		case 0x008000: // Calibration
-		case 0x010000: // Calibration (P59 upper portion)
-			break;
-
-		default:
-			VariableSleep(2);
-			SendReply(0, 0x05, 0xFF, 0xFE);
-			return;
-		}
-	}
-
 	uint8_t status = 0;
 
 	switch (flashIdentifier)
