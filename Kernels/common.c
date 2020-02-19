@@ -97,7 +97,7 @@ void ElmSleep()
 ///////////////////////////////////////////////////////////////////////////////
 void VariableSleep(unsigned int iterations)
 {
-	PrivateSleep(iterations, 250);
+	PrivateSleep(iterations, 15);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -240,21 +240,28 @@ void WriteMessage(unsigned char *start, unsigned short length, Segment segment)
 ///////////////////////////////////////////////////////////////////////////////
 int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 {
-	ScratchWatchdog();
+	//ScratchWatchdog();
 	unsigned char status;
 
+	int countWDT = 0;
 	int iterations = 0;
-	int timeout = 1000;
+	int timeout = 10000;
 	int lastMessage = (iterations - timeout) + 1;
 
 	int length = 0;
 	for (;;)
 	{
-		ScratchWatchdog();
+	
+		if (countWDT > 25)
+		{
+			ScratchWatchdog();
+			countWDT = 0;
+		}
+		countWDT++;
 		iterations++;
 
 		// If no message received for N iterations, exit.
-		if ((length == 0) && iterations > (lastMessage + timeout)) return 0;
+		//if ((length == 0) && iterations > (lastMessage + timeout)) return 0;
 
 		// Artificial message-length limit for debugging.
 		if (length == MessageBufferSize)
@@ -267,10 +274,25 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 		switch (status)
 		{
 		case 0: // No data to process. This wait period may need more tuning.
-			VariableSleep(1);
-			break;
+			
+			if (length > 0)
+			{
+				VariableSleep(0);
+				break;
+			}
+			else
+			{
+				return 0; //if no data to process, go back to main loop
+				break;
+			}			
 		case 1: // Buffer contains data bytes.
-		case 2: // Buffer contains data followed by a completion code.
+			lastMessage = iterations;
+			MessageBuffer[length++] = DLC_RECEIVE_FIFO;
+			break;
+		case 2: // Buffer contains data followed by a completion code
+			lastMessage = iterations;
+			MessageBuffer[length++] = DLC_RECEIVE_FIFO;
+			break;
 		case 4: // Buffer contains just one data byte.
 			lastMessage = iterations;
 			MessageBuffer[length++] = DLC_RECEIVE_FIFO;
@@ -287,7 +309,7 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 
 			// If we return here when the length is zero, we'll never return
 			// any message data at all. Not sure why.
-			if (length == 0) 	break;
+			if (length == 0) 	return 0;
 
 			if ((*completionCode & 0x30) == 0x30)
 			{
@@ -304,7 +326,7 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 			*readState = 0x0B;
 			return 0;
 		}
-		ScratchWatchdog();
+		//ScratchWatchdog();
 	}
 
 	// If we reach this point, the loop above probably just hit maxIterations.

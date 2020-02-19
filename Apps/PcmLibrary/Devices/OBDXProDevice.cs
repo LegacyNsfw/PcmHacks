@@ -97,8 +97,8 @@ namespace PcmHacking
 
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
-            configuration.BaudRate = 500000;
-         await this.Port.OpenAsync(configuration);
+            configuration.BaudRate = 115200;// 921600; //
+            await this.Port.OpenAsync(configuration);
             System.Threading.Thread.Sleep(100);
 
             ////Reset scantool - ensures starts at ELM protocol
@@ -501,19 +501,20 @@ namespace PcmHacking
             byte[] Msg = OBDXProDevice.DVI_RESET.GetBytes();
             Msg[Msg.Length - 1] = CalcChecksum(Msg);
             await this.Port.Send(Msg);
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(500);
             await this.Port.DiscardBuffers();
 
             //Send ELM reset
             byte[] MsgATZ = { (byte)'A', (byte)'T', (byte)'Z', 0xD };
             await this.Port.Send(MsgATZ);
-            System.Threading.Thread.Sleep(100);
+            Response<String> m = await ReadELMPacket("ATZ");
+            //System.Threading.Thread.Sleep(600);
             await this.Port.DiscardBuffers();
 
             //AT@1 will return OBDX Pro VT - will then need to change its API to DVI bytes.
             byte[] MsgAT1 = { (byte)'A', (byte)'T', (byte)'@',(byte)'1', 0xD };
             await this.Port.Send(MsgAT1);
-             Response <String> m = await ReadELMPacket("AT@1");
+              m = await ReadELMPacket("AT@1");
             if (m.Status == ResponseStatus.Success) this.Logger.AddUserMessage("Device Found: " + m.Value);
             else{this.Logger.AddUserMessage("OBDX Pro device not found or failed response"); return false;}
 
