@@ -86,7 +86,7 @@ void SendWriteSuccess(unsigned char code)
 	MessageBuffer[3] = 0x76;
 	MessageBuffer[4] = code;
 
-	WriteMessage(MessageBuffer, 4, Complete);
+	WriteMessage(MessageBuffer, 5, Complete);
 }
 
 void SendWriteFail(unsigned char callerError, unsigned char flashError)

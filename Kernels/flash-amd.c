@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 uint32_t Amd_GetFlashId()
 {
-	SIM_CSBAR0 = 0x0006;
+	SIM_CSBAR0 = 0x0007;
 	SIM_CSORBT = 0x6820;
 
 	// Switch to flash into ID-query mode.
