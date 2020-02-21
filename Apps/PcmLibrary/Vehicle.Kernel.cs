@@ -322,7 +322,7 @@ namespace PcmHacking
             await this.device.SetTimeout(TimeoutScenario.SendKernel);
 
             // Loop through the payload building and sending packets, highest first, execute on last
-            int payloadSize = device.MaxSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
+            int payloadSize = device.MaxKernelSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
             int chunkCount = payload.Length / payloadSize;
             int remainder = payload.Length % payloadSize;
 

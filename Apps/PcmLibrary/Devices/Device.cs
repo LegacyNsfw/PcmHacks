@@ -70,20 +70,51 @@ namespace PcmHacking
         /// Maximum size of sent messages.
         /// </summary>
         /// <remarks>
-        /// Max send size is currently limited to 2k, because the kernel
-        /// crashes at startup with a 4k buffer.
-        /// TODO: Make the kernel happy with a 4k buffer, remove this limit.
+        /// This is protected, not public, because consumers should use MaxKernelSendSize or MaxFlashWriteSendSize.
         /// </remarks>
-        public int MaxSendSize
+        protected int MaxSendSize
         {
             get
             {
-                return Math.Min(2048+12, this.maxSendSize);
+                return this.maxSendSize;
             }
 
-            protected set
+            set
             {
                 this.maxSendSize = value;
+            }
+        }
+
+        /// <summary>
+        /// Maximum packet size when sending the kernel.
+        /// </summary>
+        /// <remarks>
+        /// For the P04 PCM, the kernel must be sent in a single message,
+        /// so the constraint that we use for flash writing needs to be 
+        /// ignored for that request.
+        /// </remarks>
+        public int MaxKernelSendSize
+        {
+            get
+            {
+                return this.maxSendSize;
+            }
+        }
+
+        /// <summary>
+        /// Maximum packet size when writing to flash memory.
+        /// </summary>
+        /// <remarks>
+        /// This is smaller than the device's actual max send size, for 3 reasons:
+        /// 1) P01/P59 kernels will currently crash with large writes.
+        /// 2) Large packets are increasingly susceptible to noise corruption on the VPW bus.
+        /// 3) Even on a clean VPW bus, the speed increases negligibly above 2kb.
+        /// </remarks>
+        public int MaxFlashWriteSendSize
+        {
+            get
+            {
+                return Math.Min(2048 + 12, this.maxSendSize);
             }
         }
 
@@ -273,7 +304,7 @@ namespace PcmHacking
                     break;
 
                 case TimeoutScenario.SendKernel:
-                    packetSize = this.MaxSendSize + 20;
+                    packetSize = this.MaxKernelSendSize + 20;
                     break;
 
                 // Not tuned manually yet.
