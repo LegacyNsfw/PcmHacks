@@ -178,7 +178,7 @@ namespace PcmHacking
         {
             UInt16 Sum = 0;
 
-            for (int i = 4; i < Block.Length - 2; i++) // start after prio, dest, src, mode, stop at end of payload
+            for (int i = 4; i < block.Length - 2; i++) // start after prio, dest, src, mode, stop at end of payload
             {
                 Sum += block[i];
             }
