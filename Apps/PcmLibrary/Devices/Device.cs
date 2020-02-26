@@ -114,7 +114,7 @@ namespace PcmHacking
         {
             get
             {
-                return Math.Min(2048 + 12, this.maxSendSize);
+                return Math.Min(1024 + 12, this.maxSendSize);
             }
         }
 
