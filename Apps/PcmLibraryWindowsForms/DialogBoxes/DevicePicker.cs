@@ -112,9 +112,9 @@ namespace PcmHacking
 
             this.serialPortList.Items.Add(MockPort.PortName);
             
-            foreach (string name in System.IO.Ports.SerialPort.GetPortNames())
+            foreach(object portInfo in PortDiscovery.GetPorts())
             {
-                this.serialPortList.Items.Add(name);
+                this.serialPortList.Items.Add(portInfo);
             }
         }
 
@@ -199,7 +199,7 @@ namespace PcmHacking
         /// </summary>
         private void serialPortList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            this.SerialPort = this.serialPortList.SelectedItem?.ToString();
+            this.SerialPort = (this.serialPortList.SelectedItem as SerialPortInfo)?.PortName;
         }
 
         /// <summary>

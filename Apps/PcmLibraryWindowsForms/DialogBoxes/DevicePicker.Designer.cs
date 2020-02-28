@@ -122,7 +122,7 @@
             this.serialPortList.FormattingEnabled = true;
             this.serialPortList.Location = new System.Drawing.Point(10, 36);
             this.serialPortList.Name = "serialPortList";
-            this.serialPortList.Size = new System.Drawing.Size(130, 21);
+            this.serialPortList.Size = new System.Drawing.Size(266, 21);
             this.serialPortList.TabIndex = 1;
             this.serialPortList.SelectedIndexChanged += new System.EventHandler(this.serialPortList_SelectedIndexChanged);
             // 
