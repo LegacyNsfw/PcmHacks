@@ -110,12 +110,14 @@ namespace PcmHacking
             this.serialPortList.Items.Add(prompt);
             this.serialPortList.SelectedIndex = 0;
 
-            this.serialPortList.Items.Add(MockPort.PortName);
-            
-            foreach(object portInfo in PortDiscovery.GetPorts())
+            foreach (object portInfo in PortDiscovery.GetPorts())
             {
                 this.serialPortList.Items.Add(portInfo);
             }
+
+            // This is useful for testing without an actual PCM. 
+            // You'll need to uncomment a line in FillSerialDeviceList as well as this one.
+            // this.serialPortList.Items.Add(MockPort.PortName);
         }
 
         /// <summary>
@@ -128,7 +130,10 @@ namespace PcmHacking
             this.serialDeviceList.Items.Add(ElmDevice.DeviceType);
             this.serialDeviceList.Items.Add(AvtDevice.DeviceType);
             this.serialDeviceList.Items.Add(OBDXProDevice.DeviceType);
-            this.serialDeviceList.Items.Add(MockDevice.DeviceType);
+
+            // This is useful for testing without an actual PCM.
+            // You'll need to uncomment a line in FillPortList as well as this one.
+            // this.serialDeviceList.Items.Add(MockDevice.DeviceType);
         }
 
         /// <summary>
