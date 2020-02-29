@@ -209,6 +209,8 @@ namespace PcmHacking
                 await this.ResetDevice();
 
                 this.MinimumSize = new Size(800, 600);
+
+                menuItemEnable4xReadWrite.Checked = Configuration.Enable4xReadWrite;
             }
             catch (Exception exception)
             {
@@ -328,6 +330,8 @@ namespace PcmHacking
             this.writeFullContentsButton.Enabled = false;
             this.exitKernelButton.Enabled = false;
             this.reinitializeButton.Enabled = false;
+
+            this.menuItemEnable4xReadWrite.Enabled = false;
         }
 
         /// <summary>
@@ -350,11 +354,21 @@ namespace PcmHacking
             this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true; });
             this.exitKernelButton.Invoke((MethodInvoker)delegate () { this.exitKernelButton.Enabled = true; });
             this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true; });
+
+            this.menuItemEnable4xReadWrite.Enabled = true;
         }
 
         protected override void EnableInterfaceSelection()
         {
             this.interfaceBox.Enabled = true;
+        }
+
+        /// <summary>
+        /// Enable/Disable 4x
+        /// </summary>
+        private void menuItemEnable4xReadWrite_Click(object sender, EventArgs e)
+        {
+            menuItemEnable4xReadWrite.Checked = Configuration.Enable4xReadWrite ^= true;
         }
 
         /// <summary>

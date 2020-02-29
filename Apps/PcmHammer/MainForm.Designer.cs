@@ -53,6 +53,10 @@
             this.creditsWebBrowser = new System.Windows.Forms.WebBrowser();
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
+            this.menuStripMain = new System.Windows.Forms.MenuStrip();
+            this.menuItemOptions = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemEnable4xReadWrite = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemTools = new System.Windows.Forms.ToolStripMenuItem();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -60,6 +64,7 @@
             this.helpTab.SuspendLayout();
             this.creditsTab.SuspendLayout();
             this.debugTab.SuspendLayout();
+            this.menuStripMain.SuspendLayout();
             this.SuspendLayout();
             // 
             // interfaceBox
@@ -67,11 +72,11 @@
             this.interfaceBox.Controls.Add(this.reinitializeButton);
             this.interfaceBox.Controls.Add(this.selectButton);
             this.interfaceBox.Controls.Add(this.deviceDescription);
-            this.interfaceBox.Location = new System.Drawing.Point(9, 10);
+            this.interfaceBox.Location = new System.Drawing.Point(9, 26);
             this.interfaceBox.Margin = new System.Windows.Forms.Padding(2);
             this.interfaceBox.Name = "interfaceBox";
             this.interfaceBox.Padding = new System.Windows.Forms.Padding(2);
-            this.interfaceBox.Size = new System.Drawing.Size(224, 128);
+            this.interfaceBox.Size = new System.Drawing.Size(224, 125);
             this.interfaceBox.TabIndex = 0;
             this.interfaceBox.TabStop = false;
             this.interfaceBox.Text = "Device";
@@ -120,11 +125,11 @@
             this.operationsBox.Controls.Add(this.readFullContentsButton);
             this.operationsBox.Controls.Add(this.modifyVinButton);
             this.operationsBox.Controls.Add(this.readPropertiesButton);
-            this.operationsBox.Location = new System.Drawing.Point(9, 153);
+            this.operationsBox.Location = new System.Drawing.Point(9, 155);
             this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
             this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
-            this.operationsBox.Size = new System.Drawing.Size(224, 397);
+            this.operationsBox.Size = new System.Drawing.Size(224, 395);
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
@@ -187,7 +192,7 @@
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelButton.Location = new System.Drawing.Point(4, 364);
+            this.cancelButton.Location = new System.Drawing.Point(4, 362);
             this.cancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(216, 25);
@@ -249,11 +254,11 @@
             this.tabs.Controls.Add(this.helpTab);
             this.tabs.Controls.Add(this.creditsTab);
             this.tabs.Controls.Add(this.debugTab);
-            this.tabs.Location = new System.Drawing.Point(238, 10);
+            this.tabs.Location = new System.Drawing.Point(238, 26);
             this.tabs.Margin = new System.Windows.Forms.Padding(2);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(538, 540);
+            this.tabs.Size = new System.Drawing.Size(538, 524);
             this.tabs.TabIndex = 2;
             // 
             // resultsTab
@@ -263,7 +268,7 @@
             this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
             this.resultsTab.Name = "resultsTab";
             this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
-            this.resultsTab.Size = new System.Drawing.Size(530, 514);
+            this.resultsTab.Size = new System.Drawing.Size(530, 498);
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
@@ -279,7 +284,7 @@
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.userLog.Size = new System.Drawing.Size(524, 505);
+            this.userLog.Size = new System.Drawing.Size(524, 489);
             this.userLog.TabIndex = 0;
             // 
             // helpTab
@@ -288,7 +293,7 @@
             this.helpTab.Location = new System.Drawing.Point(4, 22);
             this.helpTab.Margin = new System.Windows.Forms.Padding(2);
             this.helpTab.Name = "helpTab";
-            this.helpTab.Size = new System.Drawing.Size(530, 514);
+            this.helpTab.Size = new System.Drawing.Size(530, 498);
             this.helpTab.TabIndex = 2;
             this.helpTab.Text = "Help";
             this.helpTab.UseVisualStyleBackColor = true;
@@ -300,7 +305,7 @@
             this.helpWebBrowser.Margin = new System.Windows.Forms.Padding(2);
             this.helpWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
             this.helpWebBrowser.Name = "helpWebBrowser";
-            this.helpWebBrowser.Size = new System.Drawing.Size(530, 514);
+            this.helpWebBrowser.Size = new System.Drawing.Size(530, 498);
             this.helpWebBrowser.TabIndex = 0;
             // 
             // creditsTab
@@ -309,7 +314,7 @@
             this.creditsTab.Location = new System.Drawing.Point(4, 22);
             this.creditsTab.Name = "creditsTab";
             this.creditsTab.Padding = new System.Windows.Forms.Padding(3);
-            this.creditsTab.Size = new System.Drawing.Size(530, 514);
+            this.creditsTab.Size = new System.Drawing.Size(530, 498);
             this.creditsTab.TabIndex = 3;
             this.creditsTab.Text = "Credits";
             this.creditsTab.UseVisualStyleBackColor = true;
@@ -321,7 +326,7 @@
             this.creditsWebBrowser.Margin = new System.Windows.Forms.Padding(2);
             this.creditsWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
             this.creditsWebBrowser.Name = "creditsWebBrowser";
-            this.creditsWebBrowser.Size = new System.Drawing.Size(524, 508);
+            this.creditsWebBrowser.Size = new System.Drawing.Size(524, 492);
             this.creditsWebBrowser.TabIndex = 1;
             // 
             // debugTab
@@ -331,7 +336,7 @@
             this.debugTab.Margin = new System.Windows.Forms.Padding(2);
             this.debugTab.Name = "debugTab";
             this.debugTab.Padding = new System.Windows.Forms.Padding(2);
-            this.debugTab.Size = new System.Drawing.Size(530, 514);
+            this.debugTab.Size = new System.Drawing.Size(530, 498);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -345,8 +350,40 @@
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.debugLog.Size = new System.Drawing.Size(526, 510);
+            this.debugLog.Size = new System.Drawing.Size(526, 494);
             this.debugLog.TabIndex = 0;
+            // 
+            // menuStripMain
+            // 
+            this.menuStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItemTools,
+            this.menuItemOptions});
+            this.menuStripMain.Location = new System.Drawing.Point(0, 0);
+            this.menuStripMain.Name = "menuStripMain";
+            this.menuStripMain.Size = new System.Drawing.Size(784, 24);
+            this.menuStripMain.TabIndex = 3;
+            this.menuStripMain.Text = "Main Menu";
+            // 
+            // menuItemOptions
+            // 
+            this.menuItemOptions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItemEnable4xReadWrite});
+            this.menuItemOptions.Name = "menuItemOptions";
+            this.menuItemOptions.Size = new System.Drawing.Size(56, 20);
+            this.menuItemOptions.Text = "Options";
+            // 
+            // menuItemEnable4xReadWrite
+            // 
+            this.menuItemEnable4xReadWrite.Name = "menuItemEnable4xReadWrite";
+            this.menuItemEnable4xReadWrite.Size = new System.Drawing.Size(180, 22);
+            this.menuItemEnable4xReadWrite.Text = "Enable 4x ReadWrite";
+            this.menuItemEnable4xReadWrite.Click += new System.EventHandler(this.menuItemEnable4xReadWrite_Click);
+            // 
+            // menuItemTools
+            // 
+            this.menuItemTools.Name = "menuItemTools";
+            this.menuItemTools.Size = new System.Drawing.Size(44, 20);
+            this.menuItemTools.Text = "Tools";
             // 
             // MainForm
             // 
@@ -357,7 +394,9 @@
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.operationsBox);
             this.Controls.Add(this.interfaceBox);
+            this.Controls.Add(this.menuStripMain);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MainMenuStrip = this.menuStripMain;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "MainForm";
             this.Text = "PCM Hammer";
@@ -372,7 +411,10 @@
             this.creditsTab.ResumeLayout(false);
             this.debugTab.ResumeLayout(false);
             this.debugTab.PerformLayout();
+            this.menuStripMain.ResumeLayout(false);
+            this.menuStripMain.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -402,6 +444,10 @@
         private System.Windows.Forms.Button writeParametersButton;
         private System.Windows.Forms.TabPage creditsTab;
         private System.Windows.Forms.WebBrowser creditsWebBrowser;
+        private System.Windows.Forms.MenuStrip menuStripMain;
+        private System.Windows.Forms.ToolStripMenuItem menuItemOptions;
+        private System.Windows.Forms.ToolStripMenuItem menuItemEnable4xReadWrite;
+        private System.Windows.Forms.ToolStripMenuItem menuItemTools;
     }
 }
 
