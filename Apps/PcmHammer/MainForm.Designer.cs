@@ -34,15 +34,10 @@
             this.selectButton = new System.Windows.Forms.Button();
             this.deviceDescription = new System.Windows.Forms.Label();
             this.operationsBox = new System.Windows.Forms.GroupBox();
-            this.writeParametersButton = new System.Windows.Forms.Button();
             this.testWriteButton = new System.Windows.Forms.Button();
-            this.quickComparisonButton = new System.Windows.Forms.Button();
             this.exitKernelButton = new System.Windows.Forms.Button();
-            this.writeFullContentsButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
             this.writeCalibrationButton = new System.Windows.Forms.Button();
-            this.readFullContentsButton = new System.Windows.Forms.Button();
-            this.modifyVinButton = new System.Windows.Forms.Button();
             this.readPropertiesButton = new System.Windows.Forms.Button();
             this.tabs = new System.Windows.Forms.TabControl();
             this.resultsTab = new System.Windows.Forms.TabPage();
@@ -54,9 +49,14 @@
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
             this.menuStripMain = new System.Windows.Forms.MenuStrip();
+            this.menuItemTools = new System.Windows.Forms.ToolStripMenuItem();
+            this.readEntirePCMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.verifyEntirePCMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.modifyVINToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.writeParmetersCloneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.writeOSCalibrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemOptions = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemEnable4xReadWrite = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItemTools = new System.Windows.Forms.ToolStripMenuItem();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -76,14 +76,14 @@
             this.interfaceBox.Margin = new System.Windows.Forms.Padding(2);
             this.interfaceBox.Name = "interfaceBox";
             this.interfaceBox.Padding = new System.Windows.Forms.Padding(2);
-            this.interfaceBox.Size = new System.Drawing.Size(224, 125);
+            this.interfaceBox.Size = new System.Drawing.Size(224, 93);
             this.interfaceBox.TabIndex = 0;
             this.interfaceBox.TabStop = false;
             this.interfaceBox.Text = "Device";
             // 
             // reinitializeButton
             // 
-            this.reinitializeButton.Location = new System.Drawing.Point(4, 96);
+            this.reinitializeButton.Location = new System.Drawing.Point(4, 62);
             this.reinitializeButton.Margin = new System.Windows.Forms.Padding(2);
             this.reinitializeButton.Name = "reinitializeButton";
             this.reinitializeButton.Size = new System.Drawing.Size(216, 25);
@@ -94,7 +94,7 @@
             // 
             // selectButton
             // 
-            this.selectButton.Location = new System.Drawing.Point(4, 66);
+            this.selectButton.Location = new System.Drawing.Point(4, 32);
             this.selectButton.Name = "selectButton";
             this.selectButton.Size = new System.Drawing.Size(216, 25);
             this.selectButton.TabIndex = 1;
@@ -104,7 +104,7 @@
             // 
             // deviceDescription
             // 
-            this.deviceDescription.Location = new System.Drawing.Point(4, 30);
+            this.deviceDescription.Location = new System.Drawing.Point(4, 16);
             this.deviceDescription.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.deviceDescription.Name = "deviceDescription";
             this.deviceDescription.Size = new System.Drawing.Size(214, 13);
@@ -115,39 +115,23 @@
             // 
             this.operationsBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
-            this.operationsBox.Controls.Add(this.writeParametersButton);
             this.operationsBox.Controls.Add(this.testWriteButton);
-            this.operationsBox.Controls.Add(this.quickComparisonButton);
             this.operationsBox.Controls.Add(this.exitKernelButton);
-            this.operationsBox.Controls.Add(this.writeFullContentsButton);
             this.operationsBox.Controls.Add(this.cancelButton);
             this.operationsBox.Controls.Add(this.writeCalibrationButton);
-            this.operationsBox.Controls.Add(this.readFullContentsButton);
-            this.operationsBox.Controls.Add(this.modifyVinButton);
             this.operationsBox.Controls.Add(this.readPropertiesButton);
             this.operationsBox.Location = new System.Drawing.Point(9, 155);
             this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
             this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
-            this.operationsBox.Size = new System.Drawing.Size(224, 395);
+            this.operationsBox.Size = new System.Drawing.Size(224, 347);
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
             // 
-            // writeParametersButton
-            // 
-            this.writeParametersButton.Location = new System.Drawing.Point(4, 194);
-            this.writeParametersButton.Margin = new System.Windows.Forms.Padding(2);
-            this.writeParametersButton.Name = "writeParametersButton";
-            this.writeParametersButton.Size = new System.Drawing.Size(216, 25);
-            this.writeParametersButton.TabIndex = 6;
-            this.writeParametersButton.Text = "Write Parameters (Clone)";
-            this.writeParametersButton.UseVisualStyleBackColor = true;
-            this.writeParametersButton.Click += new System.EventHandler(this.writeParametersButton_Click);
-            // 
             // testWriteButton
             // 
-            this.testWriteButton.Location = new System.Drawing.Point(4, 136);
+            this.testWriteButton.Location = new System.Drawing.Point(4, 47);
             this.testWriteButton.Margin = new System.Windows.Forms.Padding(2);
             this.testWriteButton.Name = "testWriteButton";
             this.testWriteButton.Size = new System.Drawing.Size(216, 25);
@@ -156,20 +140,10 @@
             this.testWriteButton.UseVisualStyleBackColor = true;
             this.testWriteButton.Click += new System.EventHandler(this.testWriteButton_Click);
             // 
-            // quickComparisonButton
-            // 
-            this.quickComparisonButton.Location = new System.Drawing.Point(4, 107);
-            this.quickComparisonButton.Margin = new System.Windows.Forms.Padding(2);
-            this.quickComparisonButton.Name = "quickComparisonButton";
-            this.quickComparisonButton.Size = new System.Drawing.Size(216, 25);
-            this.quickComparisonButton.TabIndex = 3;
-            this.quickComparisonButton.Text = "&Quick Comparison";
-            this.quickComparisonButton.UseVisualStyleBackColor = true;
-            this.quickComparisonButton.Click += new System.EventHandler(this.quickComparisonButton_Click);
-            // 
             // exitKernelButton
             // 
-            this.exitKernelButton.Location = new System.Drawing.Point(4, 301);
+            this.exitKernelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.exitKernelButton.Location = new System.Drawing.Point(4, 280);
             this.exitKernelButton.Margin = new System.Windows.Forms.Padding(2);
             this.exitKernelButton.Name = "exitKernelButton";
             this.exitKernelButton.Size = new System.Drawing.Size(216, 25);
@@ -178,21 +152,10 @@
             this.exitKernelButton.UseVisualStyleBackColor = true;
             this.exitKernelButton.Click += new System.EventHandler(this.testKernelButton_Click);
             // 
-            // writeFullContentsButton
-            // 
-            this.writeFullContentsButton.Location = new System.Drawing.Point(4, 223);
-            this.writeFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
-            this.writeFullContentsButton.Name = "writeFullContentsButton";
-            this.writeFullContentsButton.Size = new System.Drawing.Size(216, 25);
-            this.writeFullContentsButton.TabIndex = 8;
-            this.writeFullContentsButton.Text = "Write &OS And Calibration";
-            this.writeFullContentsButton.UseVisualStyleBackColor = true;
-            this.writeFullContentsButton.Click += new System.EventHandler(this.writeFullContentsButton_Click);
-            // 
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelButton.Location = new System.Drawing.Point(4, 362);
+            this.cancelButton.Location = new System.Drawing.Point(4, 314);
             this.cancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(216, 25);
@@ -203,7 +166,7 @@
             // 
             // writeCalibrationButton
             // 
-            this.writeCalibrationButton.Location = new System.Drawing.Point(4, 165);
+            this.writeCalibrationButton.Location = new System.Drawing.Point(4, 76);
             this.writeCalibrationButton.Margin = new System.Windows.Forms.Padding(2);
             this.writeCalibrationButton.Name = "writeCalibrationButton";
             this.writeCalibrationButton.Size = new System.Drawing.Size(216, 25);
@@ -211,28 +174,6 @@
             this.writeCalibrationButton.Text = "&Write Calibration";
             this.writeCalibrationButton.UseVisualStyleBackColor = true;
             this.writeCalibrationButton.Click += new System.EventHandler(this.writeCalibrationButton_Click);
-            // 
-            // readFullContentsButton
-            // 
-            this.readFullContentsButton.Location = new System.Drawing.Point(4, 48);
-            this.readFullContentsButton.Margin = new System.Windows.Forms.Padding(2);
-            this.readFullContentsButton.Name = "readFullContentsButton";
-            this.readFullContentsButton.Size = new System.Drawing.Size(216, 25);
-            this.readFullContentsButton.TabIndex = 1;
-            this.readFullContentsButton.Text = "&Read Full Contents";
-            this.readFullContentsButton.UseVisualStyleBackColor = true;
-            this.readFullContentsButton.Click += new System.EventHandler(this.readFullContentsButton_Click);
-            // 
-            // modifyVinButton
-            // 
-            this.modifyVinButton.Location = new System.Drawing.Point(4, 78);
-            this.modifyVinButton.Margin = new System.Windows.Forms.Padding(2);
-            this.modifyVinButton.Name = "modifyVinButton";
-            this.modifyVinButton.Size = new System.Drawing.Size(216, 25);
-            this.modifyVinButton.TabIndex = 2;
-            this.modifyVinButton.Text = "Modify &VIN";
-            this.modifyVinButton.UseVisualStyleBackColor = true;
-            this.modifyVinButton.Click += new System.EventHandler(this.modifyVinButton_Click);
             // 
             // readPropertiesButton
             // 
@@ -258,7 +199,7 @@
             this.tabs.Margin = new System.Windows.Forms.Padding(2);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(538, 524);
+            this.tabs.Size = new System.Drawing.Size(608, 476);
             this.tabs.TabIndex = 2;
             // 
             // resultsTab
@@ -268,7 +209,7 @@
             this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
             this.resultsTab.Name = "resultsTab";
             this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
-            this.resultsTab.Size = new System.Drawing.Size(530, 498);
+            this.resultsTab.Size = new System.Drawing.Size(600, 450);
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
@@ -284,7 +225,7 @@
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.userLog.Size = new System.Drawing.Size(524, 489);
+            this.userLog.Size = new System.Drawing.Size(594, 441);
             this.userLog.TabIndex = 0;
             // 
             // helpTab
@@ -360,37 +301,78 @@
             this.menuItemOptions});
             this.menuStripMain.Location = new System.Drawing.Point(0, 0);
             this.menuStripMain.Name = "menuStripMain";
-            this.menuStripMain.Size = new System.Drawing.Size(784, 24);
+            this.menuStripMain.Size = new System.Drawing.Size(854, 24);
             this.menuStripMain.TabIndex = 3;
             this.menuStripMain.Text = "Main Menu";
+            // 
+            // menuItemTools
+            // 
+            this.menuItemTools.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.readEntirePCMToolStripMenuItem,
+            this.verifyEntirePCMToolStripMenuItem,
+            this.modifyVINToolStripMenuItem,
+            this.writeParmetersCloneToolStripMenuItem,
+            this.writeOSCalibrationToolStripMenuItem});
+            this.menuItemTools.Name = "menuItemTools";
+            this.menuItemTools.Size = new System.Drawing.Size(46, 20);
+            this.menuItemTools.Text = "&Tools";
+            // 
+            // readEntirePCMToolStripMenuItem
+            // 
+            this.readEntirePCMToolStripMenuItem.Name = "readEntirePCMToolStripMenuItem";
+            this.readEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.readEntirePCMToolStripMenuItem.Text = "&Read Entire PCM";
+            this.readEntirePCMToolStripMenuItem.Click += new System.EventHandler(this.readFullContentsButton_Click);
+            // 
+            // verifyEntirePCMToolStripMenuItem
+            // 
+            this.verifyEntirePCMToolStripMenuItem.Name = "verifyEntirePCMToolStripMenuItem";
+            this.verifyEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.verifyEntirePCMToolStripMenuItem.Text = "&Verify Entire PCM";
+            this.verifyEntirePCMToolStripMenuItem.Click += new System.EventHandler(this.quickComparisonButton_Click);
+            // 
+            // modifyVINToolStripMenuItem
+            // 
+            this.modifyVINToolStripMenuItem.Name = "modifyVINToolStripMenuItem";
+            this.modifyVINToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.modifyVINToolStripMenuItem.Text = "&Change VIN";
+            this.modifyVINToolStripMenuItem.Click += new System.EventHandler(this.modifyVinButton_Click);
+            // 
+            // writeParmetersCloneToolStripMenuItem
+            // 
+            this.writeParmetersCloneToolStripMenuItem.Name = "writeParmetersCloneToolStripMenuItem";
+            this.writeParmetersCloneToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.writeParmetersCloneToolStripMenuItem.Text = "Write &Parameters (Clone)";
+            this.writeParmetersCloneToolStripMenuItem.Click += new System.EventHandler(this.writeParametersButton_Click);
+            // 
+            // writeOSCalibrationToolStripMenuItem
+            // 
+            this.writeOSCalibrationToolStripMenuItem.Name = "writeOSCalibrationToolStripMenuItem";
+            this.writeOSCalibrationToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.writeOSCalibrationToolStripMenuItem.Text = "Write &OS && Calibration";
+            this.writeOSCalibrationToolStripMenuItem.Click += new System.EventHandler(this.writeFullContentsButton_Click);
             // 
             // menuItemOptions
             // 
             this.menuItemOptions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuItemEnable4xReadWrite});
             this.menuItemOptions.Name = "menuItemOptions";
-            this.menuItemOptions.Size = new System.Drawing.Size(56, 20);
-            this.menuItemOptions.Text = "Options";
+            this.menuItemOptions.Size = new System.Drawing.Size(61, 20);
+            this.menuItemOptions.Text = "&Options";
             // 
             // menuItemEnable4xReadWrite
             // 
             this.menuItemEnable4xReadWrite.Name = "menuItemEnable4xReadWrite";
-            this.menuItemEnable4xReadWrite.Size = new System.Drawing.Size(180, 22);
-            this.menuItemEnable4xReadWrite.Text = "Enable 4x ReadWrite";
-            this.menuItemEnable4xReadWrite.Click += new System.EventHandler(this.menuItemEnable4xReadWrite_Click);
-            // 
-            // menuItemTools
-            // 
-            this.menuItemTools.Name = "menuItemTools";
-            this.menuItemTools.Size = new System.Drawing.Size(44, 20);
-            this.menuItemTools.Text = "Tools";
+            this.menuItemEnable4xReadWrite.Size = new System.Drawing.Size(214, 22);
+            this.menuItemEnable4xReadWrite.Text = "Enable 4x Communication";
+            this.menuItemEnable4xReadWrite.Click += new System.EventHandler(this.enable4xReadWrite_Click);
             // 
             // MainForm
             // 
             this.AcceptButton = this.readPropertiesButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 561);
+            this.ClientSize = new System.Drawing.Size(854, 513);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.operationsBox);
             this.Controls.Add(this.interfaceBox);
@@ -423,8 +405,6 @@
         private System.Windows.Forms.GroupBox interfaceBox;
         private System.Windows.Forms.GroupBox operationsBox;
         private System.Windows.Forms.Button writeCalibrationButton;
-        private System.Windows.Forms.Button readFullContentsButton;
-        private System.Windows.Forms.Button modifyVinButton;
         private System.Windows.Forms.Button readPropertiesButton;
         private System.Windows.Forms.TabControl tabs;
         private System.Windows.Forms.TabPage resultsTab;
@@ -438,16 +418,18 @@
         private System.Windows.Forms.TabPage helpTab;
         private System.Windows.Forms.WebBrowser helpWebBrowser;
         private System.Windows.Forms.Button exitKernelButton;
-        private System.Windows.Forms.Button writeFullContentsButton;
         private System.Windows.Forms.Button testWriteButton;
-        private System.Windows.Forms.Button quickComparisonButton;
-        private System.Windows.Forms.Button writeParametersButton;
         private System.Windows.Forms.TabPage creditsTab;
         private System.Windows.Forms.WebBrowser creditsWebBrowser;
         private System.Windows.Forms.MenuStrip menuStripMain;
         private System.Windows.Forms.ToolStripMenuItem menuItemOptions;
         private System.Windows.Forms.ToolStripMenuItem menuItemEnable4xReadWrite;
         private System.Windows.Forms.ToolStripMenuItem menuItemTools;
+        private System.Windows.Forms.ToolStripMenuItem readEntirePCMToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem verifyEntirePCMToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem modifyVINToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem writeParmetersCloneToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem writeOSCalibrationToolStripMenuItem;
     }
 }
 
