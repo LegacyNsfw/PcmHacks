@@ -211,6 +211,13 @@ namespace PcmHacking
             FlashChip flashChip = FlashChip.Create(chipId, this.logger);
             logger.AddUserMessage("Flash chip: " + flashChip.ToString());
 
+            if (flashChip.Size != image.Length)
+            {
+                this.logger.AddUserMessage(string.Format("File size {0:n0} does not match Flash Chip size {1:n0}!", image.Length, flashChip.Size));
+                await this.vehicle.Cleanup();
+                return false;
+            }
+
             CKernelVerifier verifier = new CKernelVerifier(
                 image,
                 flashChip.MemoryRanges,
