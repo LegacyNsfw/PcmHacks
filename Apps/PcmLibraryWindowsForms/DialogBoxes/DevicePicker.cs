@@ -110,7 +110,7 @@ namespace PcmHacking
             this.serialPortList.Items.Add(prompt);
             this.serialPortList.SelectedIndex = 0;
 
-            foreach (object portInfo in PortDiscovery.GetPorts())
+            foreach (object portInfo in PortDiscovery.GetPorts(this.logger))
             {
                 this.serialPortList.Items.Add(portInfo);
             }
