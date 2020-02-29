@@ -82,19 +82,30 @@ namespace PcmHacking
                 this.status.Text = "You don't seem to have any serial ports or J2534 devices.";
             }
 
-            SetDefault(this.serialPortList, Configuration.SerialPort);
-            SetDefault(this.serialDeviceList, Configuration.SerialPortDeviceType);
-            SetDefault(this.j2534DeviceList, Configuration.J2534DeviceType);
+            SetDefault(
+                this.serialPortList, 
+                x => (x as SerialPortInfo)?.PortName,
+                Configuration.SerialPort);
+
+            SetDefault(
+                this.serialDeviceList,
+                x => x.ToString(),
+                Configuration.SerialPortDeviceType);
+
+            SetDefault(
+                this.j2534DeviceList, 
+                x => x.ToString(),
+                Configuration.J2534DeviceType);
         }
 
         /// <summary>
         /// Set a ComboBox to the given item.
         /// </summary>
-        private static void SetDefault(ComboBox list, string value)
+        private static void SetDefault(ComboBox list, Func<object, string> getConfigurationValue, string value)
         {
             foreach(object item in list.Items)
             {
-                if (item.ToString() == value)
+                if (getConfigurationValue(item) == value)
                 {
                     list.SelectedItem = item;
                     return;

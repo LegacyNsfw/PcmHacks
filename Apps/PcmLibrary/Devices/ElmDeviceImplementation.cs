@@ -114,12 +114,11 @@ namespace PcmHacking
         public async Task<string> SendRequest(string request)
         {
             this.Logger.AddDebugMessage("TX: " + request);
-            await this.Port.Send(Encoding.ASCII.GetBytes(request + " \r"));
-
+            
             try
             {
+                await this.Port.Send(Encoding.ASCII.GetBytes(request + " \r"));
                 string response = await ReadELMLine();
-
                 return response;
             }
             catch (TimeoutException)

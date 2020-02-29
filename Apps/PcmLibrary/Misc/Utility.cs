@@ -148,7 +148,11 @@ namespace PcmHacking
                 var completedTask = await Task.WhenAny(task, Task.Delay(timeout, cts.Token));
                 if (completedTask == task)
                 {
+                    // Release the cancellation token.
                     cts.Cancel();
+
+                    // Ensure that exceptions from the task are propagated
+                    await task;
                     return true;
                 }
                 else

@@ -130,7 +130,7 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> ResetConnection()
         {
-            return await this.device.Initialize();
+            return await this.device.Initialize().AwaitWithTimeout(TimeSpan.FromSeconds(10));
         }
 
         /// <summary>
