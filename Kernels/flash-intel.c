@@ -10,7 +10,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 uint32_t Intel_GetFlashId()
 {
-	SIM_CSBAR0 = 0x0006;
+	SIM_CSBAR0 = 0x0007;
 	SIM_CSORBT = 0x6820;
 
 	// flash chip 12v A9 enable

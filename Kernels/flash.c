@@ -20,9 +20,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 void FlashUnlock()
 {
-	SIM_CSBARBT = 0x0006;
+	SIM_CSBARBT = 0x0007;
 	SIM_CSORBT = 0x6820;
-	SIM_CSBAR0 = 0x0006;
+	SIM_CSBAR0 = 0x0007;
 	SIM_CSOR0 = 0x7060;
 
 	// TODO: can we just |= HARDWAREIO?
@@ -42,9 +42,9 @@ void FlashUnlock()
 ///////////////////////////////////////////////////////////////////////////////
 void FlashLock()
 {
-	SIM_CSBARBT = 0x0006;
+	SIM_CSBARBT = 0x0007;
 	SIM_CSORBT = 0x6820;
-	SIM_CSBAR0 = 0x0006;
+	SIM_CSBAR0 = 0x0007;
 	SIM_CSOR0 = 0x1060;
 
 	unsigned short hardwareFlags = HARDWARE_IO;
