@@ -237,7 +237,7 @@ namespace PcmHacking
                 return true;
             }
 
-            if (!await this.SetVpwSpeedInternal(newSpeed))
+            if (((newSpeed == VpwSpeed.FourX) && (!Configuration.Enable4xReadWrite)) || (!await this.SetVpwSpeedInternal(newSpeed)))
             {
                 return false;
             }
