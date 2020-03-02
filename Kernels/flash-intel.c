@@ -6,6 +6,29 @@
 #include "flash.h"
 
 ///////////////////////////////////////////////////////////////////////////////
+// Unlock / Lock Intel flash memory.
+///////////////////////////////////////////////////////////////////////////////
+void FlashUnlock(bool unlock)
+{
+	SIM_CSBARBT = 0x0007;
+	SIM_CSORBT = 0x6820;
+	SIM_CSBAR0 = 0x0007;
+
+	if(unlock)
+	{
+		// Unlock
+		SIM_CSOR0 = 0x7060;
+		HARDWARE_IO |= 0x0001;
+	}
+	else
+	{
+		// Lock
+		SIM_CSOR0 = 0x1060;
+		HARDWARE_IO &= 0xFFFE;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Get the manufacturer and type of flash chip.
 ///////////////////////////////////////////////////////////////////////////////
 uint32_t Intel_GetFlashId()
@@ -37,7 +60,7 @@ uint8_t Intel_EraseBlock(uint32_t address)
 {
 	unsigned short status = 0;
 
-	FlashUnlock();
+	FlashUnlock(true);
 
 	uint16_t *flashBase = (uint16_t*)address;
 	*flashBase = 0x5050; // TODO: Move these commands to defines
@@ -60,7 +83,7 @@ uint8_t Intel_EraseBlock(uint32_t address)
 	*flashBase = READ_ARRAY_COMMAND;
 	*flashBase = READ_ARRAY_COMMAND;
 
-	FlashLock();
+	FlashUnlock(false);
 
 	// Return zero if successful, anything else is an error code.
 	if (status == 0x80)
@@ -83,7 +106,7 @@ uint8_t Intel_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 
 	if (!testWrite)
 	{
-		FlashUnlock();
+		FlashUnlock(true);
 	}
 
 	unsigned short* payloadArray = (unsigned short*) payloadBytes;
@@ -132,7 +155,7 @@ uint8_t Intel_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 			{
 				*address = 0xFFFF;
 				*address = 0xFFFF;
-				FlashLock();
+				FlashUnlock(false);
 			}
 
 			return errorCode;
@@ -145,7 +168,7 @@ uint8_t Intel_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 		unsigned short* address = (unsigned short*)startAddress;
 		*address = 0xFFFF;
 		*address = 0xFFFF;
-		FlashLock();
+		FlashUnlock(false);
 	}
 
 	// Check the last value we got from the status register.
@@ -156,3 +179,4 @@ uint8_t Intel_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 
 	return errorCode;
 }
+
