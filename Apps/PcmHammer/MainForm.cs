@@ -209,6 +209,8 @@ namespace PcmHacking
                 await this.ResetDevice();
 
                 this.MinimumSize = new Size(800, 600);
+
+                menuItemEnable4xReadWrite.Checked = Configuration.Enable4xReadWrite;
             }
             catch (Exception exception)
             {
@@ -318,16 +320,20 @@ namespace PcmHacking
             // The operation buttons have to be enabled/disabled individually
             // (rather than via the parent GroupBox) because we sometimes want
             // to enable the re-initialize operation while the others are disabled.
+            this.readEntirePCMToolStripMenuItem.Enabled = false;
+            this.verifyEntirePCMToolStripMenuItem.Enabled = false;
+            this.modifyVINToolStripMenuItem.Enabled = false;
+            this.writeParmetersCloneToolStripMenuItem.Enabled = false;
+            this.writeOSCalibrationToolStripMenuItem.Enabled = false;
+
             this.readPropertiesButton.Enabled = false;
-            this.readFullContentsButton.Enabled = false;
-            this.modifyVinButton.Enabled = false;
-            this.quickComparisonButton.Enabled = false;
+
             this.testWriteButton.Enabled = false;
             this.writeCalibrationButton.Enabled = false;
-            this.writeParametersButton.Enabled = false;
-            this.writeFullContentsButton.Enabled = false;
             this.exitKernelButton.Enabled = false;
             this.reinitializeButton.Enabled = false;
+
+            this.menuItemEnable4xReadWrite.Enabled = false;
         }
 
         /// <summary>
@@ -335,26 +341,41 @@ namespace PcmHacking
         /// </summary>
         protected override void EnableUserInput()
         {
-            this.interfaceBox.Invoke((MethodInvoker)delegate () { this.interfaceBox.Enabled = true; });
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.interfaceBox.Enabled = true;
 
-            // The operation buttons have to be enabled/disabled individually
-            // (rather than via the parent GroupBox) because we sometimes want
-            // to enable the re-initialize operation while the others are disabled.
-            this.readPropertiesButton.Invoke((MethodInvoker)delegate () { this.readPropertiesButton.Enabled = true; });
-            this.readFullContentsButton.Invoke((MethodInvoker)delegate () { this.readFullContentsButton.Enabled = true; });
-            this.modifyVinButton.Invoke((MethodInvoker)delegate () { this.modifyVinButton.Enabled = true; });
-            this.quickComparisonButton.Invoke((MethodInvoker)delegate () { this.quickComparisonButton.Enabled = true; });
-            this.testWriteButton.Invoke((MethodInvoker)delegate () { this.testWriteButton.Enabled = true; });
-            this.writeCalibrationButton.Invoke((MethodInvoker)delegate () { this.writeCalibrationButton.Enabled = true; });
-//            this.writeParametersButton.Invoke((MethodInvoker)delegate () { this.writeParametersButton.Enabled = true; });
-            this.writeFullContentsButton.Invoke((MethodInvoker)delegate () { this.writeFullContentsButton.Enabled = true; });
-            this.exitKernelButton.Invoke((MethodInvoker)delegate () { this.exitKernelButton.Enabled = true; });
-            this.reinitializeButton.Invoke((MethodInvoker)delegate () { this.reinitializeButton.Enabled = true; });
+                // The operation buttons have to be enabled/disabled individually
+                // (rather than via the parent GroupBox) because we sometimes want
+                // to enable the re-initialize operation while the others are disabled.
+                this.readEntirePCMToolStripMenuItem.Enabled = true;
+                this.verifyEntirePCMToolStripMenuItem.Enabled = true;
+                this.modifyVINToolStripMenuItem.Enabled = true;
+                this.writeParmetersCloneToolStripMenuItem.Enabled = true;
+                this.writeOSCalibrationToolStripMenuItem.Enabled = true;
+
+                this.readPropertiesButton.Enabled = true;
+
+                this.testWriteButton.Enabled = true;
+                this.writeCalibrationButton.Enabled = true;
+                this.exitKernelButton.Enabled = true;
+                this.reinitializeButton.Enabled = true;
+
+                this.menuItemEnable4xReadWrite.Enabled = true;
+            });
         }
 
         protected override void EnableInterfaceSelection()
         {
             this.interfaceBox.Enabled = true;
+        }
+
+        /// <summary>
+        /// Enable/Disable 4x
+        /// </summary>
+        private void enable4xReadWrite_Click(object sender, EventArgs e)
+        {
+            menuItemEnable4xReadWrite.Checked = Configuration.Enable4xReadWrite ^= true;
         }
 
         /// <summary>

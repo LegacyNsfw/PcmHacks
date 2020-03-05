@@ -114,7 +114,7 @@ namespace PcmHacking
         {
             get
             {
-                return Math.Min(2048 + 12, this.maxSendSize);
+                return Math.Min(1024 + 12, this.maxSendSize);
             }
         }
 
@@ -237,7 +237,7 @@ namespace PcmHacking
                 return true;
             }
 
-            if (!await this.SetVpwSpeedInternal(newSpeed))
+            if (((newSpeed == VpwSpeed.FourX) && (!Configuration.Enable4xReadWrite)) || (!await this.SetVpwSpeedInternal(newSpeed)))
             {
                 return false;
             }
