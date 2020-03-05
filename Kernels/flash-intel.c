@@ -43,17 +43,11 @@ uint8_t Intel_EraseBlock(uint32_t address)
 	*flashBase = 0x5050; // TODO: Move these commands to defines
 	*flashBase = 0x2020;
 	*flashBase = 0xD0D0;
-
-	WasteTime();
-	WasteTime();
-
 	*flashBase = 0x7070;
 
 	for (int iterations = 0; iterations < 0x640000; iterations++)
 	{
 		ScratchWatchdog();
-		WasteTime();
-		WasteTime();
 		status = *flashBase;
 		if ((status & 0x80) != 0)
 		{
@@ -127,9 +121,6 @@ uint8_t Intel_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 				success = 1;
 				break;
 			}
-
-			WasteTime();
-			WasteTime();
 		}
 
 		if (!success)
@@ -146,7 +137,6 @@ uint8_t Intel_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 
 			return errorCode;
 		}
-
 	}
 
 	if (!testWrite)
