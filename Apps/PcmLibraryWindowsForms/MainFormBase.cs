@@ -56,6 +56,27 @@ namespace PcmHacking
             DialogResult result = picker.ShowDialog();
             if (result == DialogResult.OK)
             {
+                if (picker.DeviceCategory == Configuration.Constants.DeviceCategorySerial)
+                {
+                    if (string.IsNullOrEmpty(picker.SerialPort))
+                    {
+                        return false;
+                    }
+
+                    if (string.IsNullOrEmpty(picker.SerialPortDeviceType))
+                    {
+                        return false;
+                    }
+                }
+
+                if (picker.DeviceCategory == Configuration.Constants.DeviceCategoryJ2534)
+                {
+                    if (string.IsNullOrEmpty(picker.J2534DeviceType))
+                    {
+                        return false;
+                    }
+                }
+
                 Configuration.DeviceCategory = picker.DeviceCategory;
                 Configuration.J2534DeviceType = picker.J2534DeviceType;
                 Configuration.SerialPort = picker.SerialPort;

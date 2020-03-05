@@ -223,7 +223,13 @@ namespace PcmHacking
         /// </summary>
         private void serialDeviceList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            this.SerialPortDeviceType = this.serialDeviceList.SelectedItem?.ToString();
+            string item = this.serialDeviceList.SelectedItem?.ToString();
+            if (item == prompt)
+            {
+                item = null;
+            }
+
+            this.SerialPortDeviceType = item;
         }
 
         /// <summary>

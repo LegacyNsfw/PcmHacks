@@ -111,6 +111,7 @@ namespace PcmHacking
             this.PortName = GetPortName(this.DeviceID, logger);
 
             if (!string.IsNullOrEmpty(this.PortName) &&
+                !this.PortName.Contains("(LPT") && 
                 this.PortName.StartsWith("COM") && 
                 this.PortName.Length > 3)
             {
