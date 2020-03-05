@@ -129,6 +129,12 @@ namespace PcmHacking
                 return false;
             }
 
+            if (message.Length < 11)
+            {
+                rawLogData = null;
+                return false;
+            }
+
             rawLogData = new RawLogData(message[4], message.GetBytes().Skip(5).Take(6).ToArray());
             return true;
         }

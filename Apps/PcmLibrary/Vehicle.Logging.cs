@@ -110,12 +110,7 @@ namespace PcmHacking
                 }
 
                 this.logger.AddDebugMessage("ReadLogData: " + message.ToString());
-
-                if ((message.Length < 4) || (message[3] != 0x6A))
-                {
-                    continue;
-                }
-
+                
                 if (this.protocol.TryParseRawLogData(message, out result))
                 {
                     break;
