@@ -18,8 +18,11 @@ namespace PcmHacking
         TestWrite,
         Calibration,
         Parameters,
-        OsAndCalibration,
+        Boot,
+        Os,
         Full,
+        OsPlusCalibration,
+        OsPlusCalibrationPlusBoot,
     }
 
     public class CKernelWriter
@@ -187,11 +190,11 @@ namespace PcmHacking
                     relevantBlocks = BlockType.Parameter;
                     break;
 
-                case WriteType.OsAndCalibration:
+                case WriteType.OsPlusCalibration:
                     relevantBlocks = BlockType.Calibration | BlockType.OperatingSystem;
                     break;
 
-                case WriteType.Full:
+                case WriteType.OsPlusCalibrationPlusBoot:
                     // Overwriting parameter blocks would break the EBCM pairing, 
                     // which is not what most users want. They just want a new OS 
                     // and the calibration to go along with it.
@@ -199,6 +202,10 @@ namespace PcmHacking
                     // The cast seems redundant, but C# converts the enum values 
                     // to ints when it does arithmetic.
                     relevantBlocks = (BlockType)(BlockType.All - BlockType.Parameter);
+                    break;
+
+                case WriteType.Full:
+                    relevantBlocks = BlockType.All;
                     break;
 
                 default:
