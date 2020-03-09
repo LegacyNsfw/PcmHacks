@@ -1,4 +1,3 @@
-  
 ﻿using J2534;
 using Microsoft.Win32;
 using System;
@@ -955,7 +954,6 @@ namespace PcmHacking
                     bool shouldHalt;
                     bool needToCheckOperatingSystem =
                         (writeType != WriteType.OsPlusCalibrationPlusBoot) &&
-                        (writeType != WriteType.OsPlusCalibration) &&
                         (writeType != WriteType.Full) &&
                         (writeType != WriteType.TestWrite);
 

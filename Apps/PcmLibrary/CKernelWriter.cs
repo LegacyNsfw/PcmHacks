@@ -18,11 +18,8 @@ namespace PcmHacking
         TestWrite,
         Calibration,
         Parameters,
-        Boot,
-        Os,
-        Full,
-        OsPlusCalibration,
         OsPlusCalibrationPlusBoot,
+        Full,
     }
 
     public class CKernelWriter
@@ -188,10 +185,6 @@ namespace PcmHacking
 
                 case WriteType.Parameters:
                     relevantBlocks = BlockType.Parameter;
-                    break;
-
-                case WriteType.OsPlusCalibration:
-                    relevantBlocks = BlockType.Calibration | BlockType.OperatingSystem;
                     break;
 
                 case WriteType.OsPlusCalibrationPlusBoot:
