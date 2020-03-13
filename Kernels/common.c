@@ -230,8 +230,6 @@ void WriteMessage(unsigned char *start, unsigned short length, Segment segment)
 			ScratchWatchdog();
 			status = DLC_STATUS & 0x03;
 		}
-
-		ClearMessageBuffer();
 	}
 }
 
@@ -243,10 +241,7 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 	ScratchWatchdog();
 	unsigned char status;
 
-	int iterations = 0;
-	int timeout = 1000;
-	int lastMessage = (iterations - timeout) + 1;
-
+	unsigned int iterations = 0;
 	int length = 0;
 	for (;;)
 	{
@@ -254,7 +249,7 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 		iterations++;
 
 		// If no message received for N iterations, exit.
-		if ((length == 0) && iterations > (lastMessage + timeout)) return 0;
+		if (iterations > 0x30000) return 0;
 
 		// Artificial message-length limit for debugging.
 		if (length == MessageBufferSize)
@@ -263,22 +258,23 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 			return length;
 		}
 
-		status = (DLC_STATUS & 0xE0) >> 5;
+		status = DLC_STATUS >> 5;
 		switch (status)
 		{
-		case 0: // No data to process. This wait period may need more tuning.
-			VariableSleep(1);
+		case 0: // No data to process.
 			break;
-		case 1: // Buffer contains data bytes.
+		case 1: // Buffer contains 2-12 data bytes.
 		case 2: // Buffer contains data followed by a completion code.
 		case 4: // Buffer contains just one data byte.
-			lastMessage = iterations;
-			MessageBuffer[length++] = DLC_RECEIVE_FIFO;
+			do {
+				MessageBuffer[length++] = DLC_RECEIVE_FIFO;
+				status = (DLC_STATUS >> 5);
+			} while ( status == 1 || status == 2 || status == 4 );
+			iterations=0; // reset the timer every byte received
 			break;
 		case 5: // Buffer contains a completion code, followed by more data bytes.
 		case 6: // Buffer contains a completion code, followed by a full frame.
 		case 7: // Buffer contains a completion code only.
-			lastMessage = iterations;
 			*completionCode = DLC_RECEIVE_FIFO;
 
 			// Not sure if this is necessary - the code works without it, but it seems
@@ -289,7 +285,7 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 			// any message data at all. Not sure why.
 			if (length == 0) 	break;
 
-			if ((*completionCode & 0x30) == 0x30)
+			if (*completionCode & 0x30)
 			{
 				*readState = 2;
 				return 0;
@@ -304,7 +300,6 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 			*readState = 0x0B;
 			return 0;
 		}
-		ScratchWatchdog();
 	}
 
 	// If we reach this point, the loop above probably just hit maxIterations.
@@ -374,7 +369,6 @@ void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3, unsig
 	toolPresent[7] = b4;
 
 	WriteMessage(toolPresent, 8, Complete);
-	ClearMessageBuffer();
 }
 
 void SendToolPresent2(unsigned int value)
