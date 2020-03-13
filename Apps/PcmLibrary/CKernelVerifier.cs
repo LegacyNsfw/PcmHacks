@@ -88,14 +88,11 @@ namespace PcmHacking
                 bool success = false;
                 UInt32 crc = 0;
                 
-                // You might think that a shorter retry delay would speed things up,
-                // but 1500ms delay gets CRC results in about 3.5 seconds.
-                // A 1000ms delay resulted in 4+ second CRC responses, and a 750ms
-                // delay resulted in 5 second CRC responses. The PCM needs to spend
-                // its time caculating CRCs rather than responding to messages.
+                // Each poll of the pcm causes it to CRC 16kb of segment data.
+                // When the segment sum is available it is returned.
                 int retryDelay = 1500;
                 Message query = this.protocol.CreateCrcQuery(range.Address, range.Size);
-                for (int attempts = 0; attempts < 10; attempts++)
+                for (int attempts = 0; attempts < 20; attempts++)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -105,10 +102,6 @@ namespace PcmHacking
                     await this.vehicle.SendToolPresentNotification();
                     if (!await this.vehicle.SendMessage(query))
                     {
-                        // This delay is fast because we're waiting for the bus to be available,
-                        // rather than waiting for the PCM's CPU to finish computing the CRC as 
-                        // with the other two delays below.
-                        await Task.Delay(100);
                         continue;
                     }
 

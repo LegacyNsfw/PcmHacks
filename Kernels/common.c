@@ -103,7 +103,8 @@ void VariableSleep(unsigned int iterations)
 ///////////////////////////////////////////////////////////////////////////////
 // All outgoing messages must be written into this buffer. The WriteMessage
 // function will copy from this buffer to the DLC. Resetting the buffer should
-// not really be necessary, but it helps to simplify debugging.
+// not really be necessary, but it helps to simplify debugging. Use sparingly,
+// this is a slow function and contributes to blocking the DLC.
 ///////////////////////////////////////////////////////////////////////////////
 void ClearMessageBuffer()
 {
@@ -362,12 +363,7 @@ void Reboot(unsigned int value)
 ///////////////////////////////////////////////////////////////////////////////
 void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3, unsigned char b4)
 {
-	unsigned char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00, 0x00, 0x00 };
-	toolPresent[4] = b1;
-	toolPresent[5] = b2;
-	toolPresent[6] = b3;
-	toolPresent[7] = b4;
-
+	unsigned char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, b1, b2, b3, b4 };
 	WriteMessage(toolPresent, 8, Complete);
 }
 
