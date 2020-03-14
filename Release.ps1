@@ -66,6 +66,7 @@ copy Apps\PcmLogger\bin\Debug\PcmLogger.* Release
 copy Apps\PcmLogger\bin\Debug\*.dll Release
 copy Apps\PcmLogger\bin\Debug\*.pdb Release
 copy Apps\PcmLogger\*.xml.profile Release
+copy Apps\PcmLogger\MathValues.configuration Release
 
 # The order of these two operations matters - it ensures that the zip file contains a directory named PcmHammerNNN.
 Rename-Item Release "PcmHammer$ReleaseNumber"
