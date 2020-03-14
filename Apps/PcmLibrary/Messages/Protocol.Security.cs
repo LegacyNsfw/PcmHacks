@@ -70,9 +70,9 @@ namespace PcmHacking
         /// </summary>
         public Response<bool> ParseUnlockResponse(byte[] unlockResponse, out string errorMessage)
         {
-            if (unlockResponse.Length != 6)
+            if (unlockResponse.Length < 6)
             {
-                errorMessage = $"Unlock response was {unlockResponse.Length} bytes long, expected 6.";
+                errorMessage = $"Unlock response truncated, expected 6 bytes, got {unlockResponse.Length} bytes.";
                 return Response.Create(ResponseStatus.UnexpectedResponse, false);
             }
 
