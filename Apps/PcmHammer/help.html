@@ -44,13 +44,15 @@
         Also, note that AllPro devices purchased before early June 2018 will need a firmware update to version 1.21 or later.
         Updating the firmware on the AllPro adapter requires the FlashMagic tool. Instructions are on the <a href="http://www.obddiag.net/">ObdDiag.Net web site.</a> and a link to the firmware can be found <a href="http://www.obddiag.net/allpro.html">here</a>.
 
-    <p><b><a href="https://www.scantool.net/obdlink-sx/">ObdLink Scantool SX</a></b> - This is inexpensive and superior to ELM knock-off devices, however it does not support 4x (high speed) mode, so a full read takes a little over 20 minutes. The ObdLink LX and MX are similar but unfortunately does not have enough memory to receive 500-byte packets of PCM data, so they are not supported. Other devices based on the Scantool OBD2 chip may or may not work, depending on their message size limits. If you find another one that works (or doesn't), please let us know.
+    <p><b><a href="https://www.scantool.net/obdlink-sx/">ObdLink Scantool SX</a></b> - This is inexpensive and superior to ELM knock-off devices, however it does not support 4x (high speed) mode, so a full read takes a little over 20 minutes. 
 
     <p><b><a href="https://www.scantool.net/obdlink-lx/">ObdLink Scantool LX</a></b> - It's like an SX, but wireless and faster (though still not 4X fast), and it costs slightly more.
 
     <p><b><a href="http://www.avt-hq.com/852_hw.htm">AVT 852</a></b> - This is the most expensive option, but this was one of the first interfaces to properly support J1850 VPW high-speed mode.
 
     <p><b>Any J2534-compatible interface that supports J1850 VPW</b> - At least in theory, these should all work. There are a few of those on the market, and we cannot test them all, but if you have one, give it a try. As time goes by we'll list the ones that are proven to work. The genuine GM MDIs are one device which is known to work, though it is not cheap. Over time we hope to confirm that other, less expensive devices will also work.
+
+    <p> The ObdLink MX is similar to the SX and LX, but unfortunately does not have enough memory to receive 500-byte packets of PCM data, so it is not supported. Other devices based on the Scantool OBD2 chip may or may not work, depending on their message size limits. If you find another one that works (or doesn't), please let us know.
 
     <p>
         Note that most ELM-based devices are <i>not</i> supported, because they do not work. Reading and clearing OBD2 trouble codes is one thing; rewriting firmware is quite another.
