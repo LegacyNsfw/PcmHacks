@@ -538,7 +538,7 @@ namespace PcmHacking
                     return Response.Create(ResponseStatus.Cancelled, false, retryCount);
                 }
 
-                Thread.Sleep(50); // Allow the running kernel time to enter the ReadMessage function
+                await Task.Delay(50); // Allow the running kernel time to enter the ReadMessage function
 
                 if (!await device.SendMessage(message))
                 {
