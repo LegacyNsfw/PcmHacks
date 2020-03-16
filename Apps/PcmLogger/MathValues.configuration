@@ -1,4 +1,4 @@
 <MathValueConfiguration>
-    <MathValue Name="Load (Calculated from MAF)" Units="g/cyl" XParameter="Mass Air Flow" XConversion="g/s" YParameter="Engine Speed" YConversion="RPM" Formula="x*60.0/y" Format="0.00"/>
-    <MathValue Name="MAF (Calculated from Load)" Units="g/sec" XParameter="Load" XConversion="g/cyl" YParameter="Engine Speed" YConversion="RPM" Formula="x*y/60.0" Format="0.00"/>
+    <MathValue Name="Load (Calculated from MAF)" Units="g/cyl" XParameter="Mass Air Flow" XConversion="g/s" YParameter="Engine Speed" YConversion="RPM" Formula="x*60.0/(y*2)" Format="0.00"/>
+    <MathValue Name="MAF (Calculated from Load)" Units="g/sec" XParameter="Load" XConversion="g/cyl" YParameter="Engine Speed" YConversion="RPM" Formula="x*y*2/60.0" Format="0.00"/>
 </MathValueConfiguration>
