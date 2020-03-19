@@ -129,6 +129,7 @@ namespace PcmHacking
         public async Task Cleanup()
         {
             this.logger.AddDebugMessage("Halting the kernel.");
+            await Task.Delay(2000);
             await this.ExitKernel();
 
             /* Waiting for the PCM to reboot didn't make any difference.
