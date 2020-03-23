@@ -256,7 +256,7 @@ namespace PcmHacking
                 if ((this.writeType == WriteType.TestWrite) && (attempt > 1))
                 {
                     logger.AddUserMessage("Test write complete.");
-                    Utility.ReportRetryCount("write", messageRetryCount, flashChip.Size, this.logger);
+                    Utility.ReportRetryCount("Write", messageRetryCount, flashChip.Size, this.logger);
                     return true;
                 }
 
