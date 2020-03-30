@@ -247,7 +247,11 @@ namespace PcmHacking
                     }
                     else
                     {
-                        this.logger.AddUserMessage("All ranges are identical.");
+                        this.logger.AddUserMessage("All relevant ranges are identical.");
+                        if (attempt > 1)
+                        {
+                            Utility.ReportRetryCount("Write", messageRetryCount, flashChip.Size, this.logger);
+                        }
                         return true;
                     }
                 }
