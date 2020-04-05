@@ -124,6 +124,7 @@ namespace PcmHacking
         /// </summary>
         public override Task<TimeoutScenario> SetTimeout(TimeoutScenario scenario)
         {
+            this.currentTimeoutScenario = scenario;
             return Task.FromResult(this.currentTimeoutScenario);
         }
 
