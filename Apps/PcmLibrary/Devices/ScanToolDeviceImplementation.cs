@@ -113,6 +113,96 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Get the time required for the given scenario.
+        /// </summary>
+        public override int GetTimeoutMilliseconds(TimeoutScenario scenario, VpwSpeed speed)
+        {
+            int milliseconds;
+
+            if (speed == VpwSpeed.Standard)
+            {
+                switch (scenario)
+                {
+                    case TimeoutScenario.ReadProperty:
+                        milliseconds = 44;
+                        break;
+
+                    case TimeoutScenario.ReadCrc:
+                        milliseconds = 865;
+                        break;
+
+                    case TimeoutScenario.ReadMemoryBlock:
+                        milliseconds = 2240;
+                        break;
+
+                    case TimeoutScenario.SendKernel:
+                        milliseconds = 913;
+                        break;
+
+                    case TimeoutScenario.DataLogging1:
+                        milliseconds = 25;
+                        break;
+
+                    case TimeoutScenario.DataLogging2:
+                        milliseconds = 40;
+                        break;
+
+                    case TimeoutScenario.DataLogging3:
+                        milliseconds = 60;
+                        break;
+
+                    case TimeoutScenario.Maximum:
+                        return 1020;
+
+                    default:
+                        throw new NotImplementedException("Unknown timeout scenario " + scenario);
+                }
+            }
+            else
+            {
+                switch (scenario)
+                {
+                    // The app doesn't currently do this in 4X mode, so this is only a guess.
+                    case TimeoutScenario.ReadProperty:
+                        milliseconds = 11;
+                        break;
+
+                    case TimeoutScenario.ReadCrc:
+                        milliseconds = 216;
+                        break;
+
+                    case TimeoutScenario.ReadMemoryBlock:
+                        milliseconds = 560;
+                        break;
+
+                    case TimeoutScenario.SendKernel:
+                        milliseconds = 230;
+                        break;
+
+                    case TimeoutScenario.DataLogging1:
+                        milliseconds = 7;
+                        break;
+
+                    case TimeoutScenario.DataLogging2:
+                        milliseconds = 10;
+                        break;
+
+                    case TimeoutScenario.DataLogging3:
+                        milliseconds = 15;
+                        break;
+
+                    case TimeoutScenario.Maximum:
+                        return 1020;
+
+                    default:
+                        throw new NotImplementedException("Unknown timeout scenario " + scenario);
+                }
+            }
+
+            return milliseconds;
+        }
+
+        /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>
         /// <remarks>

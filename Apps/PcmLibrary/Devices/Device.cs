@@ -141,7 +141,7 @@ namespace PcmHacking
         /// <summary>
         /// Current speed of the VPW bus.
         /// </summary>
-        private VpwSpeed speed;
+        protected VpwSpeed Speed { get; private set; }
 
         /// <summary>
         /// Constructor.
@@ -154,7 +154,7 @@ namespace PcmHacking
             this.MaxSendSize = 100;
             this.MaxReceiveSize = 100;
             this.Supports4X = false;
-            this.speed = VpwSpeed.Standard;
+            this.Speed = VpwSpeed.Standard;
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> SetVpwSpeed(VpwSpeed newSpeed)
         {
-            if (this.speed == newSpeed)
+            if (this.Speed == newSpeed)
             {
                 return true;
             }
@@ -242,7 +242,7 @@ namespace PcmHacking
                 return false;
             }
 
-            this.speed = newSpeed;
+            this.Speed = newSpeed;
             return true;
         }
 
@@ -273,7 +273,9 @@ namespace PcmHacking
         protected abstract Task Receive();
 
         /// <summary>
-        /// Calculates the time required for the given scenario at the current VPW speed.
+        /// This is no longer used, but is being kept for now since the comments
+        /// shed some light on the differences between AllPro and Scantool LX 
+        /// (probably not SX) interfaces.
         /// </summary>
         protected int GetVpwTimeoutMilliseconds(TimeoutScenario scenario)
         {
@@ -330,7 +332,7 @@ namespace PcmHacking
             }
 
             int bitsPerByte = 9; // 8N1 serial
-            double bitsPerSecond = this.speed == VpwSpeed.Standard ? 10.4 : 41.6;
+            double bitsPerSecond = this.Speed == VpwSpeed.Standard ? 10.4 : 41.6;
             double milliseconds = (packetSize * bitsPerByte) / bitsPerSecond;
 
             // Add 10% just in case.

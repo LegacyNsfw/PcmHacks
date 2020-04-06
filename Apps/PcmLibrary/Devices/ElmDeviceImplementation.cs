@@ -89,6 +89,15 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Get the time required for the given scenario.
+        /// </summary>
+        public virtual int GetTimeoutMilliseconds(TimeoutScenario scenario, VpwSpeed speed)
+        {
+            // This base class is only instantiated for device-independent initialization.
+            return 250;
+        }
+
+        /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>
         public virtual Task<bool> SendMessage(Message message)

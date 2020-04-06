@@ -133,7 +133,7 @@ namespace PcmHacking
                 return this.currentTimeoutScenario;
             }
 
-            int milliseconds = this.GetVpwTimeoutMilliseconds(scenario);
+            int milliseconds = this.implementation.GetTimeoutMilliseconds(scenario, this.Speed);
             
             this.Logger.AddDebugMessage("Setting timeout for " + scenario + ", " + milliseconds.ToString() + " ms.");
 
