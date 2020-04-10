@@ -178,7 +178,9 @@ namespace PcmHacking
         {
             UInt16 Sum = 0;
 
-            for (int i = 4; i < block.Length - 2; i++) // start after prio, dest, src, mode, stop at end of payload
+            // dataLength should be verified by caller, block.Length will prevent an Array out of bounds if not.
+            int dataLength = (block[5] << 8) + block[6];
+            for (int i = 4; i < dataLength + 10 && i < block.Length - 2; i++) // start after prio, dest, src, mode, stop at end of payload
             {
                 Sum += block[i];
             }
@@ -192,19 +194,19 @@ namespace PcmHacking
         /// <remarks>
         /// Overwrites the last 2 bytes at the end of the array with the sum
         /// </remarks>
-        public static byte[] AddBlockChecksum(byte[] Block)
+        public static byte[] AddBlockChecksum(byte[] block)
         {
             UInt16 Sum = 0;
 
-            for (int i = 4; i < Block.Length - 2; i++) // skip prio, dest, src, mode
+            for (int i = 4; i < block.Length - 2; i++) // skip prio, dest, src, mode
             {
-                Sum += Block[i];
+                Sum += block[i];
             }
 
-            Block[Block.Length - 2] = unchecked((byte)(Sum >> 8));
-            Block[Block.Length - 1] = unchecked((byte)(Sum & 0xFF));
+            block[block.Length - 2] = unchecked((byte)(Sum >> 8));
+            block[block.Length - 1] = unchecked((byte)(Sum & 0xFF));
 
-            return Block;
+            return block;
         }
     }
 }

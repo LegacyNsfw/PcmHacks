@@ -153,7 +153,7 @@ namespace PcmHacking
             if (actual[4] == 1)
             {
                 // With normal encoding, data length should be actual length minus header size
-                if (dataLength != actual.Length - 12)
+                if (actual.Length - 12 < dataLength)
                 {
                     return Response.Create(ResponseStatus.Truncated, new byte[0]);
                 }
