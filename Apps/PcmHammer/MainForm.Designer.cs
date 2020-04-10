@@ -49,7 +49,7 @@
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
             this.menuStripMain = new System.Windows.Forms.MenuStrip();
-            this.menuItemTools = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuItemAdvancedOperations = new System.Windows.Forms.ToolStripMenuItem();
             this.readEntirePCMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.verifyEntirePCMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modifyVINToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -298,7 +298,7 @@
             // menuStripMain
             // 
             this.menuStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuItemTools,
+            this.menuItemAdvancedOperations,
             this.menuItemOptions});
             this.menuStripMain.Location = new System.Drawing.Point(0, 0);
             this.menuStripMain.Name = "menuStripMain";
@@ -306,18 +306,18 @@
             this.menuStripMain.TabIndex = 3;
             this.menuStripMain.Text = "Main Menu";
             // 
-            // menuItemTools
+            // menuItemAdvancedOperations
             // 
-            this.menuItemTools.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuItemAdvancedOperations.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.readEntirePCMToolStripMenuItem,
             this.verifyEntirePCMToolStripMenuItem,
             this.modifyVINToolStripMenuItem,
             this.writeParmetersCloneToolStripMenuItem,
             this.writeOSCalibrationBootToolStripMenuItem,
             this.writeFullToolStripMenuItem});
-            this.menuItemTools.Name = "menuItemTools";
-            this.menuItemTools.Size = new System.Drawing.Size(44, 20);
-            this.menuItemTools.Text = "&Tools";
+            this.menuItemAdvancedOperations.Name = "menuItemAdvancedOperations";
+            this.menuItemAdvancedOperations.Size = new System.Drawing.Size(123, 20);
+            this.menuItemAdvancedOperations.Text = "&Advanced Operations";
             // 
             // readEntirePCMToolStripMenuItem
             // 
@@ -433,7 +433,7 @@
         private System.Windows.Forms.MenuStrip menuStripMain;
         private System.Windows.Forms.ToolStripMenuItem menuItemOptions;
         private System.Windows.Forms.ToolStripMenuItem menuItemEnable4xReadWrite;
-        private System.Windows.Forms.ToolStripMenuItem menuItemTools;
+        private System.Windows.Forms.ToolStripMenuItem menuItemAdvancedOperations;
         private System.Windows.Forms.ToolStripMenuItem readEntirePCMToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem verifyEntirePCMToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem modifyVINToolStripMenuItem;
