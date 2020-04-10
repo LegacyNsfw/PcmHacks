@@ -250,7 +250,10 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 		iterations++;
 
 		// If no message received for N iterations, exit.
-		if (iterations > 0x30000) return 0;
+		if (iterations > 0x30000)
+		{
+			return 0;
+		}
 
 		// Artificial message-length limit for debugging.
 		if (length == MessageBufferSize)
@@ -271,7 +274,7 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 				MessageBuffer[length++] = DLC_RECEIVE_FIFO;
 				status = (DLC_STATUS >> 5);
 			} while ( status == 1 || status == 2 || status == 4 );
-			iterations=0; // reset the timer every byte received
+			iterations = 0; // reset the timer every byte received
 			break;
 		case 5: // Buffer contains a completion code, followed by more data bytes.
 		case 6: // Buffer contains a completion code, followed by a full frame.
@@ -284,7 +287,10 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 
 			// If we return here when the length is zero, we'll never return
 			// any message data at all. Not sure why.
-			if (length == 0) 	break;
+			if (length == 0)
+			{
+				break;
+			}
 
 			if (*completionCode & 0x30)
 			{
@@ -295,7 +301,7 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 			*readState = 1;
 			return length;
 
-		case 3:  // Buffer overflow. What do do here?
+		case 3:  // Buffer overflow. What to do here?
 			// Just throw the message away and hope the tool sends again?
 			while (DLC_STATUS & 0xE0 == 0x60) MessageBuffer[length] = DLC_RECEIVE_FIFO;
 			*readState = 0x0B;

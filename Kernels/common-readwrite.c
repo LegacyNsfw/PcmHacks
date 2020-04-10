@@ -120,7 +120,7 @@ void HandleWriteMode36()
 		MessageBuffer[6] = checksum;
 		MessageBuffer[7] = expected >> 8;
 		MessageBuffer[8] = expected;
-		MessageBuffer[9] = length>> 8;
+		MessageBuffer[9] = length >> 8;
 		MessageBuffer[10] = length;
 
 		WriteMessage(MessageBuffer, 11, Complete);
@@ -135,7 +135,7 @@ void HandleWriteMode36()
 		return;
 	}
 
-	if ((start >= 0xFF8000) && (start+length <= 0xFFCDFF))
+	if ((start >= 0xFF8000) && (start + length <= 0xFFCDFF))
 	{
 		// Copy content
 		unsigned int address = 0;
