@@ -8,16 +8,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 void HandleReadMode35()
 {
-	unsigned length = MessageBuffer[5];
-	length <<= 8;
-	length |= MessageBuffer[6];
-
-	unsigned start = MessageBuffer[7];
-	start <<= 8;
-	start |= MessageBuffer[8];
-	start <<= 8;
-	start |= MessageBuffer[9];
-
+	unsigned length = (MessageBuffer[5] << 8) + MessageBuffer[6];
+	unsigned start = (MessageBuffer[7] << 16) + (MessageBuffer[8] << 8) + MessageBuffer[9];
 	// TODO: Validate the start address and length, fail if unreasonable.
 
 	// Send the payload
@@ -42,15 +34,8 @@ void HandleReadMode35()
 ///////////////////////////////////////////////////////////////////////////////
 void HandleWriteRequestMode34()
 {
-	unsigned length = MessageBuffer[5];
-	length <<= 8;
-	length |= MessageBuffer[6];
-
-	unsigned start = MessageBuffer[7];
-	start <<= 8;
-	start |= MessageBuffer[8];
-	start <<= 8;
-	start |= MessageBuffer[9];
+	unsigned length = (MessageBuffer[5] << 8) + MessageBuffer[6];
+	unsigned start = (MessageBuffer[7] << 16) + (MessageBuffer[8] << 8) + MessageBuffer[9];
 
 	if ((length > 4096) || (start != 0xFFA000))
 	{
@@ -106,16 +91,8 @@ typedef void(*EntryPoint)();
 void HandleWriteMode36()
 {
 	unsigned char command = MessageBuffer[4];
-
-	unsigned length = MessageBuffer[5];
-	length <<= 8;
-	length |= MessageBuffer[6];
-
-	unsigned start = MessageBuffer[7];
-	start <<= 8;
-	start |= MessageBuffer[8];
-	start <<= 8;
-	start |= MessageBuffer[9];
+	unsigned length = (MessageBuffer[5] << 8) + MessageBuffer[6];
+	unsigned start = (MessageBuffer[7] << 16) + (MessageBuffer[8] << 8) + MessageBuffer[9];
 
 	// Compute checksum
 	unsigned short checksum = 0;
@@ -144,7 +121,8 @@ void HandleWriteMode36()
 		MessageBuffer[7] = expected >> 8;
 		MessageBuffer[8] = expected;
 		MessageBuffer[9] = length>> 8;
-		MessageBuffer[10]= length;
+		MessageBuffer[10] = length;
+
 		WriteMessage(MessageBuffer, 11, Complete);
 
 		return;
