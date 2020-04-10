@@ -225,23 +225,19 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Process responses from the EML/ST devices.
+        /// Process responses from the ELM/ST devices.
         /// </summary>
         protected bool ProcessResponse(string rawResponse, string context, bool allowEmpty = false)
         {
             if (string.IsNullOrWhiteSpace(rawResponse))
             {
-                this.Logger.AddDebugMessage(
-                    string.Format("Empty response to {0}. {1}",
-                    context,
-                    allowEmpty ? "That's OK" : "That's not OK."));
-
                 if (allowEmpty)
                 {
                     return true;
                 }
                 else
                 {
+                    this.Logger.AddDebugMessage("Empty response to " + context + ". That's not OK.");
                     return false;
                 }
             }
