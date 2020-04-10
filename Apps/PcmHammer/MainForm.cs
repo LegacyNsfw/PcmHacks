@@ -738,7 +738,7 @@ namespace PcmHacking
                     this.AddUserMessage("Will save to " + path);
 
                     DelayDialogBox dialogBox = new DelayDialogBox();
-                    DialogResult dialogResult = dialogBox.ShowDialog();
+                    DialogResult dialogResult = dialogBox.ShowDialog(this);
                     if (dialogResult == DialogResult.Cancel)
                     {
                         return;
@@ -891,7 +891,7 @@ namespace PcmHacking
                     this.AddUserMessage(path);
 
                     DelayDialogBox dialogBox = new DelayDialogBox();
-                    DialogResult dialogResult = dialogBox.ShowDialog();
+                    DialogResult dialogResult = dialogBox.ShowDialog(this);
                     if (dialogResult == DialogResult.Cancel)
                     {
                         return;
