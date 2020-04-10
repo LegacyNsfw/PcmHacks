@@ -252,8 +252,8 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 		// If no message received for N iterations, exit.
 		if (iterations > 0x30000) return 0;
 
-		// Artificial message-length limit for debugging.
-		if (length == MessageBufferSize)
+		// Let us not overflow MessageBuffer.
+		if (length > MessageBufferSize)
 		{
 			*readState = 0xEE;
 			return length;
