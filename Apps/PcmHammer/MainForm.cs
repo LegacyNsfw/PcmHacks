@@ -758,18 +758,27 @@ namespace PcmHacking
 
                     // Get the path to save the image to.
                     string path = "";
-                    this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
-                    if (path == null)
+                    this.Invoke((MethodInvoker)delegate ()
                     {
-                        this.AddUserMessage("Save canceled.");
-                        return;
-                    }
+                        path = this.ShowSaveAsDialog();
 
-                    this.AddUserMessage("Will save to " + path);
+                        if (path == null)
+                        {
+                            this.AddUserMessage("Read canceled.");
+                            return;
+                        }
 
-                    DelayDialogBox dialogBox = new DelayDialogBox();
-                    DialogResult dialogResult = dialogBox.ShowDialog(this);
-                    if (dialogResult == DialogResult.Cancel)
+                        this.AddUserMessage("Will save to " + path);
+
+                        DelayDialogBox dialogBox = new DelayDialogBox();
+                        DialogResult dialogResult = dialogBox.ShowDialog(this);
+                        if (dialogResult == DialogResult.Cancel)
+                        {
+                            return;
+                        }
+                    });
+
+                    if (path == null)
                     {
                         return;
                     }
@@ -911,7 +920,21 @@ namespace PcmHacking
                         this.cancelButton.Enabled = true;
 
                         path = this.ShowOpenDialog();
+
+                        if (path == null)
+                        {
+                            this.AddUserMessage("Write canceled.");
+                            return;
+                        }
+
+                        DelayDialogBox dialogBox = new DelayDialogBox();
+                        DialogResult dialogResult = dialogBox.ShowDialog(this);
+                        if (dialogResult == DialogResult.Cancel)
+                        {
+                            return;
+                        }
                     });
+
 
                     if (path == null)
                     {
@@ -919,13 +942,6 @@ namespace PcmHacking
                     }
 
                     this.AddUserMessage(path);
-
-                    DelayDialogBox dialogBox = new DelayDialogBox();
-                    DialogResult dialogResult = dialogBox.ShowDialog(this);
-                    if (dialogResult == DialogResult.Cancel)
-                    {
-                        return;
-                    }
 
                     byte[] image;
                     using (Stream stream = File.OpenRead(path))
