@@ -111,7 +111,7 @@ namespace PcmHacking
             this.PortName = GetPortName(this.DeviceID, logger);
 
             if (!string.IsNullOrEmpty(this.PortName) &&
-                !this.PortName.Contains("(LPT") && 
+                !this.Name.Contains("(LPT") && 
                 this.PortName.StartsWith("COM") && 
                 this.PortName.Length > 3)
             {
@@ -121,12 +121,15 @@ namespace PcmHacking
             }
             else
             {
-                logger.AddDebugMessage(
-                    string.Format(
-                        "Unable to get port number for '{0}' / '{1}' with port name '{2}'",
-                        this.Name,
-                        this.DeviceID,
-                        this.PortName));
+                if (!this.PortName.StartsWith("LPT"))
+                {
+                    logger.AddDebugMessage(
+                        string.Format(
+                            "Unable to get port number for '{0}' / '{1}' with port name '{2}'",
+                            this.Name,
+                            this.DeviceID,
+                            this.PortName));
+                }
             }
         }
 
