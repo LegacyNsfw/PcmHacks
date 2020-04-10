@@ -174,7 +174,7 @@ namespace PcmHacking
             }
             else
             {
-                if (writeType == WriteType.Full)
+                if ((writeType == WriteType.OsPlusCalibrationPlusBoot) || (writeType == WriteType.Full))
                 {
                     logger.AddUserMessage("Changing PCM to operating system " + fileOs);
                 }
