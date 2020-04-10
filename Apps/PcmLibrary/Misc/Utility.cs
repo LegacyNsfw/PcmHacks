@@ -198,18 +198,18 @@ namespace PcmHacking
         {
             if (retryCount == 0)
             {
-                logger.AddUserMessage("All write-request messages succeeded on the first try. You have an excellent connection to the PCM.");
+                logger.AddUserMessage("All " + operation.ToLower() + "-request messages succeeded on the first try. You have an excellent connection to the PCM.");
             }
             else if (retryCount < 3)
             {
-                logger.AddUserMessage("Write-request messages had to be re-sent " + (retryCount == 1 ? "once." : "twice."));
+                logger.AddUserMessage(operation + "-request messages had to be re-sent " + (retryCount == 1 ? "once." : "twice."));
             }
             else
             {
-                logger.AddUserMessage("Write request messages had to be re-sent " + retryCount + " times.");
+                logger.AddUserMessage(operation + "-request messages had to be re-sent " + retryCount + " times.");
             }
 
-            logger.AddUserMessage("We're not sure how much retrying is normal for a " + operation + " operation on a " + (flashChipSize / 1024).ToString() + "kb PCM."); 
+            logger.AddUserMessage("We're not sure how much retrying is normal for a " + operation.ToLower() + " operation on a " + (flashChipSize / 1024).ToString() + "kb PCM."); 
             logger.AddUserMessage("Please help by sharing your results in the PCM Hammer thread at pcmhacking.net.");
         }
 
