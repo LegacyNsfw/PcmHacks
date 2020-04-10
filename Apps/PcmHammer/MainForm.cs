@@ -764,7 +764,6 @@ namespace PcmHacking
 
                         if (path == null)
                         {
-                            this.AddUserMessage("Read canceled.");
                             return;
                         }
 
@@ -774,12 +773,14 @@ namespace PcmHacking
                         DialogResult dialogResult = dialogBox.ShowDialog(this);
                         if (dialogResult == DialogResult.Cancel)
                         {
+                            path = null;
                             return;
                         }
                     });
 
                     if (path == null)
                     {
+                        this.AddUserMessage("Read canceled.");
                         return;
                     }
 
@@ -923,7 +924,6 @@ namespace PcmHacking
 
                         if (path == null)
                         {
-                            this.AddUserMessage("Write canceled.");
                             return;
                         }
 
@@ -931,6 +931,7 @@ namespace PcmHacking
                         DialogResult dialogResult = dialogBox.ShowDialog(this);
                         if (dialogResult == DialogResult.Cancel)
                         {
+                            path = null;
                             return;
                         }
                     });
@@ -938,6 +939,10 @@ namespace PcmHacking
 
                     if (path == null)
                     {
+                        this.AddUserMessage(
+                            writeType == WriteType.TestWrite ?
+                                "Test write canceled." :
+                                "Write canceled.");
                         return;
                     }
 
