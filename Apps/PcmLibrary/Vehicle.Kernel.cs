@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -299,6 +300,7 @@ namespace PcmHacking
                 return false;
             }
 
+            await this.SetDeviceTimeout(TimeoutScenario.ReadProperty);
             Message request = protocol.CreateUploadRequest(address, claimedSize);
             if(!await TrySendMessage(request, "upload request"))
             {
@@ -441,13 +443,16 @@ namespace PcmHacking
 
                 // Check for any devices that refused to switch to 4X speed.
                 // These responses usually get lost, so this code might be pointless.
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
                 Message response = null;
-                while ((response = await this.device.ReceiveMessage()) != null)
+                while (((response = await this.device.ReceiveMessage()) != null) && (sw.ElapsedMilliseconds < 1500))
                 {
                     Response<bool> refused = this.protocol.ParseHighSpeedRefusal(response);
                     if (refused.Status != ResponseStatus.Success)
                     {
                         // This should help ELM devices receive responses.
+                        await Task.Delay(250);
                         await notifier.ForceNotify();
                         continue;
                     }

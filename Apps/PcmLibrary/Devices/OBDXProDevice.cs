@@ -17,6 +17,8 @@ namespace PcmHacking
         public const string DeviceType = "OBDX Pro";
         public bool TimeStampsEnabled = false;
         public bool CRCInReceivedFrame = false;
+        private int timeout = 1000;
+        private VpwSpeed vpwSpeed = VpwSpeed.Standard;
 
         //ELM Command Set
         //To be put in, not really needed if using DVI command set
@@ -98,7 +100,8 @@ namespace PcmHacking
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 500000;
-         await this.Port.OpenAsync(configuration);
+            configuration.Timeout = this.timeout;
+            await this.Port.OpenAsync(configuration);
             System.Threading.Thread.Sleep(100);
 
             ////Reset scantool - ensures starts at ELM protocol
@@ -124,8 +127,10 @@ namespace PcmHacking
         /// </summary>
         public override Task<TimeoutScenario> SetTimeout(TimeoutScenario scenario)
         {
+            TimeoutScenario previousScenario = this.currentTimeoutScenario;
             this.currentTimeoutScenario = scenario;
-            return Task.FromResult(this.currentTimeoutScenario);
+            this.UpdateTimeout();
+            return Task.FromResult(previousScenario);
         }
 
         /// <summary>
@@ -154,7 +159,7 @@ namespace PcmHacking
             int TempCount = 0;
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            while (sw.ElapsedMilliseconds < 500) //wait for byte...
+            while (sw.ElapsedMilliseconds < Math.Max(250, this.timeout)) // wait for byte... 
             {
                 if (await this.Port.GetReceiveQueueSize() > TempCount)
                 {
@@ -803,6 +808,118 @@ namespace PcmHacking
         public override void ClearMessageBuffer()
         {
             this.Port.DiscardBuffers();
+        }
+
+        /// <summary>
+        /// This is based on the timeouts used by the AllPro, so it could probably be optimized further.
+        /// </summary>
+        private void UpdateTimeout()
+        {
+            if (this.vpwSpeed == VpwSpeed.Standard)
+            {
+                switch (this.currentTimeoutScenario)
+                {
+                    case TimeoutScenario.Minimum:
+                        this.timeout = 0;
+                        break;
+
+                    case TimeoutScenario.ReadProperty:
+                        this.timeout = 50;
+                        break;
+
+                    case TimeoutScenario.ReadCrc:
+                        this.timeout = 250;
+                        break;
+
+                    case TimeoutScenario.ReadMemoryBlock:
+                        this.timeout = 250;
+                        break;
+
+                    case TimeoutScenario.EraseMemoryBlock:
+                        this.timeout = 1000;
+                        break;
+
+                    case TimeoutScenario.WriteMemoryBlock:
+                        this.timeout = 200;
+                        break;
+
+                    case TimeoutScenario.SendKernel:
+                        this.timeout = 50;
+                        break;
+
+                    case TimeoutScenario.DataLogging1:
+                        this.timeout = 25;
+                        break;
+
+                    case TimeoutScenario.DataLogging2:
+                        this.timeout = 40;
+                        break;
+
+                    case TimeoutScenario.DataLogging3:
+                        this.timeout = 60;
+                        break;
+
+                    case TimeoutScenario.Maximum:
+                        this.timeout = 1020;
+                        break;
+
+                    default:
+                        throw new NotImplementedException("Unknown timeout scenario " + this.currentTimeoutScenario);
+                }
+            }
+            else
+            {
+                switch (this.currentTimeoutScenario)
+                {
+                    case TimeoutScenario.Minimum:
+                        this.timeout = 0;
+                        break;
+
+                    // The app doesn't currently do this in 4X mode, so this is only a guess.
+                    case TimeoutScenario.ReadProperty:
+                        this.timeout = 50;
+                        break;
+
+                    case TimeoutScenario.ReadCrc:
+                        this.timeout = 250;
+                        break;
+
+                    case TimeoutScenario.ReadMemoryBlock:
+                        this.timeout = 50;
+                        break;
+
+                    case TimeoutScenario.EraseMemoryBlock:
+                        this.timeout = 1000;
+                        break;
+
+                    case TimeoutScenario.WriteMemoryBlock:
+                        this.timeout = 170;
+                        break;
+
+                    case TimeoutScenario.SendKernel:
+                        this.timeout = 10;
+                        break;
+
+                    case TimeoutScenario.DataLogging1:
+                        this.timeout = 7;
+                        break;
+
+                    case TimeoutScenario.DataLogging2:
+                        this.timeout = 10;
+                        break;
+
+                    case TimeoutScenario.DataLogging3:
+                        this.timeout = 15;
+                        break;
+
+                    case TimeoutScenario.Maximum:
+                        this.timeout = 1020;
+                        break;
+
+                    default:
+                        throw new NotImplementedException("Unknown timeout scenario " + this.currentTimeoutScenario);
+                }
+            }
         }
     }
 
