@@ -153,7 +153,7 @@ namespace PcmHacking
                 }
 
                 logger.AddUserMessage("Read complete.");
-                Utility.ReportRetryCount("read", retryCount, flashChip.Size, this.logger);
+                Utility.ReportRetryCount("Read", retryCount, flashChip.Size, this.logger);
                 logger.AddUserMessage("Starting verification...");
 
                 CKernelVerifier verifier = new CKernelVerifier(

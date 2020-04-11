@@ -92,17 +92,8 @@ void HandleFlashChipQuery()
 ///////////////////////////////////////////////////////////////////////////////
 void HandleCrcQuery()
 {
-	unsigned length = MessageBuffer[5];
-	length <<= 8;
-	length |= MessageBuffer[6];
-	length <<= 8;
-	length |= MessageBuffer[7];
-
-	unsigned address = MessageBuffer[8];
-	address <<= 8;
-	address |= MessageBuffer[9];
-	address <<= 8;
-	address |= MessageBuffer[10];
+	unsigned length = (MessageBuffer[5] << 16) + (MessageBuffer[6] << 8) + MessageBuffer[7];
+	unsigned address = (MessageBuffer[8] << 16) + (MessageBuffer[9] << 8) + MessageBuffer[10];
 
 	// Convert to names and types that match the CRC code.
 	unsigned char *message = (unsigned char*)address;
@@ -117,6 +108,7 @@ void HandleCrcQuery()
 	else
 	{
 		path = 2;
+		crcProcessSlice();
 	}
 
 	ElmSleep();
@@ -195,12 +187,7 @@ void HandleOperatingSystemQuery()
 ///////////////////////////////////////////////////////////////////////////////
 void HandleEraseBlock()
 {
-	unsigned address = MessageBuffer[5];
-	address <<= 8;
-	address |= MessageBuffer[6];
-	address <<= 8;
-	address |= MessageBuffer[7];
-
+	unsigned address = (MessageBuffer[5] << 16) + (MessageBuffer[6] << 8) + MessageBuffer[7];
 	uint8_t status = 0;
 
 	switch (flashIdentifier)
@@ -432,8 +419,6 @@ KernelStart(void)
 
 		ScratchWatchdog();
 
-		crcProcessSlice();
-
 		char completionCode = 0xFF;
 		char readState = 0xFF;
 		int length = ReadMessage(&completionCode, &readState);
@@ -468,7 +453,6 @@ KernelStart(void)
 		if (readState != 1)
 		{
 			SendToolPresent(0xBB, 0xBB, readState, readState);
-			LongSleepWithWatchdog();
 			continue;
 		}
 

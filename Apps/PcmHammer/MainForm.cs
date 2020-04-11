@@ -1,4 +1,3 @@
-  
 ﻿using J2534;
 using Microsoft.Win32;
 using System;
@@ -324,7 +323,8 @@ namespace PcmHacking
             this.verifyEntirePCMToolStripMenuItem.Enabled = false;
             this.modifyVINToolStripMenuItem.Enabled = false;
             this.writeParmetersCloneToolStripMenuItem.Enabled = false;
-            this.writeOSCalibrationToolStripMenuItem.Enabled = false;
+            this.writeOSCalibrationBootToolStripMenuItem.Enabled = false;
+            this.writeFullToolStripMenuItem.Enabled = false;
 
             this.readPropertiesButton.Enabled = false;
 
@@ -352,7 +352,8 @@ namespace PcmHacking
                 this.verifyEntirePCMToolStripMenuItem.Enabled = true;
                 this.modifyVINToolStripMenuItem.Enabled = true;
                 this.writeParmetersCloneToolStripMenuItem.Enabled = true;
-                this.writeOSCalibrationToolStripMenuItem.Enabled = true;
+                this.writeOSCalibrationBootToolStripMenuItem.Enabled = true;
+                this.writeFullToolStripMenuItem.Enabled = true;
 
                 this.readPropertiesButton.Enabled = true;
 
@@ -558,7 +559,7 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Write the contents of the flash.
+        /// Write Calibration.
         /// </summary>
         private void writeCalibrationButton_Click(object sender, EventArgs e)
         {
@@ -616,9 +617,38 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Write the entire flash.
+        /// Write Os, Calibration and Boot.
         /// </summary>
-        private void writeFullContentsButton_Click(object sender, EventArgs e)
+        private void writeOSCalibrationBootToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!BackgroundWorker.IsAlive)
+            {
+                DialogResult result = MessageBox.Show(
+                    "Changing the operating system can render the PCM unusable." + Environment.NewLine +
+                    "Special tools may be needed to make the PCM work again." + Environment.NewLine +
+                    "Are you sure you really want to take that risk?",
+                    "This is dangerous.",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button2);
+
+                if (result == DialogResult.No)
+                {
+                    this.AddUserMessage("You have made a wise choice.");
+                }
+                else
+                {
+                    BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.OsPlusCalibrationPlusBoot));
+                    BackgroundWorker.IsBackground = true;
+                    BackgroundWorker.Start();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Write Full flash (Clone)
+        /// </summary>
+        private void writeFullToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!BackgroundWorker.IsAlive)
             {
@@ -728,19 +758,29 @@ namespace PcmHacking
 
                     // Get the path to save the image to.
                     string path = "";
-                    this.Invoke((MethodInvoker)delegate () { path = this.ShowSaveAsDialog(); });
+                    this.Invoke((MethodInvoker)delegate ()
+                    {
+                        path = this.ShowSaveAsDialog();
+
+                        if (path == null)
+                        {
+                            return;
+                        }
+
+                        this.AddUserMessage("Will save to " + path);
+
+                        DelayDialogBox dialogBox = new DelayDialogBox();
+                        DialogResult dialogResult = dialogBox.ShowDialog(this);
+                        if (dialogResult == DialogResult.Cancel)
+                        {
+                            path = null;
+                            return;
+                        }
+                    });
+
                     if (path == null)
                     {
-                        this.AddUserMessage("Save canceled.");
-                        return;
-                    }
-
-                    this.AddUserMessage("Will save to " + path);
-
-                    DelayDialogBox dialogBox = new DelayDialogBox();
-                    DialogResult dialogResult = dialogBox.ShowDialog();
-                    if (dialogResult == DialogResult.Cancel)
-                    {
+                        this.AddUserMessage("Read canceled.");
                         return;
                     }
 
@@ -881,21 +921,32 @@ namespace PcmHacking
                         this.cancelButton.Enabled = true;
 
                         path = this.ShowOpenDialog();
+
+                        if (path == null)
+                        {
+                            return;
+                        }
+
+                        DelayDialogBox dialogBox = new DelayDialogBox();
+                        DialogResult dialogResult = dialogBox.ShowDialog(this);
+                        if (dialogResult == DialogResult.Cancel)
+                        {
+                            path = null;
+                            return;
+                        }
                     });
+
 
                     if (path == null)
                     {
+                        this.AddUserMessage(
+                            writeType == WriteType.TestWrite ?
+                                "Test write canceled." :
+                                "Write canceled.");
                         return;
                     }
 
                     this.AddUserMessage(path);
-
-                    DelayDialogBox dialogBox = new DelayDialogBox();
-                    DialogResult dialogResult = dialogBox.ShowDialog();
-                    if (dialogResult == DialogResult.Cancel)
-                    {
-                        return;
-                    }
 
                     byte[] image;
                     using (Stream stream = File.OpenRead(path))
@@ -923,7 +974,9 @@ namespace PcmHacking
                     int keyAlgorithm = 1;
                     bool shouldHalt;
                     bool needToCheckOperatingSystem =
-                        (writeType != WriteType.Full) && (writeType != WriteType.TestWrite);
+                        (writeType != WriteType.OsPlusCalibrationPlusBoot) &&
+                        (writeType != WriteType.Full) &&
+                        (writeType != WriteType.TestWrite);
 
                     this.AddUserMessage("Requesting operating system ID...");
                     Response<uint> osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
@@ -1098,15 +1151,6 @@ namespace PcmHacking
                 // The token / token-source can only be cancelled once, so we need to make sure they won't be re-used.
                 this.cancellationTokenSource = null;
             }
-
         }
     }
 }
- 
-
-       
-
-     
-
-       
- 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -129,6 +130,45 @@ namespace PcmHacking
         {
             await this.HandleSelectButtonClick();
             //this.UpdateStartStopButtonState();
+        }
+
+        private async void sendMessage_Click(object sender, EventArgs e)
+        {
+            string messageText = this.message.Text;
+            StringReader reader = new StringReader(messageText);
+            string line = null;
+            while ((line = reader.ReadLine()) != null)
+            {
+                line = line.Trim();
+                IEnumerable<string> hexBytes = line.Split(' ');
+                List<byte> bytes = new List<byte>();
+                foreach (string hex in hexBytes)
+                {
+                    if (string.IsNullOrWhiteSpace(hex))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        bytes.Add(byte.Parse(hex, System.Globalization.NumberStyles.HexNumber));
+                    }
+                    catch (Exception)
+                    {
+                        this.AddUserMessage("Can't parse " + hex);
+                        return;
+                    }
+                }
+
+                this.AddUserMessage("Sending " + bytes.ToArray().ToHex());
+                await this.Vehicle.SendMessage(new Message(bytes.ToArray()));
+
+                Message responseMessage;
+                while ((responseMessage = await this.Vehicle.ReceiveMessage()) != null)
+                {
+                    this.AddUserMessage("Response: " + responseMessage.GetBytes().ToHex());
+                }
+            }
         }
     }
 }

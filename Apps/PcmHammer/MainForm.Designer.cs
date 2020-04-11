@@ -54,7 +54,8 @@
             this.verifyEntirePCMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modifyVINToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.writeParmetersCloneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.writeOSCalibrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.writeOSCalibrationBootToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.writeFullToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemOptions = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemEnable4xReadWrite = new System.Windows.Forms.ToolStripMenuItem();
             this.interfaceBox.SuspendLayout();
@@ -136,7 +137,7 @@
             this.testWriteButton.Name = "testWriteButton";
             this.testWriteButton.Size = new System.Drawing.Size(216, 25);
             this.testWriteButton.TabIndex = 4;
-            this.testWriteButton.Text = "&Test Write";
+            this.testWriteButton.Text = "T&est Write";
             this.testWriteButton.UseVisualStyleBackColor = true;
             this.testWriteButton.Click += new System.EventHandler(this.testWriteButton_Click);
             // 
@@ -234,7 +235,7 @@
             this.helpTab.Location = new System.Drawing.Point(4, 22);
             this.helpTab.Margin = new System.Windows.Forms.Padding(2);
             this.helpTab.Name = "helpTab";
-            this.helpTab.Size = new System.Drawing.Size(530, 498);
+            this.helpTab.Size = new System.Drawing.Size(600, 450);
             this.helpTab.TabIndex = 2;
             this.helpTab.Text = "Help";
             this.helpTab.UseVisualStyleBackColor = true;
@@ -246,7 +247,7 @@
             this.helpWebBrowser.Margin = new System.Windows.Forms.Padding(2);
             this.helpWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
             this.helpWebBrowser.Name = "helpWebBrowser";
-            this.helpWebBrowser.Size = new System.Drawing.Size(530, 498);
+            this.helpWebBrowser.Size = new System.Drawing.Size(600, 450);
             this.helpWebBrowser.TabIndex = 0;
             // 
             // creditsTab
@@ -255,7 +256,7 @@
             this.creditsTab.Location = new System.Drawing.Point(4, 22);
             this.creditsTab.Name = "creditsTab";
             this.creditsTab.Padding = new System.Windows.Forms.Padding(3);
-            this.creditsTab.Size = new System.Drawing.Size(530, 498);
+            this.creditsTab.Size = new System.Drawing.Size(600, 450);
             this.creditsTab.TabIndex = 3;
             this.creditsTab.Text = "Credits";
             this.creditsTab.UseVisualStyleBackColor = true;
@@ -267,7 +268,7 @@
             this.creditsWebBrowser.Margin = new System.Windows.Forms.Padding(2);
             this.creditsWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
             this.creditsWebBrowser.Name = "creditsWebBrowser";
-            this.creditsWebBrowser.Size = new System.Drawing.Size(524, 492);
+            this.creditsWebBrowser.Size = new System.Drawing.Size(594, 444);
             this.creditsWebBrowser.TabIndex = 1;
             // 
             // debugTab
@@ -277,7 +278,7 @@
             this.debugTab.Margin = new System.Windows.Forms.Padding(2);
             this.debugTab.Name = "debugTab";
             this.debugTab.Padding = new System.Windows.Forms.Padding(2);
-            this.debugTab.Size = new System.Drawing.Size(530, 498);
+            this.debugTab.Size = new System.Drawing.Size(600, 450);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -291,7 +292,7 @@
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.debugLog.Size = new System.Drawing.Size(526, 494);
+            this.debugLog.Size = new System.Drawing.Size(596, 446);
             this.debugLog.TabIndex = 0;
             // 
             // menuStripMain
@@ -312,59 +313,67 @@
             this.verifyEntirePCMToolStripMenuItem,
             this.modifyVINToolStripMenuItem,
             this.writeParmetersCloneToolStripMenuItem,
-            this.writeOSCalibrationToolStripMenuItem});
+            this.writeOSCalibrationBootToolStripMenuItem,
+            this.writeFullToolStripMenuItem});
             this.menuItemTools.Name = "menuItemTools";
-            this.menuItemTools.Size = new System.Drawing.Size(46, 20);
+            this.menuItemTools.Size = new System.Drawing.Size(44, 20);
             this.menuItemTools.Text = "&Tools";
             // 
             // readEntirePCMToolStripMenuItem
             // 
             this.readEntirePCMToolStripMenuItem.Name = "readEntirePCMToolStripMenuItem";
-            this.readEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.readEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
             this.readEntirePCMToolStripMenuItem.Text = "&Read Entire PCM";
             this.readEntirePCMToolStripMenuItem.Click += new System.EventHandler(this.readFullContentsButton_Click);
             // 
             // verifyEntirePCMToolStripMenuItem
             // 
             this.verifyEntirePCMToolStripMenuItem.Name = "verifyEntirePCMToolStripMenuItem";
-            this.verifyEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.verifyEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
             this.verifyEntirePCMToolStripMenuItem.Text = "&Verify Entire PCM";
             this.verifyEntirePCMToolStripMenuItem.Click += new System.EventHandler(this.quickComparisonButton_Click);
             // 
             // modifyVINToolStripMenuItem
             // 
             this.modifyVINToolStripMenuItem.Name = "modifyVINToolStripMenuItem";
-            this.modifyVINToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
+            this.modifyVINToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
             this.modifyVINToolStripMenuItem.Text = "&Change VIN";
             this.modifyVINToolStripMenuItem.Click += new System.EventHandler(this.modifyVinButton_Click);
             // 
             // writeParmetersCloneToolStripMenuItem
             // 
             this.writeParmetersCloneToolStripMenuItem.Name = "writeParmetersCloneToolStripMenuItem";
-            this.writeParmetersCloneToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.writeParmetersCloneToolStripMenuItem.Text = "Write &Parameters (Clone)";
+            this.writeParmetersCloneToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.writeParmetersCloneToolStripMenuItem.Text = "Write &Parameters";
             this.writeParmetersCloneToolStripMenuItem.Click += new System.EventHandler(this.writeParametersButton_Click);
             // 
-            // writeOSCalibrationToolStripMenuItem
+            // writeOSCalibrationBootToolStripMenuItem
             // 
-            this.writeOSCalibrationToolStripMenuItem.Name = "writeOSCalibrationToolStripMenuItem";
-            this.writeOSCalibrationToolStripMenuItem.Size = new System.Drawing.Size(206, 22);
-            this.writeOSCalibrationToolStripMenuItem.Text = "Write &OS && Calibration";
-            this.writeOSCalibrationToolStripMenuItem.Click += new System.EventHandler(this.writeFullContentsButton_Click);
+            this.writeOSCalibrationBootToolStripMenuItem.Name = "writeOSCalibrationBootToolStripMenuItem";
+            this.writeOSCalibrationBootToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.writeOSCalibrationBootToolStripMenuItem.Text = "Write &OS, Calibration && Boot";
+            this.writeOSCalibrationBootToolStripMenuItem.Click += new System.EventHandler(this.writeOSCalibrationBootToolStripMenuItem_Click);
+            // 
+            // writeFullToolStripMenuItem
+            // 
+            this.writeFullToolStripMenuItem.Name = "writeFullToolStripMenuItem";
+            this.writeFullToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.writeFullToolStripMenuItem.Text = "Write &Full Flash (Clone)";
+            this.writeFullToolStripMenuItem.Click += new System.EventHandler(this.writeFullToolStripMenuItem_Click);
             // 
             // menuItemOptions
             // 
             this.menuItemOptions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuItemEnable4xReadWrite});
             this.menuItemOptions.Name = "menuItemOptions";
-            this.menuItemOptions.Size = new System.Drawing.Size(61, 20);
+            this.menuItemOptions.Size = new System.Drawing.Size(56, 20);
             this.menuItemOptions.Text = "&Options";
             // 
             // menuItemEnable4xReadWrite
             // 
             this.menuItemEnable4xReadWrite.Name = "menuItemEnable4xReadWrite";
-            this.menuItemEnable4xReadWrite.Size = new System.Drawing.Size(214, 22);
-            this.menuItemEnable4xReadWrite.Text = "Enable 4x Communication";
+            this.menuItemEnable4xReadWrite.Size = new System.Drawing.Size(196, 22);
+            this.menuItemEnable4xReadWrite.Text = "Enable &4x Communication";
             this.menuItemEnable4xReadWrite.Click += new System.EventHandler(this.enable4xReadWrite_Click);
             // 
             // MainForm
@@ -429,7 +438,8 @@
         private System.Windows.Forms.ToolStripMenuItem verifyEntirePCMToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem modifyVINToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem writeParmetersCloneToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem writeOSCalibrationToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem writeOSCalibrationBootToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem writeFullToolStripMenuItem;
     }
 }
 

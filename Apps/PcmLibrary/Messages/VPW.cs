@@ -66,7 +66,7 @@ namespace PcmHacking
             if (DeviceId >= 0x80 && DeviceId <= 0x8F) return "entertainment system";
             if (DeviceId >= 0x90 && DeviceId <= 0x97) return "personal communications";
             if (DeviceId >= 0x98 && DeviceId <= 0x9F) return "climate control (HVAC)";
-            if (DeviceId >= 0xA0 && DeviceId <= 0xBF) return "convinience (door/seats/window/etc)";
+            if (DeviceId >= 0xA0 && DeviceId <= 0xBF) return "convenience (door/seats/window/etc)";
             if (DeviceId >= 0xC0 && DeviceId <= 0xC7) return "security module";
             if (DeviceId >= 0xC8 && DeviceId <= 0xCB) return "EV energy transfer system";
             if (DeviceId == 0xC8)                     return "utility connection service";
@@ -178,7 +178,9 @@ namespace PcmHacking
         {
             UInt16 Sum = 0;
 
-            for (int i = 4; i < block.Length - 2; i++) // start after prio, dest, src, mode, stop at end of payload
+            // dataLength should be verified by caller, block.Length will prevent an Array out of bounds if not.
+            int dataLength = (block[5] << 8) + block[6];
+            for (int i = 4; i < dataLength + 10 && i < block.Length - 2; i++) // start after prio, dest, src, mode, stop at end of payload
             {
                 Sum += block[i];
             }
@@ -192,19 +194,19 @@ namespace PcmHacking
         /// <remarks>
         /// Overwrites the last 2 bytes at the end of the array with the sum
         /// </remarks>
-        public static byte[] AddBlockChecksum(byte[] Block)
+        public static byte[] AddBlockChecksum(byte[] block)
         {
             UInt16 Sum = 0;
 
-            for (int i = 4; i < Block.Length - 2; i++) // skip prio, dest, src, mode
+            for (int i = 4; i < block.Length - 2; i++) // skip prio, dest, src, mode
             {
-                Sum += Block[i];
+                Sum += block[i];
             }
 
-            Block[Block.Length - 2] = unchecked((byte)(Sum >> 8));
-            Block[Block.Length - 1] = unchecked((byte)(Sum & 0xFF));
+            block[block.Length - 2] = unchecked((byte)(Sum >> 8));
+            block[block.Length - 1] = unchecked((byte)(Sum & 0xFF));
 
-            return Block;
+            return block;
         }
     }
 }
