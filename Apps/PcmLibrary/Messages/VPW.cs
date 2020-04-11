@@ -66,7 +66,7 @@ namespace PcmHacking
             if (DeviceId >= 0x80 && DeviceId <= 0x8F) return "entertainment system";
             if (DeviceId >= 0x90 && DeviceId <= 0x97) return "personal communications";
             if (DeviceId >= 0x98 && DeviceId <= 0x9F) return "climate control (HVAC)";
-            if (DeviceId >= 0xA0 && DeviceId <= 0xBF) return "convinience (door/seats/window/etc)";
+            if (DeviceId >= 0xA0 && DeviceId <= 0xBF) return "convenience (door/seats/window/etc)";
             if (DeviceId >= 0xC0 && DeviceId <= 0xC7) return "security module";
             if (DeviceId >= 0xC8 && DeviceId <= 0xCB) return "EV energy transfer system";
             if (DeviceId == 0xC8)                     return "utility connection service";

@@ -97,7 +97,7 @@ namespace PcmHacking
             int startIndex = 0;
             foreach (ProfileParameter parameter in group.Parameters)
             {
-                int value = 0;
+                Int16 value = 0;
                 switch (parameter.ByteCount)
                 {
                     case 1:
