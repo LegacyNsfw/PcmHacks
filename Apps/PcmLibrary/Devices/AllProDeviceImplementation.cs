@@ -170,7 +170,7 @@ namespace PcmHacking
                         milliseconds = 170;
                         break;
 
-                    case TimeoutScenario.SendKernel;
+                    case TimeoutScenario.SendKernel:
                         milliseconds = 10;
                         break;
 
