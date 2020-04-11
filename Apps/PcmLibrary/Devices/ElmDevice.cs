@@ -130,7 +130,7 @@ namespace PcmHacking
         {
             if (this.currentTimeoutScenario == scenario)
             {
-           //     return this.currentTimeoutScenario;
+                return this.currentTimeoutScenario;
             }
 
             int milliseconds = this.implementation.GetTimeoutMilliseconds(scenario, this.Speed);
@@ -142,7 +142,7 @@ namespace PcmHacking
             // this when sending the tool-present messages, but that might be coincidence.)
             //
             // Consider increasing if STOPPED / NO DATA is still a problem. 
-            this.Port.SetTimeout(milliseconds + 250);
+            this.Port.SetTimeout(milliseconds + 1000);
 
             // This code is so problematic that I've left it here as a warning. The app is
             // unable to receive the response to the erase command if this code is enabled.
