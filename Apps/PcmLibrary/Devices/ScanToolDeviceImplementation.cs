@@ -144,11 +144,11 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.WriteMemoryBlock:
-                        milliseconds = 200;
+                        milliseconds = 400;// 250 was too small
                         break;
 
                     case TimeoutScenario.SendKernel:
-                        milliseconds = 50;
+                        milliseconds = 100; // 50 was too small
                         break;
 
                     case TimeoutScenario.DataLogging1:

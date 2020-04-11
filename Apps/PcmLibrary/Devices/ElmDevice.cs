@@ -130,7 +130,7 @@ namespace PcmHacking
         {
             if (this.currentTimeoutScenario == scenario)
             {
-                return this.currentTimeoutScenario;
+           //     return this.currentTimeoutScenario;
             }
 
             int milliseconds = this.implementation.GetTimeoutMilliseconds(scenario, this.Speed);
