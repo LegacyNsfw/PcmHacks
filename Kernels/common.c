@@ -255,8 +255,8 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 			return 0;
 		}
 
-		// Artificial message-length limit for debugging.
-		if (length == MessageBufferSize)
+		// Let us not overflow MessageBuffer.
+		if (length > MessageBufferSize)
 		{
 			*readState = 0xEE;
 			return length;
