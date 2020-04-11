@@ -10,10 +10,13 @@ namespace PcmHacking
     public enum TimeoutScenario
     {
         Undefined = 0,
+        Minimum,
         ReadProperty,
         ReadCrc,
         SendKernel,
         ReadMemoryBlock,
+        EraseMemoryBlock,
+        WriteMemoryBlock,
         DataLogging1,
         DataLogging2,
         DataLogging3,

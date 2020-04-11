@@ -273,8 +273,6 @@ namespace PcmHacking
                 }
 
                 // Erase and rewrite the required memory ranges.
-                await this.vehicle.SetDeviceTimeout(TimeoutScenario.Maximum);
-
                 DateTime startTime = DateTime.Now;
                 UInt32 totalSize = this.GetTotalSize(flashChip, relevantBlocks);
                 UInt32 bytesRemaining = totalSize;
@@ -312,8 +310,6 @@ namespace PcmHacking
                     {
                         this.logger.AddUserMessage("Writing...");
                     }
-
-                    await this.vehicle.SendToolPresentNotification();
 
                     this.logger.AddUserMessage("Address\t% Done\tTime Remaining");
 
@@ -428,6 +424,7 @@ namespace PcmHacking
         {
             this.logger.AddUserMessage("Erasing.");
 
+            await this.vehicle.SetDeviceTimeout(TimeoutScenario.EraseMemoryBlock);
             Query<byte> eraseRequest = this.vehicle.CreateQuery<byte>(
                  () => this.protocol.CreateFlashEraseBlockRequest(range.Address),
                  this.protocol.ParseFlashEraseBlock,
@@ -525,6 +522,8 @@ namespace PcmHacking
                         startAddress,
                         totalWritten * 100 / totalSize,
                         timeRemaining));
+
+                await this.vehicle.SetDeviceTimeout(TimeoutScenario.WriteMemoryBlock);
 
                 // WritePayload contains a retry loop, so if it fails, we don't need to retry at this layer.
                 Response<bool> response = await this.vehicle.WritePayload(payloadMessage, cancellationToken);

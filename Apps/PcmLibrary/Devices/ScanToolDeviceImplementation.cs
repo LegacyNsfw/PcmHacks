@@ -123,20 +123,32 @@ namespace PcmHacking
             {
                 switch (scenario)
                 {
+                    case TimeoutScenario.Minimum:
+                        milliseconds = 0;
+                        break;
+
                     case TimeoutScenario.ReadProperty:
                         milliseconds = 44;
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        milliseconds = 865;
+                        milliseconds = 50;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
-                        milliseconds = 2240;
+                        milliseconds = 250;
+                        break;
+
+                    case TimeoutScenario.EraseMemoryBlock:
+                        milliseconds = 1000;
+                        break;
+
+                    case TimeoutScenario.WriteMemoryBlock:
+                        milliseconds = 200;
                         break;
 
                     case TimeoutScenario.SendKernel:
-                        milliseconds = 913;
+                        milliseconds = 50;
                         break;
 
                     case TimeoutScenario.DataLogging1:
@@ -160,43 +172,7 @@ namespace PcmHacking
             }
             else
             {
-                switch (scenario)
-                {
-                    // The app doesn't currently do this in 4X mode, so this is only a guess.
-                    case TimeoutScenario.ReadProperty:
-                        milliseconds = 11;
-                        break;
-
-                    case TimeoutScenario.ReadCrc:
-                        milliseconds = 216;
-                        break;
-
-                    case TimeoutScenario.ReadMemoryBlock:
-                        milliseconds = 560;
-                        break;
-
-                    case TimeoutScenario.SendKernel:
-                        milliseconds = 230;
-                        break;
-
-                    case TimeoutScenario.DataLogging1:
-                        milliseconds = 7;
-                        break;
-
-                    case TimeoutScenario.DataLogging2:
-                        milliseconds = 10;
-                        break;
-
-                    case TimeoutScenario.DataLogging3:
-                        milliseconds = 15;
-                        break;
-
-                    case TimeoutScenario.Maximum:
-                        return 1020;
-
-                    default:
-                        throw new NotImplementedException("Unknown timeout scenario " + scenario);
-                }
+                throw new NotImplementedException("Since when did ScanTool devices support 4x?");
             }
 
             return milliseconds;

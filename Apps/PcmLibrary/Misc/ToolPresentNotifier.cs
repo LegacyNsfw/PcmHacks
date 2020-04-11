@@ -77,7 +77,9 @@ namespace PcmHacking
         {
             this.logger.AddDebugMessage("Sending 'test device present' notification.");
             Message message = this.protocol.CreateTestDevicePresentNotification();
+            TimeoutScenario originalScenario = await this.device.SetTimeout(TimeoutScenario.Minimum);
             await this.device.SendMessage(message);
+            await this.device.SetTimeout(originalScenario);
         }
     }
 }

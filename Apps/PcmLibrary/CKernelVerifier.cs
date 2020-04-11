@@ -90,7 +90,7 @@ namespace PcmHacking
                 
                 // Each poll of the pcm causes it to CRC 16kb of segment data.
                 // When the segment sum is available it is returned.
-                int retryDelay = 1500;
+                int retryDelay = 50;
                 Message query = this.protocol.CreateCrcQuery(range.Address, range.Size);
                 for (int attempts = 0; attempts < 20; attempts++)
                 {

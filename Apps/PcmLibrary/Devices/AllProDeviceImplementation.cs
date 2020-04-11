@@ -94,20 +94,32 @@ namespace PcmHacking
             {
                 switch (scenario)
                 {
+                    case TimeoutScenario.Minimum:
+                        milliseconds = 0;
+                        break;
+
                     case TimeoutScenario.ReadProperty:
-                        milliseconds = 44;
+                        milliseconds = 25;
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        milliseconds = 865;
+                        milliseconds = 50;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
-                        milliseconds = 2240;
+                        milliseconds = 250;
+                        break;
+
+                    case TimeoutScenario.EraseMemoryBlock:
+                        milliseconds = 1000;
+                        break;
+
+                    case TimeoutScenario.WriteMemoryBlock:
+                        milliseconds = 200;
                         break;
 
                     case TimeoutScenario.SendKernel:
-                        milliseconds = 913;
+                        milliseconds = 50;
                         break;
 
                     case TimeoutScenario.DataLogging1:
@@ -133,21 +145,33 @@ namespace PcmHacking
             {
                 switch (scenario)
                 {
+                    case TimeoutScenario.Minimum:
+                        milliseconds = 0;
+                        break;
+
                     // The app doesn't currently do this in 4X mode, so this is only a guess.
                     case TimeoutScenario.ReadProperty:
-                        milliseconds = 11;
+                        milliseconds = 12;
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        milliseconds = 216;
+                        milliseconds = 50;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
-                        milliseconds = 560;
+                        milliseconds = 50;
                         break;
 
-                    case TimeoutScenario.SendKernel:
-                        milliseconds = 230;
+                    case TimeoutScenario.EraseMemoryBlock:
+                        milliseconds = 1000;
+                        break;
+
+                    case TimeoutScenario.WriteMemoryBlock:
+                        milliseconds = 170;
+                        break;
+
+                    case TimeoutScenario.SendKernel;
+                        milliseconds = 10;
                         break;
 
                     case TimeoutScenario.DataLogging1:
