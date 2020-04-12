@@ -313,6 +313,7 @@ namespace PcmHacking
                 if (await this.WaitForSuccess(this.protocol.ParseUploadPermissionResponse, cancellationToken))
                 {
                     logger.AddUserMessage("Upload permission granted.");
+                    uploadAllowed = true;
                     break;
                 }
 
@@ -324,7 +325,7 @@ namespace PcmHacking
                 await Task.Delay(100);
             }
 
-            if (uploadAllowed)
+            if (!uploadAllowed)
             {
                 logger.AddUserMessage("Permission to upload kernel was denied.");
                 logger.AddUserMessage("If this persists, try cutting power to the PCM, restoring power, waiting ten seconds, and trying again.");
