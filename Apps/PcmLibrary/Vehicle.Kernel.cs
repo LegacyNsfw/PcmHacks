@@ -286,9 +286,6 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> PCMExecute(byte[] payload, int address, CancellationToken cancellationToken)
         {
-            logger.AddUserMessage("Uploading kernel to PCM.");
-            logger.AddDebugMessage("Sending upload request for kernel size " + payload.Length + ", loadaddress " + address.ToString("X6"));
-
             // Note that we request an upload of 4k maximum, because the PCM will reject anything bigger.
             // But you can request a 4k upload and then send up to 16k if you want, and the PCM will not object.
             int claimedSize = Math.Min(4096, payload.Length);
@@ -300,22 +297,37 @@ namespace PcmHacking
                 return false;
             }
 
-            await this.SetDeviceTimeout(TimeoutScenario.ReadProperty);
-            Message request = protocol.CreateUploadRequest(address, claimedSize);
-            if(!await TrySendMessage(request, "upload request"))
+            logger.AddDebugMessage("Sending upload request for kernel size " + payload.Length + ", loadaddress " + address.ToString("X6"));
+
+            bool uploadAllowed = false;
+            for (int attempt = 0; attempt < 5; attempt++)
             {
-                return false;
+                logger.AddUserMessage("Requesting permission to upload kernel.");
+                await this.SetDeviceTimeout(TimeoutScenario.ReadProperty);
+                Message request = protocol.CreateUploadRequest(address, claimedSize);
+                if (!await TrySendMessage(request, "upload request"))
+                {
+                    return false;
+                }
+
+                if (await this.WaitForSuccess(this.protocol.ParseUploadPermissionResponse, cancellationToken))
+                {
+                    logger.AddUserMessage("Upload permission granted.");
+                    break;
+                }
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return false;
+                }
+
+                await Task.Delay(100);
             }
 
-            if (!await this.WaitForSuccess(this.protocol.ParseUploadPermissionResponse, cancellationToken))
+            if (uploadAllowed)
             {
                 logger.AddUserMessage("Permission to upload kernel was denied.");
-                logger.AddUserMessage("This can usually be solved by cutting power to the PCM, restoring power, waiting ten seconds, and trying again.");
-                return false;
-            }
-
-            if (cancellationToken.IsCancellationRequested)
-            {
+                logger.AddUserMessage("If this persists, try cutting power to the PCM, restoring power, waiting ten seconds, and trying again.");
                 return false;
             }
 

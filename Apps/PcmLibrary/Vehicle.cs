@@ -391,7 +391,7 @@ namespace PcmHacking
                 Response<bool> response = filter(message);
                 if ((response.Status != ResponseStatus.Success) && (response.Status != ResponseStatus.Refused))
                 {
-                    this.logger.AddDebugMessage("Ignoring message: " + response.Status);
+                    this.logger.AddDebugMessage("Ignoring message: " + response.Status + "  " + message?.GetBytes()?.ToHex());
                     continue;
                 }
 

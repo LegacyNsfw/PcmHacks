@@ -159,7 +159,7 @@ namespace PcmHacking
             int TempCount = 0;
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            while (sw.ElapsedMilliseconds < Math.Max(250, this.timeout)) // wait for byte... 
+            while (sw.ElapsedMilliseconds < Math.Max(200, this.timeout)) // wait for byte... 
             {
                 if (await this.Port.GetReceiveQueueSize() > TempCount)
                 {
@@ -875,7 +875,6 @@ namespace PcmHacking
                         this.timeout = 0;
                         break;
 
-                    // The app doesn't currently do this in 4X mode, so this is only a guess.
                     case TimeoutScenario.ReadProperty:
                         this.timeout = 50;
                         break;
