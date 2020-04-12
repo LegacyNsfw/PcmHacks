@@ -30,7 +30,7 @@ namespace PcmHacking
         /// Might be worth making this a parameter to the retry loops since
         /// in most cases when only need about 5.
         /// </remarks>
-        public const int MaxReceiveAttempts = 15;
+        public const int MaxReceiveAttempts = 5;
 
         /// <summary>
         /// The device we'll use to talk to the PCM.
