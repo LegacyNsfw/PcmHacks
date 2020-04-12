@@ -72,16 +72,15 @@ namespace PcmHacking
         /// </summary>
         public Response<bool> ParseUploadPermissionResponse(Message message)
         {
-            // In case the PCM sends back a 7F messages with an 8C priority byte...
             Response<bool> response = this.DoSimpleValidation(message, Priority.Physical0, Mode.PCMUploadRequest);
-            return response;
 
-//            if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
-  //          {
-    //            return response;
-      //      }
+            if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
+            {
+                return response;
+            }
 
-        //    return this.DoSimpleValidation(message, Priority.Physical0High, Mode.PCMUploadRequest);
+            // In case the PCM sends back a 7F messages with an 8C priority byte...
+            return this.DoSimpleValidation(message, Priority.Physical0High, Mode.PCMUploadRequest);
         }
 
         /// <summary>

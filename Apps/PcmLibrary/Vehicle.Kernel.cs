@@ -480,7 +480,7 @@ namespace PcmHacking
                     if (refused.Status != ResponseStatus.Success)
                     {
                         // This should help ELM devices receive responses.
-                        await Task.Delay(250);
+                        await Task.Delay(100);
                         await notifier.ForceNotify();
                         continue;
                     }

@@ -718,12 +718,14 @@ namespace PcmHacking
             {
                 this.Logger.AddDebugMessage("DVI setting VPW 1X");
                 Msg[3] = 0;
+                this.vpwSpeed = VpwSpeed.Standard;
                
             }
             else
             {
                 this.Logger.AddDebugMessage("DVI setting VPW 4X");
                 Msg[3] = 1;
+                this.vpwSpeed = VpwSpeed.FourX;
             }
 
             Msg[Msg.Length - 1] = CalcChecksum(Msg);
