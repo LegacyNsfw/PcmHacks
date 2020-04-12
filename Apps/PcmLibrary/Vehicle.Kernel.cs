@@ -504,9 +504,6 @@ namespace PcmHacking
             // Since we had some issue with other modules not staying quiet...
             await this.ForceSendToolPresentNotification();
 
-            TimeoutScenario scenario = newSpeed == VpwSpeed.Standard ? TimeoutScenario.ReadProperty : TimeoutScenario.ReadMemoryBlock;
-            await device.SetTimeout(scenario);
-
             return true;
         }
         
@@ -530,6 +527,7 @@ namespace PcmHacking
                 Protocol.HighSpeedPermissionResult parsed = this.protocol.ParseHighSpeedPermissionResponse(response);
                 if (!parsed.IsValid)
                 {
+                    await Task.Delay(100);
                     continue;
                 }
 
@@ -541,6 +539,7 @@ namespace PcmHacking
 
                     // Forcing a notification message should help ELM devices receive responses.
                     await notifier.ForceNotify();
+                    await Task.Delay(100);
                     continue;
                 }
 

@@ -159,7 +159,12 @@ namespace PcmHacking
             int TempCount = 0;
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            while (sw.ElapsedMilliseconds < Math.Max(200, this.timeout)) // wait for byte... 
+
+            // Wait for bytes to arrive...
+            // I'm not sure with the Math.Max thing is necessary, but 
+            // we don't permission to upload the kernel without it.
+            //while (sw.ElapsedMilliseconds < this.timeout)
+            while (sw.ElapsedMilliseconds < Math.Max(200, this.timeout))
             {
                 if (await this.Port.GetReceiveQueueSize() > TempCount)
                 {
@@ -828,7 +833,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        this.timeout = 250;
+                        this.timeout = 100;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
@@ -880,7 +885,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        this.timeout = 250;
+                        this.timeout = 100;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
