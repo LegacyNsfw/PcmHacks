@@ -26,6 +26,21 @@ namespace PcmHacking
             Message suppressChatter = this.protocol.CreateDisableNormalMessageTransmission();
             await this.device.SendMessage(suppressChatter);
             await this.notifier.ForceNotify();
+
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            while (stopwatch.ElapsedMilliseconds < 1000)
+            {
+                Message received = await this.device.ReceiveMessage();
+                if (received != null)
+                {
+                    this.logger.AddDebugMessage("Ignoring chatter: " + received.ToString());
+                }
+                else
+                {
+                    await Task.Delay(100);
+                }
+            }
         }
         
         /// <summary>

@@ -156,7 +156,7 @@ void crcProcessSlice()
     }
 
     int limit = crcLength;
-    int chunkSize = 16384;
+    int chunkSize = 8192;
     if ((crcIndex + chunkSize) < limit)
     {
         limit = crcIndex + chunkSize;

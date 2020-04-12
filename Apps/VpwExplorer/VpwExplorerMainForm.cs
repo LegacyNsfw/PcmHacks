@@ -94,9 +94,10 @@ namespace PcmHacking
             this.deviceDescription.Text = deviceName;
         }
 
-        private void PcmExplorerMainForm_Load(object sender, EventArgs e)
+        private async void PcmExplorerMainForm_Load(object sender, EventArgs e)
         {
             this.uiThreadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            await this.ResetDevice();
         }
 
         private async void testPid_Click(object sender, EventArgs e)
