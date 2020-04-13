@@ -88,7 +88,8 @@ namespace PcmHacking
         {
             this.MaxSendSize = 4096 + 10 + 2;    // packets up to 4112 but we want 4096 byte data blocks
             this.MaxReceiveSize = 4096 + 10 + 2; // with 10 byte header and 2 byte block checksum
-            this.Supports4X = true;
+            // this.Supports4X = true;
+            this.Supports4X = false;
         }
 
         public override string GetDeviceType()
@@ -169,9 +170,9 @@ namespace PcmHacking
             //
             // Ideally the next line of code would just be this:
             //
-            // while (sw.ElapsedMilliseconds < this.timeout)
+            while (sw.ElapsedMilliseconds < this.timeout)
             //
-            while (sw.ElapsedMilliseconds < Math.Max(500, this.timeout))
+            //while (sw.ElapsedMilliseconds < Math.Max(500, this.timeout))
             {
                 if (await this.Port.GetReceiveQueueSize() > TempCount)
                 {
@@ -206,7 +207,7 @@ namespace PcmHacking
                 Chk = (await WaitForSerial(1));
                 if (Chk == false)
                 {
-                    this.Logger.AddDebugMessage("Timeout.. no data present");
+                    this.Logger.AddDebugMessage("Timeout.. no data present A");
                     return Response.Create(ResponseStatus.Timeout, (Message)null);
                 }
 
@@ -231,7 +232,7 @@ namespace PcmHacking
                         Chk = (await WaitForSerial(1));
                         if (Chk == false)
                         {
-                            this.Logger.AddDebugMessage("Timeout.. no data present");
+                            this.Logger.AddDebugMessage("Timeout.. no data present B");
                             return Response.Create(ResponseStatus.Timeout, (Message)null);
                         }
                         await this.Port.Receive(timestampbuf, i, 1);
@@ -243,7 +244,7 @@ namespace PcmHacking
                     Chk = (await WaitForSerial(1));
                     if (Chk == false)
                     {
-                        this.Logger.AddDebugMessage("Timeout.. no data present");
+                        this.Logger.AddDebugMessage("Timeout.. no data present C");
                         return Response.Create(ResponseStatus.Timeout, (Message)null);
                     }
                     await this.Port.Receive(rx, 1, 1);
@@ -255,7 +256,7 @@ namespace PcmHacking
                    Chk = (await WaitForSerial(2));
                     if (Chk == false)
                     {
-                        this.Logger.AddDebugMessage("Timeout.. no data present");
+                        this.Logger.AddDebugMessage("Timeout.. no data present D");
                         return Response.Create(ResponseStatus.Timeout, (Message)null);
                     }
                     await this.Port.Receive(rx, 1, 2);
@@ -268,7 +269,7 @@ namespace PcmHacking
                 Chk = (await WaitForSerial(1));
                 if (Chk == false)
                 {
-                    this.Logger.AddDebugMessage("Timeout.. no data present");
+                    this.Logger.AddDebugMessage("Timeout.. no data present E");
                     return Response.Create(ResponseStatus.Timeout, (Message)null);
                 }
                 await this.Port.Receive(rx, 1, 1);
@@ -280,7 +281,7 @@ namespace PcmHacking
             Chk = (await WaitForSerial((ushort)(Length + 1)));
             if (Chk == false)
             {
-                this.Logger.AddDebugMessage("Timeout.. no data present");
+                this.Logger.AddDebugMessage("Timeout.. no data present F");
                 return Response.Create(ResponseStatus.Timeout, (Message)null);
             }
 
@@ -317,21 +318,25 @@ namespace PcmHacking
                 return Response.Create(ResponseStatus.Error, (Message)null);
             }
 
-           // this.Logger.AddDebugMessage("Total Length Data=" + Length + " RX: " + receive.ToHex());
+            // this.Logger.AddDebugMessage("Total Length Data=" + Length + " RX: " + receive.ToHex());
 
 
             if (receive[0] == 0x8 || receive[0] == 0x9)
             {//network frames //Strip header and checksum
                 byte[] StrippedFrame = new byte[Length];
                 Buffer.BlockCopy(receive, 2 + offset, StrippedFrame, 0, Length);
-                if (TimeStampsEnabled) return Response.Create(ResponseStatus.Success, new Message(StrippedFrame,timestampmicro,0));
+                if (TimeStampsEnabled) return Response.Create(ResponseStatus.Success, new Message(StrippedFrame, timestampmicro, 0));
                 return Response.Create(ResponseStatus.Success, new Message(StrippedFrame));
             }
             else if (receive[0] == 0x7F)
             {//error detected
                 return Response.Create(ResponseStatus.Error, new Message(receive));
             }
-            else return Response.Create(ResponseStatus.Success, new Message(receive));
+            else
+            {
+                this.Logger.AddDebugMessage("RX: " + receive.ToHex());
+                return Response.Create(ResponseStatus.Success, new Message(receive));
+            }
         }
 
 
@@ -416,7 +421,6 @@ namespace PcmHacking
         /// </summary>
         async private Task<Response<Message>> SendDVIPacket(Message message)
         {
-            //this.Logger.AddDebugMessage("Trace: SendDVIPacket");
             int length = message.GetBytes().Length;
             byte[] RawPacket = message.GetBytes();
             byte[] SendPacket = new byte[length + 3];
@@ -452,20 +456,25 @@ namespace PcmHacking
                 byte[] Val = m.Value.GetBytes();
                 if (Val[0] == 0x20 && Val[2] == 0x00)
                 {
+                    this.Logger.AddDebugMessage("TX: " + message.ToString());
                     return Response.Create(ResponseStatus.Success, message);
                 }
                 else if (Val[0] == 0x21 && Val[2] == 0x00)
                 {
+                    this.Logger.AddDebugMessage("TX: " + message.ToString());
                     return Response.Create(ResponseStatus.Success, message);
                 }
-                else return Response.Create(ResponseStatus.Error, message);
+                else
+                {
+                    this.Logger.AddUserMessage("Unable to transmit A: " + message.ToString());
+                    return Response.Create(ResponseStatus.Error, message);
+                }
             }
             else
             {
+                this.Logger.AddUserMessage("Unable to transmit B: " + message.ToString());
                 return Response.Create(ResponseStatus.Error, message);
             }
-            //  return Response.Create(ResponseStatus.Error, message);
-
         }
 
         /// <summary>
@@ -842,7 +851,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        this.timeout = 100;
+                        this.timeout = 250;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
@@ -858,7 +867,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.SendKernel:
-                        this.timeout = 50;
+                        this.timeout = 4000;
                         break;
 
                     case TimeoutScenario.DataLogging1:
@@ -894,7 +903,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        this.timeout = 100;
+                        this.timeout = 200;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
@@ -910,7 +919,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.SendKernel:
-                        this.timeout = 10;
+                        this.timeout = 4000;
                         break;
 
                     case TimeoutScenario.DataLogging1:
