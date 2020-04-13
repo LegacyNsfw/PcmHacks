@@ -325,7 +325,7 @@ namespace PcmHacking
             {//network frames //Strip header and checksum
                 byte[] StrippedFrame = new byte[Length];
                 Buffer.BlockCopy(receive, 2 + offset, StrippedFrame, 0, Length);
-                this.Logger.AddDebugMessage("RX: " + receive.ToHex());
+                this.Logger.AddDebugMessage("RX: " + StrippedFrame.ToHex());
                 if (TimeStampsEnabled) return Response.Create(ResponseStatus.Success, new Message(StrippedFrame, timestampmicro, 0));
                 return Response.Create(ResponseStatus.Success, new Message(StrippedFrame));
             }
@@ -335,7 +335,7 @@ namespace PcmHacking
             }
             else
             {
-                this.Logger.AddDebugMessage("RX: " + receive.ToHex());
+                this.Logger.AddDebugMessage("XPro: " + receive.ToHex());
                 return Response.Create(ResponseStatus.Success, new Message(receive));
             }
         }
