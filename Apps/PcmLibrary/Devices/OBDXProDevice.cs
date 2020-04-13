@@ -88,8 +88,8 @@ namespace PcmHacking
         {
             this.MaxSendSize = 4096 + 10 + 2;    // packets up to 4112 but we want 4096 byte data blocks
             this.MaxReceiveSize = 4096 + 10 + 2; // with 10 byte header and 2 byte block checksum
-            // this.Supports4X = true;
-            this.Supports4X = false;
+            this.Supports4X = true;
+            // this.Supports4X = false;
         }
 
         public override string GetDeviceType()
@@ -844,7 +844,7 @@ namespace PcmHacking
                 switch (this.currentTimeoutScenario)
                 {
                     case TimeoutScenario.Minimum:
-                        this.timeout = 0;
+                        this.timeout = 50;
                         break;
 
                     case TimeoutScenario.ReadProperty:
@@ -864,7 +864,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.WriteMemoryBlock:
-                        this.timeout = 200;
+                        this.timeout = 1200;
                         break;
 
                     case TimeoutScenario.SendKernel:
@@ -896,7 +896,7 @@ namespace PcmHacking
                 switch (this.currentTimeoutScenario)
                 {
                     case TimeoutScenario.Minimum:
-                        this.timeout = 0;
+                        this.timeout = 50;
                         break;
 
                     case TimeoutScenario.ReadProperty:
@@ -904,11 +904,11 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        this.timeout = 200;
+                        this.timeout = 250;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
-                        this.timeout = 50;
+                        this.timeout = 250;
                         break;
 
                     case TimeoutScenario.EraseMemoryBlock:
@@ -916,11 +916,11 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.WriteMemoryBlock:
-                        this.timeout = 170;
+                        this.timeout = 600;
                         break;
 
                     case TimeoutScenario.SendKernel:
-                        this.timeout = 4000;
+                        this.timeout = 2000;
                         break;
 
                     case TimeoutScenario.DataLogging1:
