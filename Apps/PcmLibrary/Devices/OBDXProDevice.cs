@@ -103,7 +103,7 @@ namespace PcmHacking
 
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
-            configuration.BaudRate = 500000;
+            configuration.BaudRate = 115200;
             configuration.Timeout = 1000;
             await this.Port.OpenAsync(configuration);
             System.Threading.Thread.Sleep(100);
