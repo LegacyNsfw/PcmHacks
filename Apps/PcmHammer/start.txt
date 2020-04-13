@@ -1,1 +1,1 @@
-Thanks for using PCM Hammer.
+WARNING: do not attempt to write using the XPro device in a vehicle. When writing with the XPro on a workbench, you may find that it takes 2 or 3 attempts to get a successful write. The XPro device itself is perfectly fine, but PCM Hammer needs to be tuned to work more reliably with it. We're actively working on this and we hope to have a new release out soon.  Sorry for the inconvenience.
