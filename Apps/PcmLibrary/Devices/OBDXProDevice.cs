@@ -17,6 +17,9 @@ namespace PcmHacking
         public const string DeviceType = "OBDX Pro";
         public bool TimeStampsEnabled = false;
         public bool CRCInReceivedFrame = false;
+
+        // This default is probably excessive but it should always be
+        // overwritten by a call to SetTimeout before use anyhow.
         private int timeout = 1000;
         private VpwSpeed vpwSpeed = VpwSpeed.Standard;
 
@@ -100,7 +103,7 @@ namespace PcmHacking
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
             configuration.BaudRate = 500000;
-            configuration.Timeout = this.timeout;
+            configuration.Timeout = 1000;
             await this.Port.OpenAsync(configuration);
             System.Threading.Thread.Sleep(100);
 
@@ -161,10 +164,14 @@ namespace PcmHacking
             sw.Start();
 
             // Wait for bytes to arrive...
-            // I'm not sure with the Math.Max thing is necessary, but 
-            // we don't permission to upload the kernel without it.
-            //while (sw.ElapsedMilliseconds < this.timeout)
-            while (sw.ElapsedMilliseconds < Math.Max(200, this.timeout))
+            // I'm not sure with the Math.Max thing is necessary, but without 
+            // we don't reliably get permission to upload the kernel. 
+            //
+            // Ideally the next line of code would just be this:
+            //
+            // while (sw.ElapsedMilliseconds < this.timeout)
+            //
+            while (sw.ElapsedMilliseconds < Math.Max(500, this.timeout))
             {
                 if (await this.Port.GetReceiveQueueSize() > TempCount)
                 {
