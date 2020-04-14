@@ -20,7 +20,6 @@ namespace PcmHacking
 
         // This default is probably excessive but it should always be
         // overwritten by a call to SetTimeout before use anyhow.
-        private int timeout = 1000;
         private VpwSpeed vpwSpeed = VpwSpeed.Standard;
 
         //ELM Command Set
@@ -89,7 +88,9 @@ namespace PcmHacking
             this.MaxSendSize = 4096 + 10 + 2;    // packets up to 4112 but we want 4096 byte data blocks
             this.MaxReceiveSize = 4096 + 10 + 2; // with 10 byte header and 2 byte block checksum
             this.Supports4X = true;
-            // this.Supports4X = false;
+
+            // This will be used during device initialization.
+            this.currentTimeoutScenario = TimeoutScenario.ReadProperty;
         }
 
         public override string GetDeviceType()
@@ -110,18 +111,35 @@ namespace PcmHacking
 
             ////Reset scantool - ensures starts at ELM protocol
             bool Status = await ResetDevice();
-            if (Status == false) return false;
+            if (Status == false)
+            {
+                this.Logger.AddUserMessage("Unable to reset DVI device.");
+                return false;
+            }
 
             //Request Board information
             Response<string> BoardName = await GetBoardDetails();
-            if (BoardName.Status != ResponseStatus.Success) return false;
+            if (BoardName.Status != ResponseStatus.Success)
+            {
+                this.Logger.AddUserMessage("Unable to get DVI device details.");
+                return false;
+            }
 
             //Set protocol to VPW mode
             Status =  await SetProtocol(OBDProtocols.VPW);
-            if (Status == false) { return false; }
+            if (Status == false)
+            {
+                this.Logger.AddUserMessage("Unable to set DVI device protocol to VPW.");
+                return false;
+            }
 
             Response<bool> SetupStatus = await DVISetup();
-            if (SetupStatus.Status != ResponseStatus.Success) return false;
+            if (SetupStatus.Status != ResponseStatus.Success)
+            {
+                this.Logger.AddUserMessage("DVI device initialization failed.");
+                return false;
+            }
+
             this.Logger.AddUserMessage("Device Successfully Initialized and Ready");
             return true;
         }
@@ -133,7 +151,6 @@ namespace PcmHacking
         {
             TimeoutScenario previousScenario = this.currentTimeoutScenario;
             this.currentTimeoutScenario = scenario;
-            this.UpdateTimeout();
             return Task.FromResult(previousScenario);
         }
 
@@ -145,7 +162,7 @@ namespace PcmHacking
             //this.Logger.AddDebugMessage("FindResponse called");
             for (int iterations = 0; iterations < 3; iterations++)
             {
-                Response<Message> response = await this.ReadDVIPacket();
+                Response<Message> response = await this.ReadDVIPacket(this.GetReceiveTimeout());
                 if (response.Status == ResponseStatus.Success)
                     if (Utility.CompareArraysPart(response.Value.GetBytes(), expected))
                         return Response.Create(ResponseStatus.Success, (Message)response.Value);
@@ -158,21 +175,19 @@ namespace PcmHacking
         /// <summary>
         /// Wait for serial byte to be availble. False if timeout.
         /// </summary>
-        async private Task<bool> WaitForSerial(ushort NumBytes)
+        async private Task<bool> WaitForSerial(ushort NumBytes, int timeout = 0)
         {
+            if (timeout == 0)
+            {
+                timeout = 500;
+            }
+
             int TempCount = 0;
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
             // Wait for bytes to arrive...
-            // I'm not sure with the Math.Max thing is necessary, but without 
-            // we don't reliably get permission to upload the kernel. 
-            //
-            // Ideally the next line of code would just be this:
-            //
-            while (sw.ElapsedMilliseconds < this.timeout)
-            //
-            //while (sw.ElapsedMilliseconds < Math.Max(500, this.timeout))
+            while (sw.ElapsedMilliseconds < timeout)
             {
                 if (await this.Port.GetReceiveQueueSize() > TempCount)
                 {
@@ -187,7 +202,7 @@ namespace PcmHacking
         /// <summary>
         /// Read an DVI formatted packet from the interface, and return a Response/Message
         /// </summary>
-        async private Task<Response<Message>> ReadDVIPacket()
+        async private Task<Response<Message>> ReadDVIPacket(int timeout = 0)
         {
 
             //this.Logger.AddDebugMessage("Trace: ReadDVIPacket");
@@ -204,7 +219,7 @@ namespace PcmHacking
             bool Chk = false;
             try
             {
-                Chk = (await WaitForSerial(1));
+                Chk = (await WaitForSerial(1, timeout));
                 if (Chk == false)
                 {
                     this.Logger.AddDebugMessage("Timeout.. no data present A");
@@ -275,7 +290,6 @@ namespace PcmHacking
                 await this.Port.Receive(rx, 1, 1);
                 Length = rx[1];
             }
-         
 
             byte[] receive = new byte[Length + 3 + offset];
             Chk = (await WaitForSerial((ushort)(Length + 1)));
@@ -451,7 +465,7 @@ namespace PcmHacking
             //  return Response.Create(ResponseStatus.Success, message);
 
             //check sent successfully
-            Response<Message> m = await ReadDVIPacket();
+            Response<Message> m = await ReadDVIPacket(1000);
             if (m.Status == ResponseStatus.Success)
             {
                 byte[] Val = m.Value.GetBytes();
@@ -503,16 +517,13 @@ namespace PcmHacking
             //  this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
             await SendDVIPacket(message);
 
-
-
-
             return true;
         }
 
         protected async override Task Receive()
         {
 
-            Response<Message> response = await ReadDVIPacket();
+            Response<Message> response = await ReadDVIPacket(this.GetReceiveTimeout());
             if (response.Status == ResponseStatus.Success)
             {
                // this.Logger.AddDebugMessage("RX: " + response.Value.GetBytes().ToHex());
@@ -633,9 +644,6 @@ namespace PcmHacking
                 this.Logger.AddUserMessage("Unable to read unique Serial");
                 return new Response<String>(ResponseStatus.Error, null);
             }
-
-
-
         }
 
         enum OBDProtocols : UInt16
@@ -692,7 +700,6 @@ namespace PcmHacking
                 this.Logger.AddDebugMessage("Failed to set filter");
                 return false;
             }
-
         }
 
         private async Task<bool> EnableProtocolNetwork()
@@ -717,7 +724,6 @@ namespace PcmHacking
                 this.Logger.AddDebugMessage("Failed to enable network");
                 return false;
             }
-
         }
 
         /// <summary>
@@ -837,54 +843,55 @@ namespace PcmHacking
         /// <summary>
         /// This is based on the timeouts used by the AllPro, so it could probably be optimized further.
         /// </summary>
-        private void UpdateTimeout()
+        private int GetReceiveTimeout()
         {
+            int result;
             if (this.vpwSpeed == VpwSpeed.Standard)
             {
                 switch (this.currentTimeoutScenario)
                 {
                     case TimeoutScenario.Minimum:
-                        this.timeout = 50;
+                        result = 50;
                         break;
 
                     case TimeoutScenario.ReadProperty:
-                        this.timeout = 50;
+                        result = 50;
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        this.timeout = 250;
+                        result = 250;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
-                        this.timeout = 250;
+                        result = 250;
                         break;
 
                     case TimeoutScenario.EraseMemoryBlock:
-                        this.timeout = 1000;
+                        result = 1000;
                         break;
 
                     case TimeoutScenario.WriteMemoryBlock:
-                        this.timeout = 1200;
+                        result = 1200;
                         break;
 
                     case TimeoutScenario.SendKernel:
-                        this.timeout = 4000;
+                        result = 4000;
                         break;
 
                     case TimeoutScenario.DataLogging1:
-                        this.timeout = 25;
+                        result = 25;
                         break;
 
                     case TimeoutScenario.DataLogging2:
-                        this.timeout = 40;
+                        result = 40;
                         break;
 
                     case TimeoutScenario.DataLogging3:
-                        this.timeout = 60;
+                        result = 60;
                         break;
 
                     case TimeoutScenario.Maximum:
-                        this.timeout = 1020;
+                        result = 1020;
                         break;
 
                     default:
@@ -896,53 +903,55 @@ namespace PcmHacking
                 switch (this.currentTimeoutScenario)
                 {
                     case TimeoutScenario.Minimum:
-                        this.timeout = 50;
+                        result = 50;
                         break;
 
                     case TimeoutScenario.ReadProperty:
-                        this.timeout = 50;
+                        result = 50;
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        this.timeout = 250;
+                        result = 250;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
-                        this.timeout = 250;
+                        result = 250;
                         break;
 
                     case TimeoutScenario.EraseMemoryBlock:
-                        this.timeout = 1000;
+                        result = 1000;
                         break;
 
                     case TimeoutScenario.WriteMemoryBlock:
-                        this.timeout = 600;
+                        result = 600;
                         break;
 
                     case TimeoutScenario.SendKernel:
-                        this.timeout = 2000;
+                        result = 2000;
                         break;
 
                     case TimeoutScenario.DataLogging1:
-                        this.timeout = 7;
+                        result = 7;
                         break;
 
                     case TimeoutScenario.DataLogging2:
-                        this.timeout = 10;
+                        result = 10;
                         break;
 
                     case TimeoutScenario.DataLogging3:
-                        this.timeout = 15;
+                        result = 15;
                         break;
 
                     case TimeoutScenario.Maximum:
-                        this.timeout = 1020;
+                        result = 1020;
                         break;
 
                     default:
                         throw new NotImplementedException("Unknown timeout scenario " + this.currentTimeoutScenario);
                 }
             }
+
+            return result;
         }
     }
 
