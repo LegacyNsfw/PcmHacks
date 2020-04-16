@@ -21,8 +21,6 @@ namespace PcmHacking
         //ELM Command Set
         //To be put in, not really needed if using DVI command set
 
-
-
         //DVI (Direct Vehicle Interface) Command Set
         public static readonly Message DVI_BOARD_HARDWARE_VERSION = new Message(new byte[] { 0x22, 0x1, 0x0, 0 });
         public static readonly Message DVI_BOARD_FIRMWARE_VERSION = new Message(new byte[] { 0x22, 0x1, 0x1, 0 });
@@ -129,18 +127,19 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// This will process incoming messages for up to 500ms looking for a message
+        /// This will process incoming messages for up to 250ms looking for a message
         /// </summary>
-        public async Task<Response<Message>> FindResponse(byte[] expected)
+
+        public async Task<Response<Message>> FindResponseFromTool(byte[] expected)
         {
             //this.Logger.AddDebugMessage("FindResponse called");
-            for (int iterations = 0; iterations < 3; iterations++)
+            for (int iterations = 0; iterations < 5; iterations++)
             {
                 Response<Message> response = await this.ReadDVIPacket();
                 if (response.Status == ResponseStatus.Success)
                     if (Utility.CompareArraysPart(response.Value.GetBytes(), expected))
                         return Response.Create(ResponseStatus.Success, (Message)response.Value);
-               // await Task.Delay(100);
+               await Task.Delay(50);
             }
 
             return Response.Create(ResponseStatus.Timeout, (Message)null);
@@ -167,12 +166,12 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Read an DVI formatted packet from the interface, and return a Response/Message
+        /// Read an DVI formatted packet from the interface.
+        /// If it recevies a Network message, in enqueues it and returns null;
+        /// If it receives a Device message, it returns the message.
         /// </summary>
         async private Task<Response<Message>> ReadDVIPacket()
         {
-
-            //this.Logger.AddDebugMessage("Trace: ReadDVIPacket");
             UInt16 Length = 0;
 
             byte offset = 0;
@@ -297,24 +296,31 @@ namespace PcmHacking
             {
                 this.Logger.AddDebugMessage("Total Length Data=" + Length + " RX: " + receive.ToHex());
                 this.Logger.AddDebugMessage("Checksum error on received message.");
-                return Response.Create(ResponseStatus.Error, (Message)null);
+                return null;
             }
 
-           // this.Logger.AddDebugMessage("Total Length Data=" + Length + " RX: " + receive.ToHex());
-
-
+            // this.Logger.AddDebugMessage("Total Length Data=" + Length + " RX: " + receive.ToHex());
+            
             if (receive[0] == 0x8 || receive[0] == 0x9)
-            {//network frames //Strip header and checksum
+            {
+                //network frames //Strip header and checksum
                 byte[] StrippedFrame = new byte[Length];
                 Buffer.BlockCopy(receive, 2 + offset, StrippedFrame, 0, Length);
-                if (TimeStampsEnabled) return Response.Create(ResponseStatus.Success, new Message(StrippedFrame,timestampmicro,0));
-                return Response.Create(ResponseStatus.Success, new Message(StrippedFrame));
+                this.Enqueue(new Message(StrippedFrame, timestampmicro, 0));
+                return null;
             }
             else if (receive[0] == 0x7F)
-            {//error detected
-                return Response.Create(ResponseStatus.Error, new Message(receive));
+            {
+                // Error from the device
+                Message result = new Message(receive);
+                this.Logger.AddDebugMessage("Error received: " + result.ToString());
+                return Response.Create(ResponseStatus.Error, result);
             }
-            else return Response.Create(ResponseStatus.Success, new Message(receive));
+            else
+            {
+                // Valid message from the device
+                return Response.Create(ResponseStatus.Success, new Message(receive));
+            }
         }
 
 
@@ -429,7 +435,21 @@ namespace PcmHacking
             //  return Response.Create(ResponseStatus.Success, message);
 
             //check sent successfully
-            Response<Message> m = await ReadDVIPacket();
+            Response<Message> m = null;
+
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                m = await ReadDVIPacket();
+                if (m == null)
+                {
+                    await Task.Delay(50);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
             if (m.Status == ResponseStatus.Success)
             {
                 byte[] Val = m.Value.GetBytes();
@@ -447,8 +467,6 @@ namespace PcmHacking
             {
                 return Response.Create(ResponseStatus.Error, message);
             }
-            //  return Response.Create(ResponseStatus.Error, message);
-
         }
 
         /// <summary>
@@ -475,25 +493,19 @@ namespace PcmHacking
             //this.Logger.AddDebugMessage("Sendrequest called");
             //  this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
             await SendDVIPacket(message);
-
-
-
-
             return true;
         }
 
+        /// <summary>
+        /// Receive a message from the network - or at least try to.
+        /// </summary>
+        /// <remarks>
+        /// Messages are placed into the queue by the code in ReadDvIPacket.
+        /// Retry loops and message processing are in the application layer.
+        /// </remarks>
         protected async override Task Receive()
         {
-
-            Response<Message> response = await ReadDVIPacket();
-            if (response.Status == ResponseStatus.Success)
-            {
-               // this.Logger.AddDebugMessage("RX: " + response.Value.GetBytes().ToHex());
-                this.Enqueue(response.Value);
-                return;
-            }
-
-            this.Logger.AddDebugMessage("DVI: no message waiting.");
+            await ReadDVIPacket();
         }
 
         private async Task<bool> ResetDevice()
@@ -627,7 +639,7 @@ namespace PcmHacking
             Array.Copy(Msg, RespBytes, Msg.Length);
             RespBytes[0] += (byte)0x10;
             RespBytes[RespBytes.Length - 1] = CalcChecksum(RespBytes);
-            Response<Message> m = await FindResponse(RespBytes);
+            Response<Message> m = await FindResponseFromTool(RespBytes);
             if (m.Status == ResponseStatus.Success)
             {
                 this.Logger.AddDebugMessage("OBD Protocol Set to VPW");
@@ -723,7 +735,7 @@ namespace PcmHacking
             Array.Copy(Msg, RespBytes, Msg.Length);
             RespBytes[0] += (byte)0x10;
             RespBytes[RespBytes.Length - 1] = CalcChecksum(RespBytes);
-            Response<Message> m = await FindResponse(RespBytes);
+            Response<Message> m = await FindResponseFromTool(RespBytes);
             if (m.Status != ResponseStatus.Success) return false;
 
             return true;
