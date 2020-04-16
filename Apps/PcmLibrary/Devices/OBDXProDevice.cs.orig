@@ -28,24 +28,24 @@ namespace PcmHacking
         //DVI (Direct Vehicle Interface) Command Set
         public static readonly Message DVI_BOARD_HARDWARE_VERSION = new Message(new byte[] { 0x22, 0x1, 0x0, 0 });
         public static readonly Message DVI_BOARD_FIRMWARE_VERSION = new Message(new byte[] { 0x22, 0x1, 0x1, 0 });
-        public static readonly Message DVI_BOARD_MODEL = new Message(new byte[] { 0x22, 0x1, 0x2, 0 });
-        public static readonly Message DVI_BOARD_NAME = new Message(new byte[] { 0x22, 0x1, 0x3, 0 });
+        public static readonly Message DVI_BOARD_MODEL = new Message(new byte[] { 0x22, 0x1, 0x2,0 });
+        public static readonly Message DVI_BOARD_NAME = new Message(new byte[] { 0x22, 0x1, 0x3,0 });
         public static readonly Message DVI_UniqueSerial = new Message(new byte[] { 0x22, 0x1, 0x4, 0 });
         public static readonly Message DVI_Supported_OBD_Protocols = new Message(new byte[] { 0x22, 0x1, 0x5, 0 });
         public static readonly Message DVI_Supported_PC_Protocols = new Message(new byte[] { 0x22, 0x1, 0x6, 0 });
 
         public static readonly Message DVI_Req_NewtorkWriteStatus = new Message(new byte[] { 0x24, 0x1, 0x1, 0 });
-        public static readonly Message DVI_Set_NewtorkWriteStatus = new Message(new byte[] { 0x24, 0x2, 0x1, 0, 0 });
+        public static readonly Message DVI_Set_NewtorkWriteStatus = new Message(new byte[] { 0x24, 0x2, 0x1,0, 0 });
         public static readonly Message DVI_Req_ConfigRespStatus = new Message(new byte[] { 0x24, 0x1, 0x2, 0 });
         public static readonly Message DVI_Set_CofigRespStatus = new Message(new byte[] { 0x24, 0x2, 0x2, 0, 0 });
 
         public static readonly Message DVI_Req_TimeStampOnRxNetwork = new Message(new byte[] { 0x24, 0x1, 0x3, 0 });
-        public static readonly Message DVI_Set_TimeStampOnRxNetwork = new Message(new byte[] { 0x24, 0x2, 0x3, 0, 0 });
+        public static readonly Message DVI_Set_TimeStampOnRxNetwork = new Message(new byte[] { 0x24, 0x2, 0x3, 0,0 });
 
-        public static readonly Message DVI_RESET = new Message(new byte[] { 0x25, 0x0, 0 });
+        public static readonly Message DVI_RESET = new Message(new byte[] { 0x25, 0x0,0 });
 
         public static readonly Message DVI_Req_OBD_Protocol = new Message(new byte[] { 0x31, 0x1, 0x1, 0 });
-        public static readonly Message DVI_Set_OBD_Protocol = new Message(new byte[] { 0x31, 0x2, 0x1, 0, 0 });
+        public static readonly Message DVI_Set_OBD_Protocol = new Message(new byte[] { 0x31, 0x2, 0x1, 0,0 });
         public static readonly Message DVI_Req_NewtorkEnable = new Message(new byte[] { 0x31, 0x1, 0x2, 0 });
         public static readonly Message DVI_Set_NewtorkEnable = new Message(new byte[] { 0x31, 0x2, 0x2, 0, 0 });
         public static readonly Message DVI_Set_API_Protocol = new Message(new byte[] { 0x31, 0x2, 0x6, 0, 0 });
@@ -55,11 +55,11 @@ namespace PcmHacking
         public static readonly Message DVI_Req_From_Filter = new Message(new byte[] { 0x33, 0x1, 0x1, 0 });
         public static readonly Message DVI_Set_From_Filter = new Message(new byte[] { 0x33, 0x3, 0x1, 0, 0, 0 });
         public static readonly Message DVI_Req_RangeTo_Filter = new Message(new byte[] { 0x33, 0x1, 0x2, 0 });
-        public static readonly Message DVI_Set_RangeTo_Filter = new Message(new byte[] { 0x33, 0x3, 0x2, 0, 0, 0, 0 });
+        public static readonly Message DVI_Set_RangeTo_Filter = new Message(new byte[] { 0x33, 0x3, 0x2,0, 0, 0, 0 });
         public static readonly Message DVI_Req_RangeFrom_Filter = new Message(new byte[] { 0x33, 0x1, 0x3, 0 });
-        public static readonly Message DVI_Set_RangeFrom_Filter = new Message(new byte[] { 0x33, 0x4, 0x3, 0, 0, 0, 0 });
+        public static readonly Message DVI_Set_RangeFrom_Filter = new Message(new byte[] { 0x33, 0x4, 0x3,0, 0, 0, 0 });
         public static readonly Message DVI_Req_Mask = new Message(new byte[] { 0x33, 0x1, 0x4, 0 });
-        public static readonly Message DVI_Set_Mask = new Message(new byte[] { 0x33, 0x5, 0x4, 0, 0, 0, 0, 0 });
+        public static readonly Message DVI_Set_Mask = new Message(new byte[] { 0x33, 0x5, 0x4, 0, 0, 0,0, 0 });
         public static readonly Message DVI_Req_Speed = new Message(new byte[] { 0x33, 0x1, 0x6, 0 });
         public static readonly Message DVI_Set_Speed = new Message(new byte[] { 0x33, 0x2, 0x6, 0, 0 });
         public static readonly Message DVI_Req_ValidateCRC_onRX = new Message(new byte[] { 0x33, 0x1, 0x7, 0 });
@@ -67,18 +67,18 @@ namespace PcmHacking
         public static readonly Message DVI_Req_Show_CRC_OnNetwork = new Message(new byte[] { 0x33, 0x1, 0x8, 0 });
         public static readonly Message DVI_Set_Show_CRC_OnNetwork = new Message(new byte[] { 0x33, 0x2, 0x8, 0, 0 });
         public static readonly Message DVI_Req_Write_Idle_Timeout = new Message(new byte[] { 0x33, 0x1, 0x9, 0 });
-        public static readonly Message DVI_Set_Write_Idle_Timeout = new Message(new byte[] { 0x33, 0x3, 0x9, 0, 0, 0 });
-        public static readonly Message DVI_Req_1x_Timings = new Message(new byte[] { 0x33, 0x2, 0xA, 0, 0 });
+        public static readonly Message DVI_Set_Write_Idle_Timeout = new Message(new byte[] { 0x33, 0x3, 0x9, 0,0, 0 });
+        public static readonly Message DVI_Req_1x_Timings = new Message(new byte[] { 0x33, 0x2, 0xA,0, 0 });
         public static readonly Message DVI_Set_1x_Timings = new Message(new byte[] { 0x33, 0x4, 0xA, 0, 0, 0, 0 });
         public static readonly Message DVI_Req_4x_Timings = new Message(new byte[] { 0x33, 0x2, 0xB, 0, 0 });
         public static readonly Message DVI_Set_4x_Timings = new Message(new byte[] { 0x33, 0x4, 0xB, 0, 0, 0, 0 });
         public static readonly Message DVI_Req_ResetTimings = new Message(new byte[] { 0x33, 0x2, 0xC, 0, 0 });
         public static readonly Message DVI_Req_ErrorBits = new Message(new byte[] { 0x33, 0x1, 0xD, 0 });
         public static readonly Message DVI_Set_ErrorBits = new Message(new byte[] { 0x33, 0x3, 0xD, 0, 0, 0 });
-        public static readonly Message DVI_Req_ErrorCount = new Message(new byte[] { 0x33, 0x2, 0xE, 0, 0 });
+        public static readonly Message DVI_Req_ErrorCount = new Message(new byte[] { 0x33, 0x2, 0xE,0, 0 });
         public static readonly Message DVI_Req_DefaultSettings = new Message(new byte[] { 0x33, 0x1, 0xF, 0 });
 
-        public static readonly Message DVI_Req_ADC_SingleChannel = new Message(new byte[] { 0x35, 0x2, 0x0, 0, 0 });
+        public static readonly Message DVI_Req_ADC_SingleChannel = new Message(new byte[] { 0x35, 0x2, 0x0,0, 0 });
         public static readonly Message DVI_Req_ADC_MultipleChannels = new Message(new byte[] { 0x35, 0x2, 0x1, 0, 0 });
 
         public OBDXProDevice(IPort port, ILogger logger) : base(port, logger)
@@ -124,7 +124,7 @@ namespace PcmHacking
             }
 
             //Set protocol to VPW mode
-            Status = await SetProtocol(OBDProtocols.VPW);
+            Status =  await SetProtocol(OBDProtocols.VPW);
             if (Status == false)
             {
                 this.Logger.AddUserMessage("Unable to set DVI device protocol to VPW.");
@@ -165,7 +165,7 @@ namespace PcmHacking
                 if (response.Status == ResponseStatus.Success)
                     if (Utility.CompareArraysPart(response.Value.GetBytes(), expected))
                         return Response.Create(ResponseStatus.Success, (Message)response.Value);
-                await Task.Delay(50);
+               await Task.Delay(50);
             }
 
             return Response.Create(ResponseStatus.Timeout, (Message)null);
@@ -267,7 +267,7 @@ namespace PcmHacking
                 else //if long, get two bytes for length
                 {
                     offset += 1;
-                    Chk = (await WaitForSerial(2));
+                   Chk = (await WaitForSerial(2));
                     if (Chk == false)
                     {
                         this.Logger.AddDebugMessage("Timeout.. no data present D");
@@ -332,34 +332,52 @@ namespace PcmHacking
             }
 
             // this.Logger.AddDebugMessage("Total Length Data=" + Length + " RX: " + receive.ToHex());
+<<<<<<< HEAD
+            
+=======
 
+
+>>>>>>> nsfw/timeouts
             if (receive[0] == 0x8 || receive[0] == 0x9)
             {
                 //network frames //Strip header and checksum
                 byte[] StrippedFrame = new byte[Length];
                 Buffer.BlockCopy(receive, 2 + offset, StrippedFrame, 0, Length);
+<<<<<<< HEAD
                 this.Enqueue(new Message(StrippedFrame, timestampmicro, 0));
                 return null;
+=======
+                this.Logger.AddDebugMessage("RX: " + StrippedFrame.ToHex());
+                if (TimeStampsEnabled) return Response.Create(ResponseStatus.Success, new Message(StrippedFrame, timestampmicro, 0));
+                return Response.Create(ResponseStatus.Success, new Message(StrippedFrame));
+>>>>>>> nsfw/timeouts
             }
             else if (receive[0] == 0x7F)
             {
                 // Error from the device
                 Message result = new Message(receive);
-                this.Logger.AddDebugMessage("XPro Error: " + result.ToString());
+                this.Logger.AddDebugMessage("Error received: " + result.ToString());
                 return Response.Create(ResponseStatus.Error, result);
             }
             else
             {
                 // Valid message from the device
+                return Response.Create(ResponseStatus.Success, new Message(receive));
+            }
+<<<<<<< HEAD
+=======
+            else
+            {
                 this.Logger.AddDebugMessage("XPro: " + receive.ToHex());
                 return Response.Create(ResponseStatus.Success, new Message(receive));
             }
+>>>>>>> nsfw/timeouts
         }
 
 
         async private Task<Response<String>> ReadELMPacket(String SentFrame)
         {
-            // UInt16 Counter = 0;
+           // UInt16 Counter = 0;
             bool framefound = false;
             bool Chk = false;
 
@@ -462,30 +480,30 @@ namespace PcmHacking
 
             //Send frame
             await this.Port.Send(SendPacket);
+            //this.Logger.AddDebugMessage("send: " + SendPacket.ToHex());
 
-            // Wait for confirmation of successful send
+            //  return Response.Create(ResponseStatus.Success, message);
+
+            //check sent successfully
+<<<<<<< HEAD
             Response<Message> m = null;
 
-            for (int attempt = 0; attempt < 10; attempt++)
+            for (int attempt = 0; attempt < 5; attempt++)
             {
-                m = await ReadDVIPacket(500);
-                if (m != null)
+                m = await ReadDVIPacket();
+                if (m == null)
                 {
-                    if (m.Status == ResponseStatus.Timeout)
-                    {
-                        continue;
-                    }
+                    await Task.Delay(50);
+                }
+                else
+                {
                     break;
                 }
-            }            
-
-            if (m == null)
-            {
-                // This should never happen, but just in case...
-                this.Logger.AddUserMessage("No response to send attempt. " + message.ToString());
-                return Response.Create(ResponseStatus.Error, new Message(new byte[0]));
             }
 
+=======
+            Response<Message> m = await ReadDVIPacket(1000);
+>>>>>>> nsfw/timeouts
             if (m.Status == ResponseStatus.Success)
             {
                 byte[] Val = m.Value.GetBytes();
@@ -518,13 +536,13 @@ namespace PcmHacking
         async private Task<Response<Boolean>> DVISetup()
         {
             //Set filter
-            bool Status = await SetToFilter(DeviceId.Tool);
+            bool Status =  await SetToFilter(DeviceId.Tool);
             if (Status == false) return Response.Create(ResponseStatus.Error, false);
 
             //Enable network rx/tx for protocol
             Status = await EnableProtocolNetwork();
             if (Status == false) return Response.Create(ResponseStatus.Error, false);
-
+ 
             return Response.Create(ResponseStatus.Success, true);
         }
 
@@ -536,6 +554,10 @@ namespace PcmHacking
             //this.Logger.AddDebugMessage("Sendrequest called");
             //  this.Logger.AddDebugMessage("TX: " + message.GetBytes().ToHex());
             await SendDVIPacket(message);
+<<<<<<< HEAD
+=======
+
+>>>>>>> nsfw/timeouts
             return true;
         }
 
@@ -548,7 +570,20 @@ namespace PcmHacking
         /// </remarks>
         protected async override Task Receive()
         {
+<<<<<<< HEAD
             await ReadDVIPacket();
+=======
+
+            Response<Message> response = await ReadDVIPacket(this.GetReceiveTimeout());
+            if (response.Status == ResponseStatus.Success)
+            {
+               // this.Logger.AddDebugMessage("RX: " + response.Value.GetBytes().ToHex());
+                this.Enqueue(response.Value);
+                return;
+            }
+
+            this.Logger.AddDebugMessage("DVI: no message waiting.");
+>>>>>>> nsfw/timeouts
         }
 
         private async Task<bool> ResetDevice()
@@ -567,11 +602,11 @@ namespace PcmHacking
             await this.Port.DiscardBuffers();
 
             //AT@1 will return OBDX Pro VT - will then need to change its API to DVI bytes.
-            byte[] MsgAT1 = { (byte)'A', (byte)'T', (byte)'@', (byte)'1', 0xD };
+            byte[] MsgAT1 = { (byte)'A', (byte)'T', (byte)'@',(byte)'1', 0xD };
             await this.Port.Send(MsgAT1);
-            Response<String> m = await ReadELMPacket("AT@1");
+             Response <String> m = await ReadELMPacket("AT@1");
             if (m.Status == ResponseStatus.Success) this.Logger.AddUserMessage("Device Found: " + m.Value);
-            else { this.Logger.AddUserMessage("OBDX Pro device not found or failed response"); return false; }
+            else{this.Logger.AddUserMessage("OBDX Pro device not found or failed response"); return false;}
 
             //Change to DVI protocol DX 
             byte[] MsgDXDP = { (byte)'D', (byte)'X', (byte)'D', (byte)'P', (byte)'1', 0xD };
@@ -594,8 +629,8 @@ namespace PcmHacking
             {
                 byte[] Val = m.Value.GetBytes();
                 Details = System.Text.Encoding.ASCII.GetString(Val, 3, Val[1] - 1);
-                //  this.Logger.AddUserMessage("Device Found: " + name);
-                // return new Response<String>(ResponseStatus.Success, name);
+              //  this.Logger.AddUserMessage("Device Found: " + name);
+               // return new Response<String>(ResponseStatus.Success, name);
             }
             else
             {
@@ -608,7 +643,7 @@ namespace PcmHacking
             Msg = OBDXProDevice.DVI_BOARD_FIRMWARE_VERSION.GetBytes();
             Msg[Msg.Length - 1] = CalcChecksum(Msg);
             await this.Port.Send(Msg);
-            m = await ReadDVIPacket();
+             m = await ReadDVIPacket();
             if (m.Status == ResponseStatus.Success)
             {
                 byte[] Val = m.Value.GetBytes();
@@ -759,7 +794,7 @@ namespace PcmHacking
                 this.Logger.AddDebugMessage("DVI setting VPW 1X");
                 Msg[3] = 0;
                 this.vpwSpeed = VpwSpeed.Standard;
-
+               
             }
             else
             {
@@ -815,7 +850,7 @@ namespace PcmHacking
         }
 
 
-        private void ProcessError(ErrorType Type, byte code)
+      private void ProcessError(ErrorType Type, byte code)
         {
             string ErrVal = "";
             if (Type == ErrorType.ConfigOrTxNetwork)
@@ -847,7 +882,7 @@ namespace PcmHacking
             }
             else if (Type == ErrorType.RxNetwork)
             {
-
+                
             }
             this.Logger.AddDebugMessage("Fault reported from scantool: " + ErrVal);
         }
@@ -971,4 +1006,5 @@ namespace PcmHacking
             return result;
         }
     }
+
 }
