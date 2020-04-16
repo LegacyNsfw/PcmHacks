@@ -501,13 +501,13 @@ namespace PcmHacking
                 }
                 else
                 {
-                    this.Logger.AddUserMessage("Unable to transmit A: " + message.ToString());
+                    this.Logger.AddUserMessage("Unable to transmit, odd response from device: " + message.ToString());
                     return Response.Create(ResponseStatus.Error, message);
                 }
             }
             else
             {
-                this.Logger.AddUserMessage("Unable to transmit B: " + message.ToString());
+                this.Logger.AddUserMessage("Unable to transmit, " + m.Status + ": " + message.ToString());
                 return Response.Create(ResponseStatus.Error, message);
             }
         }
