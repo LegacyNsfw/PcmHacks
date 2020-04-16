@@ -139,9 +139,9 @@ namespace PcmHacking
         public const byte ClearDiagnosticInformation = 0x14;
         public const byte ExitKernel = 0x20;
         public const byte SendDynamicData = 0x2A;
-        public const byte ConfigureDynamicData = 0x2C;
         public const byte Seed = 0x27;
         public const byte SilenceBus = 0x28;
+        public const byte ConfigureDynamicData = 0x2C;
         public const byte ReadBlock = 0x3C;
         public const byte PCMUploadRequest = 0x34;
         public const byte PCMUpload = 0x36;

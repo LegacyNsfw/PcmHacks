@@ -146,19 +146,6 @@ namespace PcmHacking
         {
             this.logger.AddDebugMessage("Halting the kernel.");
             await this.ExitKernel();
-
-            /* Waiting for the PCM to reboot didn't make any difference.
-             * But I still hope that if we send the right messages after
-             * restarting the PCM, we can clear the TAC's P1518 code.
-             * 
-            this.logger.AddUserMessage("Waiting for the PCM to restart...");
-            for(int remaining = 10; remaining > 0; remaining--)
-            {
-                this.logger.AddUserMessage(remaining.ToString() + " seconds left.");
-                await Task.Delay(1000);
-            }
-            */
-
             await this.ClearTroubleCodes();
         }
 
@@ -185,28 +172,34 @@ namespace PcmHacking
 
         /// <summary>
         /// Ask the factory operating system to clear trouble codes. 
-        /// This should only run 10 seconds after rebooting, to ensure that the operating system is running again.
+        /// In theory this should only run 10 seconds after rebooting, to ensure that the operating system is running again.
+        /// In practice, that hasn't been an issue. It's the other modules (TAC especially) that really need to be reset.
         /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
         public async Task ClearTroubleCodes()
         {
             this.logger.AddUserMessage("Clearing trouble codes.");
             this.device.ClearMessageQueue();
 
+            // No timeout because we don't care about responses to these messages.
+            await this.device.SetTimeout(TimeoutScenario.Minimum);
+            
             // The response is not checked because the priority byte and destination address are odd.
             // Different devices will handle this differently. Scantool won't recieve it.
             // so we send it twice just to be sure.
             Message clearCodesRequest = this.protocol.CreateClearDiagnosticTroubleCodesRequest();
+
+            await Task.Delay(250);
             await this.device.SendMessage(clearCodesRequest);
+            await Task.Delay(250);
             await this.device.SendMessage(clearCodesRequest);
 
             // This is a conventional message, but the response from the PCM might get lost 
             // among the responses from other modules on the bus, so again we just send it twice.
-            await Task.Delay(500);
             Message clearDiagnosticInformationRequest = this.protocol.CreateClearDiagnosticInformationRequest();
+
+            await Task.Delay(250);
             await this.device.SendMessage(clearDiagnosticInformationRequest);
+            await Task.Delay(250);
             await this.device.SendMessage(clearDiagnosticInformationRequest);
         }
 
@@ -301,9 +294,6 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> PCMExecute(byte[] payload, int address, CancellationToken cancellationToken)
         {
-            logger.AddUserMessage("Uploading kernel to PCM.");
-            logger.AddDebugMessage("Sending upload request for kernel size " + payload.Length + ", loadaddress " + address.ToString("X6"));
-
             // Note that we request an upload of 4k maximum, because the PCM will reject anything bigger.
             // But you can request a 4k upload and then send up to 16k if you want, and the PCM will not object.
             int claimedSize = Math.Min(4096, payload.Length);
@@ -315,21 +305,38 @@ namespace PcmHacking
                 return false;
             }
 
-            Message request = protocol.CreateUploadRequest(address, claimedSize);
-            if(!await TrySendMessage(request, "upload request"))
+            logger.AddDebugMessage("Sending upload request for kernel size " + payload.Length + ", loadaddress " + address.ToString("X6"));
+
+            bool uploadAllowed = false;
+            for (int attempt = 0; attempt < 5; attempt++)
             {
-                return false;
+                logger.AddUserMessage("Requesting permission to upload kernel.");
+                await this.SetDeviceTimeout(TimeoutScenario.ReadProperty);
+                Message request = protocol.CreateUploadRequest(address, claimedSize);
+                if (!await TrySendMessage(request, "upload request"))
+                {
+                    return false;
+                }
+
+                if (await this.WaitForSuccess(this.protocol.ParseUploadPermissionResponse, cancellationToken))
+                {
+                    logger.AddUserMessage("Upload permission granted.");
+                    uploadAllowed = true;
+                    break;
+                }
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return false;
+                }
+
+                await Task.Delay(100);
             }
 
-            if (!await this.WaitForSuccess(this.protocol.ParseUploadPermissionResponse, cancellationToken))
+            if (!uploadAllowed)
             {
                 logger.AddUserMessage("Permission to upload kernel was denied.");
-                logger.AddUserMessage("This can usually be solved by cutting power to the PCM, restoring power, waiting ten seconds, and trying again.");
-                return false;
-            }
-
-            if (cancellationToken.IsCancellationRequested)
-            {
+                logger.AddUserMessage("If this persists, try cutting power to the PCM, restoring power, waiting ten seconds, and trying again.");
                 return false;
             }
 
@@ -457,13 +464,16 @@ namespace PcmHacking
 
                 // Check for any devices that refused to switch to 4X speed.
                 // These responses usually get lost, so this code might be pointless.
+                Stopwatch sw = new Stopwatch();
+                sw.Start();
                 Message response = null;
-                while ((response = await this.device.ReceiveMessage()) != null)
+                while (((response = await this.device.ReceiveMessage()) != null) && (sw.ElapsedMilliseconds < 1500))
                 {
                     Response<bool> refused = this.protocol.ParseHighSpeedRefusal(response);
                     if (refused.Status != ResponseStatus.Success)
                     {
                         // This should help ELM devices receive responses.
+                        await Task.Delay(100);
                         await notifier.ForceNotify();
                         continue;
                     }
@@ -486,9 +496,6 @@ namespace PcmHacking
 
             // Since we had some issue with other modules not staying quiet...
             await this.ForceSendToolPresentNotification();
-
-            TimeoutScenario scenario = newSpeed == VpwSpeed.Standard ? TimeoutScenario.ReadProperty : TimeoutScenario.ReadMemoryBlock;
-            await device.SetTimeout(scenario);
 
             return true;
         }
@@ -513,6 +520,7 @@ namespace PcmHacking
                 Protocol.HighSpeedPermissionResult parsed = this.protocol.ParseHighSpeedPermissionResponse(response);
                 if (!parsed.IsValid)
                 {
+                    await Task.Delay(100);
                     continue;
                 }
 
@@ -524,6 +532,7 @@ namespace PcmHacking
 
                     // Forcing a notification message should help ELM devices receive responses.
                     await notifier.ForceNotify();
+                    await Task.Delay(100);
                     continue;
                 }
 

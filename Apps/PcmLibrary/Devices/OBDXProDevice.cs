@@ -18,30 +18,34 @@ namespace PcmHacking
         public bool TimeStampsEnabled = false;
         public bool CRCInReceivedFrame = false;
 
+        // This default is probably excessive but it should always be
+        // overwritten by a call to SetTimeout before use anyhow.
+        private VpwSpeed vpwSpeed = VpwSpeed.Standard;
+
         //ELM Command Set
         //To be put in, not really needed if using DVI command set
 
         //DVI (Direct Vehicle Interface) Command Set
         public static readonly Message DVI_BOARD_HARDWARE_VERSION = new Message(new byte[] { 0x22, 0x1, 0x0, 0 });
         public static readonly Message DVI_BOARD_FIRMWARE_VERSION = new Message(new byte[] { 0x22, 0x1, 0x1, 0 });
-        public static readonly Message DVI_BOARD_MODEL = new Message(new byte[] { 0x22, 0x1, 0x2,0 });
-        public static readonly Message DVI_BOARD_NAME = new Message(new byte[] { 0x22, 0x1, 0x3,0 });
+        public static readonly Message DVI_BOARD_MODEL = new Message(new byte[] { 0x22, 0x1, 0x2, 0 });
+        public static readonly Message DVI_BOARD_NAME = new Message(new byte[] { 0x22, 0x1, 0x3, 0 });
         public static readonly Message DVI_UniqueSerial = new Message(new byte[] { 0x22, 0x1, 0x4, 0 });
         public static readonly Message DVI_Supported_OBD_Protocols = new Message(new byte[] { 0x22, 0x1, 0x5, 0 });
         public static readonly Message DVI_Supported_PC_Protocols = new Message(new byte[] { 0x22, 0x1, 0x6, 0 });
 
         public static readonly Message DVI_Req_NewtorkWriteStatus = new Message(new byte[] { 0x24, 0x1, 0x1, 0 });
-        public static readonly Message DVI_Set_NewtorkWriteStatus = new Message(new byte[] { 0x24, 0x2, 0x1,0, 0 });
+        public static readonly Message DVI_Set_NewtorkWriteStatus = new Message(new byte[] { 0x24, 0x2, 0x1, 0, 0 });
         public static readonly Message DVI_Req_ConfigRespStatus = new Message(new byte[] { 0x24, 0x1, 0x2, 0 });
         public static readonly Message DVI_Set_CofigRespStatus = new Message(new byte[] { 0x24, 0x2, 0x2, 0, 0 });
 
         public static readonly Message DVI_Req_TimeStampOnRxNetwork = new Message(new byte[] { 0x24, 0x1, 0x3, 0 });
-        public static readonly Message DVI_Set_TimeStampOnRxNetwork = new Message(new byte[] { 0x24, 0x2, 0x3, 0,0 });
+        public static readonly Message DVI_Set_TimeStampOnRxNetwork = new Message(new byte[] { 0x24, 0x2, 0x3, 0, 0 });
 
-        public static readonly Message DVI_RESET = new Message(new byte[] { 0x25, 0x0,0 });
+        public static readonly Message DVI_RESET = new Message(new byte[] { 0x25, 0x0, 0 });
 
         public static readonly Message DVI_Req_OBD_Protocol = new Message(new byte[] { 0x31, 0x1, 0x1, 0 });
-        public static readonly Message DVI_Set_OBD_Protocol = new Message(new byte[] { 0x31, 0x2, 0x1, 0,0 });
+        public static readonly Message DVI_Set_OBD_Protocol = new Message(new byte[] { 0x31, 0x2, 0x1, 0, 0 });
         public static readonly Message DVI_Req_NewtorkEnable = new Message(new byte[] { 0x31, 0x1, 0x2, 0 });
         public static readonly Message DVI_Set_NewtorkEnable = new Message(new byte[] { 0x31, 0x2, 0x2, 0, 0 });
         public static readonly Message DVI_Set_API_Protocol = new Message(new byte[] { 0x31, 0x2, 0x6, 0, 0 });
@@ -51,11 +55,11 @@ namespace PcmHacking
         public static readonly Message DVI_Req_From_Filter = new Message(new byte[] { 0x33, 0x1, 0x1, 0 });
         public static readonly Message DVI_Set_From_Filter = new Message(new byte[] { 0x33, 0x3, 0x1, 0, 0, 0 });
         public static readonly Message DVI_Req_RangeTo_Filter = new Message(new byte[] { 0x33, 0x1, 0x2, 0 });
-        public static readonly Message DVI_Set_RangeTo_Filter = new Message(new byte[] { 0x33, 0x3, 0x2,0, 0, 0, 0 });
+        public static readonly Message DVI_Set_RangeTo_Filter = new Message(new byte[] { 0x33, 0x3, 0x2, 0, 0, 0, 0 });
         public static readonly Message DVI_Req_RangeFrom_Filter = new Message(new byte[] { 0x33, 0x1, 0x3, 0 });
-        public static readonly Message DVI_Set_RangeFrom_Filter = new Message(new byte[] { 0x33, 0x4, 0x3,0, 0, 0, 0 });
+        public static readonly Message DVI_Set_RangeFrom_Filter = new Message(new byte[] { 0x33, 0x4, 0x3, 0, 0, 0, 0 });
         public static readonly Message DVI_Req_Mask = new Message(new byte[] { 0x33, 0x1, 0x4, 0 });
-        public static readonly Message DVI_Set_Mask = new Message(new byte[] { 0x33, 0x5, 0x4, 0, 0, 0,0, 0 });
+        public static readonly Message DVI_Set_Mask = new Message(new byte[] { 0x33, 0x5, 0x4, 0, 0, 0, 0, 0 });
         public static readonly Message DVI_Req_Speed = new Message(new byte[] { 0x33, 0x1, 0x6, 0 });
         public static readonly Message DVI_Set_Speed = new Message(new byte[] { 0x33, 0x2, 0x6, 0, 0 });
         public static readonly Message DVI_Req_ValidateCRC_onRX = new Message(new byte[] { 0x33, 0x1, 0x7, 0 });
@@ -63,18 +67,18 @@ namespace PcmHacking
         public static readonly Message DVI_Req_Show_CRC_OnNetwork = new Message(new byte[] { 0x33, 0x1, 0x8, 0 });
         public static readonly Message DVI_Set_Show_CRC_OnNetwork = new Message(new byte[] { 0x33, 0x2, 0x8, 0, 0 });
         public static readonly Message DVI_Req_Write_Idle_Timeout = new Message(new byte[] { 0x33, 0x1, 0x9, 0 });
-        public static readonly Message DVI_Set_Write_Idle_Timeout = new Message(new byte[] { 0x33, 0x3, 0x9, 0,0, 0 });
-        public static readonly Message DVI_Req_1x_Timings = new Message(new byte[] { 0x33, 0x2, 0xA,0, 0 });
+        public static readonly Message DVI_Set_Write_Idle_Timeout = new Message(new byte[] { 0x33, 0x3, 0x9, 0, 0, 0 });
+        public static readonly Message DVI_Req_1x_Timings = new Message(new byte[] { 0x33, 0x2, 0xA, 0, 0 });
         public static readonly Message DVI_Set_1x_Timings = new Message(new byte[] { 0x33, 0x4, 0xA, 0, 0, 0, 0 });
         public static readonly Message DVI_Req_4x_Timings = new Message(new byte[] { 0x33, 0x2, 0xB, 0, 0 });
         public static readonly Message DVI_Set_4x_Timings = new Message(new byte[] { 0x33, 0x4, 0xB, 0, 0, 0, 0 });
         public static readonly Message DVI_Req_ResetTimings = new Message(new byte[] { 0x33, 0x2, 0xC, 0, 0 });
         public static readonly Message DVI_Req_ErrorBits = new Message(new byte[] { 0x33, 0x1, 0xD, 0 });
         public static readonly Message DVI_Set_ErrorBits = new Message(new byte[] { 0x33, 0x3, 0xD, 0, 0, 0 });
-        public static readonly Message DVI_Req_ErrorCount = new Message(new byte[] { 0x33, 0x2, 0xE,0, 0 });
+        public static readonly Message DVI_Req_ErrorCount = new Message(new byte[] { 0x33, 0x2, 0xE, 0, 0 });
         public static readonly Message DVI_Req_DefaultSettings = new Message(new byte[] { 0x33, 0x1, 0xF, 0 });
 
-        public static readonly Message DVI_Req_ADC_SingleChannel = new Message(new byte[] { 0x35, 0x2, 0x0,0, 0 });
+        public static readonly Message DVI_Req_ADC_SingleChannel = new Message(new byte[] { 0x35, 0x2, 0x0, 0, 0 });
         public static readonly Message DVI_Req_ADC_MultipleChannels = new Message(new byte[] { 0x35, 0x2, 0x1, 0, 0 });
 
         public OBDXProDevice(IPort port, ILogger logger) : base(port, logger)
@@ -82,6 +86,9 @@ namespace PcmHacking
             this.MaxSendSize = 4096 + 10 + 2;    // packets up to 4112 but we want 4096 byte data blocks
             this.MaxReceiveSize = 4096 + 10 + 2; // with 10 byte header and 2 byte block checksum
             this.Supports4X = true;
+
+            // This will be used during device initialization.
+            this.currentTimeoutScenario = TimeoutScenario.ReadProperty;
         }
 
         public override string GetDeviceType()
@@ -95,24 +102,42 @@ namespace PcmHacking
 
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
-            configuration.BaudRate = 500000;
-         await this.Port.OpenAsync(configuration);
+            configuration.BaudRate = 115200;
+            configuration.Timeout = 1000;
+            await this.Port.OpenAsync(configuration);
             System.Threading.Thread.Sleep(100);
 
             ////Reset scantool - ensures starts at ELM protocol
             bool Status = await ResetDevice();
-            if (Status == false) return false;
+            if (Status == false)
+            {
+                this.Logger.AddUserMessage("Unable to reset DVI device.");
+                return false;
+            }
 
             //Request Board information
             Response<string> BoardName = await GetBoardDetails();
-            if (BoardName.Status != ResponseStatus.Success) return false;
+            if (BoardName.Status != ResponseStatus.Success)
+            {
+                this.Logger.AddUserMessage("Unable to get DVI device details.");
+                return false;
+            }
 
             //Set protocol to VPW mode
-            Status =  await SetProtocol(OBDProtocols.VPW);
-            if (Status == false) { return false; }
+            Status = await SetProtocol(OBDProtocols.VPW);
+            if (Status == false)
+            {
+                this.Logger.AddUserMessage("Unable to set DVI device protocol to VPW.");
+                return false;
+            }
 
             Response<bool> SetupStatus = await DVISetup();
-            if (SetupStatus.Status != ResponseStatus.Success) return false;
+            if (SetupStatus.Status != ResponseStatus.Success)
+            {
+                this.Logger.AddUserMessage("DVI device initialization failed.");
+                return false;
+            }
+
             this.Logger.AddUserMessage("Device Successfully Initialized and Ready");
             return true;
         }
@@ -122,8 +147,9 @@ namespace PcmHacking
         /// </summary>
         public override Task<TimeoutScenario> SetTimeout(TimeoutScenario scenario)
         {
+            TimeoutScenario previousScenario = this.currentTimeoutScenario;
             this.currentTimeoutScenario = scenario;
-            return Task.FromResult(this.currentTimeoutScenario);
+            return Task.FromResult(previousScenario);
         }
 
         /// <summary>
@@ -135,11 +161,11 @@ namespace PcmHacking
             //this.Logger.AddDebugMessage("FindResponse called");
             for (int iterations = 0; iterations < 5; iterations++)
             {
-                Response<Message> response = await this.ReadDVIPacket();
+                Response<Message> response = await this.ReadDVIPacket(this.GetReceiveTimeout());
                 if (response.Status == ResponseStatus.Success)
                     if (Utility.CompareArraysPart(response.Value.GetBytes(), expected))
                         return Response.Create(ResponseStatus.Success, (Message)response.Value);
-               await Task.Delay(50);
+                await Task.Delay(50);
             }
 
             return Response.Create(ResponseStatus.Timeout, (Message)null);
@@ -148,12 +174,19 @@ namespace PcmHacking
         /// <summary>
         /// Wait for serial byte to be availble. False if timeout.
         /// </summary>
-        async private Task<bool> WaitForSerial(ushort NumBytes)
+        async private Task<bool> WaitForSerial(ushort NumBytes, int timeout = 0)
         {
+            if (timeout == 0)
+            {
+                timeout = 500;
+            }
+
             int TempCount = 0;
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            while (sw.ElapsedMilliseconds < 500) //wait for byte...
+
+            // Wait for bytes to arrive...
+            while (sw.ElapsedMilliseconds < timeout)
             {
                 if (await this.Port.GetReceiveQueueSize() > TempCount)
                 {
@@ -170,7 +203,7 @@ namespace PcmHacking
         /// If it recevies a Network message, in enqueues it and returns null;
         /// If it receives a Device message, it returns the message.
         /// </summary>
-        async private Task<Response<Message>> ReadDVIPacket()
+        async private Task<Response<Message>> ReadDVIPacket(int timeout = 0)
         {
             UInt16 Length = 0;
 
@@ -185,10 +218,10 @@ namespace PcmHacking
             bool Chk = false;
             try
             {
-                Chk = (await WaitForSerial(1));
+                Chk = (await WaitForSerial(1, timeout));
                 if (Chk == false)
                 {
-                    this.Logger.AddDebugMessage("Timeout.. no data present");
+                    this.Logger.AddDebugMessage("Timeout.. no data present A");
                     return Response.Create(ResponseStatus.Timeout, (Message)null);
                 }
 
@@ -213,7 +246,7 @@ namespace PcmHacking
                         Chk = (await WaitForSerial(1));
                         if (Chk == false)
                         {
-                            this.Logger.AddDebugMessage("Timeout.. no data present");
+                            this.Logger.AddDebugMessage("Timeout.. no data present B");
                             return Response.Create(ResponseStatus.Timeout, (Message)null);
                         }
                         await this.Port.Receive(timestampbuf, i, 1);
@@ -225,7 +258,7 @@ namespace PcmHacking
                     Chk = (await WaitForSerial(1));
                     if (Chk == false)
                     {
-                        this.Logger.AddDebugMessage("Timeout.. no data present");
+                        this.Logger.AddDebugMessage("Timeout.. no data present C");
                         return Response.Create(ResponseStatus.Timeout, (Message)null);
                     }
                     await this.Port.Receive(rx, 1, 1);
@@ -234,10 +267,10 @@ namespace PcmHacking
                 else //if long, get two bytes for length
                 {
                     offset += 1;
-                   Chk = (await WaitForSerial(2));
+                    Chk = (await WaitForSerial(2));
                     if (Chk == false)
                     {
-                        this.Logger.AddDebugMessage("Timeout.. no data present");
+                        this.Logger.AddDebugMessage("Timeout.. no data present D");
                         return Response.Create(ResponseStatus.Timeout, (Message)null);
                     }
                     await this.Port.Receive(rx, 1, 2);
@@ -250,19 +283,18 @@ namespace PcmHacking
                 Chk = (await WaitForSerial(1));
                 if (Chk == false)
                 {
-                    this.Logger.AddDebugMessage("Timeout.. no data present");
+                    this.Logger.AddDebugMessage("Timeout.. no data present E");
                     return Response.Create(ResponseStatus.Timeout, (Message)null);
                 }
                 await this.Port.Receive(rx, 1, 1);
                 Length = rx[1];
             }
-         
 
             byte[] receive = new byte[Length + 3 + offset];
             Chk = (await WaitForSerial((ushort)(Length + 1)));
             if (Chk == false)
             {
-                this.Logger.AddDebugMessage("Timeout.. no data present");
+                this.Logger.AddDebugMessage("Timeout.. no data present F");
                 return Response.Create(ResponseStatus.Timeout, (Message)null);
             }
 
@@ -300,7 +332,7 @@ namespace PcmHacking
             }
 
             // this.Logger.AddDebugMessage("Total Length Data=" + Length + " RX: " + receive.ToHex());
-            
+
             if (receive[0] == 0x8 || receive[0] == 0x9)
             {
                 //network frames //Strip header and checksum
@@ -313,12 +345,13 @@ namespace PcmHacking
             {
                 // Error from the device
                 Message result = new Message(receive);
-                this.Logger.AddDebugMessage("Error received: " + result.ToString());
+                this.Logger.AddDebugMessage("XPro Error: " + result.ToString());
                 return Response.Create(ResponseStatus.Error, result);
             }
             else
             {
                 // Valid message from the device
+                this.Logger.AddDebugMessage("XPro: " + receive.ToHex());
                 return Response.Create(ResponseStatus.Success, new Message(receive));
             }
         }
@@ -326,7 +359,7 @@ namespace PcmHacking
 
         async private Task<Response<String>> ReadELMPacket(String SentFrame)
         {
-           // UInt16 Counter = 0;
+            // UInt16 Counter = 0;
             bool framefound = false;
             bool Chk = false;
 
@@ -405,7 +438,6 @@ namespace PcmHacking
         /// </summary>
         async private Task<Response<Message>> SendDVIPacket(Message message)
         {
-            //this.Logger.AddDebugMessage("Trace: SendDVIPacket");
             int length = message.GetBytes().Length;
             byte[] RawPacket = message.GetBytes();
             byte[] SendPacket = new byte[length + 3];
@@ -430,11 +462,8 @@ namespace PcmHacking
 
             //Send frame
             await this.Port.Send(SendPacket);
-            //this.Logger.AddDebugMessage("send: " + SendPacket.ToHex());
 
-            //  return Response.Create(ResponseStatus.Success, message);
-
-            //check sent successfully
+            // Wait for confirmation of successful send
             Response<Message> m = null;
 
             for (int attempt = 0; attempt < 5; attempt++)
@@ -455,16 +484,23 @@ namespace PcmHacking
                 byte[] Val = m.Value.GetBytes();
                 if (Val[0] == 0x20 && Val[2] == 0x00)
                 {
+                    this.Logger.AddDebugMessage("TX: " + message.ToString());
                     return Response.Create(ResponseStatus.Success, message);
                 }
                 else if (Val[0] == 0x21 && Val[2] == 0x00)
                 {
+                    this.Logger.AddDebugMessage("TX: " + message.ToString());
                     return Response.Create(ResponseStatus.Success, message);
                 }
-                else return Response.Create(ResponseStatus.Error, message);
+                else
+                {
+                    this.Logger.AddUserMessage("Unable to transmit A: " + message.ToString());
+                    return Response.Create(ResponseStatus.Error, message);
+                }
             }
             else
             {
+                this.Logger.AddUserMessage("Unable to transmit B: " + message.ToString());
                 return Response.Create(ResponseStatus.Error, message);
             }
         }
@@ -475,13 +511,13 @@ namespace PcmHacking
         async private Task<Response<Boolean>> DVISetup()
         {
             //Set filter
-            bool Status =  await SetToFilter(DeviceId.Tool);
+            bool Status = await SetToFilter(DeviceId.Tool);
             if (Status == false) return Response.Create(ResponseStatus.Error, false);
 
             //Enable network rx/tx for protocol
             Status = await EnableProtocolNetwork();
             if (Status == false) return Response.Create(ResponseStatus.Error, false);
- 
+
             return Response.Create(ResponseStatus.Success, true);
         }
 
@@ -524,11 +560,11 @@ namespace PcmHacking
             await this.Port.DiscardBuffers();
 
             //AT@1 will return OBDX Pro VT - will then need to change its API to DVI bytes.
-            byte[] MsgAT1 = { (byte)'A', (byte)'T', (byte)'@',(byte)'1', 0xD };
+            byte[] MsgAT1 = { (byte)'A', (byte)'T', (byte)'@', (byte)'1', 0xD };
             await this.Port.Send(MsgAT1);
-             Response <String> m = await ReadELMPacket("AT@1");
+            Response<String> m = await ReadELMPacket("AT@1");
             if (m.Status == ResponseStatus.Success) this.Logger.AddUserMessage("Device Found: " + m.Value);
-            else{this.Logger.AddUserMessage("OBDX Pro device not found or failed response"); return false;}
+            else { this.Logger.AddUserMessage("OBDX Pro device not found or failed response"); return false; }
 
             //Change to DVI protocol DX 
             byte[] MsgDXDP = { (byte)'D', (byte)'X', (byte)'D', (byte)'P', (byte)'1', 0xD };
@@ -551,8 +587,8 @@ namespace PcmHacking
             {
                 byte[] Val = m.Value.GetBytes();
                 Details = System.Text.Encoding.ASCII.GetString(Val, 3, Val[1] - 1);
-              //  this.Logger.AddUserMessage("Device Found: " + name);
-               // return new Response<String>(ResponseStatus.Success, name);
+                //  this.Logger.AddUserMessage("Device Found: " + name);
+                // return new Response<String>(ResponseStatus.Success, name);
             }
             else
             {
@@ -565,7 +601,7 @@ namespace PcmHacking
             Msg = OBDXProDevice.DVI_BOARD_FIRMWARE_VERSION.GetBytes();
             Msg[Msg.Length - 1] = CalcChecksum(Msg);
             await this.Port.Send(Msg);
-             m = await ReadDVIPacket();
+            m = await ReadDVIPacket();
             if (m.Status == ResponseStatus.Success)
             {
                 byte[] Val = m.Value.GetBytes();
@@ -618,9 +654,6 @@ namespace PcmHacking
                 this.Logger.AddUserMessage("Unable to read unique Serial");
                 return new Response<String>(ResponseStatus.Error, null);
             }
-
-
-
         }
 
         enum OBDProtocols : UInt16
@@ -677,7 +710,6 @@ namespace PcmHacking
                 this.Logger.AddDebugMessage("Failed to set filter");
                 return false;
             }
-
         }
 
         private async Task<bool> EnableProtocolNetwork()
@@ -702,7 +734,6 @@ namespace PcmHacking
                 this.Logger.AddDebugMessage("Failed to enable network");
                 return false;
             }
-
         }
 
         /// <summary>
@@ -720,12 +751,14 @@ namespace PcmHacking
             {
                 this.Logger.AddDebugMessage("DVI setting VPW 1X");
                 Msg[3] = 0;
-               
+                this.vpwSpeed = VpwSpeed.Standard;
+
             }
             else
             {
                 this.Logger.AddDebugMessage("DVI setting VPW 4X");
                 Msg[3] = 1;
+                this.vpwSpeed = VpwSpeed.FourX;
             }
 
             Msg[Msg.Length - 1] = CalcChecksum(Msg);
@@ -775,7 +808,7 @@ namespace PcmHacking
         }
 
 
-      private void ProcessError(ErrorType Type, byte code)
+        private void ProcessError(ErrorType Type, byte code)
         {
             string ErrVal = "";
             if (Type == ErrorType.ConfigOrTxNetwork)
@@ -807,7 +840,7 @@ namespace PcmHacking
             }
             else if (Type == ErrorType.RxNetwork)
             {
-                
+
             }
             this.Logger.AddDebugMessage("Fault reported from scantool: " + ErrVal);
         }
@@ -816,6 +849,119 @@ namespace PcmHacking
         {
             this.Port.DiscardBuffers();
         }
-    }
 
+        /// <summary>
+        /// This is based on the timeouts used by the AllPro, so it could probably be optimized further.
+        /// </summary>
+        private int GetReceiveTimeout()
+        {
+            int result;
+            if (this.vpwSpeed == VpwSpeed.Standard)
+            {
+                switch (this.currentTimeoutScenario)
+                {
+                    case TimeoutScenario.Minimum:
+                        result = 50;
+                        break;
+
+                    case TimeoutScenario.ReadProperty:
+                        result = 50;
+                        break;
+
+                    case TimeoutScenario.ReadCrc:
+                        result = 250;
+                        break;
+
+                    case TimeoutScenario.ReadMemoryBlock:
+                        result = 250;
+                        break;
+
+                    case TimeoutScenario.EraseMemoryBlock:
+                        result = 1000;
+                        break;
+
+                    case TimeoutScenario.WriteMemoryBlock:
+                        result = 1200;
+                        break;
+
+                    case TimeoutScenario.SendKernel:
+                        result = 4000;
+                        break;
+
+                    case TimeoutScenario.DataLogging1:
+                        result = 25;
+                        break;
+
+                    case TimeoutScenario.DataLogging2:
+                        result = 40;
+                        break;
+
+                    case TimeoutScenario.DataLogging3:
+                        result = 60;
+                        break;
+
+                    case TimeoutScenario.Maximum:
+                        result = 1020;
+                        break;
+
+                    default:
+                        throw new NotImplementedException("Unknown timeout scenario " + this.currentTimeoutScenario);
+                }
+            }
+            else
+            {
+                switch (this.currentTimeoutScenario)
+                {
+                    case TimeoutScenario.Minimum:
+                        result = 50;
+                        break;
+
+                    case TimeoutScenario.ReadProperty:
+                        result = 50;
+                        break;
+
+                    case TimeoutScenario.ReadCrc:
+                        result = 250;
+                        break;
+
+                    case TimeoutScenario.ReadMemoryBlock:
+                        result = 250;
+                        break;
+
+                    case TimeoutScenario.EraseMemoryBlock:
+                        result = 1000;
+                        break;
+
+                    case TimeoutScenario.WriteMemoryBlock:
+                        result = 600;
+                        break;
+
+                    case TimeoutScenario.SendKernel:
+                        result = 2000;
+                        break;
+
+                    case TimeoutScenario.DataLogging1:
+                        result = 7;
+                        break;
+
+                    case TimeoutScenario.DataLogging2:
+                        result = 10;
+                        break;
+
+                    case TimeoutScenario.DataLogging3:
+                        result = 15;
+                        break;
+
+                    case TimeoutScenario.Maximum:
+                        result = 1020;
+                        break;
+
+                    default:
+                        throw new NotImplementedException("Unknown timeout scenario " + this.currentTimeoutScenario);
+                }
+            }
+
+            return result;
+        }
+    }
 }

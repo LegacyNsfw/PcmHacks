@@ -72,7 +72,15 @@ namespace PcmHacking
         /// </summary>
         public Response<bool> ParseUploadPermissionResponse(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6C, 0x34);
+            Response<bool> response = this.DoSimpleValidation(message, Priority.Physical0, Mode.PCMUploadRequest);
+
+            if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
+            {
+                return response;
+            }
+
+            // In case the PCM sends back a 7F message with an 8C priority byte...
+            return this.DoSimpleValidation(message, Priority.Physical0High, Mode.PCMUploadRequest);
         }
 
         /// <summary>
@@ -80,7 +88,7 @@ namespace PcmHacking
         /// </summary>
         public Response<bool> ParseUploadResponse(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6D, 0x36);
+            return this.DoSimpleValidation(message, Priority.Block, Mode.PCMUpload);
         }
 
         /// <summary>
@@ -105,14 +113,6 @@ namespace PcmHacking
             {
                 return new Message(request);
             }
-        }
-
-        /// <summary>
-        /// Parse the response to a read request. (Obsolete?)
-        /// </summary>
-        public Response<bool> ParseReadResponse(Message message)
-        {
-            return this.DoSimpleValidation(message, 0x6C, 0x35); 
         }
 
         /// <summary>

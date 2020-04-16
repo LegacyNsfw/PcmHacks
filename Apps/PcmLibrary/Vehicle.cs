@@ -391,7 +391,7 @@ namespace PcmHacking
                 Response<bool> response = filter(message);
                 if ((response.Status != ResponseStatus.Success) && (response.Status != ResponseStatus.Refused))
                 {
-                    this.logger.AddDebugMessage("Ignoring message: " + response.Status);
+                    this.logger.AddDebugMessage("Ignoring message: " + response.Status + "  " + message.ToString());
                     continue;
                 }
 
@@ -442,7 +442,7 @@ namespace PcmHacking
                 }
 
                 lastStatus = payloadResponse.Status;
-                this.logger.AddDebugMessage("Unable to process response: " + lastStatus);
+                this.logger.AddDebugMessage("Unable to process response: " + lastStatus + " " + payloadMessage.ToString());
             }
 
             return Response.Create<byte[]>(lastStatus, new byte[0]);
