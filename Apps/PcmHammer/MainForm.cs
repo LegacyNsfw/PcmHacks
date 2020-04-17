@@ -1,4 +1,4 @@
-﻿using J2534;
+using J2534;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -36,7 +36,7 @@ namespace PcmHacking
         /// 
         /// If not null, use a number like "004" that matches a release branch.
         /// </summary>
-        private const string AppVersion = null;
+        private const string AppVersion = "014";
 
         /// <summary>
         /// We had to move some operations to a background thread for the J2534 code as the DLL functions do not have an awaiter.
