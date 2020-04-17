@@ -467,7 +467,13 @@ namespace PcmHacking
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
                 Message response = null;
-                while (((response = await this.device.ReceiveMessage()) != null) && (sw.ElapsedMilliseconds < 1500))
+
+                // WARNING: The AllPro stopped receiving permission-to-upload messages when this timeout period
+                // was set to 1500ms.  Reducing it to 500 seems to have fixed that problem. 
+                // 
+                // It would be nice to find a way to wait equally long with all devices, as refusal messages
+                // are still a potetial source of trouble. 
+                while (((response = await this.device.ReceiveMessage()) != null) && (sw.ElapsedMilliseconds < 500))
                 {
                     Response<bool> refused = this.protocol.ParseHighSpeedRefusal(response);
                     if (refused.Status != ResponseStatus.Success)
