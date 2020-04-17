@@ -136,7 +136,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
-                        milliseconds = 50;
+                        milliseconds = 110;
                         break;
 
                     case TimeoutScenario.EraseMemoryBlock:
