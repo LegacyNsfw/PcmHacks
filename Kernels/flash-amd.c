@@ -143,8 +143,6 @@ uint8_t Amd_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAd
 				success = 1;
 				break;
 			}
-
-			WasteTime();
 		}
 
 		if (!success)

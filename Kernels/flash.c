@@ -27,9 +27,7 @@ void FlashUnlock()
 
 	// TODO: can we just |= HARDWAREIO?
 	unsigned short hardwareFlags = HARDWARE_IO;
-	WasteTime();
 	hardwareFlags |= 0x0001;
-	WasteTime();
 	HARDWARE_IO = hardwareFlags;
 
 	VariableSleep(0x50);
@@ -49,10 +47,7 @@ void FlashLock()
 
 	unsigned short hardwareFlags = HARDWARE_IO;
 	hardwareFlags &= 0xFFFE;
-	WasteTime();
-	WasteTime();
 	HARDWARE_IO = hardwareFlags;
 
 	VariableSleep(0x50);
 }
-
