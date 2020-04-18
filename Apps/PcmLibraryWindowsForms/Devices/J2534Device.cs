@@ -88,8 +88,7 @@ namespace PcmHacking
         {
             Filters = new List<ulong>();
 
-            //this.Logger.AddDebugMessage("Initialize called");
-            this.Logger.AddDebugMessage("Initializing " + this.ToString());
+            this.Logger.AddUserMessage("Initializing " + this.ToString());
 
             Response<J2534Err> m; // hold returned messages for processing
             Response<bool> m2;
@@ -105,50 +104,49 @@ namespace PcmHacking
                 m2 = CloseLibrary();
                 if (m2.Status != ResponseStatus.Success)
                 {
-                    this.Logger.AddDebugMessage("Error closing loaded DLL");
+                    this.Logger.AddUserMessage("Error closing loaded DLL");
                     return false;
                 }
-                this.Logger.AddDebugMessage("DLL successfully unloaded");
+                this.Logger.AddDebugMessage("Existing DLL successfully unloaded.");
             }
 
             //Connect to requested DLL
             m2 = LoadLibrary(J2534Port.LoadedDevice);
             if (m2.Status != ResponseStatus.Success)
             {
-                this.Logger.AddDebugMessage("Error occured loading J2534 DLL");
+                this.Logger.AddUserMessage("Unable to load the J2534 DLL.");
                 return false;
             }
             this.Logger.AddUserMessage("Loaded DLL");
-
 
             //connect to scantool
             m = ConnectTool();
             if (m.Status != ResponseStatus.Success)
             {
-                this.Logger.AddDebugMessage("Error occured connecting to scantool");
+                this.Logger.AddUserMessage("Unable to connect to the device.");
                 return false;
             }
-            this.Logger.AddUserMessage("Connected to Scantool");
 
-
+            this.Logger.AddUserMessage("Connected to the device.");
+            
             //Optional.. read API,firmware version ect here
-
-
+            
             //read voltage
             volts = ReadVoltage();
             if (volts.Status != ResponseStatus.Success)
             {
-                this.Logger.AddDebugMessage("Error occured reading voltage");
-                return false;
+                this.Logger.AddDebugMessage("Unable to read battery voltage.");
             }
-            this.Logger.AddUserMessage("Battery Voltage is: " + volts.Value.ToString());
-            this.Logger.AddDebugMessage("Battery Voltage is: " + volts.Value.ToString());
+            else
+            {
+                this.Logger.AddUserMessage("Battery Voltage is: " + volts.Value.ToString());
+            }
 
             //Set Protocol
             m = ConnectToProtocol(ProtocolID.J1850VPW, BaudRate.J1850VPW_10400, ConnectFlag.NONE);
             if (m.Status != ResponseStatus.Success)
             {
-                this.Logger.AddDebugMessage("Failed to set protocol, J2534 error code: 0x" + m.Value.ToString("X"));
+                this.Logger.AddUserMessage("Failed to set protocol, J2534 error code: 0x" + m.Value.ToString("X"));
                 return false;
             }
             this.Logger.AddDebugMessage("Protocol Set");
@@ -157,10 +155,11 @@ namespace PcmHacking
             m = SetFilter(0xFEFFFF, 0x6CF010, 0, TxFlag.NONE, FilterType.PASS_FILTER);
             if (m.Status != ResponseStatus.Success)
             {
-                this.Logger.AddDebugMessage("Failed to set filter, J2534 error code: 0x" + m.Value.ToString("X2"));
+                this.Logger.AddUserMessage("Failed to set filter, J2534 error code: 0x" + m.Value.ToString("X2"));
                 return false;
             }
-            this.Logger.AddDebugMessage("Filter Set");
+
+            this.Logger.AddDebugMessage("Device initialization complete.");
 
             return true;
         }
