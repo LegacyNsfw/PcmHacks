@@ -39,3 +39,24 @@
     <Parameter Name="Target AFR" DefineBy="Pid" ByteCount="1" Address="0x119E">
       <Conversion Name="AFR" Expression="x/10" />
     </Parameter>
+
+    <Parameter Name="Cracker Plus Follower" DefineBy="Address" ByteCount="2" Address="0xFF97F4">
+      <Conversion Name="Raw" Expression="x/1024.0" />
+    </Parameter>
+    <Parameter Name="Total Desired Idle Airflow" DefineBy="Address" ByteCount="2" Address="0xFF97DA">
+      <Conversion Name="Raw" Expression="x/1024.0" />
+    </Parameter>
+
+    <Parameter Name="Additional Startup Airflow?" DefineBy="Address" ByteCount="2" Address="0xFF97B8">
+      <Conversion Name="Raw" Expression="x/1024.0" />
+    </Parameter>
+    <Parameter Name="Long Term Idle Trim?" DefineBy="Address" ByteCount="2" Address="0xFF81E4">
+      <Conversion Name="Raw" Expression="x/1024.0" />
+    </Parameter>
+
+    <Parameter Name="Knock Retard?" DefineBy="Address" ByteCount="2" Address="0xFF968E">
+      <Conversion Name="Degrees?" Expression="x" />
+    </Parameter>
+    <Parameter Name="Ignition Advance Multiplier?" DefineBy="Address" ByteCount="2" Address="0xFF8250">
+      <Conversion Name="Multiplier" Expression="x/4096.0" />
+    </Parameter>
