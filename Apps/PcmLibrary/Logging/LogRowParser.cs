@@ -117,7 +117,7 @@ namespace PcmHacking
 
                         if (startIndex < payload.Length)
                         {
-                            value |= payload[startIndex++];
+                            value = (Int16)((UInt16)value | (byte)payload[startIndex++]);
                         }
                         break;
 
