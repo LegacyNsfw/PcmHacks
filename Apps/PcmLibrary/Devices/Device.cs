@@ -321,7 +321,7 @@ namespace PcmHacking
                 case TimeoutScenario.DataLogging1:
                     packetSize = 30;
                     break;
-                
+
                 // This one was tuned by hand to avoid timeouts with STPX, and it work well for the AllPro too.
                 case TimeoutScenario.DataLogging2:
                     packetSize = 47;

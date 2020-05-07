@@ -17,7 +17,7 @@ namespace PcmHacking
         /// </summary>
         private Vehicle vehicle;
         protected Vehicle Vehicle { get { return this.vehicle; } }
-               
+
         public virtual void AddDebugMessage(string message) { }
         public virtual void AddUserMessage(string message) { }
         public virtual void ResetLogs() { }
@@ -39,7 +39,7 @@ namespace PcmHacking
             // enable re-init button
             // show device name
         }
-        
+
         /// <summary>
         /// Handle clicking the "Select Interface" button
         /// </summary>

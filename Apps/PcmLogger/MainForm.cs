@@ -118,7 +118,7 @@ namespace PcmHacking
             {
                 await this.LoadProfile(profilePath);
             }
-            
+
             string logDirectory = LoggerConfiguration.LogDirectory;
             if (string.IsNullOrWhiteSpace(logDirectory))
             {
@@ -300,7 +300,7 @@ namespace PcmHacking
                         this.loggerProgress.Visible = true;
                         this.logFilePath.Text = logFilePath;
                         this.setDirectory.Enabled = false;
-						this.startStopLogging.Focus();
+                        this.startStopLogging.Focus();
                     });
 
                     MathValueConfigurationLoader loader = new MathValueConfigurationLoader(this);
@@ -374,7 +374,7 @@ namespace PcmHacking
                         delegate ()
                         {
                             this.logValues.Text = "Logging interrupted. " + exception.Message;
-							this.startStopLogging.Focus();
+                            this.startStopLogging.Focus();
                         });
                 }
                 finally
@@ -401,7 +401,7 @@ namespace PcmHacking
 
                             this.selectButton.Enabled = true;
                             this.selectProfileButton.Enabled = true;
-							this.startStopLogging.Focus();
+                            this.startStopLogging.Focus();
                         });
                 }
             }
