@@ -81,6 +81,21 @@ namespace PcmHacking
             }
         }
 
+        public bool Supports4X
+        {
+            get => this.device.Supports4X;
+        }
+
+        public bool Enable4xReadWrite
+        {
+            set
+            {
+                this.device.Enable4xReadWrite = value;
+            }
+
+            get => this.device.Enable4xReadWrite;
+        }
+
         /// <summary>
         /// Constructor.
         /// </summary>

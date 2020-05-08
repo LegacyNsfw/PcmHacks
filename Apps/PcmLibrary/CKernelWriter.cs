@@ -60,7 +60,7 @@ namespace PcmHacking
                 if (kernelVersion == 0)
                 {
                     // Switch to 4x, if possible. But continue either way.
-                    if (Configuration.Enable4xReadWrite)
+                    if (this.vehicle.Enable4xReadWrite)
                     {
                         // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
                         if (!await this.vehicle.VehicleSetVPW4x(VpwSpeed.FourX))

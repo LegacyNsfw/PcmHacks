@@ -362,7 +362,10 @@ namespace PcmHacking
                 this.exitKernelButton.Enabled = true;
                 this.reinitializeButton.Enabled = true;
 
-                this.menuItemEnable4xReadWrite.Enabled = true;
+                if (this.Vehicle.Supports4X)
+                {
+                    this.menuItemEnable4xReadWrite.Enabled = true;
+                }
             });
         }
 
@@ -376,7 +379,7 @@ namespace PcmHacking
         /// </summary>
         private void enable4xReadWrite_Click(object sender, EventArgs e)
         {
-            menuItemEnable4xReadWrite.Checked = Configuration.Enable4xReadWrite ^= true;
+            Vehicle.Enable4xReadWrite = menuItemEnable4xReadWrite.Checked = Configuration.Enable4xReadWrite ^= true;
         }
 
         /// <summary>

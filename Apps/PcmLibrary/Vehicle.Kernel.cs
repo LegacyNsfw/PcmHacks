@@ -440,6 +440,12 @@ namespace PcmHacking
                 return true;
             }
             
+            if ((newSpeed == VpwSpeed.FourX) && !this.device.Enable4xReadWrite)
+            {
+                logger.AddUserMessage("4X communications disabled by configuration.");
+                return true;
+            }
+
             // Configure the vehicle bus when switching to 4x
             if (newSpeed == VpwSpeed.FourX)
             {
