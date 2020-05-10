@@ -225,7 +225,6 @@ namespace PcmHacking
                 this.protocol,
                 this.logger);
 
-            bool allRangesMatch = false;
             int messageRetryCount = 0;
             await this.vehicle.SendToolPresentNotification();
             for (int attempt = 1; attempt <= 5; attempt++)
@@ -235,8 +234,6 @@ namespace PcmHacking
                     relevantBlocks,
                     cancellationToken))
                 {
-                    allRangesMatch = true;
-
                     // Don't stop here if the user just wants to test their cable.
                     if (this.writeType == WriteType.TestWrite)
                     {
@@ -251,6 +248,7 @@ namespace PcmHacking
                         if (attempt > 1)
                         {
                             Utility.ReportRetryCount("Write", messageRetryCount, flashChip.Size, this.logger);
+                            this.logger.AddUserMessage("Flash successful!");
                         }
                         return true;
                     }
@@ -333,18 +331,6 @@ namespace PcmHacking
                         bytesRemaining -= range.Size;
                     }
                 }
-            }
-
-            if (allRangesMatch)
-            {
-                this.logger.AddUserMessage("Flash successful!");
-
-                if (messageRetryCount > 2)
-                {
-                    logger.AddUserMessage("Write request messages had to be re-sent " + messageRetryCount + " times.");
-                }
-
-                return true;
             }
 
             // During a test write, we will return from the middle of the loop above.
