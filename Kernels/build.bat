@@ -18,3 +18,4 @@ c:\mingw\bin\g++ -o test.exe test.cpp crc.c
 
 copy kernel.bin ..\Apps\PcmHammer\bin\debug\kernel.bin
 dir *.bin
+
