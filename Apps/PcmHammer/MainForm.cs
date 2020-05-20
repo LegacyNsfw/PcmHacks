@@ -834,6 +834,7 @@ namespace PcmHacking
 
                     CKernelReader reader = new CKernelReader(
                         this.Vehicle,
+                        info,
                         this);
 
                     Response<Stream> readResponse = await reader.ReadContents(cancellationTokenSource.Token);
@@ -973,6 +974,7 @@ namespace PcmHacking
                     bool needUnlock;
                     int keyAlgorithm = 1;
                     bool shouldHalt;
+                    PcmInfo pcmInfo = null;
                     bool needToCheckOperatingSystem =
                         (writeType != WriteType.OsPlusCalibrationPlusBoot) &&
                         (writeType != WriteType.Full) &&
@@ -982,8 +984,8 @@ namespace PcmHacking
                     Response<uint> osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
                     if (osidResponse.Status == ResponseStatus.Success)
                     {
-                        PcmInfo info = new PcmInfo(osidResponse.Value);
-                        keyAlgorithm = info.KeyAlgorithm;
+                        pcmInfo = new PcmInfo(osidResponse.Value);
+                        keyAlgorithm = pcmInfo.KeyAlgorithm;
                         needUnlock = true;
 
                         if (!validator.IsSameOperatingSystem(osidResponse.Value))
@@ -1047,6 +1049,8 @@ namespace PcmHacking
                                 {
                                     return;
                                 }
+
+                                pcmInfo = new PcmInfo(osidResponse.Value);
                             }
 
                             needToCheckOperatingSystem = false;
@@ -1072,6 +1076,7 @@ namespace PcmHacking
 
                     CKernelWriter writer = new CKernelWriter(
                         this.Vehicle,
+                        pcmInfo,
                         new Protocol(),
                         writeType,
                         this);
