@@ -147,6 +147,11 @@ namespace PcmHacking
         protected VpwSpeed Speed { get; private set; }
 
         /// <summary>
+        /// Enable Disable VPW 4x.
+        /// </summary>
+        public bool Enable4xReadWrite { get; set; }
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         public Device(ILogger logger)
@@ -240,7 +245,7 @@ namespace PcmHacking
                 return true;
             }
 
-            if (((newSpeed == VpwSpeed.FourX) && (!Configuration.Enable4xReadWrite)) || (!await this.SetVpwSpeedInternal(newSpeed)))
+            if (((newSpeed == VpwSpeed.FourX) && !this.Enable4xReadWrite) || (!await this.SetVpwSpeedInternal(newSpeed)))
             {
                 return false;
             }

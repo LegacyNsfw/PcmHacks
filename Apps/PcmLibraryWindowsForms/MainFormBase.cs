@@ -106,6 +106,8 @@ namespace PcmHacking
                 return false;
             }
 
+            device.Enable4xReadWrite = Configuration.Enable4xReadWrite;
+
             Protocol protocol = new Protocol();
             this.vehicle = new Vehicle(
                 device,
