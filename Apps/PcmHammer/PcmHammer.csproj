@@ -52,9 +52,9 @@
     <ApplicationIcon>0411_256px.ico</ApplicationIcon>
   </PropertyGroup>
   <Target Name="Date" BeforeTargets="CoreCompile">
-    <WriteLinesToFile File="$(IntermediateOutputPath).generated.cs" Lines="static partial class Generated { public static System.DateTime BuildTime = System.DateTime.UtcNow %3B }" Overwrite="true" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)generated.cs" Lines="static partial class Generated { public static long BuildTime = $([System.DateTime]::UtcNow.Ticks)%3B }" Overwrite="true" />
     <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath).generated.cs" />
+      <Compile Include="$(IntermediateOutputPath)generated.cs" />
     </ItemGroup>
   </Target>
   <ItemGroup>

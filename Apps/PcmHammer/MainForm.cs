@@ -176,7 +176,7 @@ namespace PcmHacking
             string versionString = AppVersion;
             if (versionString == null)
             {
-                DateTime localTime = Generated.BuildTime.ToLocalTime();
+                DateTime localTime = new DateTime(Generated.BuildTime).ToLocalTime();
                 versionString = String.Format(
                     "({0}, {1})",
                     localTime.ToShortDateString(),
