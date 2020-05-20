@@ -16,8 +16,6 @@ namespace PcmHacking
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
-            Configuration.SetAccessor(new WinFormsConfigurationAccessor());
             Application.Run(new PcmExplorerMainForm());
         }
     }

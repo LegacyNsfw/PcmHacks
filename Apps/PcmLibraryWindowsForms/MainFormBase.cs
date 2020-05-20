@@ -56,7 +56,7 @@ namespace PcmHacking
             DialogResult result = picker.ShowDialog();
             if (result == DialogResult.OK)
             {
-                if (picker.DeviceCategory == Configuration.Constants.DeviceCategorySerial)
+                if (picker.DeviceCategory == DeviceConfiguration.Constants.DeviceCategorySerial)
                 {
                     if (string.IsNullOrEmpty(picker.SerialPort))
                     {
@@ -69,7 +69,7 @@ namespace PcmHacking
                     }
                 }
 
-                if (picker.DeviceCategory == Configuration.Constants.DeviceCategoryJ2534)
+                if (picker.DeviceCategory == DeviceConfiguration.Constants.DeviceCategoryJ2534)
                 {
                     if (string.IsNullOrEmpty(picker.J2534DeviceType))
                     {
@@ -77,10 +77,11 @@ namespace PcmHacking
                     }
                 }
 
-                Configuration.DeviceCategory = picker.DeviceCategory;
-                Configuration.J2534DeviceType = picker.J2534DeviceType;
-                Configuration.SerialPort = picker.SerialPort;
-                Configuration.SerialPortDeviceType = picker.SerialPortDeviceType;
+                DeviceConfiguration.Settings.DeviceCategory = picker.DeviceCategory;
+                DeviceConfiguration.Settings.J2534DeviceType = picker.J2534DeviceType;
+                DeviceConfiguration.Settings.SerialPort = picker.SerialPort;
+                DeviceConfiguration.Settings.SerialPortDeviceType = picker.SerialPortDeviceType;
+                DeviceConfiguration.Settings.Save();
                 return await this.ResetDevice();
             }
             return false;
@@ -106,7 +107,7 @@ namespace PcmHacking
                 return false;
             }
 
-            device.Enable4xReadWrite = Configuration.Enable4xReadWrite;
+            device.Enable4xReadWrite = DeviceConfiguration.Settings.Enable4xReadWrite;
 
             Protocol protocol = new Protocol();
             this.vehicle = new Vehicle(

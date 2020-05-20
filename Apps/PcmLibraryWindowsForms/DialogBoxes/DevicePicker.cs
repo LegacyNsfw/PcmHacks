@@ -85,17 +85,17 @@ namespace PcmHacking
             SetDefault(
                 this.serialPortList, 
                 x => (x as SerialPortInfo)?.PortName,
-                Configuration.SerialPort);
+                DeviceConfiguration.Settings.SerialPort);
 
             SetDefault(
                 this.serialDeviceList,
                 x => x.ToString(),
-                Configuration.SerialPortDeviceType);
+                DeviceConfiguration.Settings.SerialPortDeviceType);
 
             SetDefault(
                 this.j2534DeviceList, 
                 x => x.ToString(),
-                Configuration.J2534DeviceType);
+                DeviceConfiguration.Settings.J2534DeviceType);
         }
 
         /// <summary>
@@ -193,7 +193,7 @@ namespace PcmHacking
             {
                 serialOptionsGroupBox.Enabled = true;
                 j2534OptionsGroupBox.Enabled = false;
-                this.DeviceCategory = Configuration.Constants.DeviceCategorySerial;
+                this.DeviceCategory = DeviceConfiguration.Constants.DeviceCategorySerial;
             }
         }
 
@@ -206,7 +206,7 @@ namespace PcmHacking
             {
                 serialOptionsGroupBox.Enabled = false;
                 j2534OptionsGroupBox.Enabled = true;
-                this.DeviceCategory = Configuration.Constants.DeviceCategoryJ2534;
+                this.DeviceCategory = DeviceConfiguration.Constants.DeviceCategoryJ2534;
             }
         }
 
@@ -246,11 +246,11 @@ namespace PcmHacking
         private async void testButton_Click(object sender, EventArgs e)
         {
             Device device;
-            if (this.DeviceCategory == Configuration.Constants.DeviceCategorySerial)
+            if (this.DeviceCategory == DeviceConfiguration.Constants.DeviceCategorySerial)
             {
                 device = DeviceFactory.CreateSerialDevice(this.SerialPort, this.SerialPortDeviceType, this.logger);
             }
-            else if (this.DeviceCategory == Configuration.Constants.DeviceCategoryJ2534)
+            else if (this.DeviceCategory == DeviceConfiguration.Constants.DeviceCategoryJ2534)
             {
                 device = DeviceFactory.CreateJ2534Device(this.J2534DeviceType, this.logger);
             }

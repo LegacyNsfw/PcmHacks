@@ -113,17 +113,18 @@ namespace PcmHacking
         {
             this.uiThreadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             await this.ResetDevice();
-            string profilePath = LoggerConfiguration.ProfilePath;
+            string profilePath = Configuration.Settings.ProfilePath;
             if (!string.IsNullOrEmpty(profilePath))
             {
                 await this.LoadProfile(profilePath);
             }
 
-            string logDirectory = LoggerConfiguration.LogDirectory;
+            string logDirectory = Configuration.Settings.LogDirectory;
             if (string.IsNullOrWhiteSpace(logDirectory))
             {
                 logDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                LoggerConfiguration.LogDirectory = logDirectory;
+                Configuration.Settings.LogDirectory = logDirectory;
+                Configuration.Settings.Save();
             }
 
             this.logFilePath.Text = logDirectory;
@@ -209,7 +210,8 @@ namespace PcmHacking
                 loader.Initialize();
                 this.profileAndMath = new LogProfileAndMath(profile, loader.Configuration);
                 this.logValues.Text = string.Join(Environment.NewLine, this.profileAndMath.GetColumnNames());
-                LoggerConfiguration.ProfilePath = path;
+                Configuration.Settings.ProfilePath = path;
+                Configuration.Settings.Save();
             }
             catch (Exception exception)
             {
@@ -226,10 +228,11 @@ namespace PcmHacking
         private void setDirectory_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog dialog = new FolderBrowserDialog();
-            dialog.SelectedPath = LoggerConfiguration.LogDirectory;
+            dialog.SelectedPath = Configuration.Settings.LogDirectory;
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                LoggerConfiguration.LogDirectory = dialog.SelectedPath;
+                Configuration.Settings.LogDirectory = dialog.SelectedPath;
+                Configuration.Settings.Save();
                 this.logFilePath.Text = dialog.SelectedPath;
             }
         }
@@ -239,7 +242,7 @@ namespace PcmHacking
         /// </summary>
         private void openDirectory_Click(object sender, EventArgs e)
         {
-            Process.Start(LoggerConfiguration.LogDirectory);
+            Process.Start(Configuration.Settings.LogDirectory);
         }
 
         /// <summary>
@@ -396,7 +399,7 @@ namespace PcmHacking
                             this.loggerProgress.Visible = false;
                             this.startStopLogging.Enabled = true;
                             this.startStopLogging.Text = "Start &Logging";
-                            this.logFilePath.Text = LoggerConfiguration.LogDirectory;
+                            this.logFilePath.Text = Configuration.Settings.LogDirectory;
                             this.setDirectory.Enabled = true;
 
                             this.selectButton.Enabled = true;
@@ -416,7 +419,7 @@ namespace PcmHacking
                 "_" +
                 this.profileName +
                 ".csv";
-            return Path.Combine(LoggerConfiguration.LogDirectory, file);
+            return Path.Combine(Configuration.Settings.LogDirectory, file);
         }
 
         /// <summary>
