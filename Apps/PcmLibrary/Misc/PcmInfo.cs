@@ -715,6 +715,9 @@ namespace PcmHacking
                     this.Description = "1998-2005 V6";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
+                    this.IsSupported = false;
+                    this.KernelBaseAddress = 0xFF9090;
+                    this.ValidationMethod = ValidationMethod.P04;
                     break;
 
                 default:
