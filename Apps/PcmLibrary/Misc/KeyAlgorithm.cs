@@ -300,12 +300,12 @@ namespace PcmHacking
 
         public static void Op_code_comp(int high_byte, int low_byte)
         {
-            if (high_byte >= low_byte)
+            if (high_byte < low_byte)
             {
                 key_value = (65535 & (~key_value));
             }
             else
-                key_value = (65535 & (~(key_value + 1)));
+                key_value = (65535 & (~(key_value) + 1));
         }
 
         public static void Op_code_rot_lt(int high_byte, int low_byte)
