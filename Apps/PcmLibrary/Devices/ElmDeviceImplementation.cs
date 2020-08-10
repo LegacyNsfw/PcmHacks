@@ -176,16 +176,8 @@ namespace PcmHacking
 
             for (int i = 0; i < maxPayload; i++)
             {
-                try
-                {
-                    // Receive a single byte.
-                    await this.Port.Receive(b, 0, 1);
-                }
-                catch (TimeoutException)
-                {
-                    // No characters were available to read.
-                    break;
-                }
+                // Receive a single byte.
+                await this.Port.Receive(b, 0, 1);
 
                 // Is it the prompt '>'.
                 if (b[0] == '>')
