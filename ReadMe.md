@@ -26,6 +26,6 @@ Extract the contents of the zip file, and run PcmHammer.exe or PcmLogger.exe.
 
 ## Some .bin files for flashing, and .xdf files for tuning:
 
-[BoredTruckOwner's LS-based repository:](https://github.com/BoredTruckOwner/LS_Based_Engine_Repository)
+[BoredTruckOwner's LS-based repository](https://github.com/BoredTruckOwner/LS_Based_Engine_Repository)
 
-[The GM section of SnoMan's multi-manufacturer repository:](https://github.com/Snoman002/Engine-Tune-Repository-TunerPro-EFIlive-TunerCat/tree/master/General%20Motors)
+[The GM section of SnoMan's multi-manufacturer repository](https://github.com/Snoman002/Engine-Tune-Repository-TunerPro-EFIlive-TunerCat/tree/master/General%20Motors)
