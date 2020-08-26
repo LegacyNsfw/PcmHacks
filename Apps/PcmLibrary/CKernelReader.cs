@@ -18,6 +18,11 @@ namespace PcmHacking
         private readonly Protocol protocol;
         private readonly ILogger logger;
 
+        public bool VerifyFile
+        {
+            get; set;
+        } = true;
+
         public CKernelReader(Vehicle vehicle, PcmInfo pcmInfo, ILogger logger)
         {
             this.vehicle = vehicle;
@@ -156,27 +161,31 @@ namespace PcmHacking
 
                 logger.AddUserMessage("Read complete.");
                 Utility.ReportRetryCount("Read", retryCount, flashChip.Size, this.logger);
-                logger.AddUserMessage("Starting verification...");
 
-                CKernelVerifier verifier = new CKernelVerifier(
-                    image,
-                    flashChip.MemoryRanges,
-                    this.vehicle,
-                    this.protocol,
-                    this.logger);
+                if (VerifyFile)
+                {
+                    logger.AddUserMessage("Starting verification...");
 
-                if (await verifier.CompareRanges(
-                    image,
-                    BlockType.All,
-                    cancellationToken))
-                {
-                    logger.AddUserMessage("The contents of the file match the contents of the PCM.");
-                }
-                else
-                {
-                    logger.AddUserMessage("##############################################################################");
-                    logger.AddUserMessage("There are errors in the data that was read from the PCM. Do not use this file.");
-                    logger.AddUserMessage("##############################################################################");
+                    CKernelVerifier verifier = new CKernelVerifier(
+                        image,
+                        flashChip.MemoryRanges,
+                        this.vehicle,
+                        this.protocol,
+                        this.logger);
+
+                    if (await verifier.CompareRanges(
+                        image,
+                        BlockType.All,
+                        cancellationToken))
+                    {
+                        logger.AddUserMessage("The contents of the file match the contents of the PCM.");
+                    }
+                    else
+                    {
+                        logger.AddUserMessage("##############################################################################");
+                        logger.AddUserMessage("There are errors in the data that was read from the PCM. Do not use this file.");
+                        logger.AddUserMessage("##############################################################################");
+                    }
                 }
 
                 await this.vehicle.Cleanup(); // Not sure why this does not get called in the finally block on successfull read?
