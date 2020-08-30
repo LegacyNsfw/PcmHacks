@@ -209,7 +209,7 @@ namespace PcmHacking
 
                 this.MinimumSize = new Size(800, 600);
 
-                menuItemEnable4xReadWrite.Checked = Configuration.Enable4xReadWrite;
+                menuItemEnable4xReadWrite.Checked = DeviceConfiguration.Settings.Enable4xReadWrite;
             }
             catch (Exception exception)
             {
@@ -379,7 +379,8 @@ namespace PcmHacking
         /// </summary>
         private void enable4xReadWrite_Click(object sender, EventArgs e)
         {
-            Vehicle.Enable4xReadWrite = menuItemEnable4xReadWrite.Checked = Configuration.Enable4xReadWrite ^= true;
+            Vehicle.Enable4xReadWrite = menuItemEnable4xReadWrite.Checked = DeviceConfiguration.Settings.Enable4xReadWrite ^= true;
+            DeviceConfiguration.Settings.Save();
         }
 
         /// <summary>

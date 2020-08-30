@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContentLoader.cs" />
+    <Compile Include="DeviceConfiguration.cs" />
     <Compile Include="Devices\DeviceFactory.cs" />
     <Compile Include="Devices\J2534Device.cs" />
     <Compile Include="Devices\J2534DeviceFinder.cs" />
@@ -69,7 +70,11 @@
     <Compile Include="Ports\PortDiscovery.cs" />
     <Compile Include="Ports\StandardPort.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WinFormsConfigurationAccessor.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Devices\J2534.dll" />
@@ -84,6 +89,13 @@
       <Project>{0b317c5a-e078-4a96-8e7a-00601bca1429}</Project>
       <Name>PcmLibrary</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

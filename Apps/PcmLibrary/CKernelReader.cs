@@ -69,7 +69,7 @@ namespace PcmHacking
                     logger.AddUserMessage("Failed to load kernel from file.");
                     return new Response<Stream>(response.Status, null);
                 }
-                
+
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return Response.Create(ResponseStatus.Cancelled, (Stream)null);
