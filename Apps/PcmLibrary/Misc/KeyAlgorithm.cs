@@ -20,7 +20,16 @@ namespace PcmHacking
         {
             if ((algo >= 0) && (algo <= 255))
             {
-                return unchecked((UInt16)KeyAlgo(seed, algo));
+                if (seed != 0xFFFF)
+                {
+                    return unchecked((UInt16)KeyAlgo(seed, algo));
+                }
+                else
+                {
+                    // 0xFFFF seed is non-standard and indicates that Parameter block is not programmed
+                    // so the key is also 0xFFFF. This sometimes happens after SPS flashing.
+                    return 0xFFFF;
+                }
             }
             else
             {
