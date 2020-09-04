@@ -58,6 +58,7 @@
             this.writeFullToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemOptions = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemEnable4xReadWrite = new System.Windows.Forms.ToolStripMenuItem();
+            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -364,7 +365,8 @@
             // menuItemOptions
             // 
             this.menuItemOptions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuItemEnable4xReadWrite});
+            this.menuItemEnable4xReadWrite,
+            this.settingsToolStripMenuItem});
             this.menuItemOptions.Name = "menuItemOptions";
             this.menuItemOptions.Size = new System.Drawing.Size(56, 20);
             this.menuItemOptions.Text = "&Options";
@@ -375,6 +377,13 @@
             this.menuItemEnable4xReadWrite.Size = new System.Drawing.Size(196, 22);
             this.menuItemEnable4xReadWrite.Text = "Enable &4x Communication";
             this.menuItemEnable4xReadWrite.Click += new System.EventHandler(this.enable4xReadWrite_Click);
+            // 
+            // settingsToolStripMenuItem
+            // 
+            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.settingsToolStripMenuItem.Text = "&Settings";
+            this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -440,6 +449,7 @@
         private System.Windows.Forms.ToolStripMenuItem writeParmetersCloneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem writeOSCalibrationBootToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem writeFullToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
     }
 }
 
