@@ -5,6 +5,10 @@
 #define EXTERN extern
 #endif
 
+#define bool	_Bool
+#define true	1
+#define false	0
+
 typedef unsigned char  uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned       uint32_t;

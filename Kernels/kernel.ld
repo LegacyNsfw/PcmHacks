@@ -12,7 +12,6 @@ SECTIONS
 		crc.o (.text)
 		common.o (.text)
 		common-readwrite.o (.text)
-		flash.o (.text)
 		flash-intel.o (.text)
 		flash-amd.o (.text)
 	}
