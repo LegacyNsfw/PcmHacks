@@ -254,7 +254,7 @@ namespace PcmHacking
                         {
                             Utility.ReportRetryCount("Write", messageRetryCount, flashChip.Size, this.logger);
                         }
-                        return true;
+                        break;
                     }
                 }
 
@@ -340,12 +340,6 @@ namespace PcmHacking
             if (allRangesMatch)
             {
                 this.logger.AddUserMessage("Flash successful!");
-
-                if (messageRetryCount > 2)
-                {
-                    logger.AddUserMessage("Write request messages had to be re-sent " + messageRetryCount + " times.");
-                }
-
                 return true;
             }
 
