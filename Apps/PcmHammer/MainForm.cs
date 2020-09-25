@@ -210,6 +210,12 @@ namespace PcmHacking
                 this.MinimumSize = new Size(800, 600);
 
                 menuItemEnable4xReadWrite.Checked = DeviceConfiguration.Settings.Enable4xReadWrite;
+
+                if (string.IsNullOrWhiteSpace(Configuration.Settings.LogDirectory) || !Directory.Exists(Configuration.Settings.LogDirectory))
+                {
+                    Configuration.Settings.LogDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    Configuration.Settings.Save();
+                }
             }
             catch (Exception exception)
             {
@@ -286,26 +292,36 @@ namespace PcmHacking
         /// </summary>
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (this.currentWriteType == WriteType.None)
+            switch (this.currentWriteType)
             {
-                return;
+                case WriteType.None:
+                case WriteType.TestWrite:
+                    break;
+
+                default:
+                    DialogResult choice = MessageBox.Show(
+                        this,
+                        "Closing PCM Hammer now could make your PCM unusable." + Environment.NewLine +
+                        "Are you sure you want to take that risk?",
+                        "PCM Hammer",
+                        MessageBoxButtons.YesNo);
+
+                    if (choice == DialogResult.No)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                    break;
             }
 
-            if (this.currentWriteType == WriteType.TestWrite)
+            if (Configuration.Settings.SaveUserLogOnExit)
             {
-                return;
+                SaveLog(this.userLog);
             }
 
-            var choice = MessageBox.Show(
-                this,
-                "Closing PCM Hammer now could make your PCM unusable." + Environment.NewLine +
-                "Are you sure you want to take that risk?",
-                "PCM Hammer",
-                MessageBoxButtons.YesNo);
-
-            if (choice == DialogResult.No)
+            if (Configuration.Settings.SaveDebugLogOnExit)
             {
-                e.Cancel = true;
+                SaveLog(this.debugLog);
             }
         }
 
@@ -326,6 +342,8 @@ namespace PcmHacking
             this.writeOSCalibrationBootToolStripMenuItem.Enabled = false;
             this.writeFullToolStripMenuItem.Enabled = false;
             this.settingsToolStripMenuItem.Enabled = false;
+            this.saveToolStripMenuItem.Enabled = false;
+            this.exitApplicationToolStripMenuItem.Enabled = false;
 
             this.readPropertiesButton.Enabled = false;
 
@@ -356,6 +374,8 @@ namespace PcmHacking
                 this.writeOSCalibrationBootToolStripMenuItem.Enabled = true;
                 this.writeFullToolStripMenuItem.Enabled = true;
                 this.settingsToolStripMenuItem.Enabled = true;
+                this.saveToolStripMenuItem.Enabled = true;
+                this.exitApplicationToolStripMenuItem.Enabled = true;
 
                 this.readPropertiesButton.Enabled = true;
 
@@ -375,6 +395,63 @@ namespace PcmHacking
         {
             this.interfaceBox.Enabled = true;
             this.settingsToolStripMenuItem.Enabled = true;
+            this.exitApplicationToolStripMenuItem.Enabled = true;
+        }
+
+        /// <summary>
+        /// Save the selected log
+        /// </summary>
+        protected void SaveLog(TextBox logBox)
+        {
+            if (string.IsNullOrWhiteSpace(logBox.Text))
+            {
+                return;
+            }
+
+            string fileName = Configuration.Settings.LogDirectory
+                + "\\PcmHammer_"
+                + logBox.Name
+                + "_"
+                + DateTime.Now.ToString("yyyyMMdd@HHmmss")
+                + ".txt";
+            try
+            {
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(fileName))
+                {
+                    file.WriteLine(logBox.Text);
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(this, fileName,
+                    "ERROR file NOT Saved." + Environment.NewLine + e.Message,
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Save Debug Log
+        /// </summary>
+        private void debugLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveLog(debugLog);
+        }
+
+        /// <summary>
+        /// Save Results Log
+        /// </summary>
+        private void resultsLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveLog(userLog);
+        }
+
+        /// <summary>
+        /// Exit Application
+        /// </summary>
+        private void exitApplicationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
 
         /// <summary>
