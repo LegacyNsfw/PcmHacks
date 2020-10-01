@@ -144,6 +144,6 @@ if defined DUMP_ELF (
 
 if defined COPY_BIN (
   echo %BIN_LOCATION%
-  copy kernel.bin %BIN_LOCATION%
+  copy kernel.bin "%BIN_LOCATION%"
 )
 
