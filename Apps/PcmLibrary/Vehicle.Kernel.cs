@@ -422,9 +422,13 @@ namespace PcmHacking
 
             this.logger.AddUserMessage("Kernel upload 100% complete.");
 
-            // Consider: return kernel version rather than boolean?
-            UInt32 kernelVersion = await this.GetKernelVersion();
-            this.logger.AddUserMessage("Kernel Version: " + kernelVersion.ToString("X8"));
+            if (ReportKernelID)
+            {
+                // Consider: Allowing caller to call GetKernelVersion(...)?
+                // Consider: return kernel version rather than boolean?
+                UInt32 kernelVersion = await this.GetKernelVersion();
+                this.logger.AddUserMessage("Kernel Version: " + kernelVersion.ToString("X8"));
+            }
 
             return true;
         }

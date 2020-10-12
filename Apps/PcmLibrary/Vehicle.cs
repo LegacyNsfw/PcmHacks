@@ -97,6 +97,17 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Silences Kernel ID reporting
+        /// </summary>
+        /// <remarks>
+        /// See note Vehicle.Kernel PCMExecute(...)
+        /// </remarks>
+        public bool ReportKernelID
+        {
+            get; set;
+        } = true;
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         public Vehicle(
