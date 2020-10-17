@@ -81,7 +81,10 @@ namespace PcmHacking
                     stID.Contains("STN1150") || // MX version 1
                     stID.Contains("STN1151") || // MX version 2
                     stID.Contains("STN1155") || // LX
-                    stID.Contains("STN2255"))   // MX+
+                    stID.Contains("STN2255") ||	// MX+
+					stID.Contains("STN1170") || // ELM327 v3
+					stID.Contains("STN2120") || // ELS27 v3
+					stID.Contains("STN2230"))   // EX
                 {
                     // 2048 works, but doesn't write measurably faster.
                     this.MaxSendSize = 1024 + 12;
@@ -110,72 +113,6 @@ namespace PcmHacking
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Get the time required for the given scenario.
-        /// </summary>
-        public override int GetTimeoutMilliseconds(TimeoutScenario scenario, VpwSpeed speed)
-        {
-            int milliseconds;
-
-            if (speed == VpwSpeed.Standard)
-            {
-                switch (scenario)
-                {
-                    case TimeoutScenario.Minimum:
-                        milliseconds = 0;
-                        break;
-
-                    case TimeoutScenario.ReadProperty:
-                        milliseconds = 25;
-                        break;
-
-                    case TimeoutScenario.ReadCrc:
-                        milliseconds = 100;
-                        break;
-
-                    case TimeoutScenario.ReadMemoryBlock:
-                        milliseconds = 110;
-                        break;
-
-                    case TimeoutScenario.EraseMemoryBlock:
-                        milliseconds = 1000;
-                        break;
-
-                    case TimeoutScenario.WriteMemoryBlock:
-                        milliseconds = 140; // 125 works, added some for safety
-                        break;
-
-                    case TimeoutScenario.SendKernel:
-                        milliseconds = 50;
-                        break;
-
-                    case TimeoutScenario.DataLogging1:
-                        milliseconds = 25;
-                        break;
-
-                    case TimeoutScenario.DataLogging2:
-                        milliseconds = 40;
-                        break;
-
-                    case TimeoutScenario.DataLogging3:
-                        milliseconds = 60;
-                        break;
-
-                    case TimeoutScenario.Maximum:
-                        return 1020;
-
-                    default:
-                        throw new NotImplementedException("Unknown timeout scenario " + scenario);
-                }
-            }
-            else
-            {
-                throw new NotImplementedException("Since when did ScanTool devices support 4x?");
-            }
-
-            return milliseconds;
         }
 
         /// <summary>
