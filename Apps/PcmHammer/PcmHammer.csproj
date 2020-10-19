@@ -82,6 +82,12 @@
     <Compile Include="DialogBoxes\DelayDialogBox.Designer.cs">
       <DependentUpon>DelayDialogBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="DialogBoxes\SettingsDialogBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DialogBoxes\SettingsDialogBox.Designer.cs">
+      <DependentUpon>SettingsDialogBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="DialogBoxes\VinForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -99,6 +105,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="DialogBoxes\DelayDialogBox.resx">
       <DependentUpon>DelayDialogBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DialogBoxes\SettingsDialogBox.resx">
+      <DependentUpon>SettingsDialogBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DialogBoxes\VinForm.resx">
       <DependentUpon>VinForm.cs</DependentUpon>

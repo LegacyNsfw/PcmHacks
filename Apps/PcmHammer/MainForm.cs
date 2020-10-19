@@ -325,6 +325,7 @@ namespace PcmHacking
             this.writeParmetersCloneToolStripMenuItem.Enabled = false;
             this.writeOSCalibrationBootToolStripMenuItem.Enabled = false;
             this.writeFullToolStripMenuItem.Enabled = false;
+            this.settingsToolStripMenuItem.Enabled = false;
 
             this.readPropertiesButton.Enabled = false;
 
@@ -354,6 +355,7 @@ namespace PcmHacking
                 this.writeParmetersCloneToolStripMenuItem.Enabled = true;
                 this.writeOSCalibrationBootToolStripMenuItem.Enabled = true;
                 this.writeFullToolStripMenuItem.Enabled = true;
+                this.settingsToolStripMenuItem.Enabled = true;
 
                 this.readPropertiesButton.Enabled = true;
 
@@ -372,6 +374,18 @@ namespace PcmHacking
         protected override void EnableInterfaceSelection()
         {
             this.interfaceBox.Enabled = true;
+            this.settingsToolStripMenuItem.Enabled = true;
+        }
+
+        /// <summary>
+        /// Settings Dialog
+        /// </summary>
+        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (DialogBoxes.SettingsDialogBox settingsDialog = new DialogBoxes.SettingsDialogBox())
+            {
+                DialogResult dialogResult = settingsDialog.ShowDialog();
+            }
         }
 
         /// <summary>
