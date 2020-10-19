@@ -35,6 +35,7 @@ namespace PcmHacking
                 if (received != null)
                 {
                     this.logger.AddDebugMessage("Ignoring chatter: " + received.ToString());
+                    break;
                 }
                 else
                 {
