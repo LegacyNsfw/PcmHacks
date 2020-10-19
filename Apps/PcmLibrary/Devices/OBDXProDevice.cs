@@ -162,9 +162,10 @@ namespace PcmHacking
             for (int iterations = 0; iterations < 5; iterations++)
             {
                 Response<Message> response = await this.ReadDVIPacket(this.GetReceiveTimeout());
-                if (response.Status == ResponseStatus.Success)
-                    if (Utility.CompareArraysPart(response.Value.GetBytes(), expected))
-                        return Response.Create(ResponseStatus.Success, (Message)response.Value);
+                if (response != null)  // Hack to silence error - See: https://pcmhacking.net/forums/viewtopic.php?f=42&t=6730&start=110#p101790
+                    if (response.Status == ResponseStatus.Success)
+                        if (Utility.CompareArraysPart(response.Value.GetBytes(), expected))
+                            return Response.Create(ResponseStatus.Success, (Message)response.Value);
                 await Task.Delay(50);
             }
 
