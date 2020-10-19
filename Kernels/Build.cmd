@@ -131,7 +131,7 @@ rem *** All that for this ...
 "%GCC_LOCATION%\m68k-elf-gcc.exe" -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 -O0 main.c write-kernel.c crc.c common.c common-readwrite.c flash-intel.c flash-amd.c
 if %errorlevel% neq 0 goto :EOF
 
-"%GCC_LOCATION%\m68k-elf-ld.exe" -Map kernel.map --section-start .kernel_code=0x%BASE_ADDRESS% -T kernel.ld main.o write-kernel.o crc.o common.o common-readwrite.o -o kernel.elf flash-intel.o flash-amd.o
+"%GCC_LOCATION%\m68k-elf-ld.exe" --section-start .kernel_code=0x%BASE_ADDRESS% -T kernel.ld -Map kernel.map -o kernel.elf main.o write-kernel.o crc.o common.o common-readwrite.o flash-intel.o flash-amd.o
 if %errorlevel% neq 0 goto :EOF
 
 "%GCC_LOCATION%\m68k-elf-objcopy.exe" -O binary --only-section=.kernel_code --only-section=.rodata kernel.elf kernel.bin
