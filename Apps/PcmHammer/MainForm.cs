@@ -258,9 +258,9 @@ namespace PcmHacking
                 this.cancelButton.Enabled = false;
 
                 // Load the dynamic content asynchronously.
-                ThreadPool.QueueUserWorkItem(new WaitCallback(LoadStartMessage));
-                ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
-                ThreadPool.QueueUserWorkItem(new WaitCallback(LoadCredits));
+                //ThreadPool.QueueUserWorkItem(new WaitCallback(LoadStartMessage));
+                //ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
+                //ThreadPool.QueueUserWorkItem(new WaitCallback(LoadCredits));
 
                 await this.ResetDevice();
 
@@ -413,6 +413,7 @@ namespace PcmHacking
             this.settingsToolStripMenuItem.Enabled = false;
             this.saveToolStripMenuItem.Enabled = false;
             this.exitApplicationToolStripMenuItem.Enabled = false;
+            this.userDefinedKeyToolStripMenuItem.Enabled = false;
 
             this.readPropertiesButton.Enabled = false;
 
@@ -445,6 +446,7 @@ namespace PcmHacking
                 this.settingsToolStripMenuItem.Enabled = true;
                 this.saveToolStripMenuItem.Enabled = true;
                 this.exitApplicationToolStripMenuItem.Enabled = true;
+                this.userDefinedKeyToolStripMenuItem.Enabled = true;
 
                 this.readPropertiesButton.Enabled = true;
 
@@ -501,6 +503,32 @@ namespace PcmHacking
             using (DialogBoxes.SettingsDialogBox settingsDialog = new DialogBoxes.SettingsDialogBox())
             {
                 DialogResult dialogResult = settingsDialog.ShowDialog();
+            }
+        }
+
+        /// <summary>
+        /// User Defined Key
+        /// </summary>
+        private void userDefinedKeyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (userDefinedKeyToolStripMenuItem.Checked)
+            {
+                using (DialogBoxes.UserDefinedKeyDialogBox keyDialog = new DialogBoxes.UserDefinedKeyDialogBox())
+                {
+                    DialogResult dialogResult = keyDialog.ShowDialog();
+                    if (dialogResult == DialogResult.OK)
+                    {
+                        this.Vehicle.UserDefinedKey = keyDialog.UserDefinedKey;
+                    }
+                    else
+                    {
+                        this.userDefinedKeyToolStripMenuItem.Checked = false;
+                    }
+                }
+            }
+            else
+            {
+                this.Vehicle.UserDefinedKey = -1;
             }
         }
 

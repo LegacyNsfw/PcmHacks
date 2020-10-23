@@ -96,6 +96,11 @@ namespace PcmHacking
             get => this.device.Enable4xReadWrite;
         }
 
+        public Int32 UserDefinedKey
+        {
+            get; set;
+        } = -1;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -305,7 +310,16 @@ namespace PcmHacking
                 return true;
             }
 
-            UInt16 key = KeyAlgorithm.GetKey(keyAlgorithm, seedValue);
+            UInt16 key;
+            if (UserDefinedKey == -1)
+            {
+                key = KeyAlgorithm.GetKey(keyAlgorithm, seedValue);
+            }
+            else
+            {
+                this.logger.AddUserMessage($"User Defined Key: 0x{UserDefinedKey.ToString("X4")}");
+                key = (UInt16)UserDefinedKey;
+            }
 
             this.logger.AddDebugMessage("Sending unlock request (" + seedValue.ToString("X4") + ", " + key.ToString("X4") + ")");
             Message unlockRequest = this.protocol.CreateUnlockRequest(key);

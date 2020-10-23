@@ -36,7 +36,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\Jason\AppData\Local\Temp\vsAE7D.tmp\Debug\</IntermediateOutputPath>
+    <IntermediateOutputPath>C:\Users\tcg\AppData\Local\Temp\vsAEFB.tmp\Debug\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -46,7 +46,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\Jason\AppData\Local\Temp\vsAE7D.tmp\Release\</IntermediateOutputPath>
+    <IntermediateOutputPath>C:\Users\tcg\AppData\Local\Temp\vsAEFB.tmp\Release\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>0411_256px.ico</ApplicationIcon>
@@ -89,6 +89,12 @@
     <Compile Include="DialogBoxes\SettingsDialogBox.Designer.cs">
       <DependentUpon>SettingsDialogBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="DialogBoxes\UserDefinedKeyDialogBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DialogBoxes\UserDefinedKeyDialogBox.designer.cs">
+      <DependentUpon>UserDefinedKeyDialogBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="DialogBoxes\VinForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -109,6 +115,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DialogBoxes\SettingsDialogBox.resx">
       <DependentUpon>SettingsDialogBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DialogBoxes\UserDefinedKeyDialogBox.resx">
+      <DependentUpon>UserDefinedKeyDialogBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DialogBoxes\VinForm.resx">
       <DependentUpon>VinForm.cs</DependentUpon>
