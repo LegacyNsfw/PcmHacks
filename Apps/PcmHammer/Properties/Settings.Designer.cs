@@ -22,5 +22,41 @@ namespace PcmHammer.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LogDirectory {
+            get {
+                return ((string)(this["LogDirectory"]));
+            }
+            set {
+                this["LogDirectory"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SaveUserLogOnExit {
+            get {
+                return ((bool)(this["SaveUserLogOnExit"]));
+            }
+            set {
+                this["SaveUserLogOnExit"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SaveDebugLogOnExit {
+            get {
+                return ((bool)(this["SaveDebugLogOnExit"]));
+            }
+            set {
+                this["SaveDebugLogOnExit"] = value;
+            }
+        }
     }
 }

@@ -19,11 +19,35 @@ namespace PcmHacking.DialogBoxes
 
         private void SettingsDialogBox_Load(object sender, EventArgs e)
         {
+            if (string.IsNullOrWhiteSpace(Configuration.Settings.LogDirectory))
+            {
+                Configuration.Settings.LogDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                Configuration.Settings.Save();
+            }
+            logDirectoryTextBox.Text = Configuration.Settings.LogDirectory;
+
+            saveUserLogOnExitCheckBox.Checked = Configuration.Settings.SaveUserLogOnExit;
+            saveDebugLogOnExitCheckBox.Checked = Configuration.Settings.SaveDebugLogOnExit;
             applyButton.Enabled = false;
         }
 
         private void SaveSettings()
         {
+            if (Configuration.Settings.LogDirectory != logDirectoryTextBox.Text)
+            {
+                Configuration.Settings.LogDirectory = logDirectoryTextBox.Text;
+            }
+
+            if (Configuration.Settings.SaveUserLogOnExit != saveUserLogOnExitCheckBox.Checked)
+            {
+                Configuration.Settings.SaveUserLogOnExit = saveUserLogOnExitCheckBox.Checked;
+            }
+
+            if (Configuration.Settings.SaveDebugLogOnExit != saveDebugLogOnExitCheckBox.Checked)
+            {
+                Configuration.Settings.SaveDebugLogOnExit = saveDebugLogOnExitCheckBox.Checked;
+            }
+
             Configuration.Settings.Save();
             applyButton.Enabled = false;
         }
@@ -46,6 +70,33 @@ namespace PcmHacking.DialogBoxes
         private void cancelButton_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
+        }
+
+        private void logDirectoryTextBox_TextChanged(object sender, EventArgs e)
+        {
+            applyButton.Enabled = true;
+        }
+
+        private void logDirectoryButton_Click(object sender, EventArgs e)
+        {
+            using (FolderBrowserDialog dialog = new FolderBrowserDialog())
+            {
+                dialog.SelectedPath = Configuration.Settings.LogDirectory;
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    logDirectoryTextBox.Text = dialog.SelectedPath;
+                }
+            }
+        }
+
+        private void saveUserLogOnExitCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            applyButton.Enabled = true;
+        }
+
+        private void saveDebugLogOnExitCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            applyButton.Enabled = true;
         }
     }
 }

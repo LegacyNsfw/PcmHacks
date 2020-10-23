@@ -169,6 +169,32 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Show the save-as dialog box for saving log files.
+        /// </summary>
+        private string ShowLogSaveAsDialog(string logName)
+        {
+            SaveFileDialog dialog = new SaveFileDialog();
+
+            dialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+            dialog.FilterIndex = 1;
+            dialog.RestoreDirectory = true;
+            dialog.InitialDirectory = Configuration.Settings.LogDirectory;
+            dialog.FileName =
+                "PcmHammer_"
+                + logName
+                + "_"
+                + DateTime.Now.ToString("yyyyMMdd@HHmmss")
+                + ".txt";
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                return dialog.FileName;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Gets a string to use in the window caption and at the top of each log.
         /// </summary>
         public override string GetAppNameAndVersion()
@@ -184,6 +210,37 @@ namespace PcmHacking
             }
 
             return AppName + " " + versionString;
+        }
+
+        /// <summary>
+        /// Save the selected log
+        /// </summary>
+        protected void SaveLog(TextBox logBox, string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(logBox.Text))
+            {
+                return;
+            }
+
+            try
+            {
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(fileName))
+                {
+                    file.WriteLine(logBox.Text);
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(this, fileName,
+                    "ERROR file NOT Saved." + Environment.NewLine + e.Message,
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
         }
 
         /// <summary>
@@ -210,6 +267,12 @@ namespace PcmHacking
                 this.MinimumSize = new Size(800, 600);
 
                 menuItemEnable4xReadWrite.Checked = DeviceConfiguration.Settings.Enable4xReadWrite;
+
+                if (string.IsNullOrWhiteSpace(Configuration.Settings.LogDirectory) || !Directory.Exists(Configuration.Settings.LogDirectory))
+                {
+                    Configuration.Settings.LogDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    Configuration.Settings.Save();
+                }
             }
             catch (Exception exception)
             {
@@ -286,26 +349,48 @@ namespace PcmHacking
         /// </summary>
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (this.currentWriteType == WriteType.None)
+            switch (this.currentWriteType)
             {
-                return;
+                case WriteType.None:
+                case WriteType.TestWrite:
+                    break;
+
+                default:
+                    DialogResult choice = MessageBox.Show(
+                        this,
+                        "Closing PCM Hammer now could make your PCM unusable." + Environment.NewLine +
+                        "Are you sure you want to take that risk?",
+                        "PCM Hammer",
+                        MessageBoxButtons.YesNo);
+
+                    if (choice == DialogResult.No)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                    break;
             }
 
-            if (this.currentWriteType == WriteType.TestWrite)
+            if (Configuration.Settings.SaveUserLogOnExit)
             {
-                return;
+                string fileName = Configuration.Settings.LogDirectory
+                    + "\\PcmHammer_"
+                    + userLog.Name
+                    + "_"
+                    + DateTime.Now.ToString("yyyyMMdd@HHmmss")
+                    + ".txt";
+                SaveLog(this.userLog, fileName);
             }
 
-            var choice = MessageBox.Show(
-                this,
-                "Closing PCM Hammer now could make your PCM unusable." + Environment.NewLine +
-                "Are you sure you want to take that risk?",
-                "PCM Hammer",
-                MessageBoxButtons.YesNo);
-
-            if (choice == DialogResult.No)
+            if (Configuration.Settings.SaveDebugLogOnExit)
             {
-                e.Cancel = true;
+                string fileName = Configuration.Settings.LogDirectory
+                    + "\\PcmHammer_"
+                    + debugLog.Name
+                    + "_"
+                    + DateTime.Now.ToString("yyyyMMdd@HHmmss")
+                    + ".txt";
+                SaveLog(this.debugLog, fileName);
             }
         }
 
@@ -326,6 +411,8 @@ namespace PcmHacking
             this.writeOSCalibrationBootToolStripMenuItem.Enabled = false;
             this.writeFullToolStripMenuItem.Enabled = false;
             this.settingsToolStripMenuItem.Enabled = false;
+            this.saveToolStripMenuItem.Enabled = false;
+            this.exitApplicationToolStripMenuItem.Enabled = false;
 
             this.readPropertiesButton.Enabled = false;
 
@@ -356,6 +443,8 @@ namespace PcmHacking
                 this.writeOSCalibrationBootToolStripMenuItem.Enabled = true;
                 this.writeFullToolStripMenuItem.Enabled = true;
                 this.settingsToolStripMenuItem.Enabled = true;
+                this.saveToolStripMenuItem.Enabled = true;
+                this.exitApplicationToolStripMenuItem.Enabled = true;
 
                 this.readPropertiesButton.Enabled = true;
 
@@ -375,6 +464,33 @@ namespace PcmHacking
         {
             this.interfaceBox.Enabled = true;
             this.settingsToolStripMenuItem.Enabled = true;
+            this.exitApplicationToolStripMenuItem.Enabled = true;
+        }
+
+        /// <summary>
+        /// Save Debug Log
+        /// </summary>
+        private void saveDebugLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string fileName = ShowLogSaveAsDialog(debugLog.Name);
+            SaveLog(debugLog, fileName);
+        }
+
+        /// <summary>
+        /// Save Results Log
+        /// </summary>
+        private void saveResultsLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string fileName = ShowLogSaveAsDialog(userLog.Name);
+            SaveLog(userLog, fileName);
+        }
+
+        /// <summary>
+        /// Exit Application
+        /// </summary>
+        private void exitApplicationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
 
         /// <summary>

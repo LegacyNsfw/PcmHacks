@@ -49,6 +49,11 @@
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
             this.menuStripMain = new System.Windows.Forms.MenuStrip();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveResultsLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveDebugLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitApplicationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemTools = new System.Windows.Forms.ToolStripMenuItem();
             this.readEntirePCMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.verifyEntirePCMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -299,6 +304,7 @@
             // menuStripMain
             // 
             this.menuStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem,
             this.menuItemTools,
             this.menuItemOptions});
             this.menuStripMain.Location = new System.Drawing.Point(0, 0);
@@ -306,6 +312,45 @@
             this.menuStripMain.Size = new System.Drawing.Size(854, 24);
             this.menuStripMain.TabIndex = 3;
             this.menuStripMain.Text = "Main Menu";
+            // 
+            // fileToolStripMenuItem
+            // 
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveToolStripMenuItem,
+            this.exitApplicationToolStripMenuItem});
+            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
+            this.fileToolStripMenuItem.Text = "&File";
+            // 
+            // saveToolStripMenuItem
+            // 
+            this.saveToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveResultsLogToolStripMenuItem,
+            this.saveDebugLogToolStripMenuItem});
+            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveToolStripMenuItem.Text = "&Save";
+            // 
+            // saveResultsLogToolStripMenuItem
+            // 
+            this.saveResultsLogToolStripMenuItem.Name = "saveResultsLogToolStripMenuItem";
+            this.saveResultsLogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveResultsLogToolStripMenuItem.Text = "&Results Log";
+            this.saveResultsLogToolStripMenuItem.Click += new System.EventHandler(this.saveResultsLogToolStripMenuItem_Click);
+            // 
+            // saveDebugLogToolStripMenuItem
+            // 
+            this.saveDebugLogToolStripMenuItem.Name = "saveDebugLogToolStripMenuItem";
+            this.saveDebugLogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveDebugLogToolStripMenuItem.Text = "&Debug Log";
+            this.saveDebugLogToolStripMenuItem.Click += new System.EventHandler(this.saveDebugLogToolStripMenuItem_Click);
+            // 
+            // exitApplicationToolStripMenuItem
+            // 
+            this.exitApplicationToolStripMenuItem.Name = "exitApplicationToolStripMenuItem";
+            this.exitApplicationToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitApplicationToolStripMenuItem.Text = "E&xit";
+            this.exitApplicationToolStripMenuItem.Click += new System.EventHandler(this.exitApplicationToolStripMenuItem_Click);
             // 
             // menuItemTools
             // 
@@ -450,6 +495,11 @@
         private System.Windows.Forms.ToolStripMenuItem writeOSCalibrationBootToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem writeFullToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveResultsLogToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveDebugLogToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exitApplicationToolStripMenuItem;
     }
 }
 
