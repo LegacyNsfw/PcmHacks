@@ -34,6 +34,7 @@
             this.okButton = new System.Windows.Forms.Button();
             this.tabControl = new System.Windows.Forms.TabControl();
             this.generalTabPage = new System.Windows.Forms.TabPage();
+            this.mainWindowPersistenceCheckBox = new System.Windows.Forms.CheckBox();
             this.saveUserLogOnExitCheckBox = new System.Windows.Forms.CheckBox();
             this.saveDebugLogOnExitCheckBox = new System.Windows.Forms.CheckBox();
             this.logDirectoryTextBox = new System.Windows.Forms.TextBox();
@@ -89,6 +90,7 @@
             // 
             // generalTabPage
             // 
+            this.generalTabPage.Controls.Add(this.mainWindowPersistenceCheckBox);
             this.generalTabPage.Controls.Add(this.saveUserLogOnExitCheckBox);
             this.generalTabPage.Controls.Add(this.saveDebugLogOnExitCheckBox);
             this.generalTabPage.Controls.Add(this.logDirectoryTextBox);
@@ -101,13 +103,24 @@
             this.generalTabPage.Text = "General";
             this.generalTabPage.UseVisualStyleBackColor = true;
             // 
+            // mainWindowPersistenceCheckBox
+            // 
+            this.mainWindowPersistenceCheckBox.AutoSize = true;
+            this.mainWindowPersistenceCheckBox.Location = new System.Drawing.Point(7, 7);
+            this.mainWindowPersistenceCheckBox.Name = "mainWindowPersistenceCheckBox";
+            this.mainWindowPersistenceCheckBox.Size = new System.Drawing.Size(149, 17);
+            this.mainWindowPersistenceCheckBox.TabIndex = 0;
+            this.mainWindowPersistenceCheckBox.Text = "Main Window Persistence";
+            this.mainWindowPersistenceCheckBox.UseVisualStyleBackColor = true;
+            this.mainWindowPersistenceCheckBox.CheckedChanged += new System.EventHandler(this.mainWindowPersistenceCheckBox_CheckedChanged);
+            // 
             // saveUserLogOnExitCheckBox
             // 
             this.saveUserLogOnExitCheckBox.AutoSize = true;
             this.saveUserLogOnExitCheckBox.Location = new System.Drawing.Point(7, 93);
             this.saveUserLogOnExitCheckBox.Name = "saveUserLogOnExitCheckBox";
             this.saveUserLogOnExitCheckBox.Size = new System.Drawing.Size(189, 17);
-            this.saveUserLogOnExitCheckBox.TabIndex = 0;
+            this.saveUserLogOnExitCheckBox.TabIndex = 1;
             this.saveUserLogOnExitCheckBox.Text = "Save results log on application exit";
             this.saveUserLogOnExitCheckBox.UseVisualStyleBackColor = true;
             this.saveUserLogOnExitCheckBox.CheckedChanged += new System.EventHandler(this.saveUserLogOnExitCheckBox_CheckedChanged);
@@ -118,7 +131,7 @@
             this.saveDebugLogOnExitCheckBox.Location = new System.Drawing.Point(7, 116);
             this.saveDebugLogOnExitCheckBox.Name = "saveDebugLogOnExitCheckBox";
             this.saveDebugLogOnExitCheckBox.Size = new System.Drawing.Size(189, 17);
-            this.saveDebugLogOnExitCheckBox.TabIndex = 1;
+            this.saveDebugLogOnExitCheckBox.TabIndex = 2;
             this.saveDebugLogOnExitCheckBox.Text = "Save debug log on application exit";
             this.saveDebugLogOnExitCheckBox.UseVisualStyleBackColor = true;
             this.saveDebugLogOnExitCheckBox.CheckedChanged += new System.EventHandler(this.saveDebugLogOnExitCheckBox_CheckedChanged);
@@ -128,7 +141,7 @@
             this.logDirectoryTextBox.Location = new System.Drawing.Point(128, 142);
             this.logDirectoryTextBox.Name = "logDirectoryTextBox";
             this.logDirectoryTextBox.Size = new System.Drawing.Size(292, 20);
-            this.logDirectoryTextBox.TabIndex = 1;
+            this.logDirectoryTextBox.TabIndex = 4;
             this.logDirectoryTextBox.TextChanged += new System.EventHandler(this.logDirectoryTextBox_TextChanged);
             // 
             // logDirectoryButton
@@ -136,7 +149,7 @@
             this.logDirectoryButton.Location = new System.Drawing.Point(7, 139);
             this.logDirectoryButton.Name = "logDirectoryButton";
             this.logDirectoryButton.Size = new System.Drawing.Size(115, 23);
-            this.logDirectoryButton.TabIndex = 2;
+            this.logDirectoryButton.TabIndex = 3;
             this.logDirectoryButton.Text = "Log Directory";
             this.logDirectoryButton.UseVisualStyleBackColor = true;
             this.logDirectoryButton.Click += new System.EventHandler(this.logDirectoryButton_Click);
@@ -173,5 +186,6 @@
         private System.Windows.Forms.TextBox logDirectoryTextBox;
         private System.Windows.Forms.CheckBox saveUserLogOnExitCheckBox;
         private System.Windows.Forms.CheckBox saveDebugLogOnExitCheckBox;
+        private System.Windows.Forms.CheckBox mainWindowPersistenceCheckBox;
     }
 }

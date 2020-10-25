@@ -61,12 +61,6 @@ namespace PcmHacking
         public MainForm()
         {
             InitializeComponent();
-
-            // Wide enough for the CRC comparison table
-            this.Width = 1000;
-
-            // Golden ratio
-            this.Height = 618;
         }
 
         /// <summary>
@@ -273,6 +267,20 @@ namespace PcmHacking
                     Configuration.Settings.LogDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                     Configuration.Settings.Save();
                 }
+
+                if (Configuration.Settings.MainWindowPersistence)
+                {
+                    if (Configuration.Settings.MainWindowSize.Width > 0 || Configuration.Settings.MainWindowSize.Height > 0)
+                    {
+                        this.WindowState = Configuration.Settings.MainWindowState;
+                        if (this.WindowState == FormWindowState.Minimized)
+                        {
+                            this.WindowState = FormWindowState.Normal;
+                        }
+                        this.Location = Configuration.Settings.MainWindowLocation;
+                        this.Size = Configuration.Settings.MainWindowSize;
+                    }
+                }
             }
             catch (Exception exception)
             {
@@ -369,6 +377,22 @@ namespace PcmHacking
                         return;
                     }
                     break;
+            }
+
+            if (Configuration.Settings.MainWindowPersistence)
+            {
+                Configuration.Settings.MainWindowState = this.WindowState;
+                if (this.WindowState == FormWindowState.Normal)
+                {
+                    Configuration.Settings.MainWindowLocation = this.Location;
+                    Configuration.Settings.MainWindowSize = this.Size;
+                }
+                else
+                {
+                    Configuration.Settings.MainWindowLocation = this.RestoreBounds.Location;
+                    Configuration.Settings.MainWindowSize = this.RestoreBounds.Size;
+                }
+                Configuration.Settings.Save();
             }
 
             if (Configuration.Settings.SaveUserLogOnExit)
