@@ -258,9 +258,9 @@ namespace PcmHacking
                 this.cancelButton.Enabled = false;
 
                 // Load the dynamic content asynchronously.
-                //ThreadPool.QueueUserWorkItem(new WaitCallback(LoadStartMessage));
-                //ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
-                //ThreadPool.QueueUserWorkItem(new WaitCallback(LoadCredits));
+                ThreadPool.QueueUserWorkItem(new WaitCallback(LoadStartMessage));
+                ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
+                ThreadPool.QueueUserWorkItem(new WaitCallback(LoadCredits));
 
                 await this.ResetDevice();
 
