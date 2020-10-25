@@ -28,6 +28,7 @@ namespace PcmHacking.DialogBoxes
 
             saveUserLogOnExitCheckBox.Checked = Configuration.Settings.SaveUserLogOnExit;
             saveDebugLogOnExitCheckBox.Checked = Configuration.Settings.SaveDebugLogOnExit;
+            mainWindowPersistenceCheckBox.Checked = Configuration.Settings.MainWindowPersistence;
             applyButton.Enabled = false;
         }
 
@@ -46,6 +47,11 @@ namespace PcmHacking.DialogBoxes
             if (Configuration.Settings.SaveDebugLogOnExit != saveDebugLogOnExitCheckBox.Checked)
             {
                 Configuration.Settings.SaveDebugLogOnExit = saveDebugLogOnExitCheckBox.Checked;
+            }
+
+            if (Configuration.Settings.MainWindowPersistence != mainWindowPersistenceCheckBox.Checked)
+            {
+                Configuration.Settings.MainWindowPersistence = mainWindowPersistenceCheckBox.Checked;
             }
 
             Configuration.Settings.Save();
@@ -95,6 +101,11 @@ namespace PcmHacking.DialogBoxes
         }
 
         private void saveDebugLogOnExitCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            applyButton.Enabled = true;
+        }
+
+        private void mainWindowPersistenceCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             applyButton.Enabled = true;
         }
