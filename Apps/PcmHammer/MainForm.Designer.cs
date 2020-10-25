@@ -63,6 +63,7 @@
             this.writeFullToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemOptions = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemEnable4xReadWrite = new System.Windows.Forms.ToolStripMenuItem();
+            this.userDefinedKeyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
@@ -411,6 +412,7 @@
             // 
             this.menuItemOptions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuItemEnable4xReadWrite,
+            this.userDefinedKeyToolStripMenuItem,
             this.settingsToolStripMenuItem});
             this.menuItemOptions.Name = "menuItemOptions";
             this.menuItemOptions.Size = new System.Drawing.Size(56, 20);
@@ -422,6 +424,15 @@
             this.menuItemEnable4xReadWrite.Size = new System.Drawing.Size(196, 22);
             this.menuItemEnable4xReadWrite.Text = "Enable &4x Communication";
             this.menuItemEnable4xReadWrite.Click += new System.EventHandler(this.enable4xReadWrite_Click);
+            // 
+            // userDefinedKeyToolStripMenuItem
+            // 
+            this.userDefinedKeyToolStripMenuItem.CheckOnClick = true;
+            this.userDefinedKeyToolStripMenuItem.Name = "userDefinedKeyToolStripMenuItem";
+            this.userDefinedKeyToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.userDefinedKeyToolStripMenuItem.Text = "&User Defined Key";
+            this.userDefinedKeyToolStripMenuItem.ToolTipText = "Valid for current device selection, Application instance or Toggle Action.";
+            this.userDefinedKeyToolStripMenuItem.Click += new System.EventHandler(this.userDefinedKeyToolStripMenuItem_Click);
             // 
             // settingsToolStripMenuItem
             // 
@@ -500,6 +511,7 @@
         private System.Windows.Forms.ToolStripMenuItem saveResultsLogToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveDebugLogToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitApplicationToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem userDefinedKeyToolStripMenuItem;
     }
 }
 
