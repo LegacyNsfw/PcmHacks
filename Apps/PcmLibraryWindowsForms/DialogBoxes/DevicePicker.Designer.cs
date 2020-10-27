@@ -1,4 +1,4 @@
-﻿namespace PcmHacking
+namespace PcmHacking
 {
     partial class DevicePicker
     {

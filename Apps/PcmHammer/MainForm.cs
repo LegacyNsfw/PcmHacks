@@ -77,7 +77,6 @@ namespace PcmHacking
 
                     // User messages are added to the debug log as well, so that the debug log has everything.
                     this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
-
                 });
         }
 
@@ -1122,7 +1121,6 @@ namespace PcmHacking
                             return;
                         }
                     });
-
 
                     if (path == null)
                     {
