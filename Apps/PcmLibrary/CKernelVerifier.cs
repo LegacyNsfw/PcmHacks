@@ -94,6 +94,8 @@ namespace PcmHacking
                 Message query = this.protocol.CreateCrcQuery(range.Address, range.Size);
                 for (int attempts = 0; attempts < 20; attempts++)
                 {
+                    logger.StatusUpdateActivity($"Attempt {attempts + 1} processing CRC for range {range.Address:X6}-{range.Address + (range.Size - 1):X6}");
+
                     if (cancellationToken.IsCancellationRequested)
                     {
                         break;
@@ -145,6 +147,8 @@ namespace PcmHacking
                         range.DesiredCrc == range.ActualCrc ? "Same" : "Different",
                         range.Type));
             }
+
+            logger.StatusUpdateActivity(string.Empty);
 
             await this.vehicle.SendToolPresentNotification();
 

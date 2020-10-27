@@ -161,6 +161,10 @@ namespace PcmHacking
 
                 return success;
             }
+            finally
+            {
+                logger.StatusUpdateReset();
+            }
         }
 
         /// <summary>
@@ -232,6 +236,8 @@ namespace PcmHacking
             await this.vehicle.SendToolPresentNotification();
             for (int attempt = 1; attempt <= 5; attempt++)
             {
+                logger.StatusUpdateReset();
+
                 if (await verifier.CompareRanges(
                     image,
                     relevantBlocks,
@@ -313,8 +319,6 @@ namespace PcmHacking
                         this.logger.AddUserMessage("Writing...");
                     }
 
-                    this.logger.AddUserMessage("Address\t% Done\tTime Remaining");
-
                     Response<bool> writeResponse = await WriteMemoryRange(
                         range,
                         image,
@@ -329,6 +333,8 @@ namespace PcmHacking
                         this.logger.AddUserMessage("Retry count for this block: " + writeResponse.RetryCount);
                         messageRetryCount += writeResponse.RetryCount;
                     }
+
+                    logger.StatusUpdateRetryCount((messageRetryCount > 0) ? messageRetryCount.ToString() + ((messageRetryCount > 1) ? " Retries" : " Retry") : string.Empty);
 
                     if (writeResponse.Value)
                     {
@@ -486,38 +492,26 @@ namespace PcmHacking
                     startAddress,
                     justTestWrite ? BlockCopyType.TestWrite : BlockCopyType.Copy);
 
-                string timeRemaining;
+                string timeRemaining = string.Empty;
 
                 TimeSpan elapsed = DateTime.Now - startTime;
                 UInt32 totalWritten = totalSize - bytesRemaining;
+                UInt32 bytesPerSecond = 0;
 
-                // Wait 10 seconds before showing estimates.
-                if (elapsed.TotalSeconds < 10)
-                {
-                    timeRemaining = "Measuring write speed...";
-                }
-                else
-                {
-                    UInt32 bytesPerSecond = (UInt32)(totalWritten / elapsed.TotalSeconds);
+                bytesPerSecond = (UInt32)(totalWritten / elapsed.TotalSeconds);
 
-                    // Don't divide by zero.
-                    if (bytesPerSecond > 0)
-                    {
-                        UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
-                        timeRemaining = TimeSpan.FromSeconds(secondsRemaining).ToString("mm\\:ss");
-                    }
-                    else
-                    {
-                        timeRemaining = "??:??";
-                    }
+                // Don't divide by zero.
+                if (bytesPerSecond > 0)
+                {
+                    UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
+                    timeRemaining = TimeSpan.FromSeconds(secondsRemaining).ToString("mm\\:ss");
                 }
 
-                logger.AddUserMessage(
-                    string.Format(
-                        "0x{0:X6}\t{1}%\t{2}",
-                        startAddress,
-                        totalWritten * 100 / totalSize,
-                        timeRemaining));
+                logger.StatusUpdateActivity($"Writing {thisPayloadSize} bytes to 0x{startAddress:X6}");
+                logger.StatusUpdatePercentDone((totalWritten * 100 / totalSize > 0) ? $"{totalWritten * 100 / totalSize}%" : string.Empty);
+                logger.StatusUpdateTimeRemaining($"T-{timeRemaining}");
+                logger.StatusUpdateKbps((bytesPerSecond > 0) ? $"{(double)bytesPerSecond * 8.00 / 1000.00:0.00} Kbps" : string.Empty);
+                logger.StatusUpdateProgressBar((double)(totalWritten + thisPayloadSize) / totalSize, true);
 
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.WriteMemoryBlock);
 

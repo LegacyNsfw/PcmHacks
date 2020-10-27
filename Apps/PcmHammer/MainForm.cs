@@ -94,6 +94,79 @@ namespace PcmHacking
                 });
         }
 
+        public override void StatusUpdateActivity(string activity)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.activityToolStripStatusLabel.Text = activity;
+                });
+        }
+
+        public override void StatusUpdateTimeRemaining(string remaining)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.timeRemainingToolStripStatusLabel.Text = remaining;
+                });
+        }
+
+        public override void StatusUpdatePercentDone(string percent)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.percentDoneToolStripStatusLabel.Text = percent;
+                });
+        }
+
+        public override void StatusUpdateRetryCount(string retries)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.retryCountToolStripStatusLabel.Text = retries;
+                });
+        }
+
+        public override void StatusUpdateProgressBar(double completed, bool visible)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    if (visible)
+                    {
+                        this.progressBarToolStripProgressBar.Visible = true;
+                    }
+                    else
+                    {
+                        this.progressBarToolStripProgressBar.Visible = false;
+                    }
+
+                    this.progressBarToolStripProgressBar.Value = (int)(completed * 100);
+                });
+        }
+
+        public override void StatusUpdateKbps(string Kbps)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.kbpsToolStripStatusLabel.Text = Kbps;
+                });
+        }
+
+        public override void StatusUpdateReset()
+        {
+            this.StatusUpdateActivity(string.Empty);
+            this.StatusUpdateTimeRemaining(string.Empty);
+            this.StatusUpdatePercentDone(string.Empty);
+            this.StatusUpdateRetryCount(string.Empty);
+            this.StatusUpdateProgressBar(0, false);
+            this.StatusUpdateKbps(string.Empty);
+        }
+
         /// <summary>
         /// Reset the user and debug logs.
         /// </summary>
@@ -290,6 +363,8 @@ namespace PcmHacking
                         this.Size = Configuration.Settings.MainWindowSize;
                     }
                 }
+
+                this.StatusUpdateReset();
             }
             catch (Exception exception)
             {

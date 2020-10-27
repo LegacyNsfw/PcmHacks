@@ -65,6 +65,13 @@
             this.menuItemEnable4xReadWrite = new System.Windows.Forms.ToolStripMenuItem();
             this.userDefinedKeyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.statusStatusStrip = new System.Windows.Forms.StatusStrip();
+            this.activityToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.kbpsToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.retryCountToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.progressBarToolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.percentDoneToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.timeRemainingToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -73,6 +80,7 @@
             this.creditsTab.SuspendLayout();
             this.debugTab.SuspendLayout();
             this.menuStripMain.SuspendLayout();
+            this.statusStatusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // interfaceBox
@@ -132,7 +140,7 @@
             this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
             this.operationsBox.Name = "operationsBox";
             this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
-            this.operationsBox.Size = new System.Drawing.Size(224, 347);
+            this.operationsBox.Size = new System.Drawing.Size(224, 326);
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
@@ -151,7 +159,7 @@
             // exitKernelButton
             // 
             this.exitKernelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.exitKernelButton.Location = new System.Drawing.Point(4, 280);
+            this.exitKernelButton.Location = new System.Drawing.Point(4, 259);
             this.exitKernelButton.Margin = new System.Windows.Forms.Padding(2);
             this.exitKernelButton.Name = "exitKernelButton";
             this.exitKernelButton.Size = new System.Drawing.Size(216, 25);
@@ -163,7 +171,7 @@
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelButton.Location = new System.Drawing.Point(4, 314);
+            this.cancelButton.Location = new System.Drawing.Point(4, 293);
             this.cancelButton.Margin = new System.Windows.Forms.Padding(2);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(216, 25);
@@ -207,7 +215,7 @@
             this.tabs.Margin = new System.Windows.Forms.Padding(2);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(608, 476);
+            this.tabs.Size = new System.Drawing.Size(608, 455);
             this.tabs.TabIndex = 2;
             // 
             // resultsTab
@@ -217,7 +225,7 @@
             this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
             this.resultsTab.Name = "resultsTab";
             this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
-            this.resultsTab.Size = new System.Drawing.Size(600, 450);
+            this.resultsTab.Size = new System.Drawing.Size(600, 429);
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
@@ -233,7 +241,7 @@
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.userLog.Size = new System.Drawing.Size(594, 441);
+            this.userLog.Size = new System.Drawing.Size(594, 420);
             this.userLog.TabIndex = 0;
             // 
             // helpTab
@@ -242,7 +250,7 @@
             this.helpTab.Location = new System.Drawing.Point(4, 22);
             this.helpTab.Margin = new System.Windows.Forms.Padding(2);
             this.helpTab.Name = "helpTab";
-            this.helpTab.Size = new System.Drawing.Size(600, 450);
+            this.helpTab.Size = new System.Drawing.Size(600, 429);
             this.helpTab.TabIndex = 2;
             this.helpTab.Text = "Help";
             this.helpTab.UseVisualStyleBackColor = true;
@@ -254,7 +262,7 @@
             this.helpWebBrowser.Margin = new System.Windows.Forms.Padding(2);
             this.helpWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
             this.helpWebBrowser.Name = "helpWebBrowser";
-            this.helpWebBrowser.Size = new System.Drawing.Size(600, 450);
+            this.helpWebBrowser.Size = new System.Drawing.Size(600, 429);
             this.helpWebBrowser.TabIndex = 0;
             // 
             // creditsTab
@@ -263,7 +271,7 @@
             this.creditsTab.Location = new System.Drawing.Point(4, 22);
             this.creditsTab.Name = "creditsTab";
             this.creditsTab.Padding = new System.Windows.Forms.Padding(3);
-            this.creditsTab.Size = new System.Drawing.Size(600, 450);
+            this.creditsTab.Size = new System.Drawing.Size(600, 429);
             this.creditsTab.TabIndex = 3;
             this.creditsTab.Text = "Credits";
             this.creditsTab.UseVisualStyleBackColor = true;
@@ -275,7 +283,7 @@
             this.creditsWebBrowser.Margin = new System.Windows.Forms.Padding(2);
             this.creditsWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
             this.creditsWebBrowser.Name = "creditsWebBrowser";
-            this.creditsWebBrowser.Size = new System.Drawing.Size(594, 444);
+            this.creditsWebBrowser.Size = new System.Drawing.Size(594, 423);
             this.creditsWebBrowser.TabIndex = 1;
             // 
             // debugTab
@@ -285,7 +293,7 @@
             this.debugTab.Margin = new System.Windows.Forms.Padding(2);
             this.debugTab.Name = "debugTab";
             this.debugTab.Padding = new System.Windows.Forms.Padding(2);
-            this.debugTab.Size = new System.Drawing.Size(600, 450);
+            this.debugTab.Size = new System.Drawing.Size(600, 429);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -299,7 +307,7 @@
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.debugLog.Size = new System.Drawing.Size(596, 446);
+            this.debugLog.Size = new System.Drawing.Size(596, 425);
             this.debugLog.TabIndex = 0;
             // 
             // menuStripMain
@@ -329,27 +337,27 @@
             this.saveResultsLogToolStripMenuItem,
             this.saveDebugLogToolStripMenuItem});
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(98, 22);
             this.saveToolStripMenuItem.Text = "&Save";
             // 
             // saveResultsLogToolStripMenuItem
             // 
             this.saveResultsLogToolStripMenuItem.Name = "saveResultsLogToolStripMenuItem";
-            this.saveResultsLogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveResultsLogToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
             this.saveResultsLogToolStripMenuItem.Text = "&Results Log";
             this.saveResultsLogToolStripMenuItem.Click += new System.EventHandler(this.saveResultsLogToolStripMenuItem_Click);
             // 
             // saveDebugLogToolStripMenuItem
             // 
             this.saveDebugLogToolStripMenuItem.Name = "saveDebugLogToolStripMenuItem";
-            this.saveDebugLogToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.saveDebugLogToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
             this.saveDebugLogToolStripMenuItem.Text = "&Debug Log";
             this.saveDebugLogToolStripMenuItem.Click += new System.EventHandler(this.saveDebugLogToolStripMenuItem_Click);
             // 
             // exitApplicationToolStripMenuItem
             // 
             this.exitApplicationToolStripMenuItem.Name = "exitApplicationToolStripMenuItem";
-            this.exitApplicationToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitApplicationToolStripMenuItem.Size = new System.Drawing.Size(98, 22);
             this.exitApplicationToolStripMenuItem.Text = "E&xit";
             this.exitApplicationToolStripMenuItem.Click += new System.EventHandler(this.exitApplicationToolStripMenuItem_Click);
             // 
@@ -441,12 +449,77 @@
             this.settingsToolStripMenuItem.Text = "&Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
             // 
+            // statusStatusStrip
+            // 
+            this.statusStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.activityToolStripStatusLabel,
+            this.retryCountToolStripStatusLabel,
+            this.kbpsToolStripStatusLabel,
+            this.progressBarToolStripProgressBar,
+            this.percentDoneToolStripStatusLabel,
+            this.timeRemainingToolStripStatusLabel});
+            this.statusStatusStrip.Location = new System.Drawing.Point(0, 491);
+            this.statusStatusStrip.Name = "statusStatusStrip";
+            this.statusStatusStrip.ShowItemToolTips = true;
+            this.statusStatusStrip.Size = new System.Drawing.Size(854, 22);
+            this.statusStatusStrip.TabIndex = 4;
+            this.statusStatusStrip.Text = "Status Strip";
+            // 
+            // activityToolStripStatusLabel
+            // 
+            this.activityToolStripStatusLabel.AutoSize = false;
+            this.activityToolStripStatusLabel.Name = "activityToolStripStatusLabel";
+            this.activityToolStripStatusLabel.Size = new System.Drawing.Size(297, 17);
+            this.activityToolStripStatusLabel.Spring = true;
+            this.activityToolStripStatusLabel.Text = "Activity";
+            this.activityToolStripStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.activityToolStripStatusLabel.ToolTipText = "Current Activity";
+            // 
+            // kbpsToolStripStatusLabel
+            // 
+            this.kbpsToolStripStatusLabel.AutoSize = false;
+            this.kbpsToolStripStatusLabel.Name = "kbpsToolStripStatusLabel";
+            this.kbpsToolStripStatusLabel.Size = new System.Drawing.Size(65, 17);
+            this.kbpsToolStripStatusLabel.Text = "Kbps";
+            this.kbpsToolStripStatusLabel.ToolTipText = "Kilobits Per Second";
+            // 
+            // retryCountToolStripStatusLabel
+            // 
+            this.retryCountToolStripStatusLabel.AutoSize = false;
+            this.retryCountToolStripStatusLabel.Name = "retryCountToolStripStatusLabel";
+            this.retryCountToolStripStatusLabel.Size = new System.Drawing.Size(65, 17);
+            this.retryCountToolStripStatusLabel.Text = "Retry";
+            this.retryCountToolStripStatusLabel.ToolTipText = "Retry Count";
+            // 
+            // progressBarToolStripProgressBar
+            // 
+            this.progressBarToolStripProgressBar.AutoSize = false;
+            this.progressBarToolStripProgressBar.Name = "progressBarToolStripProgressBar";
+            this.progressBarToolStripProgressBar.Size = new System.Drawing.Size(250, 16);
+            // 
+            // percentDoneToolStripStatusLabel
+            // 
+            this.percentDoneToolStripStatusLabel.AutoSize = false;
+            this.percentDoneToolStripStatusLabel.Name = "percentDoneToolStripStatusLabel";
+            this.percentDoneToolStripStatusLabel.Size = new System.Drawing.Size(50, 17);
+            this.percentDoneToolStripStatusLabel.Text = "Percent";
+            this.percentDoneToolStripStatusLabel.ToolTipText = "Percent Completed";
+            // 
+            // timeRemainingToolStripStatusLabel
+            // 
+            this.timeRemainingToolStripStatusLabel.AutoSize = false;
+            this.timeRemainingToolStripStatusLabel.Name = "timeRemainingToolStripStatusLabel";
+            this.timeRemainingToolStripStatusLabel.Size = new System.Drawing.Size(75, 17);
+            this.timeRemainingToolStripStatusLabel.Text = "Time Remaining";
+            this.timeRemainingToolStripStatusLabel.ToolTipText = "Time Remaining (T minus)";
+            // 
             // MainForm
             // 
             this.AcceptButton = this.readPropertiesButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(854, 513);
+            this.Controls.Add(this.statusStatusStrip);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.operationsBox);
             this.Controls.Add(this.interfaceBox);
@@ -469,6 +542,8 @@
             this.debugTab.PerformLayout();
             this.menuStripMain.ResumeLayout(false);
             this.menuStripMain.PerformLayout();
+            this.statusStatusStrip.ResumeLayout(false);
+            this.statusStatusStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -512,6 +587,13 @@
         private System.Windows.Forms.ToolStripMenuItem saveDebugLogToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitApplicationToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem userDefinedKeyToolStripMenuItem;
+        private System.Windows.Forms.StatusStrip statusStatusStrip;
+        private System.Windows.Forms.ToolStripStatusLabel activityToolStripStatusLabel;
+        private System.Windows.Forms.ToolStripStatusLabel timeRemainingToolStripStatusLabel;
+        private System.Windows.Forms.ToolStripStatusLabel percentDoneToolStripStatusLabel;
+        private System.Windows.Forms.ToolStripStatusLabel retryCountToolStripStatusLabel;
+        private System.Windows.Forms.ToolStripProgressBar progressBarToolStripProgressBar;
+        private System.Windows.Forms.ToolStripStatusLabel kbpsToolStripStatusLabel;
     }
 }
 

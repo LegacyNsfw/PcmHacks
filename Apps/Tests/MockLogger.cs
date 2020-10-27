@@ -16,5 +16,33 @@ namespace Tests
         public void AddUserMessage(string message)
         {
         }
+
+        public void StatusUpdateActivity(string activity)
+        {
+        }
+
+        public void StatusUpdateTimeRemaining(string remaining)
+        {
+        }
+
+        public void StatusUpdatePercentDone(string percent)
+        {
+        }
+
+        public void StatusUpdateRetryCount(string retries)
+        {
+        }
+
+        public void StatusUpdateProgressBar(double completed, bool visible)
+        {
+        }
+
+        public void StatusUpdateKbps(string Kbps)
+        {
+        }
+
+        public void StatusUpdateReset()
+        {
+        }
     }
 }
