@@ -1,4 +1,4 @@
-﻿namespace PcmHacking.DialogBoxes
+namespace PcmHacking.DialogBoxes
 {
     partial class VinForm
     {
