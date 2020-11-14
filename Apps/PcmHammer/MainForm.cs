@@ -131,7 +131,7 @@ namespace PcmHacking
             SaveFileDialog dialog = new SaveFileDialog();
             dialog.DefaultExt = ".bin";
             dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
-            dialog.FilterIndex = 0;
+            dialog.FilterIndex = 1;
             dialog.OverwritePrompt = true;
             dialog.ValidateNames = true;
             DialogResult result = dialog.ShowDialog();
@@ -151,7 +151,7 @@ namespace PcmHacking
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.DefaultExt = ".bin";
             dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
-            dialog.FilterIndex = 0;
+            dialog.FilterIndex = 1;
             DialogResult result = dialog.ShowDialog();
             if (result == DialogResult.OK)
             {
