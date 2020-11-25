@@ -59,8 +59,9 @@ namespace PcmHacking
             J2534Port.Functions = new J2534Extended();
             J2534Port.LoadedDevice = jport;
 
-            this.MaxSendSize = 4096+10+2;    // Driver or protocol limit?
-            this.MaxReceiveSize = 4096+10+2; // Driver or protocol limit?
+            // Reduced from 4096+12 for the MDI2
+            this.MaxSendSize = 2048 + 12;    // J2534 Standard is 4KB
+            this.MaxReceiveSize = 2048 + 12; // J2534 Standard is 4KB
             this.Supports4X = true;       
         }
 
