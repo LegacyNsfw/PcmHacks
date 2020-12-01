@@ -1202,6 +1202,11 @@ namespace PcmHacking
                             {
                                 this.AddUserMessage("PCM is in recovery mode.");
                                 needUnlock = true;
+
+                                // Prevent Null Reference Exception when calling:
+                                //   LoadKernelFromFile(this.pcmInfo.KernelFileName)
+                                // in CKernelWriter.Write() during Recovery Mode.
+                                pcmInfo = new PcmInfo(0);
                             }
                             else
                             {
