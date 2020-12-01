@@ -26,6 +26,8 @@ void FlashUnlock(bool unlock)
 		SIM_CSOR0 = 0x1060;
 		HARDWARE_IO &= 0xFFFE;
 	}
+	// P01 Critical
+	VariableSleep(0x50);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
