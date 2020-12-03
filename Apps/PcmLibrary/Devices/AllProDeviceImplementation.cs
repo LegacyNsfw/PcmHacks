@@ -107,7 +107,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
-                        milliseconds = 250;
+                        milliseconds = 300;
                         break;
 
                     case TimeoutScenario.EraseMemoryBlock:
@@ -115,7 +115,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.WriteMemoryBlock:
-                        milliseconds = 200;
+                        milliseconds = 250;
                         break;
 
                     case TimeoutScenario.SendKernel:
