@@ -1209,6 +1209,7 @@ namespace PcmHacking
                                 this.AddUserMessage("Unlock may not work, but we'll try...");
                                 needUnlock = true;
                             }
+                            pcmInfo = new PcmInfo(0); // Prevent Null Reference Exceptions from breaking Recovery Mode
                         }
                         else
                         {
