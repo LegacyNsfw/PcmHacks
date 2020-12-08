@@ -138,19 +138,29 @@ namespace PcmHacking
     /// </summary>
     private string ShowSaveAsDialog()
         {
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.DefaultExt = ".bin";
-            dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
-            dialog.FilterIndex = 1;
-            dialog.OverwritePrompt = true;
-            dialog.ValidateNames = true;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                return dialog.FileName;
-            }
+            string fileName = null;
 
-            return null;
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.DefaultExt = ".bin";
+                dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
+                dialog.FilterIndex = 1;
+                dialog.OverwritePrompt = true;
+                dialog.ValidateNames = true;
+                dialog.RestoreDirectory = true;
+
+                if (!string.IsNullOrWhiteSpace(Configuration.Settings.BinDirectory))
+                {
+                    dialog.InitialDirectory = Configuration.Settings.BinDirectory;
+                }
+
+                DialogResult result = dialog.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    fileName = dialog.FileName;
+                }
+            }
+            return fileName;
         }
 
         /// <summary>
@@ -158,43 +168,75 @@ namespace PcmHacking
         /// </summary>
         private string ShowOpenDialog()
         {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.DefaultExt = ".bin";
-            dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
-            dialog.FilterIndex = 1;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                return dialog.FileName;
-            }
+            string fileName = null;
 
-            return null;
+            using (OpenFileDialog dialog = new OpenFileDialog())
+            {
+                dialog.DefaultExt = ".bin";
+                dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
+                dialog.FilterIndex = 1;
+                dialog.RestoreDirectory = true;
+
+                if (!string.IsNullOrWhiteSpace(Configuration.Settings.BinDirectory))
+                {
+                    dialog.InitialDirectory = Configuration.Settings.BinDirectory;
+                }
+
+                DialogResult result = dialog.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    fileName = dialog.FileName;
+                }
+            }
+            return fileName;
         }
 
         /// <summary>
-        /// Show the save-as dialog box for saving log files.
+        /// Generate a filename based on Log Name and Timestamp.
         /// </summary>
-        private string ShowLogSaveAsDialog(string logName)
+        /// <remarks>
+        /// i.e. userLog.Name or debugLog.Name
+        /// </remarks>
+        private string GetLogFilename(string logName)
         {
-            SaveFileDialog dialog = new SaveFileDialog();
-
-            dialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
-            dialog.FilterIndex = 1;
-            dialog.RestoreDirectory = true;
-            dialog.InitialDirectory = Configuration.Settings.LogDirectory;
-            dialog.FileName =
+            string fileName =
                 "PcmHammer_"
                 + logName
                 + "_"
                 + DateTime.Now.ToString("yyyyMMdd@HHmmss")
                 + ".txt";
+            return fileName;
+        }
 
-            if (dialog.ShowDialog() == DialogResult.OK)
+        /// <summary>
+        /// Show a save-as dialog box for saving log files.
+        /// </summary>
+        /// <remarks>
+        /// i.e. userLog.Name or debugLog.Name
+        /// </remarks>
+        private string ShowLogSaveAsDialog(string logName)
+        {
+            string fileName = string.Empty;
+
+            if (!Configuration.Settings.UseLogSaveAsDialog)
             {
-                return dialog.FileName;
+                return Configuration.Settings.LogDirectory + "\\" + GetLogFilename(logName);
             }
 
-            return null;
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+                dialog.FilterIndex = 1;
+                dialog.RestoreDirectory = true;
+                dialog.InitialDirectory = Configuration.Settings.LogDirectory;
+                dialog.FileName = GetLogFilename(logName);
+
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    fileName = dialog.FileName;
+                }
+            }
+            return fileName;
         }
 
         /// <summary>
@@ -406,23 +448,13 @@ namespace PcmHacking
 
             if (Configuration.Settings.SaveUserLogOnExit)
             {
-                string fileName = Configuration.Settings.LogDirectory
-                    + "\\PcmHammer_"
-                    + userLog.Name
-                    + "_"
-                    + DateTime.Now.ToString("yyyyMMdd@HHmmss")
-                    + ".txt";
+                string fileName = Configuration.Settings.LogDirectory + "\\" + GetLogFilename(userLog.Name);
                 SaveLog(this.userLog, fileName);
             }
 
             if (Configuration.Settings.SaveDebugLogOnExit)
             {
-                string fileName = Configuration.Settings.LogDirectory
-                    + "\\PcmHammer_"
-                    + debugLog.Name
-                    + "_"
-                    + DateTime.Now.ToString("yyyyMMdd@HHmmss")
-                    + ".txt";
+                string fileName = Configuration.Settings.LogDirectory + "\\" + GetLogFilename(debugLog.Name);
                 SaveLog(this.debugLog, fileName);
             }
         }

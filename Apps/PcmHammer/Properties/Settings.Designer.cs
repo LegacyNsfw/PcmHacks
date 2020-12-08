@@ -26,6 +26,18 @@ namespace PcmHammer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string BinDirectory {
+            get {
+                return ((string)(this["BinDirectory"]));
+            }
+            set {
+                this["BinDirectory"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string LogDirectory {
             get {
                 return ((string)(this["LogDirectory"]));
@@ -56,6 +68,18 @@ namespace PcmHammer.Properties {
             }
             set {
                 this["SaveDebugLogOnExit"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UseLogSaveAsDialog {
+            get {
+                return ((bool)(this["UseLogSaveAsDialog"]));
+            }
+            set {
+                this["UseLogSaveAsDialog"] = value;
             }
         }
         

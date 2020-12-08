@@ -26,9 +26,15 @@ namespace PcmHacking.DialogBoxes
             }
             logDirectoryTextBox.Text = Configuration.Settings.LogDirectory;
 
+            if (!string.IsNullOrWhiteSpace(Configuration.Settings.BinDirectory))
+            {
+                binDirectoryTextBox.Text = Configuration.Settings.BinDirectory;
+            }
+
             saveUserLogOnExitCheckBox.Checked = Configuration.Settings.SaveUserLogOnExit;
             saveDebugLogOnExitCheckBox.Checked = Configuration.Settings.SaveDebugLogOnExit;
             mainWindowPersistenceCheckBox.Checked = Configuration.Settings.MainWindowPersistence;
+            useLogSaveAsDialogCheckBox.Checked = Configuration.Settings.UseLogSaveAsDialog;
             applyButton.Enabled = false;
         }
 
@@ -52,6 +58,16 @@ namespace PcmHacking.DialogBoxes
             if (Configuration.Settings.MainWindowPersistence != mainWindowPersistenceCheckBox.Checked)
             {
                 Configuration.Settings.MainWindowPersistence = mainWindowPersistenceCheckBox.Checked;
+            }
+
+            if (Configuration.Settings.BinDirectory != binDirectoryTextBox.Text)
+            {
+                Configuration.Settings.BinDirectory = binDirectoryTextBox.Text;
+            }
+
+            if (Configuration.Settings.UseLogSaveAsDialog != useLogSaveAsDialogCheckBox.Checked)
+            {
+                Configuration.Settings.UseLogSaveAsDialog = useLogSaveAsDialogCheckBox.Checked;
             }
 
             Configuration.Settings.Save();
@@ -106,6 +122,28 @@ namespace PcmHacking.DialogBoxes
         }
 
         private void mainWindowPersistenceCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            applyButton.Enabled = true;
+        }
+
+        private void binDirectoryTextBox_TextChanged(object sender, EventArgs e)
+        {
+            applyButton.Enabled = true;
+        }
+
+        private void binDirectoryButton_Click(object sender, EventArgs e)
+        {
+            using (FolderBrowserDialog dialog = new FolderBrowserDialog())
+            {
+                dialog.SelectedPath = Configuration.Settings.BinDirectory;
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    binDirectoryTextBox.Text = dialog.SelectedPath;
+                }
+            }
+        }
+
+        private void useLogSaveAsDialogCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             applyButton.Enabled = true;
         }
