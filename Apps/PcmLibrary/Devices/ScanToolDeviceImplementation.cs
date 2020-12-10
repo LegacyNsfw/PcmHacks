@@ -87,8 +87,7 @@ namespace PcmHacking
                 //
                 // * With character echo off (ATE 0), 1 Mbps with character echo on (ATE 1)
 
-                // Testing shows the above chart to be somewhat inaccurate.
-                // For example the SX fails with 1024 + 256 + 12.
+                // Here 1024 bytes = 2048 ASCII hex bytes, without spaces
                 if (stID.Contains("STN1110") || // SparkFun OBD-II UART
                     stID.Contains("STN1130") || // SX
                     stID.Contains("STN1150") || // MX v1
