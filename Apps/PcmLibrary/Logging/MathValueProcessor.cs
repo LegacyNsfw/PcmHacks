@@ -31,10 +31,10 @@ namespace PcmHacking
 
     public class MathValueProcessor
     {
-        private readonly LogProfile profile;
+        private readonly DpidConfiguration profile;
         private List<MathValueAndDependencies> mathValues;
 
-        public MathValueProcessor(LogProfile profile, MathValueConfiguration mathValueConfiguration)
+        public MathValueProcessor(DpidConfiguration profile, MathValueConfiguration mathValueConfiguration)
         {
             this.profile = profile;
             this.mathValues = new List<MathValueAndDependencies>();
@@ -50,13 +50,13 @@ namespace PcmHacking
                 {
                     // TODO: Find the parameter in a configuration file that contains all parameters and conversions,
                     // pick the appropriate conversion even if it's not what the user chose for this log profile.
-                    if (parameter.Name == mathValue.XParameter)
+                    if (parameter.Parameter.Name == mathValue.XParameter)
                     {
                         xParameter = parameter;
                         xConversion = parameter.Conversion;
                     }
 
-                    if (parameter.Name == mathValue.YParameter)
+                    if (parameter.Parameter.Name == mathValue.YParameter)
                     {
                         yParameter = parameter;
                         yConversion = parameter.Conversion;

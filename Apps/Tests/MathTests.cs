@@ -12,11 +12,9 @@ namespace Tests
         [TestMethod]
         public void MathValueTest()
         {
-            ProfileParameter rpm = new ProfileParameter();
-            rpm.Name = "Engine Speed";
-            rpm.Conversion = new Conversion();
-            rpm.Conversion.Name = "RPM";
-            rpm.Conversion.Expression = "x";
+            ProfileParameter rpm = new ProfileParameter(
+                new Parameter("000C", "Engine Speed", "", 2, false, 
+                new Conversion[] { new Conversion("RPM", "X", "0") });
 
             ProfileParameter maf = new ProfileParameter();
             maf.Name = "Mass Air Flow";
@@ -32,7 +30,7 @@ namespace Tests
             load.Format = "0.00";
             load.Formula = "(y*60)/x";
 
-            LogProfile profile = new LogProfile();
+            DpidConfiguration profile = new DpidConfiguration();
             profile.ParameterGroups.Add(new ParameterGroup());
             profile.ParameterGroups[0].Parameters.Add(rpm);
             profile.ParameterGroups[0].Parameters.Add(maf);

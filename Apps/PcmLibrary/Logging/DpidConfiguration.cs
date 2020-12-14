@@ -8,94 +8,11 @@ using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace PcmHacking
-{
-    public static class UnsignedHex
-    {
-        public static string GetUnsignedHex(UInt32 value)
-        {
-            return "0x" + value.ToString("X");
-        }
-
-        public static UInt32 GetUnsignedHex(string rawValue)
-        {
-            if (string.IsNullOrEmpty(rawValue))
-            {
-                return 0;
-            }
-
-            if (!rawValue.StartsWith("0x"))
-                throw new XmlSchemaException("Unexpected format of unsigned hex value: " + rawValue);
-
-            uint result;
-            if (uint.TryParse(
-                rawValue.Substring(2),
-                NumberStyles.HexNumber,
-                CultureInfo.CurrentCulture,
-                out result))
-            {
-                return result;
-            }
-
-            throw new JsonSerializationException("Unable to parse hex value: " + rawValue);
-        }
-    }
-
-    public struct UnsignedHexValue
-    {
-        private uint value;
-        public UnsignedHexValue(uint value)
-        {
-            this.value = value;
-        }
-
-        public override string ToString()
-        {
-            return $"0x{this.value:X}";
-        }
-
-        public static implicit operator uint(UnsignedHexValue hex) { return hex.value; }
-        public static implicit operator UnsignedHexValue(uint x) { return new UnsignedHexValue(x); }
-        
-    }
-
-    public class UnsignedHexValueConverter :JsonConverter<UnsignedHexValue>
-    {
-        public override UnsignedHexValue ReadJson(JsonReader reader, Type objectType, UnsignedHexValue existingValue, bool hasExistingValue, JsonSerializer serializer)
-        {
-            string s = (string)reader.Value;
-            if (string.IsNullOrEmpty(s))
-            {
-                return 0;
-            }
-
-            if (!s.StartsWith("0x"))
-                throw new JsonSerializationException();
-
-            uint result;
-            if (uint.TryParse(
-                s.Substring(2),
-                NumberStyles.HexNumber,
-                CultureInfo.CurrentCulture,
-                out result))
-            {
-                return result;
-            }
-
-            throw new JsonSerializationException("Unable to parse hex value: " + s);
-        }
-
-        public override void WriteJson(JsonWriter writer, UnsignedHexValue value, JsonSerializer serializer)
-        {
-            writer.WriteValue(value.ToString());
-        }
-    }
-    
+{    
     //[DataContract]
-    public class Conversion
+/*    public class Conversion
     {
         [XmlAttribute]
         public string Name { get; set; }
@@ -156,19 +73,7 @@ namespace PcmHacking
         [XmlElement]
         public List<Conversion> Conversions { get; set; }
     }
-
-    //[DataContract]
-    public class ProfileParameter : Parameter
-    {
-        [XmlElement]
-        public Conversion Conversion { get; set; }
-
-        public override string ToString()
-        {
-            return base.ToString() + ", " + this.Conversion.ToString();
-        }
-    }
-
+*/
     //[DataContract]
     public class ParameterGroup
     {
@@ -204,18 +109,18 @@ namespace PcmHacking
         {
             get
             {
-                return Parameters.Sum(x => x.ByteCount);
+                return Parameters.Sum(x => x.Parameter.ByteCount);
             }
         }
 
         public override string ToString()
         {
-            return string.Join(", ", new string[] { this.Dpid.ToString() }.Concat(this.Parameters.Select(x => x.Name)));
+            return string.Join(", ", new string[] { this.Dpid.ToString() }.Concat(this.Parameters.Select(x => x.Parameter.Name)));
         }
 
         public bool TryAddParameter(ProfileParameter parameter)
         {
-            if (this.TotalBytes + parameter.ByteCount > MaxBytes)
+            if (this.TotalBytes + parameter.Parameter.ByteCount > MaxBytes)
             {
                 return false;
             }
@@ -230,7 +135,7 @@ namespace PcmHacking
     /// 
     /// </summary>
     //[DataContract]
-    public class LogProfile
+    public class DpidConfiguration
     {
         public const int MaxGroups = 3;
 
@@ -259,7 +164,7 @@ namespace PcmHacking
             }
         }
 
-        public LogProfile()
+        public DpidConfiguration()
         {
             this.ParameterGroups = new List<ParameterGroup>();
         }
@@ -279,7 +184,7 @@ namespace PcmHacking
         {
             return this.ParameterGroups.SelectMany(
                     group => group.Parameters.Select(
-                        parameter => string.Format("{0} ({1})", parameter.Name, parameter.Conversion.Name)));
+                        parameter => string.Format("{0} ({1})", parameter.Parameter.Name, parameter.Conversion.Units)));
         }
     }
 }

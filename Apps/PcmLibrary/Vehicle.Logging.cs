@@ -16,7 +16,7 @@ namespace PcmHacking
         /// <summary>
         /// Start logging
         /// </summary>
-        public async Task<DpidCollection> ConfigureDpids(LogProfile profile)
+        public async Task<DpidCollection> ConfigureDpids(DpidConfiguration profile)
         {
             List<byte> dpids = new List<byte>();
             foreach (ParameterGroup group in profile.ParameterGroups)
@@ -26,10 +26,10 @@ namespace PcmHacking
                 {
                     Message configurationMessage = this.protocol.ConfigureDynamicData(
                         (byte)group.Dpid,
-                        parameter.DefineBy,
+                        parameter.Parameter.Type == ParameterType.PID ? DefineBy.Pid : DefineBy.Address,
                         position,
-                        parameter.ByteCount,
-                        parameter.Address);
+                        parameter.Parameter.ByteCount,
+                        parameter.Parameter.Address);
 
                     if (!await this.SendMessage(configurationMessage))
                     {
@@ -67,7 +67,7 @@ namespace PcmHacking
                     }
 
 
-                    position += parameter.ByteCount;
+                    position += parameter.Parameter.ByteCount;
                 }
                 dpids.Add((byte)group.Dpid);
             }

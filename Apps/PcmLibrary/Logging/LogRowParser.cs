@@ -25,7 +25,7 @@ namespace PcmHacking
     /// </summary>
     public class LogRowParser
     {
-        private LogProfile profile;
+        private DpidConfiguration profile;
         private Dictionary<byte, byte[]> responseData = new Dictionary<byte, byte[]>();
         private HashSet<byte> dpidsReceived = new HashSet<byte>();
         private int dpidsInProfile;
@@ -35,7 +35,7 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public LogRowParser(LogProfile profile)
+        public LogRowParser(DpidConfiguration profile)
         {
             this.profile = profile;
 
@@ -98,7 +98,7 @@ namespace PcmHacking
             foreach (ProfileParameter parameter in group.Parameters)
             {
                 Int16 value = 0;
-                switch (parameter.ByteCount)
+                switch (parameter.Parameter.ByteCount)
                 {
                     case 1:
                         if (startIndex < payload.Length)
@@ -127,7 +127,7 @@ namespace PcmHacking
 
                 if (parameter.Conversion.Expression == "0x")
                 {
-                    string format = parameter.ByteCount == 1 ? "X2" : "X4";
+                    string format = parameter.Parameter.ByteCount == 1 ? "X2" : "X4";
 
                     results.Add(
                         parameter,

@@ -7,11 +7,11 @@ namespace PcmHacking
 {
     public class LogProfileAndMath
     {
-        private readonly LogProfile profile;
+        private readonly DpidConfiguration profile;
         private readonly MathValueConfiguration mathValueConfiguration;
         private readonly MathValueProcessor mathValueProcessor;
 
-        public LogProfile Profile
+        public DpidConfiguration Profile
         {
             get
             {
@@ -27,7 +27,7 @@ namespace PcmHacking
             }
         }
 
-        public LogProfileAndMath(LogProfile profile, MathValueConfiguration mathValueConfiguration)
+        public LogProfileAndMath(DpidConfiguration profile, MathValueConfiguration mathValueConfiguration)
         {
             this.profile = profile;
             this.mathValueConfiguration = mathValueConfiguration;

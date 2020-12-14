@@ -182,19 +182,19 @@ namespace PcmHacking
         {
             try
             {
-                LogProfile profile;
+                DpidConfiguration profile;
                 if (path.EndsWith(".json.profile"))
                 {
                     using (Stream stream = File.OpenRead(path))
                     {
-                        LogProfileReader reader = new LogProfileReader(stream);
+                        DpidConfigurationReader reader = new DpidConfigurationReader(stream);
                         profile = await reader.ReadAsync();
                     }
 
                     string newPath = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(path)) + ".xml.profile";
                     using (Stream xml = File.OpenWrite(newPath))
                     {
-                        LogProfileXmlWriter writer = new LogProfileXmlWriter(xml);
+                        DpidConfigurationXmlWriter writer = new DpidConfigurationXmlWriter(xml);
                         writer.Write(profile);
                     }
                 }
@@ -202,7 +202,7 @@ namespace PcmHacking
                 {
                     using (Stream stream = File.OpenRead(path))
                     {
-                        LogProfileXmlReader reader = new LogProfileXmlReader(stream);
+                        DpidConfigurationXmlReader reader = new DpidConfigurationXmlReader(stream);
                         profile = reader.Read();
                     }
                 }
@@ -486,59 +486,6 @@ namespace PcmHacking
         private void saveAsButton_Click(object sender, EventArgs e)
         {
 
-        }
-
-        public enum ParameterType
-        {
-            Invalid,
-            PID,
-            RAM
-        };
-
-        public class Parameter
-        {
-            public string Id { get; private set; }
-            public string Name { get; private set; }
-            public string Description { get; private set; }
-            public ParameterType Type { get; private set; }
-            public int Size { get; private set; }
-            public bool BitMapped { get; private set; }
-            public IEnumerable<Conversion> Conversions { get; private set; }
-
-            public Parameter(
-                string id, 
-                string name, 
-                string description, 
-                ParameterType type, 
-                int size,
-                bool bitMapped, 
-                IEnumerable<Conversion> conversions)
-            {
-                this.Id = id;
-                this.Name = name;
-                this.Description = description;
-                this.Type = type;
-                this.Size = size;
-                this.BitMapped = bitMapped;
-                this.Conversions = conversions;
-            }
-
-            public override string ToString()
-            {
-                return this.Name;
-            }
-        }
-
-        public class Conversion
-        {
-            public string Units { get; private set; }
-            public string Formula { get; private set; }
-
-            public Conversion (string units, string formula)
-            {
-                this.Units = units;
-                this.Formula = formula;
-            }
         }
 
         private void FillParameterList()

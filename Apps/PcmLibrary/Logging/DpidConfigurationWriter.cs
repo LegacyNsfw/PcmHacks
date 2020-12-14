@@ -7,16 +7,16 @@ using Newtonsoft.Json;
 
 namespace PcmHacking
 {
-    public class LogProfileWriter
+    public class DpidConfigurationWriter
     {
         private Stream stream;
 
-        public LogProfileWriter(Stream stream)
+        public DpidConfigurationWriter(Stream stream)
         {
             this.stream = stream;
         }
 
-        public async Task WriteAsync(LogProfile profile)
+        public async Task WriteAsync(DpidConfiguration profile)
         {
             using (StreamWriter writer = new StreamWriter(stream))
             {

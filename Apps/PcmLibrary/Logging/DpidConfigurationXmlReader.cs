@@ -7,19 +7,19 @@ using System.Xml.Serialization;
 
 namespace PcmHacking
 {
-    public class LogProfileXmlReader
+    public class DpidConfigurationXmlReader
     {
         private Stream stream;
 
-        public LogProfileXmlReader(Stream stream)
+        public DpidConfigurationXmlReader(Stream stream)
         {
             this.stream = stream;
         }
 
-        public LogProfile Read()
+        public DpidConfiguration Read()
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(LogProfile));
-            return (LogProfile) serializer.Deserialize(this.stream);
+            XmlSerializer serializer = new XmlSerializer(typeof(DpidConfiguration));
+            return (DpidConfiguration) serializer.Deserialize(this.stream);
         }
     }
 }
