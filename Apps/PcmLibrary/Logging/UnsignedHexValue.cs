@@ -22,8 +22,8 @@ namespace PcmHacking
                 return 0;
             }
 
-            if (!rawValue.StartsWith("0x"))
-                throw new XmlSchemaException("Unexpected format of unsigned hex value: " + rawValue);
+//            if (!rawValue.StartsWith("0x"))
+//                throw new ArgumentException("Unexpected format of unsigned hex value: " + rawValue);
 
             uint result;
             if (uint.TryParse(
@@ -35,7 +35,7 @@ namespace PcmHacking
                 return result;
             }
 
-            throw new JsonSerializationException("Unable to parse hex value: " + rawValue);
+            throw new ArgumentException("Unable to parse hex value: " + rawValue);
         }
     }
 

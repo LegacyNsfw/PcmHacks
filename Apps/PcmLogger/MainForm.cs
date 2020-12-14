@@ -445,9 +445,9 @@ namespace PcmHacking
                     rowValueEnumerator.MoveNext();
                     builder.Append(rowValueEnumerator.Current);
                     builder.Append('\t');
-                    builder.Append(parameter.Conversion.Name);
+                    builder.Append(parameter.Conversion.Units);
                     builder.Append('\t');
-                    builder.AppendLine(parameter.Name);
+                    builder.AppendLine(parameter.Parameter.Name);
                 }
             }
 
@@ -490,6 +490,8 @@ namespace PcmHacking
 
         private void FillParameterList()
         {
+            string name = string.Empty;
+
             try
             {
                 string appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
@@ -506,16 +508,18 @@ namespace PcmHacking
                         conversions.Add(
                             new Conversion(
                                 conversion.Attribute("units").Value,
-                                conversion.Attribute("formula").Value));
+                                conversion.Attribute("expression").Value,
+                                conversion.Attribute("format").Value));
                     }
+
+                    name = parameter.Attribute("name").Value;
 
                     parameters.Add(
                         new Parameter(
                             parameter.Attribute("id").Value,
                             parameter.Attribute("name").Value,
                             parameter.Attribute("description").Value,
-                            (ParameterType)Enum.Parse(typeof(ParameterType), parameter.Attribute("type").Value, true),
-                            int.Parse(parameter.Attribute("size").Value),
+                            int.Parse(parameter.Attribute("byteCount").Value),
                             bool.Parse(parameter.Attribute("bitMapped").Value),
                             conversions));
                 }
@@ -541,7 +545,7 @@ namespace PcmHacking
             {
                 MessageBox.Show(
                     this,
-                    exception.ToString(),
+                    "Name: " + name + Environment.NewLine + exception.ToString(),
                     "Unable to load the parameter list.");
             }
         }

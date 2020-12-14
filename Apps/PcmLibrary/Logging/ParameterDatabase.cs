@@ -47,7 +47,7 @@ namespace PcmHacking
             IEnumerable<Conversion> conversions)
         {
             this.Id = id;
-            this.Address = uint.Parse(this.Id);
+            this.Address = UnsignedHex.GetUnsignedHex(this.Id);
             this.Name = name;
             this.Description = description;
             this.Type = ParameterType.PID;

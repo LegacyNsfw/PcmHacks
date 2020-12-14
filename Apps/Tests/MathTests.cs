@@ -12,21 +12,21 @@ namespace Tests
         [TestMethod]
         public void MathValueTest()
         {
+            var rpmConversion = new Conversion("RPM", "X", "0");
             ProfileParameter rpm = new ProfileParameter(
-                new Parameter("000C", "Engine Speed", "", 2, false, 
-                new Conversion[] { new Conversion("RPM", "X", "0") });
+                new Parameter("000C", "Engine Speed", "", 2, false, new Conversion[] { rpmConversion }),
+                rpmConversion);
 
-            ProfileParameter maf = new ProfileParameter();
-            maf.Name = "Mass Air Flow";
-            maf.Conversion = new Conversion();
-            maf.Conversion.Name = "g/s";
-            maf.Conversion.Expression = "x";
+            var mafConversion = new Conversion("g/s", "X", "0.00");
+            ProfileParameter maf = new ProfileParameter(
+                new Parameter("0010", "Mass Air Flow", "", 2, false, new Conversion[] { mafConversion }),
+                mafConversion);
 
             MathValue load = new MathValue();
-            load.XParameter = rpm.Name;
-            load.XConversion = rpm.Conversion.Name;
-            load.YParameter = maf.Name;
-            load.YConversion = maf.Conversion.Name;
+            load.XParameter = rpm.Parameter.Name;
+            load.XConversion = rpm.Conversion.Units;
+            load.YParameter = maf.Parameter.Name;
+            load.YConversion = maf.Conversion.Units;
             load.Format = "0.00";
             load.Formula = "(y*60)/x";
 
