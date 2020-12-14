@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace PcmHacking
 {
@@ -78,7 +79,7 @@ namespace PcmHacking
         protected override void DisableUserInput()
         {
             this.selectButton.Enabled = false;
-            this.selectProfileButton.Enabled = false;
+//            this.selectProfileButton.Enabled = false;
             this.startStopLogging.Enabled = false;
         }
 
@@ -90,7 +91,7 @@ namespace PcmHacking
         protected override void EnableUserInput()
         {
             this.selectButton.Enabled = true;
-            this.selectProfileButton.Enabled = true;
+//            this.selectProfileButton.Enabled = true;
             this.startStopLogging.Enabled = true;
             this.startStopLogging.Focus();
         }
@@ -104,6 +105,9 @@ namespace PcmHacking
         protected override void ValidDeviceSelected(string deviceName)
         {
             this.deviceDescription.Text = deviceName;
+
+            // TODO: Do this asynchronously
+            // this.AddExtendedParameters();
         }
 
         /// <summary>
@@ -113,11 +117,11 @@ namespace PcmHacking
         {
             this.uiThreadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             await this.ResetDevice();
-            string profilePath = Configuration.Settings.ProfilePath;
-            if (!string.IsNullOrEmpty(profilePath))
-            {
-                await this.LoadProfile(profilePath);
-            }
+//            string profilePath = Configuration.Settings.ProfilePath;
+  //          if (!string.IsNullOrEmpty(profilePath))
+    //        {
+      //          await this.LoadProfile(profilePath);
+         //   }
 
             string logDirectory = Configuration.Settings.LogDirectory;
             if (string.IsNullOrWhiteSpace(logDirectory))
@@ -127,7 +131,11 @@ namespace PcmHacking
                 Configuration.Settings.Save();
             }
 
+
             this.logFilePath.Text = logDirectory;
+
+            // TODO: do this async
+            this.FillParameterList();
         }
 
         /// <summary>
@@ -203,21 +211,21 @@ namespace PcmHacking
                     return;
                 }
 
-                this.profilePath.Text = path;
-                this.profileName = Path.GetFileNameWithoutExtension(this.profilePath.Text);
+//                this.profilePath.Text = path;
+//                this.profileName = Path.GetFileNameWithoutExtension(this.profilePath.Text);
 
                 MathValueConfigurationLoader loader = new MathValueConfigurationLoader(this);
                 loader.Initialize();
                 this.profileAndMath = new LogProfileAndMath(profile, loader.Configuration);
                 this.logValues.Text = string.Join(Environment.NewLine, this.profileAndMath.GetColumnNames());
-                Configuration.Settings.ProfilePath = path;
+//                Configuration.Settings.ProfilePath = path;
                 Configuration.Settings.Save();
             }
             catch (Exception exception)
             {
                 this.logValues.Text = exception.Message;
                 this.AddDebugMessage(exception.ToString());
-                this.profilePath.Text = "[no profile loaded]";
+//                this.profilePath.Text = "[no profile loaded]";
                 this.profileName = null;
             }
         }
@@ -336,7 +344,7 @@ namespace PcmHacking
                             {
                                 this.loggerProgress.MarqueeAnimationSpeed = 150;
                                 this.selectButton.Enabled = false;
-                                this.selectProfileButton.Enabled = false;
+//                                this.selectProfileButton.Enabled = false;
                             });
 
                         while (!this.logStopRequested)
@@ -403,7 +411,7 @@ namespace PcmHacking
                             this.setDirectory.Enabled = true;
 
                             this.selectButton.Enabled = true;
-                            this.selectProfileButton.Enabled = true;
+//                            this.selectProfileButton.Enabled = true;
                             this.startStopLogging.Focus();
                         });
                 }
@@ -458,6 +466,137 @@ namespace PcmHacking
             lastLogTime = now;
 
             return builder.ToString();
+        }
+
+        private void newButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void openButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void saveButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void saveAsButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        public enum ParameterType
+        {
+            Invalid,
+            PID,
+            RAM
+        };
+
+        public class Parameter
+        {
+            public string Id { get; private set; }
+            public string Name { get; private set; }
+            public string Description { get; private set; }
+            public ParameterType Type { get; private set; }
+            public int Size { get; private set; }
+            public bool BitMapped { get; private set; }
+            public IEnumerable<Conversion> Conversions { get; private set; }
+
+            public Parameter(
+                string id, 
+                string name, 
+                string description, 
+                ParameterType type, 
+                int size,
+                bool bitMapped, 
+                IEnumerable<Conversion> conversions)
+            {
+                this.Id = id;
+                this.Name = name;
+                this.Description = description;
+                this.Type = type;
+                this.Size = size;
+                this.BitMapped = bitMapped;
+                this.Conversions = conversions;
+            }
+
+            public override string ToString()
+            {
+                return this.Name;
+            }
+        }
+
+        public class Conversion
+        {
+            public string Units { get; private set; }
+            public string Formula { get; private set; }
+
+            public Conversion (string units, string formula)
+            {
+                this.Units = units;
+                this.Formula = formula;
+            }
+        }
+
+        private void FillParameterList()
+        {
+            try
+            {
+                string appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string appDirectory = Path.GetDirectoryName(appPath);
+                string parametersPath = Path.Combine(appDirectory, "Parameters.Standard.xml");
+                XDocument xml = XDocument.Load(parametersPath);
+
+                List<Parameter> parameters = new List<Parameter>();
+                foreach (XElement parameter in xml.Root.Elements("Parameter"))
+                {
+                    List<Conversion> conversions = new List<Conversion>();
+                    foreach (XElement conversion in parameter.Elements("Conversion"))
+                    {
+                        conversions.Add(
+                            new Conversion(
+                                conversion.Attribute("units").Value,
+                                conversion.Attribute("formula").Value));
+                    }
+
+                    parameters.Add(
+                        new Parameter(
+                            parameter.Attribute("id").Value,
+                            parameter.Attribute("name").Value,
+                            parameter.Attribute("description").Value,
+                            (ParameterType)Enum.Parse(typeof(ParameterType), parameter.Attribute("type").Value, true),
+                            int.Parse(parameter.Attribute("size").Value),
+                            bool.Parse(parameter.Attribute("bitMapped").Value),
+                            conversions));
+                }
+
+                foreach (Parameter parameter in parameters)
+                {
+                    DataGridViewRow row = new DataGridViewRow();
+                    row.CreateCells(this.parameterGrid);
+                    row.Cells[0].Value = false; // enabled
+                    row.Cells[1].Value = parameter;
+
+                    DataGridViewComboBoxCell cell = (DataGridViewComboBoxCell)row.Cells[2];
+                    cell.DisplayMember = "Units";
+                    foreach (Conversion conversion in parameter.Conversions)
+                    {
+                        cell.Items.Add(conversion);
+                    }
+                    row.Cells[2].Value = parameter.Conversions.First();
+                    this.parameterGrid.Rows.Add(row);
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(
+                    this,
+                    exception.ToString(),
+                    "Unable to load the parameter list.");
+            }
         }
     }
 }

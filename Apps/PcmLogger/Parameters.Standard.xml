@@ -1,0 +1,1393 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Parameters>
+    <Parameter
+        id="0004"
+        name="Engine Load"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x/2.55)" />
+    </Parameter>
+    <Parameter
+        id="0005"
+        name="ECT Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="°C" formula="y=(x-40)" />
+    </Parameter>
+    <Parameter
+        id="0006"
+        name="Short Term FT Bank 1"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x-128)/1.28" />
+    </Parameter>
+    <Parameter
+        id="0007"
+        name="Long Term FT Bank 1"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x-128)/1.28" />
+    </Parameter>
+    <Parameter
+        id="0008"
+        name="Short Term FT Bank 2"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x-128)/1.28" />
+    </Parameter>
+    <Parameter
+        id="0009"
+        name="Long Term FT Bank 2"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x-128)/1.28" />
+    </Parameter>
+    <Parameter
+        id="000B"
+        name="MAP Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="kPa" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="000C"
+        name="Engine Speed"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="RPM" formula="y=(((x_high*256)+x_low)*0.25)" />
+    </Parameter>
+    <Parameter
+        id="000D"
+        name="Vehicle Speed Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="km/h" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="000E"
+        name="Spark"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="°" formula="y=(x/2)-64" />
+    </Parameter>
+    <Parameter
+        id="000F"
+        name="IAT Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="°C" formula="y=(x-40)" />
+    </Parameter>
+    <Parameter
+        id="0010"
+        name="MAF Sensor"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="g/s" formula="y=(((x_high*256)+x_low)/100)" />
+    </Parameter>
+    <Parameter
+        id="1100"
+        name="A/C Relay Command"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>3)" />
+    </Parameter>
+    <Parameter
+        id="1100"
+        name="A/C Request Signal"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="1100"
+        name="A/C Clutch Feedback Signal"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>1)" />
+    </Parameter>
+    <Parameter
+        id="1100"
+        name="PCM Reset"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>2)" />
+    </Parameter>
+    <Parameter
+        id="1100"
+        name="GEN L"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>7)" />
+    </Parameter>
+    <Parameter
+        id="1101"
+        name="EVAP Vent Solenoid Command"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="VTD Fuel Disable"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>1)" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="TCC Enable Solenoid Command"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>2)" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="Traction Control Status"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="Powertrain Induced Chassis Pitch Command"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>5)" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="Extended Travel Brake Pedal Switch"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>6)" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="TCC/Cruise Brake Pedal Switch"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>3)" />
+    </Parameter>
+    <Parameter
+        id="1103"
+        name="Reduced Engine Power"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>7)" />
+    </Parameter>
+    <Parameter
+        id="1103"
+        name="Engine Oil Level Switch"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>5)" />
+    </Parameter>
+    <Parameter
+        id="1103"
+        name="MIL Command"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>1)" />
+    </Parameter>
+    <Parameter
+        id="1104"
+        name="Cruise Control Active"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>4)" />
+    </Parameter>
+    <Parameter
+        id="1104"
+        name="DTC Set This Ignition"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>2)" />
+    </Parameter>
+    <Parameter
+        id="1104"
+        name="AIR Solenoid Command "
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>1)" />
+    </Parameter>
+    <Parameter
+        id="1104"
+        name="AIR Pump Relay Command "
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="1105"
+        name="Loop Status"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="1105"
+        name="Decel"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>7)" />
+    </Parameter>
+    <Parameter
+        id="1105"
+        name="Fuel Trim Learn"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>5)" />
+    </Parameter>
+    <Parameter
+        id="1105"
+        name="Cold Startup"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>6)" />
+    </Parameter>
+    <Parameter
+        id="1106"
+        name="FC Relay 1 Command"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="1106"
+        name="FC Relay 2 and 3 Command"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>1)" />
+    </Parameter>
+    <Parameter
+        id="1112"
+        name="TFP Sw"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=((x" />
+    </Parameter>
+    <Parameter
+        id="1113"
+        name="TR Sw"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="1115"
+        name="TAC/PCM Communication Signal"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>7)" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="Cruise Resume/Accel"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>6)" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="Cruise Set/Coast Switch"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>5)" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="Cruise On/Off Switch"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>4)" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="APP Sensor 1 and 2"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="Stoplamp Pedal Switch"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>7)" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="TP Sensors 1 and 2"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>3)" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="APP Sensor 1 and 3"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>1)" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="APP Sensor 2 and 3"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>2)" />
+    </Parameter>
+    <Parameter
+        id="1141"
+        name="Ignition 1 Signal"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volts" formula="y=(x/10)" />
+    </Parameter>
+    <Parameter
+        id="1142"
+        name="MAP Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volts" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="1143"
+        name="TP Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volts" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="1144"
+        name="A/C High Side Pressure Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volts" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="1144"
+        name="A/C High Side Pressure Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Kpa" formula="y=((x*1.833)-14.95)*6.895" />
+    </Parameter>
+    <Parameter
+        id="1145"
+        name="HO2S Bank 1 Sensor 1"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="mV" formula="y=(x/0.2304)" />
+    </Parameter>
+    <Parameter
+        id="1146"
+        name="HO2S Bank 1 Sensor 2"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="mV" formula="y=(x/0.2304)" />
+    </Parameter>
+    <Parameter
+        id="1148"
+        name="HO2S Bank 2 Sensor 1"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="mV" formula="y=(x/0.2304)" />
+    </Parameter>
+    <Parameter
+        id="1149"
+        name="HO2S Bank 2 Sensor 2"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="mV" formula="y=(x/0.2304)" />
+    </Parameter>
+    <Parameter
+        id="114D"
+        name="GEN F"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x/2.55)" />
+    </Parameter>
+    <Parameter
+        id="114E"
+        name="Fuel Tank Pressure Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volts" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="1155"
+        name="Fuel Level Sensor Left Tank"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volts" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="115C"
+        name="Engine Oil Pressure Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volts" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="115C"
+        name="Engine Oil Pressure Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Kpa" formula="y=((x*4.34)-104.2)" />
+    </Parameter>
+    <Parameter
+        id="116F"
+        name="Start Up ECT"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="°C" formula="y=(x-40)" />
+    </Parameter>
+    <Parameter
+        id="1170"
+        name="EVAP Purge Solenoid Command"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x/2.55)" />
+    </Parameter>
+    <Parameter
+        id="1190"
+        name="Fuel Trim Cell"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="1192"
+        name="Desired Idle Speed"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="RPM" formula="y=(x*12.5)" />
+    </Parameter>
+    <Parameter
+        id="119D"
+        name="BARO"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="kPa" formula="y=(x+28)/2.71" />
+    </Parameter>
+    <Parameter
+        id="119E"
+        name="Air Fuel Ratio"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units=":1" formula="y=(x/10)" />
+    </Parameter>
+    <Parameter
+        id="119F"
+        name="Engine Oil Life Remaining"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x/2.55+0.5)" />
+    </Parameter>
+    <Parameter
+        id="11A1"
+        name="Engine Run Time"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=((x_high*256)+x_low)" />
+    </Parameter>
+    <Parameter
+        id="11A6"
+        name="Knock Retard"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="°" formula="y=(x*0.0879)" />
+    </Parameter>
+    <Parameter
+        id="11EA"
+        name="Misfire Current Cyl"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="11EB"
+        name="Misfire Current Cyl"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="11EC"
+        name="Misfire Current Cyl"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="11ED"
+        name="Misfire Current Cyl"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="11F8"
+        name="Misfire History Cyl"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=((x_high*256)+x_low)" />
+    </Parameter>
+    <Parameter
+        id="11F9"
+        name="Misfire History Cyl"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=((x_high*256)+x_low)" />
+    </Parameter>
+    <Parameter
+        id="11FA"
+        name="Misfire History Cyl"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=((x_high*256)+x_low)" />
+    </Parameter>
+    <Parameter
+        id="11FB"
+        name="Misfire History Cyl"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=((x_high*256)+x_low)" />
+    </Parameter>
+    <Parameter
+        id="1201"
+        name="Misfire History Cyl"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=((x_high*256)+x_low)" />
+    </Parameter>
+    <Parameter
+        id="1202"
+        name="Misfire History Cyl"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=((x_high*256)+x_low)" />
+    </Parameter>
+    <Parameter
+        id="1203"
+        name="Misfire History Cyl"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=((x_high*256)+x_low)" />
+    </Parameter>
+    <Parameter
+        id="1204"
+        name="Misfire History Cyl"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=((x_high*256)+x_low)" />
+    </Parameter>
+    <Parameter
+        id="1205"
+        name="Misfire Current Cyl"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="1206"
+        name="Misfire Current Cyl"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="1207"
+        name="Misfire Current Cyl"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="1208"
+        name="Misfire Current Cyl"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="120A"
+        name="Short Term FT Avg"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x-128)/1.28" />
+    </Parameter>
+    <Parameter
+        id="120B"
+        name="Long Term FT Avg"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x-128)/1.28" />
+    </Parameter>
+    <Parameter
+        id="120C"
+        name="Short Term FT Avg"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x-128)/1.28" />
+    </Parameter>
+    <Parameter
+        id="122A"
+        name="Cycles of Misfire Data"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="1232"
+        name="Warm"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="1233"
+        name="Warm"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="1234"
+        name="Mileage Since DTC Cleared"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="km" formula="y=(((x_high*256)+x_low)*5)" />
+    </Parameter>
+    <Parameter
+        id="123A"
+        name="Long Term FT Avg"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x-128)/1.28" />
+    </Parameter>
+    <Parameter
+        id="1250"
+        name="MAF Sensor"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Hz" formula="y=(((x_high*256)+x_low)/2.048)" />
+    </Parameter>
+    <Parameter
+        id="125A"
+        name="Injector PWM Bank 1 Average"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="ms" formula="y=(((x_high*256)+x_low)/65.535)" />
+    </Parameter>
+    <Parameter
+        id="125B"
+        name="Injector PWM Bank 2 Average"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="ms" formula="y=(((x_high*256)+x_low)/65.535)" />
+    </Parameter>
+    <Parameter
+        id="12B0"
+        name="APP Average"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="12B1"
+        name="TP Indicated Angle"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(((x_high*256)+x_low)*5/256)" />
+    </Parameter>
+    <Parameter
+        id="12B4"
+        name="APP Sensor 1"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="12B5"
+        name="APP Sensor 2"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="12B6"
+        name="APP Sensor 3"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="12B7"
+        name="TP Sensor 1"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="12B8"
+        name="TP Sensor 2"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(x)" />
+    </Parameter>
+    <Parameter
+        id="12B9"
+        name="TP Sensor 2"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volt" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="12BA"
+        name="TP Sensor 1"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volt" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="12BB"
+        name="APP Sensor 3"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volt" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="12BC"
+        name="APP Sensor 2"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volt" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="12BD"
+        name="APP Sensor 1"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volt" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="12E3"
+        name="Fuel Tank Pressure Sensor"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="mmHg" formula="y=-((x/5.46)-13.995)" />
+    </Parameter>
+    <Parameter
+        id="12EE"
+        name="VTD Fuel Disable Until Ign"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>2)" />
+    </Parameter>
+    <Parameter
+        id="12EE"
+        name="VTD Auto"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>3)" />
+    </Parameter>
+    <Parameter
+        id="12EE"
+        name="PCM/VCM in VTD Fail Enable"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>4)" />
+    </Parameter>
+    <Parameter
+        id="1315"
+        name="Cruise Disengage 1 History"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="1316"
+        name="Cruise Disengage 2 History"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="1317"
+        name="Cruise Disengage 3 History"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="1318"
+        name="Cruise Disengage 4 History"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="1319"
+        name="Cruise Disengage 5 History"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="131A"
+        name="Cruise Disengage 6 History"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="131B"
+        name="Cruise Disengage 7 History"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="131C"
+        name="Cruise Disengage 8 History"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>0)" />
+    </Parameter>
+    <Parameter
+        id="131D"
+        name="Fuel Tank Rated Capacity"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Liters" formula="y=(((x_high*256)+x_low)/64)" />
+    </Parameter>
+    <Parameter
+        id="131E"
+        name="TP Desired Angle"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(((x_high*256)+x_low)*5/256)" />
+    </Parameter>
+    <Parameter
+        id="131F"
+        name="APP Indicated Angle"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(((x_high*256)+x_low)*5/256)" />
+    </Parameter>
+    <Parameter
+        id="132A"
+        name="Fuel Tank Level Remaining"
+        description=""	
+        type="PID"
+        size="04"
+        bitMapped="False"
+        >
+        <Conversion units="%" formula="y=(((x_high*256)+x_low))/((((x[2]*256)+x[3])/100))" />
+    </Parameter>
+    <Parameter
+        id="132A"
+        name="Fuel Tank Level Remaining"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Liters" formula="y=(((x_high*256)+x_low)/64)" />
+    </Parameter>
+    <Parameter
+        id="132B"
+        name="CMP Sensor "
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=((x_high*256)+x_low)" />
+    </Parameter>
+    <Parameter
+        id="132C"
+        name="CMP Sensor "
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=((x_high*256)+x_low)" />
+    </Parameter>
+    <Parameter
+        id="1336"
+        name="Torque Request Signal"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="N-m" formula="y=(((x_high*256)+x_low)*0.02646484375)" />
+    </Parameter>
+    <Parameter
+        id="1337"
+        name="Torque Delivered Signal"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="N-m" formula="y=(((x_high*256)+x_low)*0.02646484375)" />
+    </Parameter>
+    <Parameter
+        id="1338"
+        name="Fuel Level Sensor Right Tank"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Volts" formula="y=(x/51)" />
+    </Parameter>
+    <Parameter
+        id="1481"
+        name="HO2S Heater Bn 1 Sen"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="amps" formula="y=((((long)x_high*256)+x_low)/50)" />
+    </Parameter>
+    <Parameter
+        id="1482"
+        name="HO2S Heater Bn 1 Sen"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="amps" formula="y=((((long)x_high*256)+x_low)/50)" />
+    </Parameter>
+    <Parameter
+        id="1484"
+        name="HO2S Heater Bn 2 Sen"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="amps" formula="y=((((long)x_high*256)+x_low)/50)" />
+    </Parameter>
+    <Parameter
+        id="1485"
+        name="HO2S Heater Bn 1 Sen"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="amps" formula="y=((((long)x_high*256)+x_low)/50)" />
+    </Parameter>
+    <Parameter
+        id="1617"
+        name="Desired IAC Airflow"
+        description=""	
+        type="PID"
+        size="02"
+        bitMapped="False"
+        >
+        <Conversion units="g/s" formula="y=((x_high*256)+x_low)/1024" />
+    </Parameter>
+    <Parameter
+        id="1922"
+        name="Power Enrichment"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="True"
+        >
+        <Conversion units="Boolean" formula="y=(x>>2)" />
+    </Parameter>
+    <Parameter
+        id="199A"
+        name="Current Gear"
+        description=""	
+        type="PID"
+        size="01"
+        bitMapped="False"
+        >
+        <Conversion units="Boolean" formula="y=(x)" />
+    </Parameter>
+</Parameters>
