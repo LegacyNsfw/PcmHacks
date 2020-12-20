@@ -12,7 +12,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml.Linq;
 
 namespace PcmHacking
 {
@@ -445,9 +444,9 @@ namespace PcmHacking
                     rowValueEnumerator.MoveNext();
                     builder.Append(rowValueEnumerator.Current);
                     builder.Append('\t');
-                    builder.Append(parameter.Conversion.Name);
+                    builder.Append(parameter.Conversion.Units);
                     builder.Append('\t');
-                    builder.AppendLine(parameter.Name);
+                    builder.AppendLine(parameter.Parameter.Name);
                 }
             }
 
@@ -490,37 +489,17 @@ namespace PcmHacking
 
         private void FillParameterList()
         {
-            try
+            string appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string appDirectory = Path.GetDirectoryName(appPath);
+            string parametersPath = Path.Combine(appDirectory, "Parameters.Standard.xml");
+
+            string errorMessage;
+            if (!ParameterDatabase.TryLoad(parametersPath, out errorMessage))
             {
-                string appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                string appDirectory = Path.GetDirectoryName(appPath);
-                string parametersPath = Path.Combine(appDirectory, "Parameters.Standard.xml");
-                XDocument xml = XDocument.Load(parametersPath);
-
-                List<Parameter> parameters = new List<Parameter>();
-                foreach (XElement parameter in xml.Root.Elements("Parameter"))
-                {
-                    List<Conversion> conversions = new List<Conversion>();
-                    foreach (XElement conversion in parameter.Elements("Conversion"))
-                    {
-                        conversions.Add(
-                            new Conversion(
-                                conversion.Attribute("units").Value,
-                                conversion.Attribute("formula").Value));
-                    }
-
-                    parameters.Add(
-                        new Parameter(
-                            parameter.Attribute("id").Value,
-                            parameter.Attribute("name").Value,
-                            parameter.Attribute("description").Value,
-                            (ParameterType)Enum.Parse(typeof(ParameterType), parameter.Attribute("type").Value, true),
-                            int.Parse(parameter.Attribute("size").Value),
-                            bool.Parse(parameter.Attribute("bitMapped").Value),
-                            conversions));
-                }
-
-                foreach (Parameter parameter in parameters)
+                MessageBox.Show(this, errorMessage, "Unable to load parameters from XML.");
+            }
+            
+            foreach (Parameter parameter in ParameterDatabase.Parameters)
                 {
                     DataGridViewRow row = new DataGridViewRow();
                     row.CreateCells(this.parameterGrid);
@@ -536,14 +515,6 @@ namespace PcmHacking
                     row.Cells[2].Value = parameter.Conversions.First();
                     this.parameterGrid.Rows.Add(row);
                 }
-            }
-            catch (Exception exception)
-            {
-                MessageBox.Show(
-                    this,
-                    exception.ToString(),
-                    "Unable to load the parameter list.");
-            }
         }
     }
 }

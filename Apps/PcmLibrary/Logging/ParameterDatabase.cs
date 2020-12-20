@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Xml.Linq;
 
 namespace PcmHacking
 {
@@ -39,15 +39,15 @@ namespace PcmHacking
         /// Constructor for standard PID parameters.
         /// </summary>
         public Parameter(
-            string id,
+            uint id,
             string name,
             string description,
             int byteCount,
             bool bitMapped,
             IEnumerable<Conversion> conversions)
         {
-            this.Id = id;
-            this.Address = uint.Parse(this.Id);
+            this.Id = id.ToString("X4");
+            this.Address = UnsignedHex.GetUnsignedHex("0x" + this.Id);
             this.Name = name;
             this.Description = description;
             this.Type = ParameterType.PID;
@@ -104,10 +104,67 @@ namespace PcmHacking
 
     public class ParameterDatabase
     {
-        public IEnumerable<Parameter> Parameters { get; private set; }
-        public ParameterDatabase(IEnumerable<Parameter> parameters)
+        public static IEnumerable<Parameter> Parameters { get; private set; }
+
+        public static bool TryLoad(string pathToXml, out string errorMessage)
         {
-            this.Parameters = parameters;
+            XDocument xml = XDocument.Load(pathToXml);
+            List<Parameter> parameters = new List<Parameter>();
+            foreach (XElement parameter in xml.Root.Elements("Parameter"))
+            {
+                string parameterName = null;
+                try
+                {
+                    List<Conversion> conversions = new List<Conversion>();
+                    foreach (XElement conversion in parameter.Elements("Conversion"))
+                    {
+                        conversions.Add(
+                            new Conversion(
+                                conversion.Attribute("units").Value,
+                                conversion.Attribute("expression").Value,
+                                conversion.Attribute("format").Value));
+                    }
+
+                    string parameterType = (string)parameter.Attribute("type");
+                    parameterName = (string)parameter.Attribute("name").Value;
+                    if (parameterType == "PID")
+                    {
+                        parameters.Add(
+                            new Parameter(
+                                UnsignedHex.GetUnsignedHex("0x" + parameter.Attribute("id").Value),
+                                parameterName,
+                                parameter.Attribute("description").Value,
+                                int.Parse(parameter.Attribute("byteCount").Value),
+                                bool.Parse(parameter.Attribute("bitMapped").Value),
+                                conversions));
+                    }
+                    else if (parameterType == "RAM")
+                    {
+                        parameters.Add(
+                            new Parameter(
+                                parameter.Attribute("id").Value,
+                                UnsignedHex.GetUnsignedHex("0x" + parameter.Attribute("address").Value),
+                                parameterName,
+                                parameter.Attribute("description").Value,
+                                int.Parse(parameter.Attribute("byteCount").Value),
+                                bool.Parse(parameter.Attribute("bitMapped").Value),
+                                conversions));
+                    }
+                }
+                catch (Exception exception)
+                {
+                    errorMessage =
+                        string.Format("Error in parameter '{0}'{1}{2}",
+                        parameterName,
+                        Environment.NewLine,
+                        exception.ToString());
+                    return false;
+                }
+            }
+
+            errorMessage = null;
+            Parameters = parameters;
+            return true;
         }
     }
 }
