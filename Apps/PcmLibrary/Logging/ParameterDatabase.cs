@@ -108,6 +108,26 @@ namespace PcmHacking
 
         public static bool TryLoad(string pathToXml, out string errorMessage)
         {
+            if (!TryLoadStandardParameters(pathToXml, out errorMessage))
+            {
+                return false;
+            }
+
+            if (!TryLoadRamParameters(out errorMessage))
+            {
+                return false;
+            }
+
+            if (!TryLoadMathParameters(out errorMessage))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool TryLoadStandardParameters(string pathToXml, out string errorMessage)
+        {
             XDocument xml = XDocument.Load(pathToXml);
             List<Parameter> parameters = new List<Parameter>();
             foreach (XElement parameter in xml.Root.Elements("Parameter"))
@@ -164,6 +184,20 @@ namespace PcmHacking
 
             errorMessage = null;
             Parameters = parameters;
+            return true;
+        }
+
+        private static bool TryLoadRamParameters(out string errorMessage)
+        {
+            // TODO
+            errorMessage = null;
+            return true;
+        }
+
+        private static bool TryLoadMathParameters(out string errorMessage)
+        {
+            // TODO
+            errorMessage = null;
             return true;
         }
     }

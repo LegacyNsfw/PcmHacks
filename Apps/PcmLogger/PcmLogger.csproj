@@ -53,6 +53,12 @@
     <Reference Include="netstandard" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MainForm.ParameterGrid.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.LogProfile.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Configuration.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>

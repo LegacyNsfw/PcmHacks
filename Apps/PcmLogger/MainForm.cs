@@ -134,7 +134,7 @@ namespace PcmHacking
             this.logFilePath.Text = logDirectory;
 
             // TODO: do this async
-            this.FillParameterList();
+            this.FillParameterGrid();
         }
 
         /// <summary>
@@ -465,56 +465,6 @@ namespace PcmHacking
             lastLogTime = now;
 
             return builder.ToString();
-        }
-
-        private void newButton_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void openButton_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void saveButton_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void saveAsButton_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void FillParameterList()
-        {
-            string appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            string appDirectory = Path.GetDirectoryName(appPath);
-            string parametersPath = Path.Combine(appDirectory, "Parameters.Standard.xml");
-
-            string errorMessage;
-            if (!ParameterDatabase.TryLoad(parametersPath, out errorMessage))
-            {
-                MessageBox.Show(this, errorMessage, "Unable to load parameters from XML.");
-            }
-            
-            foreach (Parameter parameter in ParameterDatabase.Parameters)
-                {
-                    DataGridViewRow row = new DataGridViewRow();
-                    row.CreateCells(this.parameterGrid);
-                    row.Cells[0].Value = false; // enabled
-                    row.Cells[1].Value = parameter;
-
-                    DataGridViewComboBoxCell cell = (DataGridViewComboBoxCell)row.Cells[2];
-                    cell.DisplayMember = "Units";
-                    foreach (Conversion conversion in parameter.Conversions)
-                    {
-                        cell.Items.Add(conversion);
-                    }
-                    row.Cells[2].Value = parameter.Conversions.First();
-                    this.parameterGrid.Rows.Add(row);
-                }
         }
     }
 }
