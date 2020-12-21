@@ -69,9 +69,7 @@ namespace PcmHacking
                             {
                                 continue;
                             }
-
-                            row++;
-
+                            
                             // Write the data to disk on a background thread.
                             Task background = Task.Factory.StartNew(
                                 delegate ()
