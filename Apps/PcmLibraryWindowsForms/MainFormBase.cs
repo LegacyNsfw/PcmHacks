@@ -104,9 +104,12 @@ namespace PcmHacking
             Device device = DeviceFactory.CreateDeviceFromConfigurationSettings(this);
             if (device == null)
             {
-                this.NoDeviceSelected();
-                this.DisableUserInput();
-                this.EnableInterfaceSelection();
+                this.Invoke((MethodInvoker)delegate()
+                {
+                    this.NoDeviceSelected();
+                    this.DisableUserInput();
+                    this.EnableInterfaceSelection();
+                });
                 return false;
             }
 
@@ -132,15 +135,24 @@ namespace PcmHacking
         /// </summary>
         protected async Task<bool> InitializeCurrentDevice()
         {
-            this.DisableUserInput();
-
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.DisableUserInput();
+            });
+            
             if (this.vehicle == null)
             {
-                this.EnableInterfaceSelection();
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.EnableInterfaceSelection();
+                });
                 return false;
             }
 
-            this.ResetLogs();
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.ResetLogs();
+            });
 
             this.AddUserMessage(GetAppNameAndVersion());
 
@@ -152,7 +164,10 @@ namespace PcmHacking
                 if (!initialized)
                 {
                     this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
-                    this.EnableInterfaceSelection();
+                    this.Invoke((MethodInvoker)delegate ()
+                    {
+                        this.EnableInterfaceSelection();
+                    });
                     return false;
                 }
             }
@@ -160,12 +175,19 @@ namespace PcmHacking
             {
                 this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
                 this.AddDebugMessage(exception.ToString());
-                this.EnableInterfaceSelection();
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.EnableInterfaceSelection();
+                });
                 return false;
             }
 
             await this.ValidDeviceSelectedAsync(this.vehicle.DeviceDescription);
-            this.EnableUserInput();
+
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.EnableUserInput();
+            });
             return true;
         }
     }

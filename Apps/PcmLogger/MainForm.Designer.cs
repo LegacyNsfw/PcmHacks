@@ -277,7 +277,12 @@
             this.parameterGrid.Location = new System.Drawing.Point(0, 0);
             this.parameterGrid.Margin = new System.Windows.Forms.Padding(2);
             this.parameterGrid.Name = "parameterGrid";
+            this.parameterGrid.RowHeadersVisible = false;
             this.parameterGrid.RowTemplate.Height = 24;
+            this.parameterGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.parameterGrid.ShowCellErrors = false;
+            this.parameterGrid.ShowEditingIcon = false;
+            this.parameterGrid.ShowRowErrors = false;
             this.parameterGrid.Size = new System.Drawing.Size(400, 427);
             this.parameterGrid.TabIndex = 0;
             this.parameterGrid.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.parameterGrid_CellBeginEdit);

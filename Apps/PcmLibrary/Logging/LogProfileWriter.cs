@@ -11,8 +11,15 @@ namespace PcmHacking
     {
         public static void Write(LogProfile profile, string path)
         {
-            using (XmlWriter writer = XmlWriter.Create(path))
-            {
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.IndentChars = "    ";
+            settings.NewLineChars = Environment.NewLine;
+            settings.NewLineOnAttributes = false;
+            settings.OmitXmlDeclaration = true;
+
+            using (XmlWriter writer = XmlWriter.Create(path, settings))
+            {    
                 XDocument document = new XDocument();
                 XElement top = new XElement("LogProfile");
                 document.Add(top);
@@ -58,6 +65,8 @@ namespace PcmHacking
                         mathParameters.Add(element);
                     }
                 }
+
+                document.Save(writer);
             }
         }
     }

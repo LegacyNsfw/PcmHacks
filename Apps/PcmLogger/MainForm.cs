@@ -106,35 +106,40 @@ namespace PcmHacking
 
         protected override async Task ValidDeviceSelectedAsync(string deviceName)
         {
+            this.AddDebugMessage("ValidDeviceSelectedAsync started.");
             Response<uint> response = await this.Vehicle.QueryOperatingSystemId(new CancellationToken());
             if (response.Status != ResponseStatus.Success)
             {
-                this.deviceDescription.Text = deviceName + " is unable to connect to the PCM";
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.deviceDescription.Text = deviceName + " is unable to connect to the PCM";
+                });
+
                 return;
             }
 
             this.osid = response.Value;
-            this.deviceDescription.Text = deviceName + " " + osid.ToString();
-            this.startStopLogging.Enabled = true;
+            
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.deviceDescription.Text = deviceName + " " + osid.ToString();
+                this.startStopLogging.Enabled = true;
+                this.FillParameterGrid();
+                this.parameterGrid.Enabled = true;
+            });
 
-            // TODO: do this async
-            this.FillParameterGrid();
-
+            this.AddDebugMessage("ValidDeviceSelectedAsync ended.");
         }
 
         /// <summary>
         /// Open the last device, if possible.
         /// </summary>
-        private async void MainForm_Load(object sender, EventArgs e)
+        private void MainForm_Load(object sender, EventArgs e)
         {
+            // Order matters - the scheduler must be set before adding messages.
             this.uiThreadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            await this.ResetDevice();
-//            string profilePath = Configuration.Settings.ProfilePath;
-  //          if (!string.IsNullOrEmpty(profilePath))
-    //        {
-      //          await this.LoadProfile(profilePath);
-         //   }
-
+            this.AddDebugMessage("MainForm_Load started.");
+                        
             string logDirectory = Configuration.Settings.LogDirectory;
             if (string.IsNullOrWhiteSpace(logDirectory))
             {
@@ -143,8 +148,17 @@ namespace PcmHacking
                 Configuration.Settings.Save();
             }
 
+            ThreadPool.QueueUserWorkItem(BackgroundInitialization);
 
             this.logFilePath.Text = logDirectory;
+            this.AddDebugMessage("MainForm_Load ended.");
+        }
+
+        private async void BackgroundInitialization(object unused)
+        {
+            this.AddDebugMessage("Device reset started.");
+            await this.ResetDevice();
+            this.AddDebugMessage("Device reset completed.");
         }
 
         /// <summary>

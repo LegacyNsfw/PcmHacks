@@ -91,7 +91,11 @@ namespace PcmHacking
 
         protected override Task ValidDeviceSelectedAsync(string deviceName)
         {
-            this.deviceDescription.Text = deviceName;
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.deviceDescription.Text = deviceName;
+            });
+
             return Task.CompletedTask;
         }
 

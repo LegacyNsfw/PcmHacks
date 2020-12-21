@@ -11,7 +11,7 @@ namespace PcmHacking
         private string currentProfilePath = null;
         private bool currentProfileIsDirty = false;
 
-        private const string fileFilter = "*.LogProfile|Log Profiles";
+        private const string fileFilter = "Log Profiles (*.LogProfile)|*.LogProfile|All Files|*.*";
 
         private void newButton_Click(object sender, EventArgs e)
         {

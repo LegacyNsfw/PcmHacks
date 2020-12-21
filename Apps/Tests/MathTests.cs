@@ -33,7 +33,7 @@ namespace Tests
             load.Formula = "(y*60)/x";
 
             DpidConfiguration profile = new DpidConfiguration();
-            profile.ParameterGroups.Add(new ParameterGroup());
+            profile.ParameterGroups.Add(new ParameterGroup(0xFE));
             profile.ParameterGroups[0].Parameters.Add(rpm);
             profile.ParameterGroups[0].Parameters.Add(maf);
 
