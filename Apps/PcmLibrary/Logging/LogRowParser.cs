@@ -98,7 +98,13 @@ namespace PcmHacking
             foreach (ProfileParameter parameter in group.Parameters)
             {
                 Int16 value = 0;
-                switch (parameter.Parameter.ByteCount)
+                PcmParameter pcmParameter = parameter.Parameter as PcmParameter;
+                if (pcmParameter == null)
+                {
+                    continue;
+                }
+
+                switch (pcmParameter.ByteCount)
                 {
                     case 1:
                         if (startIndex < payload.Length)
@@ -127,7 +133,7 @@ namespace PcmHacking
 
                 if (parameter.Conversion.Expression == "0x")
                 {
-                    string format = parameter.Parameter.ByteCount == 1 ? "X2" : "X4";
+                    string format = pcmParameter.ByteCount == 1 ? "X2" : "X4";
 
                     results.Add(
                         parameter,
@@ -142,6 +148,9 @@ namespace PcmHacking
                 {
                     Interpreter interpreter = new Interpreter();
                     interpreter.SetVariable("x", value);
+                    interpreter.SetVariable("x_high", value >> 8);
+                    interpreter.SetVariable("x_low", value & 0xFF);
+
                     double convertedValue = interpreter.Eval<double>(parameter.Conversion.Expression);
 
                     string format = parameter.Conversion.Format;

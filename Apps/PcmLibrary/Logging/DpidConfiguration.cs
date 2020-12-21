@@ -12,69 +12,6 @@ using System.Xml.Serialization;
 namespace PcmHacking
 {    
     //[DataContract]
-/*    public class Conversion
-    {
-        [XmlAttribute]
-        public string Name { get; set; }
-
-        [XmlAttribute]
-        public string Expression { get; set; }
-
-        [XmlAttribute]
-        public string Format { get; set; }
-
-        public override string ToString()
-        {
-            return Name + " (" + Expression + ")";
-        }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    //[DataContract]
-    public class Parameter
-    {
-        [XmlAttribute]
-        public string Name { get; set; }
-
-        [XmlAttribute]
-        public DefineBy DefineBy { get; set; }
-
-        [XmlAttribute]
-        public int ByteCount { get; set; }
-
-        [XmlIgnore]
-        public UnsignedHexValue Address { get; set; }
-
-        [XmlAttribute(AttributeName = "Address")]
-        public string AddressAttributeValue
-        {
-            get
-            {
-                return UnsignedHex.GetUnsignedHex(this.Address);
-            }
-
-            set
-            {
-                this.Address = UnsignedHex.GetUnsignedHex(value);
-            }
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}, {1}, {2} bytes at {3}", this.Name, this.DefineBy, this.ByteCount, this.Address);
-        }
-    }
-
-    //[DataContract]
-    public class DatabaseParameter : Parameter
-    {
-        [XmlElement]
-        public List<Conversion> Conversions { get; set; }
-    }
-*/
-    //[DataContract]
     public class ParameterGroup
     {
         public const int MaxBytes = 6;
@@ -99,8 +36,9 @@ namespace PcmHacking
         [XmlElement("Parameter")]
         public List<ProfileParameter> Parameters { get; set; }
 
-        public ParameterGroup()
+        public ParameterGroup(byte id)
         {
+            this.Dpid = new UnsignedHexValue(id);
             this.Parameters = new List<ProfileParameter>();
         }
 
@@ -109,7 +47,7 @@ namespace PcmHacking
         {
             get
             {
-                return Parameters.Sum(x => x.Parameter.ByteCount);
+                return Parameters.Sum(x => (x.Parameter as PcmParameter).ByteCount);
             }
         }
 
@@ -120,7 +58,7 @@ namespace PcmHacking
 
         public bool TryAddParameter(ProfileParameter parameter)
         {
-            if (this.TotalBytes + parameter.Parameter.ByteCount > MaxBytes)
+            if (this.TotalBytes + (parameter.Parameter as PcmParameter).ByteCount > MaxBytes)
             {
                 return false;
             }
@@ -128,7 +66,6 @@ namespace PcmHacking
             this.Parameters.Add(parameter);
             return true;
         }
-
     }
 
     /// <summary>
@@ -185,6 +122,11 @@ namespace PcmHacking
             return this.ParameterGroups.SelectMany(
                     group => group.Parameters.Select(
                         parameter => string.Format("{0} ({1})", parameter.Parameter.Name, parameter.Conversion.Units)));
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0} parameters", this.AllParameters.Count);
         }
     }
 }

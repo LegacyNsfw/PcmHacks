@@ -89,9 +89,14 @@ namespace PcmHacking
             this.deviceDescription.Text = "No device selected";
         }
 
-        protected override void ValidDeviceSelected(string deviceName)
+        protected override Task ValidDeviceSelectedAsync(string deviceName)
         {
-            this.deviceDescription.Text = deviceName;
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.deviceDescription.Text = deviceName;
+            });
+
+            return Task.CompletedTask;
         }
 
         private async void PcmExplorerMainForm_Load(object sender, EventArgs e)

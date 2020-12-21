@@ -12,14 +12,16 @@ namespace Tests
         [TestMethod]
         public void MathValueTest()
         {
-            var rpmConversion = new Conversion("RPM", "X", "0");
+            Conversion rpmConversion = new Conversion("RPM", "X", "0");
             ProfileParameter rpm = new ProfileParameter(
-                new Parameter("000C", "Engine Speed", "", 2, false, new Conversion[] { rpmConversion }),
+                new PidParameter(0x3456, "Engine Speed", "", 2, false, 
+                    new Conversion[] { rpmConversion }),
                 rpmConversion);
 
-            var mafConversion = new Conversion("g/s", "X", "0.00");
+            Conversion mafConversion = new Conversion("RPM", "X", "0");
             ProfileParameter maf = new ProfileParameter(
-                new Parameter("0010", "Mass Air Flow", "", 2, false, new Conversion[] { mafConversion }),
+                new PidParameter(0x1234, "Mass Air Flow", "", 2, false,
+                    new Conversion[] { mafConversion }),
                 mafConversion);
 
             MathValue load = new MathValue();
@@ -31,7 +33,7 @@ namespace Tests
             load.Formula = "(y*60)/x";
 
             DpidConfiguration profile = new DpidConfiguration();
-            profile.ParameterGroups.Add(new ParameterGroup());
+            profile.ParameterGroups.Add(new ParameterGroup(0xFE));
             profile.ParameterGroups[0].Parameters.Add(rpm);
             profile.ParameterGroups[0].Parameters.Add(maf);
 

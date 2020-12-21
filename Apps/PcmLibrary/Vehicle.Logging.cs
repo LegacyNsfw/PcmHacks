@@ -19,26 +19,70 @@ namespace PcmHacking
         public async Task<DpidCollection> ConfigureDpids(DpidConfiguration profile)
         {
             List<byte> dpids = new List<byte>();
+
+
+            uint osid = 0; // TODO: this.QueryOperatingSystemId()
+
             foreach (ParameterGroup group in profile.ParameterGroups)
             {
                 int position = 1;
                 foreach (ProfileParameter parameter in group.Parameters)
                 {
-                    Message configurationMessage = this.protocol.ConfigureDynamicData(
-                        (byte)group.Dpid,
-                        parameter.Parameter.Type == ParameterType.PID ? DefineBy.Pid : DefineBy.Address,
-                        position,
-                        parameter.Parameter.ByteCount,
-                        parameter.Parameter.Address);
+                    PidParameter pidParameter = parameter.Parameter as PidParameter;
+                    RamParameter ramParameter = parameter.Parameter as RamParameter;
+                    int byteCount;
 
-                    if (!await this.SendMessage(configurationMessage))
+                    if (pidParameter != null)
                     {
-                        return null;
+                        Message configurationMessage = this.protocol.ConfigureDynamicData(
+                            (byte)group.Dpid,
+                            DefineBy.Pid,
+                            position,
+                            pidParameter.ByteCount,
+                            pidParameter.PID);
+
+                        if (!await this.SendMessage(configurationMessage))
+                        {
+                            return null;
+                        }
+
+                        byteCount = pidParameter.ByteCount;
+                    }
+                    else if (ramParameter != null)
+                    {
+                        uint address;
+                        if (ramParameter.TryGetAddress(osid, out address))
+                        {
+                            Message configurationMessage = this.protocol.ConfigureDynamicData(
+                                (byte)group.Dpid,
+                                DefineBy.Address,
+                                position,
+                                ramParameter.ByteCount,
+                                address);
+
+                            if (!await this.SendMessage(configurationMessage))
+                            {
+                                return null;
+                            }
+
+                            byteCount = ramParameter.ByteCount;
+                        }
+                        else
+                        {
+                            this.logger.AddUserMessage(
+                                string.Format("Parameter {0} is not defined for PCM {1}",
+                                ramParameter.Name,
+                                osid));
+                            byteCount = 0;
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("Why does this ParameterGroup contain a " + parameter.Parameter.GetType().Name + "?");
                     }
 
                     // Wait for a success or fail message.
                     // TODO: move this into the protocol layer.
-                    //
                     for (int attempt = 0; attempt < 3; attempt++)
                     {
                         Message responseMessage = await this.ReceiveMessage();
@@ -67,7 +111,7 @@ namespace PcmHacking
                     }
 
 
-                    position += parameter.Parameter.ByteCount;
+                    position += byteCount;
                 }
                 dpids.Add((byte)group.Dpid);
             }

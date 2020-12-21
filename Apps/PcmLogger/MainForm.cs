@@ -12,19 +12,19 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml.Linq;
 
 namespace PcmHacking
 {
     public partial class MainForm : MainFormBase
     {
-        private LogProfileAndMath profileAndMath;
+        private DpidsAndMath dpidsAndMath;
         private bool logging;
         private object loggingLock = new object();
         private bool logStopRequested;
         private string profileName;
         private TaskScheduler uiThreadScheduler;
         private static DateTime lastLogTime;
+        private uint osid;
 
         /// <summary>
         /// Constructor
@@ -79,7 +79,6 @@ namespace PcmHacking
         protected override void DisableUserInput()
         {
             this.selectButton.Enabled = false;
-//            this.selectProfileButton.Enabled = false;
             this.startStopLogging.Enabled = false;
         }
 
@@ -91,7 +90,6 @@ namespace PcmHacking
         protected override void EnableUserInput()
         {
             this.selectButton.Enabled = true;
-//            this.selectProfileButton.Enabled = true;
             this.startStopLogging.Enabled = true;
             this.startStopLogging.Focus();
         }
@@ -102,26 +100,40 @@ namespace PcmHacking
             this.deviceDescription.Text = "No device selected";
         }
 
-        protected override void ValidDeviceSelected(string deviceName)
+        protected override async Task ValidDeviceSelectedAsync(string deviceName)
         {
-            this.deviceDescription.Text = deviceName;
+            this.AddDebugMessage("ValidDeviceSelectedAsync started.");
+            Response<uint> response = await this.Vehicle.QueryOperatingSystemId(new CancellationToken());
+            if (response.Status != ResponseStatus.Success)
+            {
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.deviceDescription.Text = deviceName + " is unable to connect to the PCM";
+                });
 
-            // TODO: Do this asynchronously
-            // this.AddExtendedParameters();
+                return;
+            }
+
+            this.osid = response.Value;
+            
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.deviceDescription.Text = deviceName + " " + osid.ToString();
+                this.startStopLogging.Enabled = true;
+                this.parameterGrid.Enabled = true;
+            });
+
+            this.AddDebugMessage("ValidDeviceSelectedAsync ended.");
         }
 
         /// <summary>
         /// Open the last device, if possible.
         /// </summary>
-        private async void MainForm_Load(object sender, EventArgs e)
+        private void MainForm_Load(object sender, EventArgs e)
         {
+            // Order matters - the scheduler must be set before adding messages.
             this.uiThreadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            await this.ResetDevice();
-//            string profilePath = Configuration.Settings.ProfilePath;
-  //          if (!string.IsNullOrEmpty(profilePath))
-    //        {
-      //          await this.LoadProfile(profilePath);
-         //   }
+            this.AddDebugMessage("MainForm_Load started.");
 
             string logDirectory = Configuration.Settings.LogDirectory;
             if (string.IsNullOrWhiteSpace(logDirectory))
@@ -131,11 +143,20 @@ namespace PcmHacking
                 Configuration.Settings.Save();
             }
 
+            ThreadPool.QueueUserWorkItem(BackgroundInitialization);
 
             this.logFilePath.Text = logDirectory;
+            this.AddDebugMessage("MainForm_Load ended.");
+        }
 
-            // TODO: do this async
-            this.FillParameterList();
+        private async void BackgroundInitialization(object unused)
+        {
+            this.FillParameterGrid();
+            this.parameterGrid.Enabled = true;
+
+            this.AddDebugMessage("Device reset started.");
+            await this.ResetDevice();
+            this.AddDebugMessage("Device reset completed.");
         }
 
         /// <summary>
@@ -164,11 +185,11 @@ namespace PcmHacking
 
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                await this.LoadProfile(dialog.FileName);
+                await this.Obsolete_LoadProfile(dialog.FileName);
             }
             else
             {
-                this.profileAndMath = null;
+                this.dpidsAndMath = null;
                 this.profileName = null;
             }
 
@@ -178,7 +199,7 @@ namespace PcmHacking
         /// <summary>
         /// Load the profile from the given path.
         /// </summary>
-        private async Task LoadProfile(string path)
+        private async Task Obsolete_LoadProfile(string path)
         {
             try
             {
@@ -214,10 +235,8 @@ namespace PcmHacking
 //                this.profilePath.Text = path;
 //                this.profileName = Path.GetFileNameWithoutExtension(this.profilePath.Text);
 
-                MathValueConfigurationLoader loader = new MathValueConfigurationLoader(this);
-                loader.Initialize();
-                this.profileAndMath = new LogProfileAndMath(profile, loader.Configuration);
-                this.logValues.Text = string.Join(Environment.NewLine, this.profileAndMath.GetColumnNames());
+                this.dpidsAndMath = new DpidsAndMath(profile, loader.Configuration);
+                this.logValues.Text = string.Join(Environment.NewLine, this.dpidsAndMath.GetColumnNames());
 //                Configuration.Settings.ProfilePath = path;
                 Configuration.Settings.Save();
             }
@@ -258,7 +277,7 @@ namespace PcmHacking
         /// </summary>
         private void UpdateStartStopButtonState()
         {
-            this.startStopLogging.Enabled = this.Vehicle != null && this.profileAndMath != null;
+            this.startStopLogging.Enabled = this.Vehicle != null && this.dpidsAndMath != null;
         }
 
         /// <summary>
@@ -268,152 +287,48 @@ namespace PcmHacking
         {
             if (logging)
             {
-                this.logStopRequested = true;
-                this.startStopLogging.Enabled = false;
-                this.startStopLogging.Text = "Start &Logging";
+                this.StopLogging();
             }
             else
             {
-                lock (loggingLock)
-                {
-                    if (this.profileAndMath == null)
-                    {
-                        this.logValues.Text = "Please select a log profile.";
-                        return;
-                    }
-
-                    if (!logging)
-                    {
-                        logging = true;
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(LoggingThread), null);
-                        this.startStopLogging.Text = "Stop &Logging";
-                    }
-                }
+                this.StartLogging();
             }
         }
 
         /// <summary>
-        /// The loop that reads data from the PCM.
+        /// Signal the background thread to stop.
         /// </summary>
-        private async void LoggingThread(object threadContext)
-        {
-            using (AwayMode lockScreenSuppressor = new AwayMode())
-            {
-                try
+        private void StopLogging()
                 {
-                    string logFilePath = GenerateLogFilePath();
+            this.logStopRequested = true;
+            this.startStopLogging.Enabled = false;
+            this.startStopLogging.Text = "Start &Logging";
 
-                    this.loggerProgress.Invoke(
-                    (MethodInvoker)
-                    delegate ()
+            // TODO: Async
+            while(this.logging)
                     {
-                        this.loggerProgress.Value = 0;
-                        this.loggerProgress.Visible = true;
-                        this.logFilePath.Text = logFilePath;
-                        this.setDirectory.Enabled = false;
-                        this.startStopLogging.Focus();
-                    });
-
-                    MathValueConfigurationLoader loader = new MathValueConfigurationLoader(this);
-                    loader.Initialize();
-                    Logger logger = new Logger(this.Vehicle, this.profileAndMath, loader.Configuration);
-                    if (!await logger.StartLogging())
-                    {
-                        this.AddUserMessage("Unable to start logging.");
-                        return;
+                Thread.Sleep(100);
                     }
-
-#if Vpw4x
-                if (!await this.Vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
-                {
-                    this.AddUserMessage("Unable to switch to 4x.");
-                    return;
                 }
-#endif
-                    using (StreamWriter streamWriter = new StreamWriter(logFilePath))
-                    {
-                        LogFileWriter writer = new LogFileWriter(streamWriter);
-                        IEnumerable<string> columnNames = this.profileAndMath.GetColumnNames();
-                        await writer.WriteHeader(columnNames);
 
-                        lastLogTime = DateTime.Now;
-
-                        this.loggerProgress.Invoke(
-                            (MethodInvoker)
-                            delegate ()
+        /// <summary>
+        /// Start the background thread.
+        /// </summary>
+        private void StartLogging()
                             {
-                                this.loggerProgress.MarqueeAnimationSpeed = 150;
-                                this.selectButton.Enabled = false;
-//                                this.selectProfileButton.Enabled = false;
-                            });
-
-                        while (!this.logStopRequested)
+            lock (loggingLock)
                         {
-                            this.AddDebugMessage("Requesting row...");
-                            IEnumerable<string> rowValues = await logger.GetNextRow();
-                            if (rowValues == null)
+                if (this.dpidsAndMath == null)
                             {
-                                continue;
+                    this.logValues.Text = "Please select a log profile.";
+                    return;
                             }
 
-                            // Write the data to disk on a background thread.
-                            Task background = Task.Factory.StartNew(
-                                delegate ()
-                                {
-                                    writer.WriteLine(rowValues);
-                                });
-
-                            // Display the data using a foreground thread.
-                            Task foreground = Task.Factory.StartNew(
-                                delegate ()
-                                {
-                                    string formattedValues = FormatValuesForTextBox(rowValues);
-                                    this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
-                                },
-                                CancellationToken.None,
-                                TaskCreationOptions.None,
-                                uiThreadScheduler);
-                        }
-                    }
-                }
-                catch (Exception exception)
-                {
-                    this.AddDebugMessage(exception.ToString());
-                    this.AddUserMessage("Logging interrupted. " + exception.Message);
-                    this.logValues.Invoke(
-                        (MethodInvoker)
-                        delegate ()
+                if (!logging)
                         {
-                            this.logValues.Text = "Logging interrupted. " + exception.Message;
-                            this.startStopLogging.Focus();
-                        });
-                }
-                finally
-                {
-#if Vpw4x
-                if (!await this.Vehicle.VehicleSetVPW4x(VpwSpeed.Standard))
-                {
-                    // Try twice...
-                    await this.Vehicle.VehicleSetVPW4x(VpwSpeed.Standard);
-                }
-#endif
-                    this.logStopRequested = false;
-                    this.logging = false;
-                    this.startStopLogging.Invoke(
-                        (MethodInvoker)
-                        delegate ()
-                        {
-                            this.loggerProgress.MarqueeAnimationSpeed = 0;
-                            this.loggerProgress.Visible = false;
-                            this.startStopLogging.Enabled = true;
-                            this.startStopLogging.Text = "Start &Logging";
-                            this.logFilePath.Text = Configuration.Settings.LogDirectory;
-                            this.setDirectory.Enabled = true;
-
-                            this.selectButton.Enabled = true;
-//                            this.selectProfileButton.Enabled = true;
-                            this.startStopLogging.Focus();
-                        });
+                    logging = true;
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(LoggingThread), null);
+                    this.startStopLogging.Text = "Stop &Logging";
                 }
             }
         }
@@ -438,7 +353,7 @@ namespace PcmHacking
         {
             StringBuilder builder = new StringBuilder();
             IEnumerator<string> rowValueEnumerator = rowValues.GetEnumerator();
-            foreach(ParameterGroup group in this.profileAndMath.Profile.ParameterGroups)
+            foreach(ParameterGroup group in this.dpidsAndMath.Profile.ParameterGroups)
             {
                 foreach(ProfileParameter parameter in group.Parameters)
                 {
@@ -451,7 +366,7 @@ namespace PcmHacking
                 }
             }
 
-            foreach(MathValue mathValue in this.profileAndMath.MathValueProcessor.GetMathValues())
+            foreach(MathValue mathValue in this.dpidsAndMath.MathValueProcessor.GetMathValues())
             {
                 rowValueEnumerator.MoveNext();
                 builder.Append(rowValueEnumerator.Current);
@@ -468,86 +383,14 @@ namespace PcmHacking
             return builder.ToString();
         }
 
-        private void newButton_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void openButton_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void saveButton_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void saveAsButton_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void FillParameterList()
-        {
-            string name = string.Empty;
-
-            try
-            {
-                string appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                string appDirectory = Path.GetDirectoryName(appPath);
-                string parametersPath = Path.Combine(appDirectory, "Parameters.Standard.xml");
-                XDocument xml = XDocument.Load(parametersPath);
-
-                List<Parameter> parameters = new List<Parameter>();
-                foreach (XElement parameter in xml.Root.Elements("Parameter"))
+        private void parameterGrid_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
                 {
-                    List<Conversion> conversions = new List<Conversion>();
-                    foreach (XElement conversion in parameter.Elements("Conversion"))
-                    {
-                        conversions.Add(
-                            new Conversion(
-                                conversion.Attribute("units").Value,
-                                conversion.Attribute("expression").Value,
-                                conversion.Attribute("format").Value));
-                    }
-
-                    name = parameter.Attribute("name").Value;
-
-                    parameters.Add(
-                        new Parameter(
-                            parameter.Attribute("id").Value,
-                            parameter.Attribute("name").Value,
-                            parameter.Attribute("description").Value,
-                            int.Parse(parameter.Attribute("byteCount").Value),
-                            bool.Parse(parameter.Attribute("bitMapped").Value),
-                            conversions));
+//            this.RegenerateProfile();
                 }
 
-                foreach (Parameter parameter in parameters)
+        private void parameterGrid_CurrentCellChanged(object sender, EventArgs e)
                 {
-                    DataGridViewRow row = new DataGridViewRow();
-                    row.CreateCells(this.parameterGrid);
-                    row.Cells[0].Value = false; // enabled
-                    row.Cells[1].Value = parameter;
-
-                    DataGridViewComboBoxCell cell = (DataGridViewComboBoxCell)row.Cells[2];
-                    cell.DisplayMember = "Units";
-                    foreach (Conversion conversion in parameter.Conversions)
-                    {
-                        cell.Items.Add(conversion);
-                    }
-                    row.Cells[2].Value = parameter.Conversions.First();
-                    this.parameterGrid.Rows.Add(row);
-                }
-            }
-            catch (Exception exception)
-            {
-                MessageBox.Show(
-                    this,
-                    "Name: " + name + Environment.NewLine + exception.ToString(),
-                    "Unable to load the parameter list.");
-            }
+//            this.RegenerateProfile();
         }
     }
 }

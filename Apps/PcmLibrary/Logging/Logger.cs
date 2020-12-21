@@ -15,7 +15,7 @@ namespace PcmHacking
     public class Logger
     {
         private readonly Vehicle vehicle;
-        private readonly LogProfileAndMath profileAndMath;
+        private readonly DpidsAndMath profileAndMath;
         private DpidCollection dpids;
 
 #if FAST_LOGGING
@@ -25,7 +25,7 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Logger(Vehicle vehicle, LogProfileAndMath profileAndMath, MathValueConfiguration mathValueConfiguration)
+        public Logger(Vehicle vehicle, DpidsAndMath profileAndMath, MathValueConfiguration mathValueConfiguration)
         {
             this.vehicle = vehicle;
             this.profileAndMath = profileAndMath;

@@ -118,9 +118,14 @@ namespace PcmHacking
         /// <summary>
         /// Invoked when a device is selected and successfully initialized.
         /// </summary>
-        protected override void ValidDeviceSelected(string deviceName)
+        protected override Task ValidDeviceSelectedAsync(string deviceName)
         {
-            this.deviceDescription.Text = deviceName;
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.deviceDescription.Text = deviceName;
+            });
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
