@@ -5,7 +5,7 @@ using System.Text;
 
 namespace PcmHacking
 {
-    public class LogProfileAndMath
+    public class DpidsAndMath
     {
         private readonly DpidConfiguration profile;
         private readonly MathValueConfiguration mathValueConfiguration;
@@ -27,7 +27,7 @@ namespace PcmHacking
             }
         }
 
-        public LogProfileAndMath(DpidConfiguration profile, MathValueConfiguration mathValueConfiguration)
+        public DpidsAndMath(DpidConfiguration profile, MathValueConfiguration mathValueConfiguration)
         {
             this.profile = profile;
             this.mathValueConfiguration = mathValueConfiguration;

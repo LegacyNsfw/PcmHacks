@@ -15,11 +15,29 @@ namespace PcmHacking
 
         private void newButton_Click(object sender, EventArgs e)
         {
-            currentProfile = new LogProfile();
+            if (this.currentProfileIsDirty)
+            {
+                if (this.SaveIfNecessary() == DialogResult.Cancel)
+                {
+                    return;
+                }
+            }
+
+            this.ResetProfile();
         }
 
         private void openButton_Click(object sender, EventArgs e)
         {
+            if (this.currentProfileIsDirty)
+            {
+                if (this.SaveIfNecessary() == DialogResult.Cancel)
+                {
+                    return;
+                }
+            }
+
+            this.ResetProfile();
+
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = fileFilter;
             dialog.Multiselect = false;
@@ -28,7 +46,8 @@ namespace PcmHacking
             DialogResult result = dialog.ShowDialog(this);
             if (result == DialogResult.OK)
             {
-                currentProfile = LogProfileReader.Read(dialog.FileName);
+                LogProfileReader reader = new LogProfileReader(this.database);
+                currentProfile = reader.Read(dialog.FileName);
             }
 
             this.UpdateGridFromProfile();
@@ -48,20 +67,63 @@ namespace PcmHacking
 
         private void saveAsButton_Click(object sender, EventArgs e)
         {
+            this.ShowSaveAs();
+        }
+
+        private DialogResult SaveIfNecessary()
+        {
+            DialogResult result = MessageBox.Show(
+                this,
+                "Would you like to save the current profile before continuing?",
+                "The current profile has changed.",
+                MessageBoxButtons.YesNoCancel);
+
+            switch (result)
+            {
+                case DialogResult.Yes:
+                    if (string.IsNullOrEmpty(currentProfilePath))
+                    {
+                        if (this.ShowSaveAs() == DialogResult.Cancel)
+                        {
+                            return DialogResult.Cancel;
+                        }
+
+                        return DialogResult.OK;
+                    }
+                    else
+                    {
+                        this.saveButton_Click(this, new EventArgs());
+                        return DialogResult.OK;
+                    }
+
+                case DialogResult.Cancel:
+                    return DialogResult.Cancel;
+
+                default: // DialogResult.No
+                    return DialogResult.OK;
+            }
+        }
+
+        private DialogResult ShowSaveAs()
+        { 
             SaveFileDialog dialog = new SaveFileDialog();
             dialog.Filter = fileFilter;
             dialog.OverwritePrompt = true;
+            dialog.AddExtension = true;
             DialogResult result = dialog.ShowDialog(this);
             if (result == DialogResult.OK)
             {
+                this.currentProfilePath = dialog.FileName;
                 LogProfileWriter.Write(this.currentProfile, this.currentProfilePath);
                 this.currentProfileIsDirty = false;
             }
+
+            return result;
         }
 
         private void ResetProfile()
         {
-
+            currentProfile = new LogProfile();
         }
     }
 }

@@ -34,10 +34,13 @@ namespace PcmHacking
             // set device name to "no device selected"
         }
 
-        protected virtual void ValidDeviceSelected(string deviceName)
+        protected virtual async Task ValidDeviceSelectedAsync(string deviceName)
         {
             // enable re-init button
             // show device name
+
+            // This is just here to suppress a compiler warning.
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -161,7 +164,7 @@ namespace PcmHacking
                 return false;
             }
 
-            this.ValidDeviceSelected(this.vehicle.DeviceDescription);
+            await this.ValidDeviceSelectedAsync(this.vehicle.DeviceDescription);
             this.EnableUserInput();
             return true;
         }

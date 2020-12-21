@@ -14,13 +14,13 @@ namespace Tests
         {
             Conversion rpmConversion = new Conversion("RPM", "X", "0");
             ProfileParameter rpm = new ProfileParameter(
-                new Parameter("RPM", 0x3456, "Engine Speed", "", 2, false, 
+                new PidParameter(0x3456, "Engine Speed", "", 2, false, 
                     new Conversion[] { rpmConversion }),
                 rpmConversion);
 
             Conversion mafConversion = new Conversion("RPM", "X", "0");
             ProfileParameter maf = new ProfileParameter(
-                new Parameter("MAF", 0x1234, "Mass Air Flow", "", 2, false,
+                new PidParameter(0x1234, "Mass Air Flow", "", 2, false,
                     new Conversion[] { mafConversion }),
                 mafConversion);
 

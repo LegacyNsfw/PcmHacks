@@ -5,6 +5,7 @@ using System.Xml.Serialization;
 
 namespace PcmHacking
 {
+    // TODO: support multiple conversions
     public class MathValue
     {
         [XmlAttribute]

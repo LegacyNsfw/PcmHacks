@@ -7,7 +7,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Raw" expression="y=x" format="0.00" />
+        <Conversion units="Raw" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="0004"
@@ -16,7 +16,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x/2.55)" format="0.00" />
+        <Conversion units="%" expression="(x/2.55)" format="0.00" />
     </Parameter>
     <Parameter
         id="0005"
@@ -25,7 +25,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="°C" expression="y=(x-40)" format="0.00" />
+        <Conversion units="°C" expression="(x-40)" format="0.00" />
     </Parameter>
     <Parameter
         id="0006"
@@ -34,7 +34,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x-128)/1.28" format="0.00" />
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
     </Parameter>
     <Parameter
         id="0007"
@@ -43,7 +43,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x-128)/1.28" format="0.00" />
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
     </Parameter>
     <Parameter
         id="0008"
@@ -52,7 +52,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x-128)/1.28" format="0.00" />
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
     </Parameter>
     <Parameter
         id="0009"
@@ -61,7 +61,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x-128)/1.28" format="0.00" />
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
     </Parameter>
     <Parameter
         id="000B"
@@ -70,7 +70,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="kPa" expression="y=(x)" format="0.00" />
+        <Conversion units="kPa" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="000C"
@@ -79,7 +79,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="RPM" expression="y=(((x_high*256)+x_low)*0.25)" format="0.00" />
+        <Conversion units="RPM" expression="(((x_high*256)+x_low)*0.25)" format="0.00" />
     </Parameter>
     <Parameter
         id="000D"
@@ -88,7 +88,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="km/h" expression="y=(x)" format="0.00" />
+        <Conversion units="km/h" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="000E"
@@ -97,7 +97,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="°" expression="y=(x/2)-64" format="0.00" />
+        <Conversion units="°" expression="(x/2)-64" format="0.00" />
     </Parameter>
     <Parameter
         id="000F"
@@ -106,7 +106,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="°C" expression="y=(x-40)" format="0.00" />
+        <Conversion units="°C" expression="(x-40)" format="0.00" />
     </Parameter>
     <Parameter
         id="0010"
@@ -115,7 +115,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="g/s" expression="y=(((x_high*256)+x_low)/100)" format="0.00" />
+        <Conversion units="g/s" expression="(((x_high*256)+x_low)/100)" format="0.00" />
     </Parameter>
     <Parameter
         id="1100"
@@ -124,7 +124,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>3)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>3)" format="0.00" />
     </Parameter>
     <Parameter
         id="1100"
@@ -133,7 +133,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="1100"
@@ -142,7 +142,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>1)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
     </Parameter>
     <Parameter
         id="1100"
@@ -151,7 +151,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>2)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
     </Parameter>
     <Parameter
         id="1100"
@@ -160,7 +160,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>7)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>7)" format="0.00" />
     </Parameter>
     <Parameter
         id="1101"
@@ -169,7 +169,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(" format="0.00" />
+        <Conversion units="Boolean" expression="(" format="0.00" />
     </Parameter>
     <Parameter
         id="1102"
@@ -178,7 +178,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>1)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
     </Parameter>
     <Parameter
         id="1102"
@@ -187,7 +187,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>2)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
     </Parameter>
     <Parameter
         id="1102"
@@ -196,7 +196,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="1102"
@@ -205,7 +205,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>5)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>5)" format="0.00" />
     </Parameter>
     <Parameter
         id="1102"
@@ -214,7 +214,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>6)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>6)" format="0.00" />
     </Parameter>
     <Parameter
         id="1102"
@@ -223,7 +223,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>3)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>3)" format="0.00" />
     </Parameter>
     <Parameter
         id="1103"
@@ -232,7 +232,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>7)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>7)" format="0.00" />
     </Parameter>
     <Parameter
         id="1103"
@@ -241,7 +241,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>5)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>5)" format="0.00" />
     </Parameter>
     <Parameter
         id="1103"
@@ -250,7 +250,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>1)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
     </Parameter>
     <Parameter
         id="1104"
@@ -259,7 +259,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>4)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>4)" format="0.00" />
     </Parameter>
     <Parameter
         id="1104"
@@ -268,7 +268,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>2)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
     </Parameter>
     <Parameter
         id="1104"
@@ -277,7 +277,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>1)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
     </Parameter>
     <Parameter
         id="1104"
@@ -286,7 +286,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="1105"
@@ -295,7 +295,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="1105"
@@ -304,7 +304,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>7)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>7)" format="0.00" />
     </Parameter>
     <Parameter
         id="1105"
@@ -313,7 +313,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>5)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>5)" format="0.00" />
     </Parameter>
     <Parameter
         id="1105"
@@ -322,7 +322,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>6)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>6)" format="0.00" />
     </Parameter>
     <Parameter
         id="1106"
@@ -331,7 +331,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="1106"
@@ -340,7 +340,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>1)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
     </Parameter>
     <Parameter
         id="1112"
@@ -349,7 +349,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=((x" format="0.00" />
+        <Conversion units="Boolean" expression="((x" format="0.00" />
     </Parameter>
     <Parameter
         id="1113"
@@ -358,7 +358,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="1115"
@@ -367,7 +367,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>7)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>7)" format="0.00" />
     </Parameter>
     <Parameter
         id="1116"
@@ -376,7 +376,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>6)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>6)" format="0.00" />
     </Parameter>
     <Parameter
         id="1116"
@@ -385,7 +385,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>5)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>5)" format="0.00" />
     </Parameter>
     <Parameter
         id="1116"
@@ -394,7 +394,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>4)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>4)" format="0.00" />
     </Parameter>
     <Parameter
         id="1116"
@@ -403,7 +403,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="1116"
@@ -412,7 +412,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>7)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>7)" format="0.00" />
     </Parameter>
     <Parameter
         id="1116"
@@ -421,7 +421,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>3)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>3)" format="0.00" />
     </Parameter>
     <Parameter
         id="1116"
@@ -430,7 +430,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>1)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
     </Parameter>
     <Parameter
         id="1116"
@@ -439,7 +439,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>2)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
     </Parameter>
     <Parameter
         id="1141"
@@ -448,7 +448,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volts" expression="y=(x/10)" format="0.00" />
+        <Conversion units="Volts" expression="(x/10)" format="0.00" />
     </Parameter>
     <Parameter
         id="1142"
@@ -457,7 +457,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volts" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="1143"
@@ -466,7 +466,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volts" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="1144"
@@ -475,7 +475,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volts" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="1144"
@@ -484,7 +484,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Kpa" expression="y=((x*1.833)-14.95)*6.895" format="0.00" />
+        <Conversion units="Kpa" expression="((x*1.833)-14.95)*6.895" format="0.00" />
     </Parameter>
     <Parameter
         id="1145"
@@ -493,7 +493,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="mV" expression="y=(x/0.2304)" format="0.00" />
+        <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
     </Parameter>
     <Parameter
         id="1146"
@@ -502,7 +502,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="mV" expression="y=(x/0.2304)" format="0.00" />
+        <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
     </Parameter>
     <Parameter
         id="1148"
@@ -511,7 +511,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="mV" expression="y=(x/0.2304)" format="0.00" />
+        <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
     </Parameter>
     <Parameter
         id="1149"
@@ -520,7 +520,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="mV" expression="y=(x/0.2304)" format="0.00" />
+        <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
     </Parameter>
     <Parameter
         id="114D"
@@ -529,7 +529,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x/2.55)" format="0.00" />
+        <Conversion units="%" expression="(x/2.55)" format="0.00" />
     </Parameter>
     <Parameter
         id="114E"
@@ -538,7 +538,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volts" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="1155"
@@ -547,7 +547,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volts" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="115C"
@@ -556,7 +556,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volts" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="115C"
@@ -565,7 +565,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Kpa" expression="y=((x*4.34)-104.2)" format="0.00" />
+        <Conversion units="Kpa" expression="((x*4.34)-104.2)" format="0.00" />
     </Parameter>
     <Parameter
         id="116F"
@@ -574,7 +574,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="°C" expression="y=(x-40)" format="0.00" />
+        <Conversion units="°C" expression="(x-40)" format="0.00" />
     </Parameter>
     <Parameter
         id="1170"
@@ -583,7 +583,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x/2.55)" format="0.00" />
+        <Conversion units="%" expression="(x/2.55)" format="0.00" />
     </Parameter>
     <Parameter
         id="1190"
@@ -592,7 +592,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="1192"
@@ -601,7 +601,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="RPM" expression="y=(x*12.5)" format="0.00" />
+        <Conversion units="RPM" expression="(x*12.5)" format="0.00" />
     </Parameter>
     <Parameter
         id="119D"
@@ -610,7 +610,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="kPa" expression="y=(x+28)/2.71" format="0.00" />
+        <Conversion units="kPa" expression="(x+28)/2.71" format="0.00" />
     </Parameter>
     <Parameter
         id="119E"
@@ -619,7 +619,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units=":1" expression="y=(x/10)" format="0.00" />
+        <Conversion units=":1" expression="(x/10)" format="0.00" />
     </Parameter>
     <Parameter
         id="119F"
@@ -628,7 +628,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x/2.55+0.5)" format="0.00" />
+        <Conversion units="%" expression="(x/2.55+0.5)" format="0.00" />
     </Parameter>
     <Parameter
         id="11A1"
@@ -637,7 +637,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
     </Parameter>
     <Parameter
         id="11A6"
@@ -646,7 +646,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="°" expression="y=(x*0.0879)" format="0.00" />
+        <Conversion units="°" expression="(x*0.0879)" format="0.00" />
     </Parameter>
     <Parameter
         id="11EA"
@@ -655,7 +655,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="11EB"
@@ -664,7 +664,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="11EC"
@@ -673,7 +673,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="11ED"
@@ -682,7 +682,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="11F8"
@@ -691,7 +691,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
     </Parameter>
     <Parameter
         id="11F9"
@@ -700,7 +700,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
     </Parameter>
     <Parameter
         id="11FA"
@@ -709,7 +709,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
     </Parameter>
     <Parameter
         id="11FB"
@@ -718,7 +718,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
     </Parameter>
     <Parameter
         id="1201"
@@ -727,7 +727,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
     </Parameter>
     <Parameter
         id="1202"
@@ -736,7 +736,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
     </Parameter>
     <Parameter
         id="1203"
@@ -745,7 +745,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
     </Parameter>
     <Parameter
         id="1204"
@@ -754,7 +754,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
     </Parameter>
     <Parameter
         id="1205"
@@ -763,7 +763,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="1206"
@@ -772,7 +772,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="1207"
@@ -781,7 +781,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="1208"
@@ -790,7 +790,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="120A"
@@ -799,7 +799,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x-128)/1.28" format="0.00" />
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
     </Parameter>
     <Parameter
         id="120B"
@@ -808,7 +808,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x-128)/1.28" format="0.00" />
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
     </Parameter>
     <Parameter
         id="120C"
@@ -817,7 +817,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x-128)/1.28" format="0.00" />
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
     </Parameter>
     <Parameter
         id="122A"
@@ -826,7 +826,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="1232"
@@ -835,7 +835,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="1233"
@@ -844,7 +844,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="1234"
@@ -853,7 +853,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="km" expression="y=(((x_high*256)+x_low)*5)" format="0.00" />
+        <Conversion units="km" expression="(((x_high*256)+x_low)*5)" format="0.00" />
     </Parameter>
     <Parameter
         id="123A"
@@ -862,7 +862,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x-128)/1.28" format="0.00" />
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
     </Parameter>
     <Parameter
         id="1250"
@@ -871,7 +871,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Hz" expression="y=(((x_high*256)+x_low)/2.048)" format="0.00" />
+        <Conversion units="Hz" expression="(((x_high*256)+x_low)/2.048)" format="0.00" />
     </Parameter>
     <Parameter
         id="125A"
@@ -880,7 +880,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="ms" expression="y=(((x_high*256)+x_low)/65.535)" format="0.00" />
+        <Conversion units="ms" expression="(((x_high*256)+x_low)/65.535)" format="0.00" />
     </Parameter>
     <Parameter
         id="125B"
@@ -889,7 +889,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="ms" expression="y=(((x_high*256)+x_low)/65.535)" format="0.00" />
+        <Conversion units="ms" expression="(((x_high*256)+x_low)/65.535)" format="0.00" />
     </Parameter>
     <Parameter
         id="12B0"
@@ -898,7 +898,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="12B1"
@@ -907,7 +907,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="%" expression="y=(((x_high*256)+x_low)*5/256)" format="0.00" />
+        <Conversion units="%" expression="(((x_high*256)+x_low)*5/256)" format="0.00" />
     </Parameter>
     <Parameter
         id="12B4"
@@ -916,7 +916,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x)" format="0.00" />
+        <Conversion units="%" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="12B5"
@@ -925,7 +925,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x)" format="0.00" />
+        <Conversion units="%" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="12B6"
@@ -934,7 +934,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x)" format="0.00" />
+        <Conversion units="%" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="12B7"
@@ -943,7 +943,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x)" format="0.00" />
+        <Conversion units="%" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="12B8"
@@ -952,7 +952,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="%" expression="y=(x)" format="0.00" />
+        <Conversion units="%" expression="(x)" format="0.00" />
     </Parameter>
     <Parameter
         id="12B9"
@@ -961,7 +961,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volt" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volt" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="12BA"
@@ -970,7 +970,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volt" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volt" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="12BB"
@@ -979,7 +979,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volt" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volt" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="12BC"
@@ -988,7 +988,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volt" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volt" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="12BD"
@@ -997,7 +997,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volt" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volt" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="12E3"
@@ -1006,7 +1006,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="mmHg" expression="y=-((x/5.46)-13.995)" format="0.00" />
+        <Conversion units="mmHg" expression="-((x/5.46)-13.995)" format="0.00" />
     </Parameter>
     <Parameter
         id="12EE"
@@ -1015,7 +1015,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>2)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
     </Parameter>
     <Parameter
         id="12EE"
@@ -1024,7 +1024,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>3)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>3)" format="0.00" />
     </Parameter>
     <Parameter
         id="12EE"
@@ -1033,7 +1033,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>4)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>4)" format="0.00" />
     </Parameter>
     <Parameter
         id="1315"
@@ -1042,7 +1042,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="1316"
@@ -1051,7 +1051,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="1317"
@@ -1060,7 +1060,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="1318"
@@ -1069,7 +1069,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="1319"
@@ -1078,7 +1078,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="131A"
@@ -1087,7 +1087,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="131B"
@@ -1096,7 +1096,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="131C"
@@ -1105,7 +1105,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>0)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
     </Parameter>
     <Parameter
         id="131D"
@@ -1114,7 +1114,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Liters" expression="y=(((x_high*256)+x_low)/64)" format="0.00" />
+        <Conversion units="Liters" expression="(((x_high*256)+x_low)/64)" format="0.00" />
     </Parameter>
     <Parameter
         id="131E"
@@ -1123,7 +1123,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="%" expression="y=(((x_high*256)+x_low)*5/256)" format="0.00" />
+        <Conversion units="%" expression="(((x_high*256)+x_low)*5/256)" format="0.00" />
     </Parameter>
     <Parameter
         id="131F"
@@ -1132,7 +1132,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="%" expression="y=(((x_high*256)+x_low)*5/256)" format="0.00" />
+        <Conversion units="%" expression="(((x_high*256)+x_low)*5/256)" format="0.00" />
     </Parameter>
     <Parameter
         id="132A"
@@ -1141,7 +1141,7 @@
         type="PID"
         byteCount="04"
         bitMapped="False">
-        <Conversion units="%" expression="y=(((x_high*256)+x_low))/((((x[2]*256)+x[3])/100))" format="0.00" />
+        <Conversion units="%" expression="(((x_high*256)+x_low))/((((x[2]*256)+x[3])/100))" format="0.00" />
     </Parameter>
     <Parameter
         id="132A"
@@ -1150,7 +1150,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Liters" expression="y=(((x_high*256)+x_low)/64)" format="0.00" />
+        <Conversion units="Liters" expression="(((x_high*256)+x_low)/64)" format="0.00" />
     </Parameter>
     <Parameter
         id="132B"
@@ -1159,7 +1159,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
     </Parameter>
     <Parameter
         id="132C"
@@ -1168,7 +1168,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
     </Parameter>
     <Parameter
         id="1336"
@@ -1177,7 +1177,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="N-m" expression="y=(((x_high*256)+x_low)*0.02646484375)" format="0.00" />
+        <Conversion units="N-m" expression="(((x_high*256)+x_low)*0.02646484375)" format="0.00" />
     </Parameter>
     <Parameter
         id="1337"
@@ -1186,7 +1186,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="N-m" expression="y=(((x_high*256)+x_low)*0.02646484375)" format="0.00" />
+        <Conversion units="N-m" expression="(((x_high*256)+x_low)*0.02646484375)" format="0.00" />
     </Parameter>
     <Parameter
         id="1338"
@@ -1195,7 +1195,7 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Volts" expression="y=(x/51)" format="0.00" />
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="1481"
@@ -1204,7 +1204,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="amps" expression="y=((((long)x_high*256)+x_low)/50)" format="0.00" />
+        <Conversion units="amps" expression="((((long)x_high*256)+x_low)/50)" format="0.00" />
     </Parameter>
     <Parameter
         id="1482"
@@ -1213,7 +1213,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="amps" expression="y=((((long)x_high*256)+x_low)/50)" format="0.00" />
+        <Conversion units="amps" expression="((((long)x_high*256)+x_low)/50)" format="0.00" />
     </Parameter>
     <Parameter
         id="1484"
@@ -1222,7 +1222,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="amps" expression="y=((((long)x_high*256)+x_low)/50)" format="0.00" />
+        <Conversion units="amps" expression="((((long)x_high*256)+x_low)/50)" format="0.00" />
     </Parameter>
     <Parameter
         id="1485"
@@ -1231,7 +1231,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="amps" expression="y=((((long)x_high*256)+x_low)/50)" format="0.00" />
+        <Conversion units="amps" expression="((((long)x_high*256)+x_low)/50)" format="0.00" />
     </Parameter>
     <Parameter
         id="1617"
@@ -1240,7 +1240,7 @@
         type="PID"
         byteCount="02"
         bitMapped="False">
-        <Conversion units="g/s" expression="y=((x_high*256)+x_low)/1024" format="0.00" />
+        <Conversion units="g/s" expression="((x_high*256)+x_low)/1024" format="0.00" />
     </Parameter>
     <Parameter
         id="1922"
@@ -1249,7 +1249,7 @@
         type="PID"
         byteCount="01"
         bitMapped="True">
-        <Conversion units="Boolean" expression="y=(x>>2)" format="0.00" />
+        <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
     </Parameter>
     <Parameter
         id="199A"
@@ -1258,6 +1258,6 @@
         type="PID"
         byteCount="01"
         bitMapped="False">
-        <Conversion units="Boolean" expression="y=(x)" format="0.00" />
+        <Conversion units="Boolean" expression="(x)" format="0.00" />
     </Parameter>
 </Parameters>
