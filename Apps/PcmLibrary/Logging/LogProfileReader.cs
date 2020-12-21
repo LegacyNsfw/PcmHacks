@@ -11,51 +11,74 @@ namespace PcmHacking
     {
         private ParameterDatabase database;
         private LogProfile profile;
+        private ILogger logger;
 
-        public LogProfileReader(ParameterDatabase database)
+        public LogProfileReader(ParameterDatabase database, ILogger logger)
         {
             this.database = database;
             this.profile = new LogProfile();
+            this.logger = logger;
         }
 
         public LogProfile Read(string path)
         {
-            XDocument xml = XDocument.Load(path);
+            try
+            {
+                XDocument xml = XDocument.Load(path);
 
-            this.LoadPidParameters(xml);
-            this.LoadRamParameters(xml);
-            this.LoadMathParameters(xml);
+                this.LoadPidParameters(xml);
+                this.LoadRamParameters(xml);
+                this.LoadMathParameters(xml);
+            }
+            catch(Exception exception)
+            {
+                this.logger.AddUserMessage("Unable to load profile " + Path.GetFileName(path));
+                this.logger.AddDebugMessage(exception.ToString());
+                this.profile = new LogProfile();
+            }
 
             return profile;
         }
 
         private void LoadPidParameters(XDocument xml)
         {
-            foreach (XElement parameterElement in xml.Root.Elements("PidParameter"))
+            XElement container = xml.Root.Elements("PidParameters").FirstOrDefault();
+            if (container != null)
             {
-                string id = parameterElement.Attribute("id").Value;
-                string units = parameterElement.Attribute("units").Value;
-                this.AddPidParameter(id, units);
+                foreach (XElement parameterElement in container.Elements("PidParameter"))
+                {
+                    string id = parameterElement.Attribute("id").Value;
+                    string units = parameterElement.Attribute("units").Value;
+                    this.AddPidParameter(id, units);
+                }
             }
         }
 
         private void LoadRamParameters(XDocument xml)
         {
-            foreach (XElement parameterElement in xml.Root.Elements("RamParameter"))
+            XElement container = xml.Root.Elements("RamParameters").FirstOrDefault();
+            if (container != null)
             {
-                string id = parameterElement.Attribute("id").Value;
-                string units = parameterElement.Attribute("units").Value;
-                this.AddRamParameter(id, units);
+                foreach (XElement parameterElement in container.Elements("RamParameter"))
+                {
+                    string id = parameterElement.Attribute("id").Value;
+                    string units = parameterElement.Attribute("units").Value;
+                    this.AddRamParameter(id, units);
+                }
             }
         }
 
         private void LoadMathParameters(XDocument xml)
         {
-            foreach (XElement parameterElement in xml.Root.Elements("MathParameter"))
+            XElement container = xml.Root.Elements("MathParameters").FirstOrDefault();
+            if (container != null)
             {
-                string id = parameterElement.Attribute("id").Value;
-                string units = parameterElement.Attribute("units").Value;
-                this.AddMathParameter(id, units);
+                foreach (XElement parameterElement in container.Elements("MathParameter"))
+                {
+                    string id = parameterElement.Attribute("id").Value;
+                    string units = parameterElement.Attribute("units").Value;
+                    this.AddMathParameter(id, units);
+                }
             }
         }
 

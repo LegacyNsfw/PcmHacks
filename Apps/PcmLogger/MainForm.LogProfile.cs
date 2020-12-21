@@ -43,10 +43,11 @@ namespace PcmHacking
             dialog.Multiselect = false;
             dialog.Title = "Open Log Profile";
             dialog.ValidateNames = true;
+
             DialogResult result = dialog.ShowDialog(this);
             if (result == DialogResult.OK)
             {
-                LogProfileReader reader = new LogProfileReader(this.database);
+                LogProfileReader reader = new LogProfileReader(this.database, this);
                 currentProfile = reader.Read(dialog.FileName);
             }
 

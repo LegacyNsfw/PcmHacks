@@ -79,9 +79,7 @@ namespace PcmHacking
         protected override void DisableUserInput()
         {
             this.selectButton.Enabled = false;
-//            this.selectProfileButton.Enabled = false;
             this.startStopLogging.Enabled = false;
-            this.parameterGrid.Enabled = false;
         }
 
         protected override void EnableInterfaceSelection()
@@ -92,10 +90,8 @@ namespace PcmHacking
         protected override void EnableUserInput()
         {
             this.selectButton.Enabled = true;
-//            this.selectProfileButton.Enabled = true;
             this.startStopLogging.Enabled = true;
             this.startStopLogging.Focus();
-            this.parameterGrid.Enabled = true;
         }
 
         protected override void NoDeviceSelected()
@@ -124,7 +120,6 @@ namespace PcmHacking
             {
                 this.deviceDescription.Text = deviceName + " " + osid.ToString();
                 this.startStopLogging.Enabled = true;
-                this.FillParameterGrid();
                 this.parameterGrid.Enabled = true;
             });
 
@@ -156,6 +151,9 @@ namespace PcmHacking
 
         private async void BackgroundInitialization(object unused)
         {
+            this.FillParameterGrid();
+            this.parameterGrid.Enabled = true;
+
             this.AddDebugMessage("Device reset started.");
             await this.ResetDevice();
             this.AddDebugMessage("Device reset completed.");

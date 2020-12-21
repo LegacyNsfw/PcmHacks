@@ -47,6 +47,7 @@
             this.saveButton = new System.Windows.Forms.Button();
             this.parametersTab = new System.Windows.Forms.TabPage();
             this.parametersSplitter = new System.Windows.Forms.SplitContainer();
+            this.parameterSearch = new System.Windows.Forms.TextBox();
             this.parameterGrid = new System.Windows.Forms.DataGridView();
             this.enabledColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.nameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -208,7 +209,7 @@
             this.profileList.Location = new System.Drawing.Point(2, 32);
             this.profileList.Margin = new System.Windows.Forms.Padding(2);
             this.profileList.Name = "profileList";
-            this.profileList.Size = new System.Drawing.Size(741, 394);
+            this.profileList.Size = new System.Drawing.Size(739, 394);
             this.profileList.TabIndex = 2;
             // 
             // saveAsButton
@@ -252,6 +253,7 @@
             // 
             // parametersSplitter.Panel1
             // 
+            this.parametersSplitter.Panel1.Controls.Add(this.parameterSearch);
             this.parametersSplitter.Panel1.Controls.Add(this.parameterGrid);
             this.parametersSplitter.Panel1MinSize = 200;
             // 
@@ -262,10 +264,22 @@
             this.parametersSplitter.SplitterDistance = 400;
             this.parametersSplitter.TabIndex = 1;
             // 
+            // parameterSearch
+            // 
+            this.parameterSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.parameterSearch.Location = new System.Drawing.Point(3, 3);
+            this.parameterSearch.Name = "parameterSearch";
+            this.parameterSearch.Size = new System.Drawing.Size(394, 20);
+            this.parameterSearch.TabIndex = 1;
+            // 
             // parameterGrid
             // 
             this.parameterGrid.AllowUserToAddRows = false;
             this.parameterGrid.AllowUserToDeleteRows = false;
+            this.parameterGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.parameterGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.parameterGrid.CausesValidation = false;
             this.parameterGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -273,8 +287,7 @@
             this.enabledColumn,
             this.nameColumn,
             this.unitsColumn});
-            this.parameterGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.parameterGrid.Location = new System.Drawing.Point(0, 0);
+            this.parameterGrid.Location = new System.Drawing.Point(0, 28);
             this.parameterGrid.Margin = new System.Windows.Forms.Padding(2);
             this.parameterGrid.Name = "parameterGrid";
             this.parameterGrid.RowHeadersVisible = false;
@@ -283,7 +296,7 @@
             this.parameterGrid.ShowCellErrors = false;
             this.parameterGrid.ShowEditingIcon = false;
             this.parameterGrid.ShowRowErrors = false;
-            this.parameterGrid.Size = new System.Drawing.Size(400, 427);
+            this.parameterGrid.Size = new System.Drawing.Size(400, 399);
             this.parameterGrid.TabIndex = 0;
             this.parameterGrid.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.parameterGrid_CellBeginEdit);
             this.parameterGrid.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.parameterGrid_CellValueChanged);
@@ -384,6 +397,7 @@
             this.profilesTab.ResumeLayout(false);
             this.parametersTab.ResumeLayout(false);
             this.parametersSplitter.Panel1.ResumeLayout(false);
+            this.parametersSplitter.Panel1.PerformLayout();
             this.parametersSplitter.Panel2.ResumeLayout(false);
             this.parametersSplitter.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.parametersSplitter)).EndInit();
@@ -420,6 +434,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn nameColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn unitsColumn;
         private System.Windows.Forms.SplitContainer parametersSplitter;
+        private System.Windows.Forms.TextBox parameterSearch;
     }
 }
 
