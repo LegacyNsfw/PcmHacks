@@ -181,14 +181,15 @@ namespace PcmHacking
                         while (!this.logStopRequested)
                         {
                             // Re-create the logger with an updated profile if necessary.
-                            if ((this.currentProfile != null) && (this.currentProfile != lastProfile))
+                            if (this.currentProfile != lastProfile)
                             {
                                 this.StopSaving(ref streamWriter);
 
-                                if (this.currentProfile.IsEmpty)
+                                if ((this.currentProfile == null) || this.currentProfile.IsEmpty)
                             {
                                     this.logState = LogState.Nothing;
                                     lastProfile = this.currentProfile;
+                                    logger = null;
                                 }
                                 else
                                 {
@@ -196,14 +197,20 @@ namespace PcmHacking
                                     if (logger != null)
                                     {
                                         lastProfile = this.currentProfile;
+
+                                        // If this was the first profile to load...
+                                        if (this.logState == LogState.Nothing)
+                                        {
                                         this.logState = LogState.DisplayOnly;
+                                    }
                                     }
 
                                     switch (logState)
                                     {
                                         case LogState.Nothing:
                                         case LogState.DisplayOnly:
-                                continue;
+                                        case LogState.StopSaving:
+                                            break;
 
                                         default:
                                             var tuple = await this.StartSaving(logger);
@@ -213,6 +220,14 @@ namespace PcmHacking
                                             break;
                                     }
                                 }
+
+                                this.Invoke(
+                                    (MethodInvoker)
+                                    delegate ()
+                                    {
+                                        this.startStopSaving.Enabled = logger != null;
+                                    });
+
                             }
                             
                             switch (logState)
