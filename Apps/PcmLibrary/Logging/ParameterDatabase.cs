@@ -13,10 +13,10 @@ namespace PcmHacking
             public void Add(string id, T parameter)
             {
                 this.dictionary[id] = parameter;
-            }
+    }
 
             public bool TryGetParameter(string id, out T parameter)
-            {
+    {
                 return this.dictionary.TryGetValue(id, out parameter);
             }
         }
@@ -30,7 +30,7 @@ namespace PcmHacking
         public ParameterTable<MathParameter> MathParameters { get; private set; }
 
         public ParameterDatabase(string pathToXmlDirectory)
-        {
+    {
             this.pathToXmlDirectory = pathToXmlDirectory;
             this.PidParameters = new ParameterTable<PidParameter>();
             this.RamParameters = new ParameterTable<RamParameter>();
@@ -40,25 +40,25 @@ namespace PcmHacking
         public bool TryLoad(out string errorMessage)
         {
             if (!this.TryLoadStandardParameters(out errorMessage))
-            {
+        {
                 return false;
-            }
-
-            if (!this.TryLoadRamParameters(out errorMessage))
-            {
-                return false;
-            }
-
-            if (!this.TryLoadMathParameters(out errorMessage))
-            {
-                return false;
-            }
-
-            return true;
         }
 
-        private bool TryLoadStandardParameters(out string errorMessage)
+            if (!this.TryLoadRamParameters(out errorMessage))
         {
+                return false;
+        }
+
+            if (!this.TryLoadMathParameters(out errorMessage))
+        {
+                return false;
+        }
+
+            return true;
+    }
+
+        private bool TryLoadStandardParameters(out string errorMessage)
+    {
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.Standard.xml");
             XDocument xml = XDocument.Load(pathToXml);
             this.parameters = new List<Parameter>();
@@ -66,7 +66,7 @@ namespace PcmHacking
             {
                 string parameterName = null;
                 try
-                {
+        {
                     List<Conversion> conversions = new List<Conversion>();
                     foreach (XElement conversion in parameterElement.Elements("Conversion"))
                     {
@@ -75,12 +75,12 @@ namespace PcmHacking
                                 conversion.Attribute("units").Value,
                                 conversion.Attribute("expression").Value,
                                 conversion.Attribute("format").Value));
-                    }
+        }
 
                     string parameterType = (string)parameterElement.Attribute("type");
                     parameterName = (string)parameterElement.Attribute("name").Value;
                     if (parameterType == "PID")
-                    {
+        {
                         PidParameter parameter = new PidParameter(
                             UnsignedHex.GetUnsignedHex("0x" + parameterElement.Attribute("id").Value),
                             parameterName,
@@ -101,8 +101,8 @@ namespace PcmHacking
                         Environment.NewLine,
                         exception.ToString());
                     return false;
-                }
-            }
+        }
+    }
 
             errorMessage = null;
             return true;
@@ -117,7 +117,7 @@ namespace PcmHacking
             {
                 string parameterName = null;
                 try
-                {
+    {
                     List<Conversion> conversions = new List<Conversion>();
                     foreach (XElement conversion in parameterElement.Elements("Conversion"))
                     {
