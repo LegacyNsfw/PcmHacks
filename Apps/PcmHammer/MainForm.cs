@@ -128,10 +128,15 @@ namespace PcmHacking
             return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Show the save-as dialog box (after a full read has completed).
-        /// </summary>
-        private string ShowSaveAsDialog()
+        protected override void SetSelectedDeviceText(string message)
+        {
+            this.deviceDescription.Text = message;
+        }
+
+    /// <summary>
+    /// Show the save-as dialog box (after a full read has completed).
+    /// </summary>
+    private string ShowSaveAsDialog()
         {
             SaveFileDialog dialog = new SaveFileDialog();
             dialog.DefaultExt = ".bin";

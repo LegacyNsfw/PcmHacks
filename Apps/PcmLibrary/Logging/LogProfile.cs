@@ -10,6 +10,8 @@ namespace PcmHacking
 
         public IEnumerable<ProfileParameter> Parameters { get { return this.parameters; } }
 
+        public bool IsEmpty { get { return this.parameters.Count == 0; } }
+
         public LogProfile()
         {
             this.parameters = new List<ProfileParameter>();

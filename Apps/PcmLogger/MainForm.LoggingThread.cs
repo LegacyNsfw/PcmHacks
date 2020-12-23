@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -9,6 +11,146 @@ namespace PcmHacking
 {
     partial class MainForm
     {
+        private ConcurrentQueue<Tuple<Logger, LogFileWriter, IEnumerable<string>>> logRowQueue = new ConcurrentQueue<Tuple<Logger, LogFileWriter, IEnumerable<string>>>();
+
+        private AutoResetEvent endWriterThread = new AutoResetEvent(false);
+        private AutoResetEvent rowAvailable = new AutoResetEvent(false);
+
+        private static DateTime lastLogTime;
+
+        private ManualResetEvent loggerThreadEnded = new ManualResetEvent(false);
+        private ManualResetEvent writerThreadEnded = new ManualResetEvent(false);
+        
+        enum LogState
+        {
+            Nothing,
+            DisplayOnly,
+            StartSaving,
+            Saving,
+            StopSaving
+        }
+
+        private LogState logState = LogState.Nothing;
+
+        /// <summary>
+        /// Create a string that will look reasonable in the UI's main text box.
+        /// TODO: Use a grid instead.
+        /// </summary>
+        private string FormatValuesForTextBox(DpidsAndMath dpidsAndMath, IEnumerable<string> rowValues)
+        {
+            StringBuilder builder = new StringBuilder();
+            IEnumerator<string> rowValueEnumerator = rowValues.GetEnumerator();
+            foreach (ParameterGroup group in dpidsAndMath.Profile.ParameterGroups)
+            {
+                foreach (ProfileParameter parameter in group.Parameters)
+                {
+                    rowValueEnumerator.MoveNext();
+                    builder.Append(rowValueEnumerator.Current);
+                    builder.Append('\t');
+                    builder.Append(parameter.Conversion.Units);
+                    builder.Append('\t');
+                    builder.AppendLine(parameter.Parameter.Name);
+                }
+            }
+
+            foreach (MathValue mathValue in dpidsAndMath.MathValueProcessor.GetMathValues())
+            {
+                rowValueEnumerator.MoveNext();
+                builder.Append(rowValueEnumerator.Current);
+                builder.Append('\t');
+                builder.Append(mathValue.Units);
+                builder.Append('\t');
+                builder.AppendLine(mathValue.Name);
+            }
+
+            DateTime now = DateTime.Now;
+            builder.AppendLine((now - lastLogTime).TotalMilliseconds.ToString("0.00") + "\tms\tQuery time");
+            lastLogTime = now;
+
+            return builder.ToString();
+        }
+
+        private async Task<Logger> RecreateLogger()
+                {
+            DpidsAndMath dpidsAndMath = null;
+
+            this.Invoke(
+                (MethodInvoker)
+                delegate ()
+                {
+                    // Read parmeters from the UI
+                    dpidsAndMath = this.CreateDpidConfiguration();
+                });
+
+            if (dpidsAndMath == null)
+            {
+                    this.loggerProgress.Invoke(
+                    (MethodInvoker)
+                    delegate ()
+                    {
+                        this.logValues.Text = "Unable to create DPID configuration.";
+                    });
+
+                Thread.Sleep(200);
+                return null;
+            }
+
+            Logger logger = new Logger(this.Vehicle, dpidsAndMath, this.loader.Configuration);
+                    if (!await logger.StartLogging())
+                    {
+                this.loggerProgress.Invoke(
+                    (MethodInvoker)
+                    delegate ()
+                    {
+                        this.logValues.Text = "Unable to start logging.";
+                    });
+
+                Thread.Sleep(200);
+
+                // Force a retry.
+                return null;
+            }
+
+            return logger;
+        }
+
+        private async Task<Tuple<LogFileWriter,StreamWriter>> StartSaving(Logger logger)
+        {
+            string logFilePath = GenerateLogFilePath();
+            StreamWriter streamWriter = new StreamWriter(logFilePath);
+            LogFileWriter logFileWriter = new LogFileWriter(streamWriter);
+
+            IEnumerable<string> columnNames = logger.DpidsAndMath.GetColumnNames();
+            await logFileWriter.WriteHeader(columnNames);
+
+            return new Tuple<LogFileWriter, StreamWriter>(logFileWriter, streamWriter);
+        }
+
+        private void StopSaving(ref StreamWriter streamWriter)
+        {
+            if (streamWriter != null)
+            {
+                streamWriter.Dispose();
+                streamWriter = null;
+            }
+        }
+
+        private async Task ProcessRow(Logger logger, LogFileWriter logFileWriter)
+        {
+            IEnumerable<string> rowValues = await logger.GetNextRow();
+            if (rowValues != null)
+            {
+                // Hand this data off to be written to disk and displayed in the UI.
+                this.logRowQueue.Enqueue(
+                    new Tuple<Logger, LogFileWriter, IEnumerable<string>>(
+                        logger,
+                        logFileWriter,
+                        rowValues));
+
+                this.rowAvailable.Set();
+            }
+                    }
+
         /// <summary>
         /// The loop that reads data from the PCM.
         /// </summary>
@@ -18,25 +160,8 @@ namespace PcmHacking
             {
                 try
                 {
-                    string logFilePath = GenerateLogFilePath();
-
-                    this.loggerProgress.Invoke(
-                    (MethodInvoker)
-                    delegate ()
-                    {
-                        this.loggerProgress.Value = 0;
-                        this.loggerProgress.Visible = true;
-                        this.logFilePath.Text = logFilePath;
-                        this.setDirectory.Enabled = false;
-                        this.startStopLogging.Focus();
-                    });
-
-                    Logger logger = new Logger(this.Vehicle, this.dpidsAndMath, this.loader.Configuration);
-                    if (!await logger.StartLogging())
-                    {
-                        this.AddUserMessage("Unable to start logging.");
-                        return;
-                    }
+                    // Start the write/display thread.
+                    ThreadPool.QueueUserWorkItem(LogFileWriterThread, null);
 
 #if Vpw4x
                     if (!await this.Vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
@@ -45,68 +170,112 @@ namespace PcmHacking
                         return;
                     }
 #endif
-                    using (StreamWriter streamWriter = new StreamWriter(logFilePath))
-                    {
-                        LogFileWriter writer = new LogFileWriter(streamWriter);
-                        IEnumerable<string> columnNames = this.dpidsAndMath.GetColumnNames();
-                        await writer.WriteHeader(columnNames);
 
-                        lastLogTime = DateTime.Now;
-
-                        this.loggerProgress.Invoke(
-                            (MethodInvoker)
-                            delegate ()
+                    StreamWriter streamWriter = null;
+                    try
                             {
-                                this.loggerProgress.MarqueeAnimationSpeed = 150;
-                                this.selectButton.Enabled = false;
-                            });
+                        LogProfile lastProfile = null;
+                        Logger logger = null;
+                        LogFileWriter logFileWriter = null;
 
                         while (!this.logStopRequested)
                         {
-                            this.AddDebugMessage("Requesting row...");
-                            IEnumerable<string> rowValues = await logger.GetNextRow();
-                            if (rowValues == null)
+                            // Re-create the logger with an updated profile if necessary.
+                            if ((this.currentProfile != null) && (this.currentProfile != lastProfile))
                             {
+                                this.StopSaving(ref streamWriter);
+
+                                if (this.currentProfile.IsEmpty)
+                            {
+                                    this.logState = LogState.Nothing;
+                                    lastProfile = this.currentProfile;
+                                }
+                                else
+                                {
+                                    logger = await this.RecreateLogger();
+                                    if (logger != null)
+                                    {
+                                        lastProfile = this.currentProfile;
+                                        this.logState = LogState.DisplayOnly;
+                                    }
+
+                                    switch (logState)
+                                    {
+                                        case LogState.Nothing:
+                                        case LogState.DisplayOnly:
                                 continue;
+
+                                        default:
+                                            var tuple = await this.StartSaving(logger);
+                                            logFileWriter = tuple.Item1;
+                                            streamWriter = tuple.Item2;
+                                            logState = LogState.Saving;
+                                            break;
+                                    }
+                                }
                             }
                             
-                            // Write the data to disk on a background thread.
-                            Task background = Task.Factory.StartNew(
+                            switch (logState)
+                            {
+                                case LogState.Nothing:
+                                    this.loggerProgress.Invoke(
+                                        (MethodInvoker)
                                 delegate ()
                                 {
-                                    writer.WriteLine(rowValues);
+                                            this.logValues.Text = "Please select some parameters, or open a log profile.";
                                 });
 
-                            // This is slowing down the logging rate significantly.
-                            // Even if it is only invoked 1:5 or 1:10.
-                            //
-                            // Display the data using a foreground thread.
-                            Task foreground = Task.Factory.StartNew(
-                                delegate ()
+                                    Thread.Sleep(200);
+                                    break;
+
+                                case LogState.DisplayOnly:
+                                    await this.ProcessRow(logger, null);
+                                    break;
+
+                                case LogState.StartSaving:
+                                    var tuple = await this.StartSaving(logger);
+                                    logFileWriter = tuple.Item1;
+                                    streamWriter = tuple.Item2;
+                                    logState = LogState.Saving;
+                                    break;
+
+                                case LogState.Saving:
+                                    await this.ProcessRow(logger, logFileWriter);
+                                    break;
+
+                                case LogState.StopSaving:
+                                    this.StopSaving(ref streamWriter);
+                                    this.logState = LogState.DisplayOnly;
+                                    break;
+                            }
+                        }        
+                    }
+                    finally
                                 {
-                                    string formattedValues = FormatValuesForTextBox(rowValues);
-                                    this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
-                                },
-                                CancellationToken.None,
-                                TaskCreationOptions.None,
-                                uiThreadScheduler);
+                        if (streamWriter != null)
+                        {
+                            streamWriter.Dispose();
+                            streamWriter = null;
                         }
+
+                        endWriterThread.Set();
                     }
                 }
                 catch (Exception exception)
                 {
+                    this.AddUserMessage("Logging halted. " + exception.Message);
                     this.AddDebugMessage(exception.ToString());
-                    this.AddUserMessage("Logging interrupted. " + exception.Message);
                     this.logValues.Invoke(
                         (MethodInvoker)
                         delegate ()
                         {
-                            this.logValues.Text = "Logging interrupted. " + exception.Message;
-                            this.startStopLogging.Focus();
+                            this.logValues.Text = "Logging halted. " + exception.Message;
+                            this.startStopSaving.Focus();
                         });
                 }
                 finally
                 {
+                    this.loggerThreadEnded.Set();
 #if Vpw4x
                     if (!await this.Vehicle.VehicleSetVPW4x(VpwSpeed.Standard))
                     {
@@ -114,24 +283,67 @@ namespace PcmHacking
                         await this.Vehicle.VehicleSetVPW4x(VpwSpeed.Standard);
                     }
 #endif
-                    this.logStopRequested = false;
-                    this.logging = false;
-                    this.startStopLogging.Invoke(
+                }
+            }
+        }
+
+        /// <summary>
+        /// Background thread to write to disk and send updates to the UI.
+        /// This minimizes the amount code that executes between requests for new rows of log data.
+        /// </summary>
+        private void LogFileWriterThread(object threadContext)
+        {
+            WaitHandle[] writerHandles = new WaitHandle[] { endWriterThread, rowAvailable };
+
+            try
+            {
+                while (!logStopRequested)
+                {
+                    int index = WaitHandle.WaitAny(writerHandles);
+                    if (index == 0)
+                    {
+                        this.BeginInvoke((MethodInvoker)
+                        delegate ()
+                        {
+                            this.logValues.Text = "Logging halted.";
+                        });
+
+                        return;
+                    }
+
+                    Tuple<Logger, LogFileWriter, IEnumerable<string>> row;
+                    if (logRowQueue.TryDequeue(out row))
+                    {
+                        if (row.Item2 != null)
+                        {
+                            row.Item2.WriteLine(row.Item3);
+                        }
+
+                        string formattedValues = FormatValuesForTextBox(row.Item1.DpidsAndMath, row.Item3);
+
+                        this.BeginInvoke((MethodInvoker)
+                        delegate ()
+                        {
+                            this.logValues.Text = formattedValues;
+                        });
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                this.AddUserMessage("Log writing halted. " + exception.Message);
+                this.AddDebugMessage(exception.ToString());
+                this.logValues.Invoke(
                         (MethodInvoker)
                         delegate ()
                         {
-                            this.loggerProgress.MarqueeAnimationSpeed = 0;
-                            this.loggerProgress.Visible = false;
-                            this.startStopLogging.Enabled = true;
-                            this.startStopLogging.Text = "Start &Logging";
-                            this.logFilePath.Text = Configuration.Settings.LogDirectory;
-                            this.setDirectory.Enabled = true;
-
-                            this.selectButton.Enabled = true;
-                            //                            this.selectProfileButton.Enabled = true;
-                            this.startStopLogging.Focus();
+                        this.logValues.Text = "Log writing halted. " + exception.Message;
+                        this.startStopSaving.Focus();
                         });
                 }
+            finally
+            {
+                this.writerThreadEnded.Set();
             }
         }
     }

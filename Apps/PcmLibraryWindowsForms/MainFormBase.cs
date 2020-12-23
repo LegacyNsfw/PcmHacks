@@ -13,6 +13,11 @@ namespace PcmHacking
     public partial class MainFormBase : Form, ILogger
     {
         /// <summary>
+        /// Impolite, but it needs to be short enough to fit in the device-description box.
+        /// </summary>
+        private const string selectAnotherDevice = "Select another device.";
+
+        /// <summary>
         /// The Vehicle object is our interface to the car. It has the device, the message generator, and the message parser.
         /// </summary>
         private Vehicle vehicle;
@@ -27,6 +32,11 @@ namespace PcmHacking
         protected virtual void EnableInterfaceSelection() { }
         protected virtual void EnableUserInput() { }
         protected virtual void DisableUserInput() { }
+
+        protected virtual void SetSelectedDeviceText(string message)
+        {
+
+        }
 
         protected virtual void NoDeviceSelected()
         {
@@ -100,18 +110,24 @@ namespace PcmHacking
                 this.vehicle.Dispose();
                 this.vehicle = null;
             }
-
+                        
             Device device = DeviceFactory.CreateDeviceFromConfigurationSettings(this);
             if (device == null)
             {
                 this.Invoke((MethodInvoker)delegate()
                 {
                     this.NoDeviceSelected();
+                    this.SetSelectedDeviceText(selectAnotherDevice);
                     this.DisableUserInput();
                     this.EnableInterfaceSelection();
                 });
                 return false;
             }
+
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.SetSelectedDeviceText("Connecting, please wait...");
+            });
 
             device.Enable4xReadWrite = DeviceConfiguration.Settings.Enable4xReadWrite;
 
@@ -121,6 +137,7 @@ namespace PcmHacking
                 protocol,
                 this,
                 new ToolPresentNotifier(device, protocol, this));
+
             if (!await this.InitializeCurrentDevice())
             {
                 this.vehicle = null;
@@ -160,12 +177,20 @@ namespace PcmHacking
             {
                 // TODO: this should not return a boolean, it should just throw 
                 // an exception if it is not able to initialize the device.
-                bool initialized = await this.vehicle.ResetConnection();
-                if (!initialized)
+                Task<bool> initializationTask = this.vehicle.ResetConnection();
+                bool completed = await initializationTask.AwaitWithTimeout(TimeSpan.FromSeconds(5));
+                if (!completed)
+                {
+                    throw new TimeoutException("Vehicle.ResetConnection timed out.");
+                }
+
+                if (!initializationTask.Result)
                 {
                     this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
+
                     this.Invoke((MethodInvoker)delegate ()
                     {
+                        this.SetSelectedDeviceText(selectAnotherDevice);
                         this.EnableInterfaceSelection();
                     });
                     return false;
@@ -174,9 +199,11 @@ namespace PcmHacking
             catch (Exception exception)
             {
                 this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
+
                 this.AddDebugMessage(exception.ToString());
                 this.Invoke((MethodInvoker)delegate ()
                 {
+                    this.SetSelectedDeviceText(selectAnotherDevice);
                     this.EnableInterfaceSelection();
                 });
                 return false;

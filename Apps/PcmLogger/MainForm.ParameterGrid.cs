@@ -10,7 +10,7 @@ namespace PcmHacking
     {
         private Dictionary<string, DataGridViewRow> parameterIdsToRows;
         private ParameterDatabase database;
-        private bool suspendSelectionEvents = false;
+        private bool suspendSelectionEvents = true;
         private MathValueConfigurationLoader loader;
 
         private void FillParameterGrid()
@@ -46,6 +46,8 @@ namespace PcmHacking
                 this.parameterIdsToRows[parameter.Id] = row;
                 this.parameterGrid.Rows.Add(row);
             }
+
+            this.suspendSelectionEvents = false;
         }
 
         private void UpdateGridFromProfile()
@@ -76,36 +78,21 @@ namespace PcmHacking
 
         private void parameterGrid_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            this.RegenerateProfile();
+            this.LogProfileChanged();
         }
 
-        private void RegenerateProfile()
+        private void LogProfileChanged()
         { 
             if (this.suspendSelectionEvents)
             {
                 return;
             }
-
-            bool wasLogging = this.logging;
-
-            if (wasLogging)
-            {
-                this.StopLogging();
-            }
-
+ 
             this.ResetProfile();
 
             this.CreateProfileFromGrid();
 
-            this.CreateDpidConfiguration();
-
             this.currentProfileIsDirty = true;
-
-            if (wasLogging)
-            {
-                this.StartLogging();
-            }
-            
         }
 
         private void CreateProfileFromGrid()
@@ -123,7 +110,7 @@ namespace PcmHacking
             }
         }
 
-        private void CreateDpidConfiguration()
+        private DpidsAndMath CreateDpidConfiguration()
         {
             DpidConfiguration dpids = new DpidConfiguration();
 
@@ -178,7 +165,7 @@ namespace PcmHacking
                 this.loader.Initialize();
             }
 
-            this.dpidsAndMath = new DpidsAndMath(dpids, loader.Configuration);
+            return new DpidsAndMath(dpids, loader.Configuration);
         }
     }
 }

@@ -56,7 +56,7 @@
             this.dashboardTab = new System.Windows.Forms.TabPage();
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
-            this.startStopLogging = new System.Windows.Forms.Button();
+            this.startStopSaving = new System.Windows.Forms.Button();
             this.tabs.SuspendLayout();
             this.configurationTab.SuspendLayout();
             this.profilesTab.SuspendLayout();
@@ -277,6 +277,7 @@
             // 
             this.parameterGrid.AllowUserToAddRows = false;
             this.parameterGrid.AllowUserToDeleteRows = false;
+            this.parameterGrid.AllowUserToResizeRows = false;
             this.parameterGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -298,9 +299,7 @@
             this.parameterGrid.ShowRowErrors = false;
             this.parameterGrid.Size = new System.Drawing.Size(400, 399);
             this.parameterGrid.TabIndex = 0;
-            this.parameterGrid.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.parameterGrid_CellBeginEdit);
             this.parameterGrid.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.parameterGrid_CellValueChanged);
-            this.parameterGrid.CurrentCellChanged += new System.EventHandler(this.parameterGrid_CurrentCellChanged);
             // 
             // enabledColumn
             // 
@@ -369,16 +368,16 @@
             this.debugLog.Size = new System.Drawing.Size(737, 421);
             this.debugLog.TabIndex = 0;
             // 
-            // startStopLogging
+            // startStopSaving
             // 
-            this.startStopLogging.Enabled = false;
-            this.startStopLogging.Location = new System.Drawing.Point(10, 11);
-            this.startStopLogging.Name = "startStopLogging";
-            this.startStopLogging.Size = new System.Drawing.Size(215, 23);
-            this.startStopLogging.TabIndex = 4;
-            this.startStopLogging.Text = "Start &Logging";
-            this.startStopLogging.UseVisualStyleBackColor = true;
-            this.startStopLogging.Click += new System.EventHandler(this.startStopLogging_Click);
+            this.startStopSaving.Enabled = false;
+            this.startStopSaving.Location = new System.Drawing.Point(10, 11);
+            this.startStopSaving.Name = "startStopSaving";
+            this.startStopSaving.Size = new System.Drawing.Size(215, 23);
+            this.startStopSaving.TabIndex = 4;
+            this.startStopSaving.Text = "Save &Data To File";
+            this.startStopSaving.UseVisualStyleBackColor = true;
+            this.startStopSaving.Click += new System.EventHandler(this.startStopSaving_Click);
             // 
             // MainForm
             // 
@@ -387,9 +386,10 @@
             this.ClientSize = new System.Drawing.Size(775, 505);
             this.Controls.Add(this.loggerProgress);
             this.Controls.Add(this.tabs);
-            this.Controls.Add(this.startStopLogging);
+            this.Controls.Add(this.startStopSaving);
             this.Name = "MainForm";
             this.Text = "PCM Logger";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.tabs.ResumeLayout(false);
             this.configurationTab.ResumeLayout(false);
@@ -411,7 +411,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Button startStopLogging;
+        private System.Windows.Forms.Button startStopSaving;
         private System.Windows.Forms.TabControl tabs;
         private System.Windows.Forms.TabPage dashboardTab;
         private System.Windows.Forms.TabPage debugTab;
