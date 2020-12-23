@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 
 
@@ -38,8 +40,6 @@ namespace PcmHacking
                 }
             }
 
-            this.ResetProfile();
-
             OpenFileDialog dialog = new OpenFileDialog();
             dialog.Filter = fileFilter;
             dialog.Multiselect = false;
@@ -49,16 +49,8 @@ namespace PcmHacking
             DialogResult result = dialog.ShowDialog(this);
             if (result == DialogResult.OK)
             {
-                this.currentProfilePath = dialog.FileName;
-                this.fileName = Path.GetFileNameWithoutExtension(this.currentProfilePath);
-
-                LogProfileReader reader = new LogProfileReader(this.database, this);
-                currentProfile = reader.Read(dialog.FileName);
+                this.OpenProfile(dialog.FileName);
             }
-
-            this.UpdateGridFromProfile();
-            this.LogProfileChanged();
-            this.currentProfileIsDirty = false;
         }
 
         private void saveButton_Click(object sender, EventArgs e)
@@ -134,6 +126,9 @@ namespace PcmHacking
                     this.AddDebugMessage(exception.ToString());
                     this.AddUserMessage(exception.Message);
                 }
+
+                this.profileList.Items.Remove(this.currentProfilePath);
+                this.profileList.Items.Insert(0, new PathDisplayAdapter(this.currentProfilePath));
             }
 
             return result;
@@ -142,6 +137,33 @@ namespace PcmHacking
         private void ResetProfile()
         {
             this.currentProfile = new LogProfile();
+        }
+
+        private void OpenProfile(string path)
+        {
+            bool alreadyInList = false;
+            foreach (PathDisplayAdapter adapter in this.profileList.Items)
+            {
+                if (adapter.Path == path)
+                {
+                    alreadyInList = true;
+                    break;
+                }
+            }
+
+            if (!alreadyInList)
+            {
+                PathDisplayAdapter newAdapter = new PathDisplayAdapter(path);
+                this.profileList.Items.Insert(0, newAdapter);
+            }
+
+            this.currentProfilePath = path;
+            this.fileName = Path.GetFileNameWithoutExtension(this.currentProfilePath);
+
+            LogProfileReader reader = new LogProfileReader(this.database, this);
+            this.currentProfile = reader.Read(this.currentProfilePath);
+            this.UpdateGridFromProfile();
+            this.currentProfileIsDirty = false;
         }
     }
 }

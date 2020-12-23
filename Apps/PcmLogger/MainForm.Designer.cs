@@ -40,6 +40,7 @@
             this.setDirectory = new System.Windows.Forms.Button();
             this.deviceDescription = new System.Windows.Forms.Label();
             this.profilesTab = new System.Windows.Forms.TabPage();
+            this.removeProfileButton = new System.Windows.Forms.Button();
             this.openButton = new System.Windows.Forms.Button();
             this.newButton = new System.Windows.Forms.Button();
             this.profileList = new System.Windows.Forms.ListBox();
@@ -165,6 +166,7 @@
             // 
             // profilesTab
             // 
+            this.profilesTab.Controls.Add(this.removeProfileButton);
             this.profilesTab.Controls.Add(this.openButton);
             this.profilesTab.Controls.Add(this.newButton);
             this.profilesTab.Controls.Add(this.profileList);
@@ -177,6 +179,18 @@
             this.profilesTab.TabIndex = 4;
             this.profilesTab.Text = "Profiles";
             this.profilesTab.UseVisualStyleBackColor = true;
+            // 
+            // removeProfileButton
+            // 
+            this.removeProfileButton.Enabled = false;
+            this.removeProfileButton.Location = new System.Drawing.Point(666, 3);
+            this.removeProfileButton.Margin = new System.Windows.Forms.Padding(2);
+            this.removeProfileButton.Name = "removeProfileButton";
+            this.removeProfileButton.Size = new System.Drawing.Size(75, 25);
+            this.removeProfileButton.TabIndex = 5;
+            this.removeProfileButton.Text = "&Remove";
+            this.removeProfileButton.UseVisualStyleBackColor = true;
+            this.removeProfileButton.Click += new System.EventHandler(this.removeProfileButton_Click);
             // 
             // openButton
             // 
@@ -211,6 +225,7 @@
             this.profileList.Name = "profileList";
             this.profileList.Size = new System.Drawing.Size(739, 394);
             this.profileList.TabIndex = 2;
+            this.profileList.SelectedIndexChanged += new System.EventHandler(this.profileList_SelectedIndexChanged);
             // 
             // saveAsButton
             // 
@@ -371,11 +386,11 @@
             // startStopSaving
             // 
             this.startStopSaving.Enabled = false;
-            this.startStopSaving.Location = new System.Drawing.Point(10, 11);
+            this.startStopSaving.Location = new System.Drawing.Point(12, 11);
             this.startStopSaving.Name = "startStopSaving";
             this.startStopSaving.Size = new System.Drawing.Size(215, 23);
             this.startStopSaving.TabIndex = 4;
-            this.startStopSaving.Text = "Save &Data To File";
+            this.startStopSaving.Text = "Start &Logging";
             this.startStopSaving.UseVisualStyleBackColor = true;
             this.startStopSaving.Click += new System.EventHandler(this.startStopSaving_Click);
             // 
@@ -435,6 +450,7 @@
         private System.Windows.Forms.DataGridViewComboBoxColumn unitsColumn;
         private System.Windows.Forms.SplitContainer parametersSplitter;
         private System.Windows.Forms.TextBox parameterSearch;
+        private System.Windows.Forms.Button removeProfileButton;
     }
 }
 

@@ -1,0 +1,12 @@
+﻿<LogProfile>
+    <PidParameters>
+        <PidParameter id="0005" units="°C" />
+        <PidParameter id="000C" units="RPM" />
+        <PidParameter id="000D" units="km/h" />
+        <PidParameter id="000F" units="°C" />
+        <PidParameter id="11A6" units="°" />
+        <PidParameter id="131F" units="%" />
+    </PidParameters>
+    <RamParameters />
+    <MathParameters />
+</LogProfile>

@@ -26,7 +26,6 @@ namespace PcmHacking
         private const string defaultFileName = "Data";
         private string fileName = defaultFileName;
 
-
         /// <summary>
         /// Constructor
         /// </summary>
@@ -106,6 +105,9 @@ namespace PcmHacking
             this.deviceDescription.Text = message;
         }
 
+        /// <summary>
+        /// This is invoked from within the call to base.ResetDevice().
+        /// </summary>
         protected override async Task ValidDeviceSelectedAsync(string deviceName)
         {
             this.AddDebugMessage("ValidDeviceSelectedAsync started.");
@@ -136,7 +138,7 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Open the last device, if possible.
+        /// Open the most-recently-used device, if possible.
         /// </summary>
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -152,21 +154,46 @@ namespace PcmHacking
                 Configuration.Settings.Save();
             }
 
+            this.LoadProfileHistory();
+
             ThreadPool.QueueUserWorkItem(BackgroundInitialization);
 
             this.logFilePath.Text = logDirectory;
             
             this.AddDebugMessage("MainForm_Load ended.");
         }
-
+        
         private async void BackgroundInitialization(object unused)
         {
-            this.FillParameterGrid();
-            this.parameterGrid.Enabled = true;
-
             this.AddDebugMessage("Device reset started.");
+
+            this.FillParameterGrid();
+
+            // This will cause the ValidDeviceSelectedAsync callback to be invoked.
             await this.ResetDevice();
+
             this.AddDebugMessage("Device reset completed.");
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (this.currentProfileIsDirty)
+            {
+                if (this.SaveIfNecessary() == DialogResult.Cancel)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
+            this.SaveProfileHistory();
+
+            this.logStopRequested = true;
+
+            // It turns out that WaitAll is not supported on an STA thread.
+            // WaitHandle.WaitAll(new WaitHandle[] { loggerThreadEnded, writerThreadEnded });
+            loggerThreadEnded.WaitOne(1000);
+            writerThreadEnded.WaitOne(1000);
         }
 
         /// <summary>
@@ -233,16 +260,6 @@ namespace PcmHacking
                 this.fileName +
                 ".csv";
             return Path.Combine(Configuration.Settings.LogDirectory, file);
-        }
-
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            this.logStopRequested = true;
-
-            // It turns out that WaitAll is not supported on an STA thread.
-            // WaitHandle.WaitAll(new WaitHandle[] { loggerThreadEnded, writerThreadEnded });
-            loggerThreadEnded.WaitOne(1000);
-            writerThreadEnded.WaitOne(1000);
         }
     }
 }
