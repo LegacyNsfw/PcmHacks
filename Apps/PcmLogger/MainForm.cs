@@ -238,7 +238,11 @@ namespace PcmHacking
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             this.logStopRequested = true;
-            WaitHandle.WaitAll(new WaitHandle[] { loggerThreadEnded, writerThreadEnded });
+
+            // It turns out that WaitAll is not supported on an STA thread.
+            // WaitHandle.WaitAll(new WaitHandle[] { loggerThreadEnded, writerThreadEnded });
+            loggerThreadEnded.WaitOne(1000);
+            writerThreadEnded.WaitOne(1000);
         }
     }
 }
