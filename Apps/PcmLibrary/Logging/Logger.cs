@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PcmHacking
@@ -15,12 +16,13 @@ namespace PcmHacking
     public class Logger
     {
         private readonly Vehicle vehicle;
-        private readonly DpidsAndMath profileAndMath;
+        private readonly DpidsAndMath dpidsAndMath;
         private DpidCollection dpids;
-
 #if FAST_LOGGING
         private DateTime lastRequestTime;
 #endif
+
+        public DpidsAndMath DpidsAndMath {  get { return this.dpidsAndMath; } }
 
         /// <summary>
         /// Constructor.
@@ -28,7 +30,7 @@ namespace PcmHacking
         public Logger(Vehicle vehicle, DpidsAndMath profileAndMath, MathValueConfiguration mathValueConfiguration)
         {
             this.vehicle = vehicle;
-            this.profileAndMath = profileAndMath;
+            this.dpidsAndMath = profileAndMath;
         }
 
         /// <summary>
@@ -36,7 +38,7 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> StartLogging()
         {
-            this.dpids = await this.vehicle.ConfigureDpids(this.profileAndMath.Profile);
+            this.dpids = await this.vehicle.ConfigureDpids(this.dpidsAndMath.Profile);
 
             if (this.dpids == null)
             {
@@ -44,7 +46,7 @@ namespace PcmHacking
             }
 
             int scenario = ((int)TimeoutScenario.DataLogging1 - 1);
-            scenario += this.profileAndMath.Profile.ParameterGroups.Count;
+            scenario += this.dpidsAndMath.Profile.ParameterGroups.Count;
             await this.vehicle.SetDeviceTimeout((TimeoutScenario)scenario);
 
 #if FAST_LOGGING
@@ -64,36 +66,47 @@ namespace PcmHacking
         /// <returns></returns>
         public async Task<IEnumerable<string>> GetNextRow()
         {
-            LogRowParser row = new LogRowParser(this.profileAndMath.Profile);
+            LogRowParser row = new LogRowParser(this.dpidsAndMath.Profile);
 
+            try
+            {
 #if FAST_LOGGING
-//            if (DateTime.Now.Subtract(lastRequestTime) > TimeSpan.FromSeconds(2))
+//          if (DateTime.Now.Subtract(lastRequestTime) > TimeSpan.FromSeconds(2))
             {
                 await this.vehicle.ForceSendToolPresentNotification();
             }
 #endif
 #if !FAST_LOGGING
-            if (!await this.vehicle.RequestDpids(this.dpids))
-            {
-                return null;
-            }
-#endif
-
-            while (!row.IsComplete)
-            {
-
-                RawLogData rawData = await this.vehicle.ReadLogData();
-                if (rawData == null)
+                Thread.CurrentThread.Priority = ThreadPriority.Highest;
+                if (!await this.vehicle.RequestDpids(this.dpids))
                 {
                     return null;
                 }
+#endif
 
-                row.ParseData(rawData);
+                while (!row.IsComplete)
+                {
+
+                    RawLogData rawData = await this.vehicle.ReadLogData();
+                    if (rawData == null)
+                    {
+                        return null;
+                    }
+
+                    row.ParseData(rawData);
+                }
+
+            }
+            finally
+            {
+#if !FAST_LOGGING
+                Thread.CurrentThread.Priority = ThreadPriority.Normal;
+#endif
             }
 
             DpidValues dpidValues = row.Evaluate();
 
-            IEnumerable<string> mathValues = this.profileAndMath.MathValueProcessor.GetMathValues(dpidValues);
+            IEnumerable<string> mathValues = this.dpidsAndMath.MathValueProcessor.GetMathValues(dpidValues);
 
             return dpidValues
                     .Select(x => x.Value.ValueAsString)

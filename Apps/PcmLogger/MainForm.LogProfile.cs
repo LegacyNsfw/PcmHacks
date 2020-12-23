@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Windows.Forms;
 
 
@@ -23,6 +23,8 @@ namespace PcmHacking
                 }
             }
 
+            this.fileName = defaultFileName;
+            this.currentProfileIsDirty = false;
             this.ResetProfile();
         }
 
@@ -47,11 +49,16 @@ namespace PcmHacking
             DialogResult result = dialog.ShowDialog(this);
             if (result == DialogResult.OK)
             {
+                this.currentProfilePath = dialog.FileName;
+                this.fileName = Path.GetFileNameWithoutExtension(this.currentProfilePath);
+
                 LogProfileReader reader = new LogProfileReader(this.database, this);
                 currentProfile = reader.Read(dialog.FileName);
             }
 
             this.UpdateGridFromProfile();
+            this.LogProfileChanged();
+            this.currentProfileIsDirty = false;
         }
 
         private void saveButton_Click(object sender, EventArgs e)
@@ -115,8 +122,18 @@ namespace PcmHacking
             if (result == DialogResult.OK)
             {
                 this.currentProfilePath = dialog.FileName;
-                LogProfileWriter.Write(this.currentProfile, this.currentProfilePath);
-                this.currentProfileIsDirty = false;
+                this.fileName = Path.GetFileNameWithoutExtension(this.currentProfilePath);
+
+                try
+                {
+                    LogProfileWriter.Write(this.currentProfile, this.currentProfilePath);
+                    this.currentProfileIsDirty = false;
+                }
+                catch (Exception exception)
+                {
+                    this.AddDebugMessage(exception.ToString());
+                    this.AddUserMessage(exception.Message);
+                }
             }
 
             return result;
@@ -124,7 +141,7 @@ namespace PcmHacking
 
         private void ResetProfile()
         {
-            currentProfile = new LogProfile();
+            this.currentProfile = new LogProfile();
         }
     }
 }
