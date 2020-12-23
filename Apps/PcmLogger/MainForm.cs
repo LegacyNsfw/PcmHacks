@@ -220,42 +220,6 @@ namespace PcmHacking
                 this.loggerProgress.MarqueeAnimationSpeed = 100;
                 this.loggerProgress.Visible = true;
                 this.logState = LogState.StartSaving;
-
-        /// <summary>
-        /// Signal the background thread to stop.
-        /// </summary>
-        private void StopLogging()
-        {
-            this.logStopRequested = true;
-            this.startStopLogging.Enabled = false;
-            this.startStopLogging.Text = "Start &Logging";
-
-            // TODO: Async
-            while(this.logging)
-            {
-                Thread.Sleep(100);
-            }
-        }
-
-        /// <summary>
-        /// Start the background thread.
-        /// </summary>
-        private void StartLogging()
-        {
-            lock (loggingLock)
-            {
-                if (this.dpidsAndMath == null)
-                {
-                    this.logValues.Text = "Please select a log profile.";
-                    return;
-                }
-
-                if (!logging)
-                {
-                    logging = true;
-                    ThreadPool.QueueUserWorkItem(new WaitCallback(LoggingThread), null);
-                    this.startStopLogging.Text = "Stop &Logging";
-                }
             }
         }
 
@@ -266,53 +230,15 @@ namespace PcmHacking
         {
             string file = DateTime.Now.ToString("yyyyMMdd_HHmm") +
                 "_" +
-                this.fileName+
+                this.fileName +
                 ".csv";
             return Path.Combine(Configuration.Settings.LogDirectory, file);
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            StringBuilder builder = new StringBuilder();
-            IEnumerator<string> rowValueEnumerator = rowValues.GetEnumerator();
-            foreach(ParameterGroup group in this.dpidsAndMath.Profile.ParameterGroups)
-            {
-                foreach(ProfileParameter parameter in group.Parameters)
-                {
-                    rowValueEnumerator.MoveNext();
-                    builder.Append(rowValueEnumerator.Current);
-                    builder.Append('\t');
-                    builder.Append(parameter.Conversion.Units);
-                    builder.Append('\t');
-                    builder.AppendLine(parameter.Parameter.Name);
-                }
-            }
-
-            foreach(MathValue mathValue in this.dpidsAndMath.MathValueProcessor.GetMathValues())
-            {
-                rowValueEnumerator.MoveNext();
-                builder.Append(rowValueEnumerator.Current);
-                builder.Append('\t');
-                builder.Append(mathValue.Units);
-                builder.Append('\t');
-                builder.AppendLine(mathValue.Name);
-            }
-
-            DateTime now = DateTime.Now;
-            builder.AppendLine((now - lastLogTime).TotalMilliseconds.ToString("0.00") + "\tms\tQuery time");
-            lastLogTime = now;
-
-            return builder.ToString();
-        }
-
-        private void parameterGrid_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
-        {
-//            this.RegenerateProfile();
-        }
-
-        private void parameterGrid_CurrentCellChanged(object sender, EventArgs e)
-        {
-//            this.RegenerateProfile();
+            this.logStopRequested = true;
+            WaitHandle.WaitAll(new WaitHandle[] { loggerThreadEnded, writerThreadEnded });
         }
     }
 }
