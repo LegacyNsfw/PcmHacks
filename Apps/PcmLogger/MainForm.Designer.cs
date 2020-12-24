@@ -317,6 +317,7 @@
             this.parameterGrid.ShowRowErrors = false;
             this.parameterGrid.Size = new System.Drawing.Size(400, 399);
             this.parameterGrid.TabIndex = 0;
+            this.parameterGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.parameterGrid_CellContentClick);
             this.parameterGrid.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.parameterGrid_CellValueChanged);
             // 
             // enabledColumn

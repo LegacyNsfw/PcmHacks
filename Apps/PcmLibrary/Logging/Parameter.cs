@@ -15,13 +15,56 @@ namespace PcmHacking
         public Conversion(string units, string expression, string format)
         {
             this.Units = units;
-            this.Expression = expression;
+            this.Expression = Sanitize(expression);
             this.Format = format;
         }
 
         public override string ToString()
         {
             return this.Units;
+        }
+
+        /// <summary>
+        /// The expression parser doesn't support bit-shift operators.
+        /// So we hack them into division operators here.
+        /// It's not pretty, but it's less ugly than changing the
+        /// expressions in the XML file.
+        /// </summary>
+        private string Sanitize(string input)
+        {
+            int startIndex = input.IndexOf(">>");
+            if (startIndex == -1)
+            {
+                return input;
+            }
+
+            int endIndex = startIndex;
+            char shiftChar = ' ';
+            for (int index = startIndex + 2; index < input.Length; index++)
+            {
+                endIndex = index;
+                shiftChar = input[index];
+                if (shiftChar == ' ')
+                {
+                    continue;
+                }
+                else
+                {
+                    endIndex++;
+                    break;
+                }
+            }
+
+            int shiftCount = shiftChar - '0';
+            if (shiftCount < 0 || shiftCount > 15)
+            {
+                throw new InvalidOperationException(
+                    string.Format("Unable to parse >> operator in \"{0}\"", input));
+            }
+
+            string oldText = input.Substring(startIndex, endIndex - startIndex);
+            string newText = string.Format("/{0}", Math.Pow(2, shiftCount));
+            return input.Replace(oldText, newText);
         }
     }
 
@@ -58,12 +101,20 @@ namespace PcmHacking
         public abstract bool IsSupported(uint osid);
     }
 
+    /// <summary>
+    /// Base class for parameters that come directly from the PCM - as opposed 
+    /// to Math parameters, which are only indirectly from the PCM.
+    /// </summary>
     public abstract class PcmParameter : Parameter
     {
         public int ByteCount { get; protected set; }
         public bool BitMapped { get; protected set; }
     }
 
+    /// <summary>
+    /// These parameters have a PID number that is the same for all operating
+    /// systems. (Though not not all operating systems support all PIDs.)
+    /// </summary>
     public class PidParameter : PcmParameter
     {
         public uint PID { get; private set; }
@@ -94,6 +145,10 @@ namespace PcmHacking
         }
     }
 
+    /// <summary>
+    /// These parameters are read from RAM in the PCM, and the RAM addresses
+    /// are unique to each operating system.
+    /// </summary>
     public class RamParameter : PcmParameter
     {
         private readonly Dictionary<uint, uint> addresses;
@@ -131,6 +186,9 @@ namespace PcmHacking
         }
     }
 
+    /// <summary>
+    /// These parameters are computed from other parameters.
+    /// </summary>
     public class MathParameter : Parameter
     {
         public LogColumn XColumn { get; private set; }
@@ -158,5 +216,4 @@ namespace PcmHacking
             return this.XColumn.Parameter.IsSupported(osid) && this.YColumn.Parameter.IsSupported(osid);
         }
     }
-
 }

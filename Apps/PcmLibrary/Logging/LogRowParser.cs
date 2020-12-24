@@ -146,20 +146,42 @@ namespace PcmHacking
                 }
                 else
                 {
-                    Interpreter interpreter = new Interpreter();
-                    interpreter.SetVariable("x", value);
-                    interpreter.SetVariable("x_high", value >> 8);
-                    interpreter.SetVariable("x_low", value & 0xFF);
+                    double convertedValue = 0;
 
-                    double convertedValue = interpreter.Eval<double>(column.Conversion.Expression);
-
-                    string format = column.Conversion.Format;
-                    if (string.IsNullOrWhiteSpace(format))
+                    try
                     {
-                        format = "0.00";
+                        Interpreter interpreter = new Interpreter();
+                        interpreter.SetVariable("x", value);
+                        interpreter.SetVariable("x_high", value >> 8);
+                        interpreter.SetVariable("x_low", value & 0xFF);
+
+                        convertedValue = interpreter.Eval<double>(column.Conversion.Expression);
+                    }
+                    catch(Exception exception)
+                    {
+                        throw new InvalidOperationException(
+                            string.Format("Unable to evaluate expression \"{0}\" for parameter \"{1}\"",
+                                column.Conversion.Expression,
+                                column.Parameter.Name),
+                            exception);
                     }
 
-                    string formatted = convertedValue.ToString(format);
+                    string formatted;
+                    if (pcmParameter.BitMapped)
+                    {
+                        int flag = ((int)convertedValue) & 1;
+                        formatted = (flag > 0).ToString();
+                    }
+                    else
+                    {
+                        string format = column.Conversion.Format;
+                        if (string.IsNullOrWhiteSpace(format))
+                        {
+                            format = "0.00";
+                        }
+
+                        formatted = convertedValue.ToString(format);
+                    }
 
                     results.Add(
                         column,

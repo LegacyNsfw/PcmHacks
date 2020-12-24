@@ -22,7 +22,7 @@ namespace PcmHacking
             string errorMessage;
             if (!this.database.TryLoad(out errorMessage))
             {
-                MessageBox.Show(this, errorMessage, "Unable to load parameters from XML.");
+                throw new InvalidDataException("Unable to load parameters from XML: " + errorMessage);
             }
 
             this.parameterIdsToRows = new Dictionary<string, DataGridViewRow>();
@@ -82,6 +82,15 @@ namespace PcmHacking
             finally
             {
                 this.suspendSelectionEvents = false;
+            }
+        }
+
+        private void parameterGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridViewCheckBoxCell checkBoxCell = this.parameterGrid.CurrentCell as DataGridViewCheckBoxCell;
+            if ((checkBoxCell != null) && checkBoxCell.IsInEditMode && this.parameterGrid.IsCurrentCellDirty)
+            {
+                this.parameterGrid.EndEdit();
             }
         }
 
