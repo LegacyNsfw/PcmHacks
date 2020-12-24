@@ -151,7 +151,7 @@ namespace PcmHacking
 
                     StreamWriter streamWriter = null;
                     try
-                            {
+                    {
                         LogProfile lastProfile = null;
                         Logger logger = null;
                         LogFileWriter logFileWriter = null;
@@ -164,7 +164,7 @@ namespace PcmHacking
                                 this.StopSaving(ref streamWriter);
 
                                 if ((this.currentProfile == null) || this.currentProfile.IsEmpty)
-                            {
+                                {
                                     this.logState = LogState.Nothing;
                                     lastProfile = this.currentProfile;
                                     logger = null;
@@ -179,8 +179,8 @@ namespace PcmHacking
                                         // If this was the first profile to load...
                                         if (this.logState == LogState.Nothing)
                                         {
-                                        this.logState = LogState.DisplayOnly;
-                                    }
+                                            this.logState = LogState.DisplayOnly;
+                                        }
                                     }
 
                                     switch (logState)
@@ -207,7 +207,7 @@ namespace PcmHacking
                                     });
 
                             }
-                            
+
                             switch (logState)
                             {
                                 case LogState.Nothing:
@@ -215,7 +215,7 @@ namespace PcmHacking
                                         (MethodInvoker)
                                         delegate ()
                                         {
-                                                    this.logValues.Text = "Please select some parameters, or open a log profile.";
+                                            this.logValues.Text = "Please select some parameters, or open a log profile.";
                                         });
 
                                     Thread.Sleep(200);
@@ -241,10 +241,10 @@ namespace PcmHacking
                                     this.logState = LogState.DisplayOnly;
                                     break;
                             }
-                        }        
+                        }
                     }
                     finally
-                                {
+                    {
                         if (streamWriter != null)
                         {
                             streamWriter.Dispose();
@@ -256,15 +256,18 @@ namespace PcmHacking
                 }
                 catch (Exception exception)
                 {
-                    this.AddUserMessage("Logging halted. " + exception.Message);
-                    this.AddDebugMessage(exception.ToString());
-                    this.logValues.Invoke(
-                        (MethodInvoker)
-                        delegate ()
-                        {
-                            this.logValues.Text = "Logging halted. " + exception.Message;
-                            this.startStopSaving.Focus();
-                        });
+                    if (!logStopRequested)
+                    {
+                        this.AddUserMessage("Logging halted. " + exception.Message);
+                        this.AddDebugMessage(exception.ToString());
+                        this.logValues.Invoke(
+                            (MethodInvoker)
+                            delegate ()
+                            {
+                                this.logValues.Text = "Logging halted. " + exception.Message;
+                                this.startStopSaving.Focus();
+                            });
+                    }
                 }
                 finally
                 {
@@ -324,16 +327,19 @@ namespace PcmHacking
             }
             catch (Exception exception)
             {
-                this.AddUserMessage("Log writing halted. " + exception.Message);
-                this.AddDebugMessage(exception.ToString());
-                this.logValues.Invoke(
-                        (MethodInvoker)
-                        delegate ()
-                        {
-                        this.logValues.Text = "Log writing halted. " + exception.Message;
-                        this.startStopSaving.Focus();
-                        });
+                if (!logStopRequested)
+                {
+                    this.AddUserMessage("Log writing halted. " + exception.Message);
+                    this.AddDebugMessage(exception.ToString());
+                    this.logValues.Invoke(
+                            (MethodInvoker)
+                            delegate ()
+                            {
+                                this.logValues.Text = "Log writing halted. " + exception.Message;
+                                this.startStopSaving.Focus();
+                            });
                 }
+            }
             finally
             {
                 this.writerThreadEnded.Set();
