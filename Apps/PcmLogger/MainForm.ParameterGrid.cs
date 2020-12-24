@@ -11,7 +11,6 @@ namespace PcmHacking
         private Dictionary<string, DataGridViewRow> parameterIdsToRows;
         private ParameterDatabase database;
         private bool suspendSelectionEvents = true;
-        private MathValueConfigurationLoader loader;
 
         private void FillParameterGrid()
         {
@@ -108,64 +107,6 @@ namespace PcmHacking
                     this.currentProfile.AddParameter(parameter);
                 }
             }
-        }
-
-        private DpidsAndMath CreateDpidConfiguration()
-        {
-            DpidConfiguration dpids = new DpidConfiguration();
-
-            List<ProfileParameter> singleByteParameters = new List<ProfileParameter>();
-
-            byte groupId = 0xFE;
-            ParameterGroup group = new ParameterGroup(groupId);
-            foreach(ProfileParameter parameter in this.currentProfile.Parameters)
-            {
-                PcmParameter pcmParameter = parameter.Parameter as PcmParameter;
-                if (pcmParameter == null)
-                {
-                    continue;
-                }
-
-                if (pcmParameter.ByteCount == 1)
-                {
-                    singleByteParameters.Add(parameter);
-                    continue;
-                }
-
-                group.TryAddParameter(parameter);
-                if (group.TotalBytes == ParameterGroup.MaxBytes)
-                {
-                    dpids.ParameterGroups.Add(group);
-                    groupId--;
-                    group = new ParameterGroup(groupId);
-                }
-            }
-
-            foreach (ProfileParameter parameter in singleByteParameters)
-            {
-                group.TryAddParameter(parameter);
-                if (group.TotalBytes == ParameterGroup.MaxBytes)
-                {
-                    dpids.ParameterGroups.Add(group);
-                    groupId--;
-                    group = new ParameterGroup(groupId);
-                }
-            }
-
-            if (group.Parameters.Count > 0)
-            {
-                dpids.ParameterGroups.Add(group);
-                group = null;
-            }
-
-            if (this.loader == null)
-            {
-                // TODO: Move this into ParameterDatabase
-                this.loader = new MathValueConfigurationLoader(this);
-                this.loader.Initialize();
-            }
-
-            return new DpidsAndMath(dpids, loader.Configuration);
         }
     }
 }

@@ -5,10 +5,9 @@ using System.Text;
 
 namespace PcmHacking
 {
-    public class DpidsAndMath
+    public class LoggerConfiguration
     {
         private readonly DpidConfiguration profile;
-        private readonly MathValueConfiguration mathValueConfiguration;
         private readonly MathValueProcessor mathValueProcessor;
 
         public DpidConfiguration Profile
@@ -27,13 +26,12 @@ namespace PcmHacking
             }
         }
 
-        public DpidsAndMath(DpidConfiguration profile, MathValueConfiguration mathValueConfiguration)
+        public LoggerConfiguration(DpidConfiguration profile, MathValueConfiguration mathValueConfiguration)
         {
             this.profile = profile;
-            this.mathValueConfiguration = mathValueConfiguration;
             this.mathValueProcessor = new MathValueProcessor(
                 this.profile,
-                this.mathValueConfiguration);
+                mathValueConfiguration);
         }
 
         public IEnumerable<string> GetColumnNames()

@@ -36,7 +36,7 @@ namespace PcmHacking
         /// Create a string that will look reasonable in the UI's main text box.
         /// TODO: Use a grid instead.
         /// </summary>
-        private string FormatValuesForTextBox(DpidsAndMath dpidsAndMath, IEnumerable<string> rowValues)
+        private string FormatValuesForTextBox(LoggerConfiguration dpidsAndMath, IEnumerable<string> rowValues)
         {
             StringBuilder builder = new StringBuilder();
             IEnumerator<string> rowValueEnumerator = rowValues.GetEnumerator();
@@ -71,18 +71,13 @@ namespace PcmHacking
         }
 
         private async Task<Logger> RecreateLogger()
-                {
-            DpidsAndMath dpidsAndMath = null;
+        {
+            LoggerConfiguration loggerConfiguration = null;
 
-            this.Invoke(
-                (MethodInvoker)
-                delegate ()
-                {
-                    // Read parmeters from the UI
-                    dpidsAndMath = this.CreateDpidConfiguration();
-                });
+            LoggerConfigurationFactory factory = new LoggerConfigurationFactory(this.currentProfile.Parameters, this);
+            loggerConfiguration = factory.CreateLoggerConfiguration();
 
-            if (dpidsAndMath == null)
+            if (loggerConfiguration == null)
             {
                     this.loggerProgress.Invoke(
                     (MethodInvoker)
@@ -95,7 +90,7 @@ namespace PcmHacking
                 return null;
             }
 
-            Logger logger = new Logger(this.Vehicle, dpidsAndMath, this.loader.Configuration);
+            Logger logger = new Logger(this.Vehicle, loggerConfiguration);
                     if (!await logger.StartLogging())
                     {
                 this.loggerProgress.Invoke(

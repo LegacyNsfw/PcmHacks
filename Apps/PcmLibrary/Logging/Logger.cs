@@ -16,21 +16,21 @@ namespace PcmHacking
     public class Logger
     {
         private readonly Vehicle vehicle;
-        private readonly DpidsAndMath dpidsAndMath;
+        private readonly LoggerConfiguration loggerConfiguration;
         private DpidCollection dpids;
 #if FAST_LOGGING
         private DateTime lastRequestTime;
 #endif
 
-        public DpidsAndMath DpidsAndMath {  get { return this.dpidsAndMath; } }
+        public LoggerConfiguration DpidsAndMath {  get { return this.loggerConfiguration; } }
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Logger(Vehicle vehicle, DpidsAndMath profileAndMath, MathValueConfiguration mathValueConfiguration)
+        public Logger(Vehicle vehicle, LoggerConfiguration profileAndMath)
         {
             this.vehicle = vehicle;
-            this.dpidsAndMath = profileAndMath;
+            this.loggerConfiguration = profileAndMath;
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> StartLogging()
         {
-            this.dpids = await this.vehicle.ConfigureDpids(this.dpidsAndMath.Profile);
+            this.dpids = await this.vehicle.ConfigureDpids(this.loggerConfiguration.Profile);
 
             if (this.dpids == null)
             {
@@ -46,7 +46,7 @@ namespace PcmHacking
             }
 
             int scenario = ((int)TimeoutScenario.DataLogging1 - 1);
-            scenario += this.dpidsAndMath.Profile.ParameterGroups.Count;
+            scenario += this.loggerConfiguration.Profile.ParameterGroups.Count;
             await this.vehicle.SetDeviceTimeout((TimeoutScenario)scenario);
 
 #if FAST_LOGGING
@@ -66,7 +66,7 @@ namespace PcmHacking
         /// <returns></returns>
         public async Task<IEnumerable<string>> GetNextRow()
         {
-            LogRowParser row = new LogRowParser(this.dpidsAndMath.Profile);
+            LogRowParser row = new LogRowParser(this.loggerConfiguration.Profile);
 
             try
             {
@@ -104,9 +104,9 @@ namespace PcmHacking
 #endif
             }
 
-            DpidValues dpidValues = row.Evaluate();
+            PcmParameterValues dpidValues = row.Evaluate();
 
-            IEnumerable<string> mathValues = this.dpidsAndMath.MathValueProcessor.GetMathValues(dpidValues);
+            IEnumerable<string> mathValues = this.loggerConfiguration.MathValueProcessor.GetMathValues(dpidValues);
 
             return dpidValues
                     .Select(x => x.Value.ValueAsString)

@@ -52,9 +52,9 @@ namespace Tests
             mathValueConfiguration.MathValues = new List<MathValue>();
             mathValueConfiguration.MathValues.Add(load);
 
-            DpidValues dpidValues = new DpidValues();
-            dpidValues.Add(rpm, new ParameterValue() { RawValue = 1000 });
-            dpidValues.Add(maf, new ParameterValue() { RawValue = 100 });
+            PcmParameterValues dpidValues = new PcmParameterValues();
+            dpidValues.Add(rpm, new PcmParameterValue() { RawValue = 1000 });
+            dpidValues.Add(maf, new PcmParameterValue() { RawValue = 100 });
             
             MathValueProcessor processor = new MathValueProcessor(profile, mathValueConfiguration);
             IEnumerable<string> mathValues = processor.GetMathValues(dpidValues);

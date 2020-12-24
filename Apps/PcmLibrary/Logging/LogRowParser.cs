@@ -9,14 +9,14 @@ using DynamicExpresso;
 
 namespace PcmHacking
 {
-    public class ParameterValue
+    public class PcmParameterValue
     {
         public double RawValue { get; set; }
         public string ValueAsString { get; set; }
         public double ValueAsDouble { get; set; }
     }
 
-    public class DpidValues : Dictionary<ProfileParameter, ParameterValue>
+    public class PcmParameterValues : Dictionary<ProfileParameter, PcmParameterValue>
     {
     }
 
@@ -25,27 +25,27 @@ namespace PcmHacking
     /// </summary>
     public class LogRowParser
     {
-        private DpidConfiguration profile;
+        private DpidConfiguration dpidConfiguration;
         private Dictionary<byte, byte[]> responseData = new Dictionary<byte, byte[]>();
         private HashSet<byte> dpidsReceived = new HashSet<byte>();
-        private int dpidsInProfile;
+        private int dpidCount;
         
-        public bool IsComplete { get { return this.dpidsInProfile == this.dpidsReceived.Count; } }
+        public bool IsComplete { get { return this.dpidCount == this.dpidsReceived.Count; } }
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public LogRowParser(DpidConfiguration profile)
         {
-            this.profile = profile;
+            this.dpidConfiguration = profile;
 
             // Create a place to put response data.
-            foreach (ParameterGroup group in this.profile.ParameterGroups)
+            foreach (ParameterGroup group in this.dpidConfiguration.ParameterGroups)
             {
                 responseData[(byte)group.Dpid] = new byte[6];
             }
 
-            this.dpidsInProfile = this.profile.ParameterGroups.Count;
+            this.dpidCount = this.dpidConfiguration.ParameterGroups.Count;
         }
 
         /// <summary>
@@ -67,17 +67,17 @@ namespace PcmHacking
         /// Evalutes all of the dpid payloads.
         /// </summary>
         /// <returns></returns>
-        public DpidValues Evaluate()
+        public PcmParameterValues Evaluate()
         {
-            DpidValues results = new DpidValues();
-            foreach (ParameterGroup group in this.profile.ParameterGroups)
+            PcmParameterValues results = new PcmParameterValues();
+            foreach (ParameterGroup group in this.dpidConfiguration.ParameterGroups)
             {
                 byte[] payload;
                 if (!this.responseData.TryGetValue((byte)group.Dpid, out payload))
                 {
                     foreach (ProfileParameter parameter in group.Parameters)
                     {
-                        results.Add(parameter, new ParameterValue() { ValueAsString = string.Empty, ValueAsDouble = 0 });
+                        results.Add(parameter, new PcmParameterValue() { ValueAsString = string.Empty, ValueAsDouble = 0 });
                     }
 
                     continue;
@@ -92,7 +92,7 @@ namespace PcmHacking
         /// <summary>
         /// Evaluates the payloads from a single dpid / group of parameters.
         /// </summary>
-        private void EvaluateDpidMessage(ParameterGroup group, byte[] payload, DpidValues results)
+        private void EvaluateDpidMessage(ParameterGroup group, byte[] payload, PcmParameterValues results)
         {
             int startIndex = 0;
             foreach (ProfileParameter parameter in group.Parameters)
@@ -137,7 +137,7 @@ namespace PcmHacking
 
                     results.Add(
                         parameter,
-                        new ParameterValue()
+                        new PcmParameterValue()
                         {
                             RawValue = value,
                             ValueAsDouble = value,
@@ -163,7 +163,7 @@ namespace PcmHacking
 
                     results.Add(
                         parameter,
-                        new ParameterValue()
+                        new PcmParameterValue()
                         {
                             RawValue = value,
                             ValueAsDouble = convertedValue,

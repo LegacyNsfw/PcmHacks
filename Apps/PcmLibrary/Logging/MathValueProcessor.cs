@@ -90,7 +90,7 @@ namespace PcmHacking
             return this.mathValues.Select(x => x.MathValue);
         }
 
-        public IEnumerable<string> GetMathValues(DpidValues dpidValues)
+        public IEnumerable<string> GetMathValues(PcmParameterValues dpidValues)
         {
             List<string> result = new List<string>();
             foreach(MathValueAndDependencies value in this.mathValues)
