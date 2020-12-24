@@ -3,23 +3,16 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
-using System.Xml;
-using System.Xml.Schema;
-using System.Xml.Serialization;
 
 namespace PcmHacking
 {    
-    //[DataContract]
     public class ParameterGroup
     {
         public const int MaxBytes = 6;
 
-        [XmlIgnore]
         public UnsignedHexValue Dpid { get; set; }
 
-        [XmlAttribute(AttributeName = "Dpid")]
         public string DpidAttributeValue
         {
             get
@@ -33,7 +26,6 @@ namespace PcmHacking
             }
         }
 
-        [XmlElement("Parameter")]
         public List<ProfileParameter> Parameters { get; set; }
 
         public ParameterGroup(byte id)
@@ -42,7 +34,6 @@ namespace PcmHacking
             this.Parameters = new List<ProfileParameter>();
         }
 
-        [XmlAttribute]
         public int TotalBytes
         {
             get
@@ -76,10 +67,8 @@ namespace PcmHacking
     {
         public const int MaxGroups = 3;
 
-        [XmlElement("ParameterGroup")]
         public List<ParameterGroup> ParameterGroups { get; set; }
 
-        [XmlIgnore]
         public int ParameterCount
         {
             get
@@ -88,7 +77,6 @@ namespace PcmHacking
             }
         }
 
-        [XmlIgnore]
         public IList<ProfileParameter> AllParameters
         {
             get
