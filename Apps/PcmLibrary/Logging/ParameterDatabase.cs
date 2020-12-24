@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace PcmHacking
@@ -169,7 +170,57 @@ namespace PcmHacking
 
         private bool TryLoadMathParameters(out string errorMessage)
         {
-            // TODO
+            string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.Math.xml");
+            XDocument xml = XDocument.Load(pathToXml);
+            foreach (XElement parameterElement in xml.Root.Elements("MathParameter"))
+            {
+                string parameterName = null;
+                try
+                {
+                    List<Conversion> conversions = new List<Conversion>();
+                    foreach (XElement conversion in parameterElement.Elements("Conversion"))
+                    {
+                        conversions.Add(
+                            new Conversion(
+                                conversion.Attribute("units").Value,
+                                conversion.Attribute("expression").Value,
+                                conversion.Attribute("format").Value));
+                    }
+
+                    parameterName = (string)parameterElement.Attribute("name").Value;
+
+                    string xId = parameterElement.Attribute("xParameterId").Value;
+                    string xUnits = parameterElement.Attribute("xParameterConversion").Value;
+                    Parameter xParameter = this.Parameters.Where(x => (x.Id == xId)).FirstOrDefault();
+                    Conversion xConversion = xParameter.Conversions.Where(x => x.Units == xUnits).FirstOrDefault();
+
+                    string yId = parameterElement.Attribute("yParameterId").Value;
+                    string yUnits = parameterElement.Attribute("yParameterConversion").Value;
+                    Parameter yParameter = this.Parameters.Where(y => (y.Id == yId)).FirstOrDefault();
+                    Conversion yConversion = yParameter.Conversions.Where(y => y.Units == yUnits).FirstOrDefault();
+
+                    MathParameter parameter = new MathParameter(
+                        parameterElement.Attribute("id").Value,
+                        parameterName,
+                        parameterElement.Attribute("description").Value,
+                        conversions,
+                        new ProfileParameter(xParameter, xConversion),
+                        new ProfileParameter(yParameter, yConversion));
+
+                    parameters.Add(parameter);
+                    this.MathParameters.Add(parameter.Id, parameter);
+                }
+                catch (Exception exception)
+                {
+                    errorMessage =
+                        string.Format("Error in parameter '{0}'{1}{2}",
+                        parameterName,
+                        Environment.NewLine,
+                        exception.ToString());
+                    return false;
+                }
+            }
+
             errorMessage = null;
             return true;
         }
