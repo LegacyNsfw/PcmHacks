@@ -28,6 +28,7 @@ namespace PcmHacking
             this.fileName = defaultFileName;
             this.currentProfileIsDirty = false;
             this.ResetProfile();
+            this.UpdateGridFromProfile();
         }
 
         private void openButton_Click(object sender, EventArgs e)
@@ -127,6 +128,7 @@ namespace PcmHacking
                     this.AddUserMessage(exception.Message);
                 }
 
+                // BUG: the Remove operation doesn't always work.
                 this.profileList.Items.Remove(this.currentProfilePath);
                 this.profileList.Items.Insert(0, new PathDisplayAdapter(this.currentProfilePath));
             }
@@ -160,7 +162,7 @@ namespace PcmHacking
             this.currentProfilePath = path;
             this.fileName = Path.GetFileNameWithoutExtension(this.currentProfilePath);
 
-            LogProfileReader reader = new LogProfileReader(this.database, this);
+            LogProfileReader reader = new LogProfileReader(this.database, this.osid, this);
             this.currentProfile = reader.Read(this.currentProfilePath);
             this.UpdateGridFromProfile();
             this.currentProfileIsDirty = false;

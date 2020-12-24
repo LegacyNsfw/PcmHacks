@@ -6,25 +6,25 @@ namespace PcmHacking
 {
     public class LogProfile
     {
-        private List<ProfileParameter> parameters;
+        private List<LogColumn> columns;
 
-        public IEnumerable<ProfileParameter> Parameters { get { return this.parameters; } }
+        public IEnumerable<LogColumn> Columns { get { return this.columns; } }
 
-        public bool IsEmpty { get { return this.parameters.Count == 0; } }
+        public bool IsEmpty { get { return this.columns.Count == 0; } }
 
         public LogProfile()
         {
-            this.parameters = new List<ProfileParameter>();
+            this.columns = new List<LogColumn>();
         }
 
-        public void AddParameter(ProfileParameter parameter)
+        public void AddColumn(LogColumn logColumn)
         {
-            this.parameters.Add(parameter);
+            this.columns.Add(logColumn);
         }
 
-        public void RemoveParameter(ProfileParameter parameter)
+        public void RemoveColumn(LogColumn logColumn)
         {
-            this.parameters.Remove(parameter);
+            this.columns.Remove(logColumn);
         }
     }
 }

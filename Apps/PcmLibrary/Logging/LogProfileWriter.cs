@@ -27,13 +27,13 @@ namespace PcmHacking
                 XElement pidParameters = new XElement("PidParameters");
                 top.Add(pidParameters);
 
-                foreach(ProfileParameter parameter in profile.Parameters)
+                foreach(LogColumn column in profile.Columns)
                 {
-                    if (parameter.Parameter is PidParameter)
+                    if (column.Parameter is PidParameter)
                     {
                         XElement element = new XElement("PidParameter");
-                        element.SetAttributeValue("id", parameter.Parameter.Id);
-                        element.SetAttributeValue("units", parameter.Conversion.Units);
+                        element.SetAttributeValue("id", column.Parameter.Id);
+                        element.SetAttributeValue("units", column.Conversion.Units);
                         pidParameters.Add(element);
                     }
                 }
@@ -41,13 +41,13 @@ namespace PcmHacking
                 XElement ramParameters = new XElement("RamParameters");
                 top.Add(ramParameters);
 
-                foreach (ProfileParameter parameter in profile.Parameters)
+                foreach (LogColumn column in profile.Columns)
                 {
-                    if (parameter.Parameter is RamParameter)
+                    if (column.Parameter is RamParameter)
                     {
                         XElement element = new XElement("RamParameter");
-                        element.SetAttributeValue("id", parameter.Parameter.Id);
-                        element.SetAttributeValue("units", parameter.Conversion.Units);
+                        element.SetAttributeValue("id", column.Parameter.Id);
+                        element.SetAttributeValue("units", column.Conversion.Units);
                         ramParameters.Add(element);
                     }
                 }
@@ -55,13 +55,13 @@ namespace PcmHacking
                 XElement mathParameters = new XElement("MathParameters");
                 top.Add(mathParameters);
 
-                foreach (ProfileParameter parameter in profile.Parameters)
+                foreach (LogColumn column in profile.Columns)
                 {
-                    if (parameter.Parameter is MathParameter)
+                    if (column.Parameter is MathParameter)
                     {
-                        XElement element = new XElement("MatnParameter");
-                        element.SetAttributeValue("id", parameter.Parameter.Id);
-                        element.SetAttributeValue("units", parameter.Conversion.Units);
+                        XElement element = new XElement("MathParameter");
+                        element.SetAttributeValue("id", column.Parameter.Id);
+                        element.SetAttributeValue("units", column.Conversion.Units);
                         mathParameters.Add(element);
                     }
                 }

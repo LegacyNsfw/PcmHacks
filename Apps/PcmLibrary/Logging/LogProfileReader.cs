@@ -9,15 +9,19 @@ namespace PcmHacking
 {
     public class LogProfileReader
     {
-        private ParameterDatabase database;
-        private LogProfile profile;
-        private ILogger logger;
+        private readonly ParameterDatabase database;
+        private readonly uint osid;
+        private readonly ILogger logger;
 
-        public LogProfileReader(ParameterDatabase database, ILogger logger)
+        private LogProfile profile;
+
+        public LogProfileReader(ParameterDatabase database, uint osid, ILogger logger)
         {
             this.database = database;
-            this.profile = new LogProfile();
+            this.osid = osid;            
             this.logger = logger;
+
+            this.profile = new LogProfile();
         }
 
         public LogProfile Read(string path)
@@ -90,22 +94,65 @@ namespace PcmHacking
                 return;
             }
 
+            if (!parameter.IsSupported(this.osid))
+            {
+                return;
+            }
+
             Conversion conversion;
             if (!parameter.TryGetConversion(units, out conversion))
             {
                 conversion = parameter.Conversions.First();
             }
 
-            ProfileParameter profileParameter = new ProfileParameter(parameter, conversion);
-            this.profile.AddParameter(profileParameter);
+            LogColumn column = new LogColumn(parameter, conversion);
+            this.profile.AddColumn(column);
         }
 
         private void AddRamParameter(string id, string units)
         {
+            RamParameter parameter;
+            if (!this.database.RamParameters.TryGetParameter(id, out parameter))
+            {
+                return;
+            }
+
+            if (!parameter.IsSupported(this.osid))
+            {
+                return;
+            }
+
+            Conversion conversion;
+            if (!parameter.TryGetConversion(units, out conversion))
+            {
+                conversion = parameter.Conversions.First();
+            }
+
+            LogColumn column = new LogColumn(parameter, conversion);
+            this.profile.AddColumn(column);
         }
 
         private void AddMathParameter(string id, string units)
         {
+            MathParameter parameter;
+            if (!this.database.MathParameters.TryGetParameter(id, out parameter))
+            {
+                return;
+            }
+
+            if (!parameter.IsSupported(this.osid))
+            {
+                return;
+            }
+
+            Conversion conversion;
+            if (!parameter.TryGetConversion(units, out conversion))
+            {
+                conversion = parameter.Conversions.First();
+            }
+
+            LogColumn column = new LogColumn(parameter, conversion);
+            this.profile.AddColumn(column);
         }
     }
 }

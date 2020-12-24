@@ -204,8 +204,8 @@ namespace PcmHacking
                         parameterName,
                         parameterElement.Attribute("description").Value,
                         conversions,
-                        new ProfileParameter(xParameter, xConversion),
-                        new ProfileParameter(yParameter, yConversion));
+                        new LogColumn(xParameter, xConversion),
+                        new LogColumn(yParameter, yConversion));
 
                     parameters.Add(parameter);
                     this.MathParameters.Add(parameter.Id, parameter);

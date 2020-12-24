@@ -13,5 +13,7 @@
         <PidParameter id="199A" units="Boolean" />
     </PidParameters>
     <RamParameters />
-    <MathParameters />
+    <MathParameters>
+        <MathParameter id="MathLoadFromPids" units="g/cyl" />
+    </MathParameters>
 </LogProfile>

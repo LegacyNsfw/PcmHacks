@@ -16,6 +16,7 @@ namespace PcmHacking
     public class Logger
     {
         private readonly Vehicle vehicle;
+        private readonly uint osid;
         private readonly DpidConfiguration dpidConfiguration;
         private readonly MathValueProcessor mathValueProcessor;
 
@@ -30,24 +31,71 @@ namespace PcmHacking
         /// <summary>
         /// Constructor.
         /// </summary>
-        private Logger(Vehicle vehicle, DpidConfiguration dpidConfiguration, MathValueProcessor mathValueProcessor)
+        private Logger(Vehicle vehicle, uint osid, DpidConfiguration dpidConfiguration, MathValueProcessor mathValueProcessor)
         {
             this.vehicle = vehicle;
+            this.osid = osid;
             this.dpidConfiguration = dpidConfiguration;
             this.mathValueProcessor = mathValueProcessor;
         }
 
-        public static Logger Create(Vehicle vehicle, IEnumerable<ProfileParameter> parameters)
+        public static Logger Create(Vehicle vehicle, uint osid, IEnumerable<LogColumn> columns)
         {
             DpidConfiguration dpidConfiguration = new DpidConfiguration();
 
-            List<ProfileParameter> singleByteParameters = new List<ProfileParameter>();
+            List<LogColumn> singleByteColumns = new List<LogColumn>();
+            List<LogColumn> mathColumns = new List<LogColumn>();
+            List<LogColumn> pcmColumns = new List<LogColumn>();
+            List<MathColumnAndDependencies> dependencies = new List<MathColumnAndDependencies>();
 
+            // Separate PCM columns from Math columns
+            foreach (LogColumn column in columns)
+            {
+                PcmParameter pcmParameter = column.Parameter as PcmParameter;
+                if (pcmParameter != null)
+                {
+                    pcmColumns.Add(column);
+                    continue;
+                }
+
+                MathParameter mathParameter = column.Parameter as MathParameter;
+                if (mathParameter != null)
+                {
+                    mathColumns.Add(column);
+                    continue;
+                }                
+            }
+
+            // Ensure all math columns have their dependencies
+            foreach (LogColumn column in mathColumns)
+            {
+                MathParameter mathParameter = (MathParameter)column.Parameter;
+
+                LogColumn xColumn = pcmColumns.Where(x => x.Parameter.Id == mathParameter.XColumn.Parameter.Id).FirstOrDefault();
+
+                if (xColumn == null)
+                {
+                    xColumn = new LogColumn(mathParameter.XColumn.Parameter, mathParameter.XColumn.Conversion);
+                    pcmColumns.Add(xColumn);
+                }
+
+                LogColumn yColumn = pcmColumns.Where(y => y.Parameter.Id == mathParameter.YColumn.Parameter.Id).FirstOrDefault();
+                if (yColumn == null)
+                {
+                    yColumn = new LogColumn(mathParameter.YColumn.Parameter, mathParameter.YColumn.Conversion);
+                    pcmColumns.Add(yColumn);
+                }
+
+                MathColumnAndDependencies map = new MathColumnAndDependencies(column, xColumn, yColumn);
+                dependencies.Add(map);
+            }
+
+            // Populate DPIDs with two-byte values
             byte groupId = 0xFE;
             ParameterGroup group = new ParameterGroup(groupId);
-            foreach (ProfileParameter parameter in parameters)
+            foreach (LogColumn column in pcmColumns)
             {
-                PcmParameter pcmParameter = parameter.Parameter as PcmParameter;
+                PcmParameter pcmParameter = column.Parameter as PcmParameter;
                 if (pcmParameter == null)
                 {
                     continue;
@@ -55,11 +103,11 @@ namespace PcmHacking
 
                 if (pcmParameter.ByteCount == 1)
                 {
-                    singleByteParameters.Add(parameter);
+                    singleByteColumns.Add(column);
                     continue;
                 }
 
-                group.TryAddParameter(parameter);
+                group.TryAddLogColumn(column);
                 if (group.TotalBytes == ParameterGroup.MaxBytes)
                 {
                     dpidConfiguration.ParameterGroups.Add(group);
@@ -68,9 +116,10 @@ namespace PcmHacking
                 }
             }
 
-            foreach (ProfileParameter parameter in singleByteParameters)
+            // Add the remaining one-byte values
+            foreach (LogColumn column in singleByteColumns)
             {
-                group.TryAddParameter(parameter);
+                group.TryAddLogColumn(column);
                 if (group.TotalBytes == ParameterGroup.MaxBytes)
                 {
                     dpidConfiguration.ParameterGroups.Add(group);
@@ -79,19 +128,20 @@ namespace PcmHacking
                 }
             }
 
-            if (group.Parameters.Count > 0)
+            // Add the last DPID group
+            if (group.LogColumns.Count > 0)
             {
                 dpidConfiguration.ParameterGroups.Add(group);
                 group = null;
             }
 
-            // TODO: MathValueProcessor should be initialized from ParameterDatabase and passed-in math parameters 
             return new Logger(
-                vehicle, 
-                dpidConfiguration, 
+                vehicle,
+                osid,
+                dpidConfiguration,
                 new MathValueProcessor(
-                    dpidConfiguration, 
-                    new MathValueConfiguration()));
+                    dpidConfiguration,
+                    dependencies));
         }
 
         public IEnumerable<string> GetColumnNames()
@@ -104,7 +154,7 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> StartLogging()
         {
-            this.dpids = await this.vehicle.ConfigureDpids(this.dpidConfiguration);
+            this.dpids = await this.vehicle.ConfigureDpids(this.dpidConfiguration, this.osid);
 
             if (this.dpids == null)
             {

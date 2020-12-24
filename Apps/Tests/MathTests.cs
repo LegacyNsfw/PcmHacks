@@ -12,30 +12,32 @@ namespace Tests
         [TestMethod]
         public void MathValueTest()
         {
-            Conversion rpmConversion = new Conversion("RPM", "X", "0");
-            ProfileParameter rpm = new ProfileParameter(
+            Conversion rpmConversion = new Conversion("RPM", "x", "0");
+            LogColumn rpm = new LogColumn(
                 new PidParameter(0x3456, "Engine Speed", "", 2, false, 
                     new Conversion[] { rpmConversion }),
                 rpmConversion);
 
-            Conversion mafConversion = new Conversion("RPM", "X", "0");
-            ProfileParameter maf = new ProfileParameter(
+            Conversion mafConversion = new Conversion("RPM", "x", "0");
+            LogColumn maf = new LogColumn(
                 new PidParameter(0x1234, "Mass Air Flow", "", 2, false,
                     new Conversion[] { mafConversion }),
                 mafConversion);
 
-            MathValue load = new MathValue();
-            load.XParameter = rpm.Parameter.Name;
-            load.XConversion = rpm.Conversion.Units;
-            load.YParameter = maf.Parameter.Name;
-            load.YConversion = maf.Conversion.Units;
-            load.Format = "0.00";
-            load.Formula = "(y*60)/x";
+            MathParameter load = new MathParameter(
+                "id",
+                "Load",
+                "",
+                new Conversion[] { new Conversion("g/cyl", "(y*60)/x", "0.00") },
+                rpm,
+                maf);
+
+            LogColumn mathColumn = new LogColumn(load, load.Conversions.First());
 
             DpidConfiguration profile = new DpidConfiguration();
             profile.ParameterGroups.Add(new ParameterGroup(0xFE));
-            profile.ParameterGroups[0].Parameters.Add(rpm);
-            profile.ParameterGroups[0].Parameters.Add(maf);
+            profile.ParameterGroups[0].LogColumns.Add(rpm);
+            profile.ParameterGroups[0].LogColumns.Add(maf);
 
             //MockDevice mockDevice = new MockDevice();
             //MockLogger mockLogger = new MockLogger();
@@ -48,15 +50,15 @@ namespace Tests
 
             //MathValueConfigurationLoader loader = new MathValueConfigurationLoader();
             //loader.Initialize();
-            MathValueConfiguration mathValueConfiguration = new MathValueConfiguration();
-            mathValueConfiguration.MathValues = new List<MathValue>();
-            mathValueConfiguration.MathValues.Add(load);
+
 
             PcmParameterValues dpidValues = new PcmParameterValues();
             dpidValues.Add(rpm, new PcmParameterValue() { RawValue = 1000 });
             dpidValues.Add(maf, new PcmParameterValue() { RawValue = 100 });
+
+            MathColumnAndDependencies dependencies = new MathColumnAndDependencies(mathColumn, rpm, maf);
             
-            MathValueProcessor processor = new MathValueProcessor(profile, mathValueConfiguration);
+            MathValueProcessor processor = new MathValueProcessor(profile, new MathColumnAndDependencies[] { dependencies });
             IEnumerable<string> mathValues = processor.GetMathValues(dpidValues);
 
             Assert.AreEqual(1, mathValues.Count(), "Number of math values.");

@@ -42,25 +42,25 @@ namespace PcmHacking
             IEnumerator<string> rowValueEnumerator = rowValues.GetEnumerator();
             foreach (ParameterGroup group in logger.DpidConfiguration.ParameterGroups)
             {
-                foreach (ProfileParameter parameter in group.Parameters)
+                foreach (LogColumn column in group.LogColumns)
                 {
                     rowValueEnumerator.MoveNext();
                     builder.Append(rowValueEnumerator.Current);
                     builder.Append('\t');
-                    builder.Append(parameter.Conversion.Units);
+                    builder.Append(column.Conversion.Units);
                     builder.Append('\t');
-                    builder.AppendLine(parameter.Parameter.Name);
+                    builder.AppendLine(column.Parameter.Name);
                 }
             }
 
-            foreach (MathValue mathValue in logger.MathValueProcessor.GetMathValues())
+            foreach (LogColumn mathColumn in logger.MathValueProcessor.GetMathValues())
             {
                 rowValueEnumerator.MoveNext();
                 builder.Append(rowValueEnumerator.Current);
                 builder.Append('\t');
-                builder.Append(mathValue.Units);
+                builder.Append(mathColumn.Conversion.Units);
                 builder.Append('\t');
-                builder.AppendLine(mathValue.Name);
+                builder.AppendLine(mathColumn.Parameter.Name);
             }
 
             DateTime now = DateTime.Now;
@@ -72,7 +72,7 @@ namespace PcmHacking
 
         private async Task<Logger> RecreateLogger()
         {            
-            Logger logger = Logger.Create(this.Vehicle, this.currentProfile.Parameters);
+            Logger logger = Logger.Create(this.Vehicle, this.osid, this.currentProfile.Columns);
 
             if (!await logger.StartLogging())
             {

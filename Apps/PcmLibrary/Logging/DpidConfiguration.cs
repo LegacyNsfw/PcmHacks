@@ -26,35 +26,35 @@ namespace PcmHacking
             }
         }
 
-        public List<ProfileParameter> Parameters { get; set; }
+        public List<LogColumn> LogColumns { get; set; }
 
         public ParameterGroup(byte id)
         {
             this.Dpid = new UnsignedHexValue(id);
-            this.Parameters = new List<ProfileParameter>();
+            this.LogColumns = new List<LogColumn>();
         }
 
         public int TotalBytes
         {
             get
             {
-                return Parameters.Sum(x => (x.Parameter as PcmParameter).ByteCount);
+                return LogColumns.Sum(x => (x.Parameter as PcmParameter).ByteCount);
             }
         }
 
         public override string ToString()
         {
-            return string.Join(", ", new string[] { this.Dpid.ToString() }.Concat(this.Parameters.Select(x => x.Parameter.Name)));
+            return string.Join(", ", new string[] { this.Dpid.ToString() }.Concat(this.LogColumns.Select(x => x.Parameter.Name)));
         }
 
-        public bool TryAddParameter(ProfileParameter parameter)
+        public bool TryAddLogColumn(LogColumn logColumn)
         {
-            if (this.TotalBytes + (parameter.Parameter as PcmParameter).ByteCount > MaxBytes)
+            if (this.TotalBytes + (logColumn.Parameter as PcmParameter).ByteCount > MaxBytes)
             {
                 return false;
             }
 
-            this.Parameters.Add(parameter);
+            this.LogColumns.Add(logColumn);
             return true;
         }
     }
@@ -69,21 +69,21 @@ namespace PcmHacking
 
         public List<ParameterGroup> ParameterGroups { get; set; }
 
-        public int ParameterCount
+        public int LogColumnCount
         {
             get
             {
-                return this.ParameterGroups.Sum(x => x.Parameters.Count);
+                return this.ParameterGroups.Sum(x => x.LogColumns.Count);
             }
         }
 
-        public IList<ProfileParameter> AllParameters
+        public IList<LogColumn> AllLogColumns
         {
             get
             {
-                List<ProfileParameter> allParameters = new List<ProfileParameter>();
+                List<LogColumn> allParameters = new List<LogColumn>();
                 this.ParameterGroups
-                    .ForEach(group => group.Parameters
+                    .ForEach(group => group.LogColumns
                     .ForEach(parameter => allParameters.Add(parameter)));
                 return allParameters;
             }
@@ -108,13 +108,13 @@ namespace PcmHacking
         public IEnumerable<string> GetParameterNames()
         {
             return this.ParameterGroups.SelectMany(
-                    group => group.Parameters.Select(
+                    group => group.LogColumns.Select(
                         parameter => string.Format("{0} ({1})", parameter.Parameter.Name, parameter.Conversion.Units)));
         }
 
         public override string ToString()
         {
-            return string.Format("{0} parameters", this.AllParameters.Count);
+            return string.Format("{0} parameters", this.AllLogColumns.Count);
         }
     }
 }

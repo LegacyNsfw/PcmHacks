@@ -16,20 +16,17 @@ namespace PcmHacking
         /// <summary>
         /// Start logging
         /// </summary>
-        public async Task<DpidCollection> ConfigureDpids(DpidConfiguration profile)
+        public async Task<DpidCollection> ConfigureDpids(DpidConfiguration profile, uint osid)
         {
             List<byte> dpids = new List<byte>();
-
-
-            uint osid = 0; // TODO: this.QueryOperatingSystemId()
 
             foreach (ParameterGroup group in profile.ParameterGroups)
             {
                 int position = 1;
-                foreach (ProfileParameter parameter in group.Parameters)
+                foreach (LogColumn column in group.LogColumns)
                 {
-                    PidParameter pidParameter = parameter.Parameter as PidParameter;
-                    RamParameter ramParameter = parameter.Parameter as RamParameter;
+                    PidParameter pidParameter = column.Parameter as PidParameter;
+                    RamParameter ramParameter = column.Parameter as RamParameter;
                     int byteCount;
 
                     if (pidParameter != null)
@@ -78,7 +75,7 @@ namespace PcmHacking
                     }
                     else
                     {
-                        throw new Exception("Why does this ParameterGroup contain a " + parameter.Parameter.GetType().Name + "?");
+                        throw new Exception("Why does this ParameterGroup contain a " + column.Parameter.GetType().Name + "?");
                     }
 
                     // Wait for a success or fail message.
@@ -99,13 +96,13 @@ namespace PcmHacking
 
                         if (responseMessage[3] == 0x6C)
                         {
-                            this.logger.AddDebugMessage("Configured " + parameter.ToString());
+                            this.logger.AddDebugMessage("Configured " + column.ToString());
                             break;
                         }
 
                         if (responseMessage[3] == 0x7F && responseMessage[4] == 0x2C)
                         {
-                            this.logger.AddUserMessage("Unable to configure " + parameter.ToString());
+                            this.logger.AddUserMessage("Unable to configure " + column.ToString());
                             break;
                         }
                     }

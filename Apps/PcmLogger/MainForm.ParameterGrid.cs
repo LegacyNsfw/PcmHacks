@@ -29,6 +29,11 @@ namespace PcmHacking
 
             foreach (Parameter parameter in this.database.Parameters)
             {
+                if (!parameter.IsSupported(osid))
+                {
+                    continue;
+                }
+
                 DataGridViewRow row = new DataGridViewRow();
                 row.CreateCells(this.parameterGrid);
                 row.Cells[0].Value = false; // enabled
@@ -60,10 +65,10 @@ namespace PcmHacking
                     row.Cells[0].Value = false;
                 }
 
-                foreach (ProfileParameter logParameter in this.currentProfile.Parameters)
+                foreach (LogColumn column in this.currentProfile.Columns)
                 {
                     DataGridViewRow row;
-                    if (this.parameterIdsToRows.TryGetValue(logParameter.Parameter.Id, out row))
+                    if (this.parameterIdsToRows.TryGetValue(column.Parameter.Id, out row))
                     {
                         row.Cells[0].Value = true;
                     }
@@ -103,8 +108,8 @@ namespace PcmHacking
                 if ((bool)row.Cells[0].Value == true)
                 {
                     Conversion conversion = (Conversion)row.Cells[2].Value;
-                    ProfileParameter parameter = new ProfileParameter((Parameter)row.Cells[1].Value, conversion);
-                    this.currentProfile.AddParameter(parameter);
+                    LogColumn column = new LogColumn((Parameter)row.Cells[1].Value, conversion);
+                    this.currentProfile.AddColumn(column);
                 }
             }
         }

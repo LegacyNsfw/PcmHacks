@@ -28,7 +28,7 @@ namespace PcmHacking
     /// <summary>
     /// Base class for various parameter types (PID, RAM, Math)
     /// </summary>
-    public class Parameter
+    public abstract class Parameter
     {
         public string Id { get; protected set; }
         public string Name { get; protected set; }
@@ -54,9 +54,11 @@ namespace PcmHacking
             conversion = null;
             return false;
         }
+
+        public abstract bool IsSupported(uint osid);
     }
 
-    public class PcmParameter : Parameter
+    public abstract class PcmParameter : Parameter
     {
         public int ByteCount { get; protected set; }
         public bool BitMapped { get; protected set; }
@@ -84,6 +86,11 @@ namespace PcmHacking
             this.ByteCount = byteCount;
             this.BitMapped = bitMapped;
             this.Conversions = conversions;
+        }
+
+        public override bool IsSupported(uint osid)
+        {
+            return true;
         }
     }
 
@@ -116,45 +123,40 @@ namespace PcmHacking
         {
             return this.addresses.TryGetValue(osid, out address);
         }
+
+        public override bool IsSupported(uint osid)
+        {
+            uint address;
+            return this.TryGetAddress(osid, out address);
+        }
     }
 
     public class MathParameter : Parameter
     {
-        public ProfileParameter XParameter { get; private set; }
-        public ProfileParameter YParameter { get; private set; }
+        public LogColumn XColumn { get; private set; }
+        public LogColumn YColumn { get; private set; }
 
         public MathParameter(
             string id,
             string name,
             string description,
             IEnumerable<Conversion> conversions,
-            ProfileParameter xParameter,
-            ProfileParameter yParameter)
+            LogColumn xColumn,
+            LogColumn yColumn)
         {
             this.Id = id;
             this.Name = name;
             this.Description = description;
             this.Conversions = conversions;
 
-            this.XParameter = xParameter;
-            this.YParameter = yParameter;
+            this.XColumn = xColumn;
+            this.YColumn = yColumn;
+        }
+
+        public override bool IsSupported(uint osid)
+        {
+            return this.XColumn.Parameter.IsSupported(osid) && this.YColumn.Parameter.IsSupported(osid);
         }
     }
 
-    public class ProfileParameter
-    {
-        public Parameter Parameter { get; private set; }
-        public Conversion Conversion { get; private set; }
-
-        public ProfileParameter(Parameter parameter, Conversion conversion)
-        {
-            this.Parameter = parameter;
-            this.Conversion = conversion;
-        }
-
-        public override string ToString()
-        {
-            return base.ToString() + ", " + this.Conversion.ToString();
-        }
-    }
 }

@@ -11,12 +11,12 @@ namespace PcmHacking
 {
     public class PcmParameterValue
     {
-        public double RawValue { get; set; }
+        public Int16 RawValue { get; set; }
         public string ValueAsString { get; set; }
         public double ValueAsDouble { get; set; }
     }
 
-    public class PcmParameterValues : Dictionary<ProfileParameter, PcmParameterValue>
+    public class PcmParameterValues : Dictionary<LogColumn, PcmParameterValue>
     {
     }
 
@@ -75,9 +75,9 @@ namespace PcmHacking
                 byte[] payload;
                 if (!this.responseData.TryGetValue((byte)group.Dpid, out payload))
                 {
-                    foreach (ProfileParameter parameter in group.Parameters)
+                    foreach (LogColumn column in group.LogColumns)
                     {
-                        results.Add(parameter, new PcmParameterValue() { ValueAsString = string.Empty, ValueAsDouble = 0 });
+                        results.Add(column, new PcmParameterValue() { ValueAsString = string.Empty, ValueAsDouble = 0 });
                     }
 
                     continue;
@@ -95,10 +95,10 @@ namespace PcmHacking
         private void EvaluateDpidMessage(ParameterGroup group, byte[] payload, PcmParameterValues results)
         {
             int startIndex = 0;
-            foreach (ProfileParameter parameter in group.Parameters)
+            foreach (LogColumn column in group.LogColumns)
             {
                 Int16 value = 0;
-                PcmParameter pcmParameter = parameter.Parameter as PcmParameter;
+                PcmParameter pcmParameter = column.Parameter as PcmParameter;
                 if (pcmParameter == null)
                 {
                     continue;
@@ -131,12 +131,12 @@ namespace PcmHacking
                         throw new InvalidOperationException("ByteCount must be 1 or 2");
                 }
 
-                if (parameter.Conversion.Expression == "0x")
+                if (column.Conversion.Expression == "0x")
                 {
                     string format = pcmParameter.ByteCount == 1 ? "X2" : "X4";
 
                     results.Add(
-                        parameter,
+                        column,
                         new PcmParameterValue()
                         {
                             RawValue = value,
@@ -151,9 +151,9 @@ namespace PcmHacking
                     interpreter.SetVariable("x_high", value >> 8);
                     interpreter.SetVariable("x_low", value & 0xFF);
 
-                    double convertedValue = interpreter.Eval<double>(parameter.Conversion.Expression);
+                    double convertedValue = interpreter.Eval<double>(column.Conversion.Expression);
 
-                    string format = parameter.Conversion.Format;
+                    string format = column.Conversion.Format;
                     if (string.IsNullOrWhiteSpace(format))
                     {
                         format = "0.00";
@@ -162,7 +162,7 @@ namespace PcmHacking
                     string formatted = convertedValue.ToString(format);
 
                     results.Add(
-                        parameter,
+                        column,
                         new PcmParameterValue()
                         {
                             RawValue = value,
