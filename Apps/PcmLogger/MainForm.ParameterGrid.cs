@@ -52,6 +52,11 @@ namespace PcmHacking
             }
 
             this.suspendSelectionEvents = false;
+
+            if (!this.parameterSearch.Focused)
+            {
+                this.ShowSearchPrompt();
+            }
         }
 
         private void UpdateGridFromProfile()
@@ -110,6 +115,60 @@ namespace PcmHacking
                     Conversion conversion = (Conversion)row.Cells[2].Value;
                     LogColumn column = new LogColumn((Parameter)row.Cells[1].Value, conversion);
                     this.currentProfile.AddColumn(column);
+                }
+            }
+        }
+
+        private bool showSearchPrompt = true;
+
+        private void ShowSearchPrompt()
+        {
+            this.parameterSearch.Text = "";
+            parameterSearch_Leave(this, new EventArgs());
+        }
+
+        private void parameterSearch_Enter(object sender, EventArgs e)
+        {
+            if (this.showSearchPrompt)
+            {
+                this.parameterSearch.Text = "";
+                this.showSearchPrompt = false;
+                return;
+            }
+        }
+
+        private void parameterSearch_Leave(object sender, EventArgs e)
+        {
+            if (this.parameterSearch.Text.Length == 0)
+            {
+                this.showSearchPrompt = true;
+                this.parameterSearch.Text = "Search...";
+                return;
+            }
+        }
+
+        private void parameterSearch_TextChanged(object sender, EventArgs e)
+        {
+            if (this.showSearchPrompt)
+            {
+                return;
+            }
+
+            foreach (DataGridViewRow row in this.parameterGrid.Rows)
+            {
+                Parameter parameter = row.Cells[1].Value as Parameter;
+                if (parameter == null)
+                {
+                    continue;
+                }
+                
+                if (parameter.Name.IndexOf(this.parameterSearch.Text, StringComparison.CurrentCultureIgnoreCase) == -1)
+                {
+                    row.Visible = false;
+                }
+                else
+                {
+                    row.Visible = true;
                 }
             }
         }

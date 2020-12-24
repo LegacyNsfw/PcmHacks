@@ -62,9 +62,11 @@ namespace PcmHacking
     /// <summary>
     /// 
     /// </summary>
-    //[DataContract]
     public class DpidConfiguration
     {
+        // DPID numbers 0xF2-0xFE all work
+        // 0xFE is highest priority
+        // 0xFA is very slow
         public const int MaxGroups = 3;
 
         public List<ParameterGroup> ParameterGroups { get; set; }

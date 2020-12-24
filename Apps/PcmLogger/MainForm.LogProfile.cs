@@ -15,6 +15,18 @@ namespace PcmHacking
 
         private const string fileFilter = "Log Profiles (*.LogProfile)|*.LogProfile|All Files|*.*";
 
+        /// <summary>
+        /// Generate a file name for the current log file.
+        /// </summary>
+        private string GenerateLogFilePath()
+        {
+            string file = DateTime.Now.ToString("yyyyMMdd_HHmm") +
+                "_" +
+                this.fileName +
+                ".csv";
+            return Path.Combine(Configuration.Settings.LogDirectory, file);
+        }
+
         private void newButton_Click(object sender, EventArgs e)
         {
             if (this.currentProfileIsDirty)

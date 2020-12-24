@@ -127,7 +127,7 @@ namespace PcmHacking
 
                 this.rowAvailable.Set();
             }
-                    }
+        }
 
         /// <summary>
         /// The loop that reads data from the PCM.
@@ -213,10 +213,10 @@ namespace PcmHacking
                                 case LogState.Nothing:
                                     this.loggerProgress.Invoke(
                                         (MethodInvoker)
-                                delegate ()
-                                {
-                                            this.logValues.Text = "Please select some parameters, or open a log profile.";
-                                });
+                                        delegate ()
+                                        {
+                                                    this.logValues.Text = "Please select some parameters, or open a log profile.";
+                                        });
 
                                     Thread.Sleep(200);
                                     break;

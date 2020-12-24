@@ -287,6 +287,9 @@
             this.parameterSearch.Name = "parameterSearch";
             this.parameterSearch.Size = new System.Drawing.Size(394, 20);
             this.parameterSearch.TabIndex = 1;
+            this.parameterSearch.TextChanged += new System.EventHandler(this.parameterSearch_TextChanged);
+            this.parameterSearch.Enter += new System.EventHandler(this.parameterSearch_Enter);
+            this.parameterSearch.Leave += new System.EventHandler(this.parameterSearch_Leave);
             // 
             // parameterGrid
             // 

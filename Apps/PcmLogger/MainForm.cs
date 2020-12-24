@@ -34,6 +34,8 @@ namespace PcmHacking
             InitializeComponent();
         }
 
+        #region MainFormBase override methods
+
         /// <summary>
         /// Not used.
         /// </summary>
@@ -137,6 +139,10 @@ namespace PcmHacking
             this.AddDebugMessage("ValidDeviceSelectedAsync ended.");
         }
 
+        #endregion
+
+        #region Open / Close
+
         /// <summary>
         /// Open the most-recently-used device, if possible.
         /// </summary>
@@ -159,20 +165,44 @@ namespace PcmHacking
             ThreadPool.QueueUserWorkItem(BackgroundInitialization);
 
             this.logFilePath.Text = logDirectory;
-            
+
             this.AddDebugMessage("MainForm_Load ended.");
         }
         
         private async void BackgroundInitialization(object unused)
         {
-            this.AddDebugMessage("Device reset started.");
+            try
+            {
+                this.AddDebugMessage("Device reset started.");
 
-            this.FillParameterGrid();
+                this.FillParameterGrid();
 
-            // This will cause the ValidDeviceSelectedAsync callback to be invoked.
-            await this.ResetDevice();
+                // This will cause the ValidDeviceSelectedAsync callback to be invoked.
+                await this.ResetDevice();
 
-            this.AddDebugMessage("Device reset completed.");
+                this.AddDebugMessage("Device reset completed.");
+            }
+            catch (Exception exception)
+            {
+                // Don't try to log messages during shutdown, that doesn't end well
+                // because the window handle is no longer valid.
+                //
+                // There is still a race condition around using logStopRequested for
+                // this, but the only deterministic solution involves cross-thread 
+                // access to the Form object, which isn't allowed.
+                if (!this.logStopRequested) 
+                {
+                    this.Invoke(
+                        (MethodInvoker)
+                        delegate ()
+                        {
+                            if (!this.logStopRequested)
+                            {
+                                this.AddDebugMessage("BackgroundInitialization: " + exception.ToString());
+                            }
+                        });
+                }
+            }
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -186,15 +216,19 @@ namespace PcmHacking
                 }
             }
 
-            this.SaveProfileHistory();
-
             this.logStopRequested = true;
+
+            this.SaveProfileHistory();
 
             // It turns out that WaitAll is not supported on an STA thread.
             // WaitHandle.WaitAll(new WaitHandle[] { loggerThreadEnded, writerThreadEnded });
             loggerThreadEnded.WaitOne(1000);
             writerThreadEnded.WaitOne(1000);
         }
+
+        #endregion
+
+        #region Button clicks
 
         /// <summary>
         /// Select which interface device to use. This opens the Device-Picker dialog box.
@@ -250,16 +284,7 @@ namespace PcmHacking
             }
         }
 
-        /// <summary>
-        /// Generate a file name for the current log file.
-        /// </summary>
-        private string GenerateLogFilePath()
-        {
-            string file = DateTime.Now.ToString("yyyyMMdd_HHmm") +
-                "_" +
-                this.fileName +
-                ".csv";
-            return Path.Combine(Configuration.Settings.LogDirectory, file);
-        }
+        #endregion
+
     }
 }
