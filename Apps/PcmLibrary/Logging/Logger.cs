@@ -16,21 +16,87 @@ namespace PcmHacking
     public class Logger
     {
         private readonly Vehicle vehicle;
-        private readonly LoggerConfiguration loggerConfiguration;
+        private readonly DpidConfiguration dpidConfiguration;
+        private readonly MathValueProcessor mathValueProcessor;
+
         private DpidCollection dpids;
 #if FAST_LOGGING
         private DateTime lastRequestTime;
 #endif
 
-        public LoggerConfiguration DpidsAndMath {  get { return this.loggerConfiguration; } }
+        public DpidConfiguration DpidConfiguration {  get { return this.dpidConfiguration; } }
+        public MathValueProcessor MathValueProcessor {  get { return this.mathValueProcessor; } }
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public Logger(Vehicle vehicle, LoggerConfiguration profileAndMath)
+        private Logger(Vehicle vehicle, DpidConfiguration dpidConfiguration, MathValueProcessor mathValueProcessor)
         {
             this.vehicle = vehicle;
-            this.loggerConfiguration = profileAndMath;
+            this.dpidConfiguration = dpidConfiguration;
+            this.mathValueProcessor = mathValueProcessor;
+        }
+
+        public static Logger Create(Vehicle vehicle, IEnumerable<ProfileParameter> parameters)
+        {
+            DpidConfiguration dpidConfiguration = new DpidConfiguration();
+
+            List<ProfileParameter> singleByteParameters = new List<ProfileParameter>();
+
+            byte groupId = 0xFE;
+            ParameterGroup group = new ParameterGroup(groupId);
+            foreach (ProfileParameter parameter in parameters)
+            {
+                PcmParameter pcmParameter = parameter.Parameter as PcmParameter;
+                if (pcmParameter == null)
+                {
+                    continue;
+                }
+
+                if (pcmParameter.ByteCount == 1)
+                {
+                    singleByteParameters.Add(parameter);
+                    continue;
+                }
+
+                group.TryAddParameter(parameter);
+                if (group.TotalBytes == ParameterGroup.MaxBytes)
+                {
+                    dpidConfiguration.ParameterGroups.Add(group);
+                    groupId--;
+                    group = new ParameterGroup(groupId);
+                }
+            }
+
+            foreach (ProfileParameter parameter in singleByteParameters)
+            {
+                group.TryAddParameter(parameter);
+                if (group.TotalBytes == ParameterGroup.MaxBytes)
+                {
+                    dpidConfiguration.ParameterGroups.Add(group);
+                    groupId--;
+                    group = new ParameterGroup(groupId);
+                }
+            }
+
+            if (group.Parameters.Count > 0)
+            {
+                dpidConfiguration.ParameterGroups.Add(group);
+                group = null;
+            }
+
+            // TODO: MathValueProcessor should be initialized from ParameterDatabase and passed-in math parameters 
+            return new Logger(
+                vehicle, 
+                dpidConfiguration, 
+                new MathValueProcessor(
+                    dpidConfiguration, 
+                    new MathValueConfiguration()));
+        }
+
+        public IEnumerable<string> GetColumnNames()
+        {
+            return this.dpidConfiguration.GetParameterNames().Concat(this.mathValueProcessor.GetHeaders());
         }
 
         /// <summary>
@@ -38,7 +104,7 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> StartLogging()
         {
-            this.dpids = await this.vehicle.ConfigureDpids(this.loggerConfiguration.Profile);
+            this.dpids = await this.vehicle.ConfigureDpids(this.dpidConfiguration);
 
             if (this.dpids == null)
             {
@@ -46,7 +112,7 @@ namespace PcmHacking
             }
 
             int scenario = ((int)TimeoutScenario.DataLogging1 - 1);
-            scenario += this.loggerConfiguration.Profile.ParameterGroups.Count;
+            scenario += this.dpidConfiguration.ParameterGroups.Count;
             await this.vehicle.SetDeviceTimeout((TimeoutScenario)scenario);
 
 #if FAST_LOGGING
@@ -66,7 +132,7 @@ namespace PcmHacking
         /// <returns></returns>
         public async Task<IEnumerable<string>> GetNextRow()
         {
-            LogRowParser row = new LogRowParser(this.loggerConfiguration.Profile);
+            LogRowParser row = new LogRowParser(this.dpidConfiguration);
 
             try
             {
@@ -106,7 +172,7 @@ namespace PcmHacking
 
             PcmParameterValues dpidValues = row.Evaluate();
 
-            IEnumerable<string> mathValues = this.loggerConfiguration.MathValueProcessor.GetMathValues(dpidValues);
+            IEnumerable<string> mathValues = this.mathValueProcessor.GetMathValues(dpidValues);
 
             return dpidValues
                     .Select(x => x.Value.ValueAsString)

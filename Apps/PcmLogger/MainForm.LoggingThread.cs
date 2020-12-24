@@ -36,11 +36,11 @@ namespace PcmHacking
         /// Create a string that will look reasonable in the UI's main text box.
         /// TODO: Use a grid instead.
         /// </summary>
-        private string FormatValuesForTextBox(LoggerConfiguration dpidsAndMath, IEnumerable<string> rowValues)
+        private string FormatValuesForTextBox(Logger logger, IEnumerable<string> rowValues)
         {
             StringBuilder builder = new StringBuilder();
             IEnumerator<string> rowValueEnumerator = rowValues.GetEnumerator();
-            foreach (ParameterGroup group in dpidsAndMath.Profile.ParameterGroups)
+            foreach (ParameterGroup group in logger.DpidConfiguration.ParameterGroups)
             {
                 foreach (ProfileParameter parameter in group.Parameters)
                 {
@@ -53,7 +53,7 @@ namespace PcmHacking
                 }
             }
 
-            foreach (MathValue mathValue in dpidsAndMath.MathValueProcessor.GetMathValues())
+            foreach (MathValue mathValue in logger.MathValueProcessor.GetMathValues())
             {
                 rowValueEnumerator.MoveNext();
                 builder.Append(rowValueEnumerator.Current);
@@ -71,28 +71,11 @@ namespace PcmHacking
         }
 
         private async Task<Logger> RecreateLogger()
-        {
-            LoggerConfiguration loggerConfiguration = null;
+        {            
+            Logger logger = Logger.Create(this.Vehicle, this.currentProfile.Parameters);
 
-            LoggerConfigurationFactory factory = new LoggerConfigurationFactory(this.currentProfile.Parameters, this);
-            loggerConfiguration = factory.CreateLoggerConfiguration();
-
-            if (loggerConfiguration == null)
+            if (!await logger.StartLogging())
             {
-                    this.loggerProgress.Invoke(
-                    (MethodInvoker)
-                    delegate ()
-                    {
-                        this.logValues.Text = "Unable to create DPID configuration.";
-                    });
-
-                Thread.Sleep(200);
-                return null;
-            }
-
-            Logger logger = new Logger(this.Vehicle, loggerConfiguration);
-                    if (!await logger.StartLogging())
-                    {
                 this.loggerProgress.Invoke(
                     (MethodInvoker)
                     delegate ()
@@ -115,7 +98,7 @@ namespace PcmHacking
             StreamWriter streamWriter = new StreamWriter(logFilePath);
             LogFileWriter logFileWriter = new LogFileWriter(streamWriter);
 
-            IEnumerable<string> columnNames = logger.DpidsAndMath.GetColumnNames();
+            IEnumerable<string> columnNames = logger.GetColumnNames();
             await logFileWriter.WriteHeader(columnNames);
 
             return new Tuple<LogFileWriter, StreamWriter>(logFileWriter, streamWriter);
@@ -329,7 +312,7 @@ namespace PcmHacking
                             row.Item2.WriteLine(row.Item3);
                         }
 
-                        string formattedValues = FormatValuesForTextBox(row.Item1.DpidsAndMath, row.Item3);
+                        string formattedValues = FormatValuesForTextBox(row.Item1, row.Item3);
 
                         this.BeginInvoke((MethodInvoker)
                         delegate ()
