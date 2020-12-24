@@ -4,6 +4,10 @@ using System.Text;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// For now, a log is just a list of columns.
+    /// Hopefully we'll add dashboard layouts to this in the future.
+    /// </summary>
     public class LogProfile
     {
         private List<LogColumn> columns;

@@ -13,6 +13,13 @@ namespace PcmHacking
     /// <summary>
     /// Requests log data from the Vehicle.
     /// </summary>
+    /// <remarks>
+    /// In theory we can send a single message to command the PCM to spew data
+    /// continuously. In practice, I haven't been able to get that to work.
+    /// 
+    /// But I still have hope, so the code for that is in the FAST_LOGGING
+    /// sections. We'll get faster data rates if we can figure this out.
+    /// </remarks>
     public class Logger
     {
         private readonly Vehicle vehicle;
@@ -39,6 +46,9 @@ namespace PcmHacking
             this.mathValueProcessor = mathValueProcessor;
         }
 
+        /// <summary>
+        /// The factory method converts the list of columns to a DPID configuration and math-value processor.
+        /// </summary>
         public static Logger Create(Vehicle vehicle, uint osid, IEnumerable<LogColumn> columns)
         {
             DpidConfiguration dpidConfiguration = new DpidConfiguration();
@@ -146,7 +156,7 @@ namespace PcmHacking
 
         public IEnumerable<string> GetColumnNames()
         {
-            return this.dpidConfiguration.GetParameterNames().Concat(this.mathValueProcessor.GetHeaders());
+            return this.dpidConfiguration.GetParameterNames().Concat(this.mathValueProcessor.GetHeaderNames());
         }
 
         /// <summary>

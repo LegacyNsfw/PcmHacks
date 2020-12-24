@@ -9,6 +9,9 @@ using DynamicExpresso;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// Combines the raw value read from the PCM with string and double representations.
+    /// </summary>
     public class PcmParameterValue
     {
         public Int16 RawValue { get; set; }
@@ -16,12 +19,15 @@ namespace PcmHacking
         public double ValueAsDouble { get; set; }
     }
 
+    /// <summary>
+    /// Maps log columns to values.
+    /// </summary>
     public class PcmParameterValues : Dictionary<LogColumn, PcmParameterValue>
     {
     }
 
     /// <summary>
-    /// Reads bytes from the PCM and turns them into readable strings.
+    /// Reads bytes from the PCM and turns them into doubles and readable strings.
     /// </summary>
     public class LogRowParser
     {

@@ -6,12 +6,15 @@ using System.Linq;
 using System.Text;
 
 namespace PcmHacking
-{    
+{
+    /// <summary>
+    /// This links the DPID ID with the log columns whose data is in that DPID.
+    /// </summary>
     public class ParameterGroup
     {
         public const int MaxBytes = 6;
 
-        public UnsignedHexValue Dpid { get; set; }
+        public byte Dpid { get; set; }
 
         public string DpidAttributeValue
         {
@@ -30,7 +33,7 @@ namespace PcmHacking
 
         public ParameterGroup(byte id)
         {
-            this.Dpid = new UnsignedHexValue(id);
+            this.Dpid = id;
             this.LogColumns = new List<LogColumn>();
         }
 
@@ -60,7 +63,7 @@ namespace PcmHacking
     }
 
     /// <summary>
-    /// 
+    /// This combines a set of ParameterGroups and simplifies getting the columns and their names.
     /// </summary>
     public class DpidConfiguration
     {

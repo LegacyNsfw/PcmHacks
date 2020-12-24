@@ -7,6 +7,9 @@ using System.Xml.Linq;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// Writes a LogProfile to an XML file.
+    /// </summary>
     public class LogProfileWriter
     {
         public static void Write(LogProfile profile, string path)

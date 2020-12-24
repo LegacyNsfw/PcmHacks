@@ -53,7 +53,7 @@ namespace PcmHacking
                 }
             }
 
-            foreach (LogColumn mathColumn in logger.MathValueProcessor.GetMathValues())
+            foreach (LogColumn mathColumn in logger.MathValueProcessor.GetMathColumns())
             {
                 rowValueEnumerator.MoveNext();
                 builder.Append(rowValueEnumerator.Current);

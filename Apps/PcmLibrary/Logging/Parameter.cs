@@ -4,6 +4,10 @@ using System.Text;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// Stores the math expression that converts a value from the PCM into 
+    /// something humans can understand.
+    /// </summary>
     public class Conversion
     {
         public string Units { get; private set; }

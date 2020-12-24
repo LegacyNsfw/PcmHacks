@@ -7,6 +7,9 @@ using System.Xml.Linq;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// Reads a LogProfile from an XML file.
+    /// </summary>
     public class LogProfileReader
     {
         private readonly ParameterDatabase database;

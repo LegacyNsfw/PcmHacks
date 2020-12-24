@@ -14,13 +14,13 @@ namespace PcmHacking
     public partial class Vehicle : IDisposable
     {
         /// <summary>
-        /// Start logging
+        /// Prepare the PCM to begin sending collections of parameters.
         /// </summary>
-        public async Task<DpidCollection> ConfigureDpids(DpidConfiguration profile, uint osid)
+        public async Task<DpidCollection> ConfigureDpids(DpidConfiguration dpidConfiguration, uint osid)
         {
             List<byte> dpids = new List<byte>();
 
-            foreach (ParameterGroup group in profile.ParameterGroups)
+            foreach (ParameterGroup group in dpidConfiguration.ParameterGroups)
             {
                 int position = 1;
                 foreach (LogColumn column in group.LogColumns)
@@ -161,6 +161,11 @@ namespace PcmHacking
             return result;
         }
 
+        /// <summary>
+        /// Currently only used by VpwExplorer for testing.
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
         public async Task<Response<int>> GetPid(UInt32 pid)
         {
             Message request = this.protocol.CreatePidRequest(pid);
@@ -178,6 +183,10 @@ namespace PcmHacking
             return this.protocol.ParsePidResponse(responseMessage);
         }
 
+        /// <summary>
+        /// For historical reference only.
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> StartLogging_Old()
         {
             // NOT SUPPORTED (in my ROM anyway, need to try others)

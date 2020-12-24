@@ -6,6 +6,9 @@ using System.Xml.Linq;
 
 namespace PcmHacking
 {
+    /// <summary>
+    /// This loads the collection of known parameters from XML files.
+    /// </summary>
     public class ParameterDatabase
     {
         public class ParameterTable<T> where T : Parameter
@@ -31,6 +34,9 @@ namespace PcmHacking
         public ParameterTable<RamParameter> RamParameters { get; private set; }
         public ParameterTable<MathParameter> MathParameters { get; private set; }
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public ParameterDatabase(string pathToXmlDirectory)
         {
             this.pathToXmlDirectory = pathToXmlDirectory;
@@ -39,6 +45,9 @@ namespace PcmHacking
             this.MathParameters = new ParameterTable<MathParameter>();
         }
 
+        /// <summary>
+        /// Load everything.
+        /// </summary>
         public bool TryLoad(out string errorMessage)
         {
             if (!this.TryLoadStandardParameters(out errorMessage))
@@ -59,6 +68,9 @@ namespace PcmHacking
             return true;
         }
 
+        /// <summary>
+        /// Load standard parameters.
+        /// </summary>
         private bool TryLoadStandardParameters(out string errorMessage)
         {
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.Standard.xml");
@@ -106,6 +118,9 @@ namespace PcmHacking
             return true;
         }
 
+        /// <summary>
+        /// Load RAM parameters.
+        /// </summary>
         private bool TryLoadRamParameters(out string errorMessage)
         {
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.RAM.xml");
@@ -168,6 +183,9 @@ namespace PcmHacking
             return true;
         }
 
+        /// <summary>
+        /// Load math parameters.
+        /// </summary>
         private bool TryLoadMathParameters(out string errorMessage)
         {
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.Math.xml");

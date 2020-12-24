@@ -87,9 +87,6 @@
     <Compile Include="MainForm.ProfileList.cs">
       <SubType>Form</SubType>
     </Compile>
-    <None Include="MathValues.configuration">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>PublicSettingsSingleFileGenerator</Generator>
