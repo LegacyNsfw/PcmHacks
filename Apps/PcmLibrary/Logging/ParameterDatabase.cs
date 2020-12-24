@@ -22,6 +22,7 @@ namespace PcmHacking
         }
 
         private string pathToXmlDirectory;
+
         private List<Parameter> parameters;
 
         public IEnumerable<Parameter> Parameters { get { return this.parameters; } }
@@ -77,21 +78,17 @@ namespace PcmHacking
                                 conversion.Attribute("format").Value));
                     }
 
-                    string parameterType = (string)parameterElement.Attribute("type");
                     parameterName = (string)parameterElement.Attribute("name").Value;
-                    if (parameterType == "PID")
-                    {
-                        PidParameter parameter = new PidParameter(
-                            UnsignedHex.GetUnsignedHex("0x" + parameterElement.Attribute("id").Value),
-                            parameterName,
-                            parameterElement.Attribute("description").Value,
-                            int.Parse(parameterElement.Attribute("byteCount").Value),
-                            bool.Parse(parameterElement.Attribute("bitMapped").Value),
-                            conversions);
+                    PidParameter parameter = new PidParameter(
+                        UnsignedHex.GetUnsignedHex("0x" + parameterElement.Attribute("id").Value),
+                        parameterName,
+                        parameterElement.Attribute("description").Value,
+                        int.Parse(parameterElement.Attribute("byteCount").Value),
+                        bool.Parse(parameterElement.Attribute("bitMapped").Value),
+                        conversions);
 
-                        parameters.Add(parameter);
-                        this.PidParameters.Add(parameter.Id, parameter);
-                    }
+                    parameters.Add(parameter);
+                    this.PidParameters.Add(parameter.Id, parameter);
                 }
                 catch (Exception exception)
                 {
@@ -113,7 +110,7 @@ namespace PcmHacking
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.RAM.xml");
             XDocument xml = XDocument.Load(pathToXml);
             List<Parameter> ramParameters = new List<Parameter>();
-            foreach (XElement parameterElement in xml.Root.Elements("Parameter"))
+            foreach (XElement parameterElement in xml.Root.Elements("RamParameter"))
             {
                 string parameterName = null;
                 try
@@ -128,25 +125,31 @@ namespace PcmHacking
                                 conversion.Attribute("format").Value));
                     }
 
-                    string parameterType = (string)parameterElement.Attribute("type");
-                    parameterName = (string)parameterElement.Attribute("name").Value;
-                    if (parameterType == "RAM")
+                    Dictionary<uint, uint> addresses = new Dictionary<uint, uint>();
+                    foreach (XElement location in parameterElement.Elements("Location"))
                     {
-                        // TODO: Read OSID->address dictionary
-                        Dictionary<uint, uint> addresses = new Dictionary<uint, uint>();
+                        string osidString = location.Attribute("os").Value;
+                        uint osid = uint.Parse(osidString);
 
-                        RamParameter parameter = new RamParameter(
-                            parameterElement.Attribute("id").Value,
-                            parameterName,
-                            parameterElement.Attribute("description").Value,
-                            int.Parse(parameterElement.Attribute("byteCount").Value),
-                            bool.Parse(parameterElement.Attribute("bitMapped").Value),
-                            conversions,
-                            addresses);
+                        string addressString = location.Attribute("address").Value;
+                        uint address = UnsignedHex.GetUnsignedHex(addressString);
 
-                        ramParameters.Add(parameter);
-                        this.RamParameters.Add(parameter.Id, parameter);
+                        addresses[osid] = address;
                     }
+
+                    parameterName = (string)parameterElement.Attribute("name").Value;
+
+                    RamParameter parameter = new RamParameter(
+                        parameterElement.Attribute("id").Value,
+                        parameterName,
+                        parameterElement.Attribute("description").Value,
+                        int.Parse(parameterElement.Attribute("byteCount").Value),
+                        bool.Parse(parameterElement.Attribute("bitMapped").Value),
+                        conversions,
+                        addresses);
+
+                    ramParameters.Add(parameter);
+                    this.RamParameters.Add(parameter.Id, parameter);
                 }
                 catch (Exception exception)
                 {

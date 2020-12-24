@@ -1,4 +1,83 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <RamParameters>
-    
+  <RamParameter
+    id="RamLoad"
+    name="Load"
+    description=""
+    byteCount="02"
+    bitMapped="False">
+    <Location os="12593358" address="0xFFAAEA" />
+    <Conversion units="g/cyl" expression="x/2048.0" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamOnTime"
+    name="On Time"
+    description=""
+    byteCount="02"
+    bitMapped="False">
+    <Location os="12593358" address="0xFFB04C" />
+    <Conversion units="Seconds" expression="x/160.0" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamThrottleCrackerAirflow"
+    name="Throttle Cracker Airflow"
+    description=""
+    byteCount="02"
+    bitMapped="False">
+    <Location os="12593358" address="0xFF97F0" />
+    <Conversion units="g/s" expression="x/1024.0" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamThrottleFollowerAirflow"
+    name="Throttle Follower Airflow"
+    description=""
+    byteCount="02"
+    bitMapped="False">
+    <Location os="12593358" address="0xFF980A" />
+    <Conversion units="g/s" expression="x/1024.0" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamIdleProportional"
+    name="Idle Proportional Term"
+    description=""
+    byteCount="02"
+    bitMapped="False">
+    <Location os="12593358" address="0xFFA2A2" />
+    <Conversion units="g/s" expression="x/16.0" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamIdleIntegral"
+    name="Idle Integral Term"
+    description=""
+    byteCount="02"
+    bitMapped="False">
+    <Location os="12593358" address="0xFFA296" />
+    <Conversion units="g/s" expression="x/16.0" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamIdleDerivative"
+    name="Idle Derivative Term"
+    description=""
+    byteCount="02"
+    bitMapped="False">
+    <Location os="12593358" address="0xFFA28C" />
+    <Conversion units="g/s" expression="x/16.0" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamIgnitionAdvanceMultiplier"
+    name="Ignition Advance Multiplier?"
+    description="Unconfirmed."
+    byteCount="02"
+    bitMapped="False">
+    <Location os="12593358" address="0xFF8250" />
+    <Conversion units="Factor" expression="x/4096.0" format="0.00" />
+  </RamParameter>
+
 </RamParameters>

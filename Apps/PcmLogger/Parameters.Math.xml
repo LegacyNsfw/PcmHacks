@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Parameters>
+  <Parameter
+      id="MathLoadFromPids"
+      name="Load (from RPM and MAF)"
+      description=""
+      XParameterType="PID"
+      XParameterId="0010"
+      XParameterConversion="g/s"
+      YParameterType="PID"
+      YParameterId="000C"
+      YParameterConversion="RPM">
+    <Conversion units="g/cyl" expression="x*60.0/(y*2)" format="0.00" />
+  </Parameter>
+</Parameters>>

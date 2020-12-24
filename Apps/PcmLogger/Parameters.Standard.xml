@@ -4,7 +4,6 @@
         id="0003"
         name="Fueling Mode"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Raw" expression="x" format="0.00" />
@@ -13,7 +12,6 @@
         id="0004"
         name="Engine Load"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x/2.55)" format="0.00" />
@@ -22,7 +20,6 @@
         id="0005"
         name="ECT Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="°C" expression="(x-40)" format="0.00" />
@@ -31,7 +28,6 @@
         id="0006"
         name="Short Term FT Bank 1"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
@@ -40,7 +36,6 @@
         id="0007"
         name="Long Term FT Bank 1"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
@@ -49,7 +44,6 @@
         id="0008"
         name="Short Term FT Bank 2"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
@@ -58,7 +52,6 @@
         id="0009"
         name="Long Term FT Bank 2"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
@@ -67,7 +60,6 @@
         id="000B"
         name="MAP Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="kPa" expression="(x)" format="0.00" />
@@ -76,7 +68,6 @@
         id="000C"
         name="Engine Speed"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="RPM" expression="(((x_high*256)+x_low)*0.25)" format="0.00" />
@@ -85,7 +76,6 @@
         id="000D"
         name="Vehicle Speed Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="km/h" expression="(x)" format="0.00" />
@@ -94,7 +84,6 @@
         id="000E"
         name="Spark"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="°" expression="(x/2)-64" format="0.00" />
@@ -103,7 +92,6 @@
         id="000F"
         name="IAT Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="°C" expression="(x-40)" format="0.00" />
@@ -112,7 +100,6 @@
         id="0010"
         name="MAF Sensor"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="g/s" expression="(((x_high*256)+x_low)/100)" format="0.00" />
@@ -121,7 +108,6 @@
         id="1100"
         name="A/C Relay Command"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>3)" format="0.00" />
@@ -130,7 +116,6 @@
         id="1100"
         name="A/C Request Signal"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -139,7 +124,6 @@
         id="1100"
         name="A/C Clutch Feedback Signal"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
@@ -148,7 +132,6 @@
         id="1100"
         name="PCM Reset"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
@@ -157,7 +140,6 @@
         id="1100"
         name="GEN L-Terminal Signal Command"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>7)" format="0.00" />
@@ -166,7 +148,6 @@
         id="1101"
         name="EVAP Vent Solenoid Command"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(" format="0.00" />
@@ -175,7 +156,6 @@
         id="1102"
         name="VTD Fuel Disable"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
@@ -184,7 +164,6 @@
         id="1102"
         name="TCC Enable Solenoid Command"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
@@ -193,7 +172,6 @@
         id="1102"
         name="Traction Control Status"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -202,7 +180,6 @@
         id="1102"
         name="Powertrain Induced Chassis Pitch Command"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>5)" format="0.00" />
@@ -211,7 +188,6 @@
         id="1102"
         name="Extended Travel Brake Pedal Switch"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>6)" format="0.00" />
@@ -220,7 +196,6 @@
         id="1102"
         name="TCC/Cruise Brake Pedal Switch"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>3)" format="0.00" />
@@ -229,7 +204,6 @@
         id="1103"
         name="Reduced Engine Power"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>7)" format="0.00" />
@@ -238,7 +212,6 @@
         id="1103"
         name="Engine Oil Level Switch"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>5)" format="0.00" />
@@ -247,7 +220,6 @@
         id="1103"
         name="MIL Command"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
@@ -256,7 +228,6 @@
         id="1104"
         name="Cruise Control Active"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>4)" format="0.00" />
@@ -265,7 +236,6 @@
         id="1104"
         name="DTC Set This Ignition"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
@@ -274,7 +244,6 @@
         id="1104"
         name="AIR Solenoid Command "
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
@@ -283,7 +252,6 @@
         id="1104"
         name="AIR Pump Relay Command "
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -292,7 +260,6 @@
         id="1105"
         name="Loop Status"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -301,7 +268,6 @@
         id="1105"
         name="Decel"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>7)" format="0.00" />
@@ -310,7 +276,6 @@
         id="1105"
         name="Fuel Trim Learn"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>5)" format="0.00" />
@@ -319,7 +284,6 @@
         id="1105"
         name="Cold Startup"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>6)" format="0.00" />
@@ -328,7 +292,6 @@
         id="1106"
         name="FC Relay 1 Command"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -337,7 +300,6 @@
         id="1106"
         name="FC Relay 2 and 3 Command"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
@@ -346,7 +308,6 @@
         id="1112"
         name="TFP Sw"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="((x" format="0.00" />
@@ -355,7 +316,6 @@
         id="1113"
         name="TR Sw"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -364,7 +324,6 @@
         id="1115"
         name="TAC/PCM Communication Signal"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>7)" format="0.00" />
@@ -373,7 +332,6 @@
         id="1116"
         name="Cruise Resume/Accel"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>6)" format="0.00" />
@@ -382,7 +340,6 @@
         id="1116"
         name="Cruise Set/Coast Switch"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>5)" format="0.00" />
@@ -391,7 +348,6 @@
         id="1116"
         name="Cruise On/Off Switch"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>4)" format="0.00" />
@@ -400,7 +356,6 @@
         id="1116"
         name="APP Sensor 1 and 2"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -409,7 +364,6 @@
         id="1116"
         name="Stoplamp Pedal Switch"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>7)" format="0.00" />
@@ -418,7 +372,6 @@
         id="1116"
         name="TP Sensors 1 and 2"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>3)" format="0.00" />
@@ -427,7 +380,6 @@
         id="1116"
         name="APP Sensor 1 and 3"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
@@ -436,7 +388,6 @@
         id="1116"
         name="APP Sensor 2 and 3"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
@@ -445,7 +396,6 @@
         id="1141"
         name="Ignition 1 Signal"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volts" expression="(x/10)" format="0.00" />
@@ -454,7 +404,6 @@
         id="1142"
         name="MAP Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volts" expression="(x/51)" format="0.00" />
@@ -463,7 +412,6 @@
         id="1143"
         name="TP Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volts" expression="(x/51)" format="0.00" />
@@ -472,7 +420,6 @@
         id="1144"
         name="A/C High Side Pressure Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volts" expression="(x/51)" format="0.00" />
@@ -481,7 +428,6 @@
         id="1144"
         name="A/C High Side Pressure Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Kpa" expression="((x*1.833)-14.95)*6.895" format="0.00" />
@@ -490,7 +436,6 @@
         id="1145"
         name="HO2S Bank 1 Sensor 1"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
@@ -499,7 +444,6 @@
         id="1146"
         name="HO2S Bank 1 Sensor 2"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
@@ -508,7 +452,6 @@
         id="1148"
         name="HO2S Bank 2 Sensor 1"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
@@ -517,7 +460,6 @@
         id="1149"
         name="HO2S Bank 2 Sensor 2"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
@@ -526,7 +468,6 @@
         id="114D"
         name="GEN F-Terminal Signal"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x/2.55)" format="0.00" />
@@ -535,7 +476,6 @@
         id="114E"
         name="Fuel Tank Pressure Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volts" expression="(x/51)" format="0.00" />
@@ -544,7 +484,6 @@
         id="1155"
         name="Fuel Level Sensor Left Tank"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volts" expression="(x/51)" format="0.00" />
@@ -553,7 +492,6 @@
         id="115C"
         name="Engine Oil Pressure Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volts" expression="(x/51)" format="0.00" />
@@ -562,7 +500,6 @@
         id="115C"
         name="Engine Oil Pressure Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Kpa" expression="((x*4.34)-104.2)" format="0.00" />
@@ -571,7 +508,6 @@
         id="116F"
         name="Start Up ECT"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="°C" expression="(x-40)" format="0.00" />
@@ -580,7 +516,6 @@
         id="1170"
         name="EVAP Purge Solenoid Command"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x/2.55)" format="0.00" />
@@ -589,7 +524,6 @@
         id="1190"
         name="Fuel Trim Cell"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -598,7 +532,6 @@
         id="1192"
         name="Desired Idle Speed"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="RPM" expression="(x*12.5)" format="0.00" />
@@ -607,7 +540,6 @@
         id="119D"
         name="BARO"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="kPa" expression="(x+28)/2.71" format="0.00" />
@@ -616,7 +548,6 @@
         id="119E"
         name="Air Fuel Ratio"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units=":1" expression="(x/10)" format="0.00" />
@@ -625,7 +556,6 @@
         id="119F"
         name="Engine Oil Life Remaining"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x/2.55+0.5)" format="0.00" />
@@ -634,7 +564,6 @@
         id="11A1"
         name="Engine Run Time"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
@@ -643,7 +572,6 @@
         id="11A6"
         name="Knock Retard"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="°" expression="(x*0.0879)" format="0.00" />
@@ -652,7 +580,6 @@
         id="11EA"
         name="Misfire Current Cyl"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -661,7 +588,6 @@
         id="11EB"
         name="Misfire Current Cyl"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -670,7 +596,6 @@
         id="11EC"
         name="Misfire Current Cyl"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -679,7 +604,6 @@
         id="11ED"
         name="Misfire Current Cyl"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -688,7 +612,6 @@
         id="11F8"
         name="Misfire History Cyl"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
@@ -697,7 +620,6 @@
         id="11F9"
         name="Misfire History Cyl"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
@@ -706,7 +628,6 @@
         id="11FA"
         name="Misfire History Cyl"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
@@ -715,7 +636,6 @@
         id="11FB"
         name="Misfire History Cyl"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
@@ -724,7 +644,6 @@
         id="1201"
         name="Misfire History Cyl"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
@@ -733,7 +652,6 @@
         id="1202"
         name="Misfire History Cyl"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
@@ -742,7 +660,6 @@
         id="1203"
         name="Misfire History Cyl"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
@@ -751,7 +668,6 @@
         id="1204"
         name="Misfire History Cyl"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
@@ -760,7 +676,6 @@
         id="1205"
         name="Misfire Current Cyl"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -769,7 +684,6 @@
         id="1206"
         name="Misfire Current Cyl"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -778,7 +692,6 @@
         id="1207"
         name="Misfire Current Cyl"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -787,7 +700,6 @@
         id="1208"
         name="Misfire Current Cyl"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -796,7 +708,6 @@
         id="120A"
         name="Short Term FT Avg"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
@@ -805,7 +716,6 @@
         id="120B"
         name="Long Term FT Avg"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
@@ -814,7 +724,6 @@
         id="120C"
         name="Short Term FT Avg"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
@@ -823,7 +732,6 @@
         id="122A"
         name="Cycles of Misfire Data"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -832,7 +740,6 @@
         id="1232"
         name="Warm-ups w/o Emission Faults"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -841,7 +748,6 @@
         id="1233"
         name="Warm-ups w/o Non-Emission Faults"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -850,7 +756,6 @@
         id="1234"
         name="Mileage Since DTC Cleared"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="km" expression="(((x_high*256)+x_low)*5)" format="0.00" />
@@ -859,7 +764,6 @@
         id="123A"
         name="Long Term FT Avg"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
@@ -868,7 +772,6 @@
         id="1250"
         name="MAF Sensor"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Hz" expression="(((x_high*256)+x_low)/2.048)" format="0.00" />
@@ -877,7 +780,6 @@
         id="125A"
         name="Injector PWM Bank 1 Average"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="ms" expression="(((x_high*256)+x_low)/65.535)" format="0.00" />
@@ -886,7 +788,6 @@
         id="125B"
         name="Injector PWM Bank 2 Average"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="ms" expression="(((x_high*256)+x_low)/65.535)" format="0.00" />
@@ -895,7 +796,6 @@
         id="12B0"
         name="APP Average"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />
@@ -904,7 +804,6 @@
         id="12B1"
         name="TP Indicated Angle"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="%" expression="(((x_high*256)+x_low)*5/256)" format="0.00" />
@@ -913,7 +812,6 @@
         id="12B4"
         name="APP Sensor 1"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x)" format="0.00" />
@@ -922,7 +820,6 @@
         id="12B5"
         name="APP Sensor 2"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x)" format="0.00" />
@@ -931,7 +828,6 @@
         id="12B6"
         name="APP Sensor 3"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x)" format="0.00" />
@@ -940,7 +836,6 @@
         id="12B7"
         name="TP Sensor 1"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x)" format="0.00" />
@@ -949,7 +844,6 @@
         id="12B8"
         name="TP Sensor 2"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="%" expression="(x)" format="0.00" />
@@ -958,7 +852,6 @@
         id="12B9"
         name="TP Sensor 2"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volt" expression="(x/51)" format="0.00" />
@@ -967,7 +860,6 @@
         id="12BA"
         name="TP Sensor 1"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volt" expression="(x/51)" format="0.00" />
@@ -976,7 +868,6 @@
         id="12BB"
         name="APP Sensor 3"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volt" expression="(x/51)" format="0.00" />
@@ -985,7 +876,6 @@
         id="12BC"
         name="APP Sensor 2"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volt" expression="(x/51)" format="0.00" />
@@ -994,7 +884,6 @@
         id="12BD"
         name="APP Sensor 1"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volt" expression="(x/51)" format="0.00" />
@@ -1003,7 +892,6 @@
         id="12E3"
         name="Fuel Tank Pressure Sensor"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="mmHg" expression="-((x/5.46)-13.995)" format="0.00" />
@@ -1012,7 +900,6 @@
         id="12EE"
         name="VTD Fuel Disable Until Ign"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
@@ -1021,7 +908,6 @@
         id="12EE"
         name="VTD Auto"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>3)" format="0.00" />
@@ -1030,7 +916,6 @@
         id="12EE"
         name="PCM/VCM in VTD Fail Enable"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>4)" format="0.00" />
@@ -1039,7 +924,6 @@
         id="1315"
         name="Cruise Disengage 1 History"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -1048,7 +932,6 @@
         id="1316"
         name="Cruise Disengage 2 History"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -1057,7 +940,6 @@
         id="1317"
         name="Cruise Disengage 3 History"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -1066,7 +948,6 @@
         id="1318"
         name="Cruise Disengage 4 History"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -1075,7 +956,6 @@
         id="1319"
         name="Cruise Disengage 5 History"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -1084,7 +964,6 @@
         id="131A"
         name="Cruise Disengage 6 History"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -1093,7 +972,6 @@
         id="131B"
         name="Cruise Disengage 7 History"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -1102,7 +980,6 @@
         id="131C"
         name="Cruise Disengage 8 History"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
@@ -1111,7 +988,6 @@
         id="131D"
         name="Fuel Tank Rated Capacity"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Liters" expression="(((x_high*256)+x_low)/64)" format="0.00" />
@@ -1120,7 +996,6 @@
         id="131E"
         name="TP Desired Angle"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="%" expression="(((x_high*256)+x_low)*5/256)" format="0.00" />
@@ -1129,7 +1004,6 @@
         id="131F"
         name="APP Indicated Angle"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="%" expression="(((x_high*256)+x_low)*5/256)" format="0.00" />
@@ -1138,7 +1012,6 @@
         id="132A"
         name="Fuel Tank Level Remaining"
         description=""	
-        type="PID"
         byteCount="04"
         bitMapped="False">
         <Conversion units="%" expression="(((x_high*256)+x_low))/((((x[2]*256)+x[3])/100))" format="0.00" />
@@ -1147,7 +1020,6 @@
         id="132A"
         name="Fuel Tank Level Remaining"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Liters" expression="(((x_high*256)+x_low)/64)" format="0.00" />
@@ -1156,7 +1028,6 @@
         id="132B"
         name="CMP Sensor - High to Low"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
@@ -1165,7 +1036,6 @@
         id="132C"
         name="CMP Sensor - Low to High"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
@@ -1174,7 +1044,6 @@
         id="1336"
         name="Torque Request Signal"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="N-m" expression="(((x_high*256)+x_low)*0.02646484375)" format="0.00" />
@@ -1183,7 +1052,6 @@
         id="1337"
         name="Torque Delivered Signal"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="N-m" expression="(((x_high*256)+x_low)*0.02646484375)" format="0.00" />
@@ -1192,7 +1060,6 @@
         id="1338"
         name="Fuel Level Sensor Right Tank"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Volts" expression="(x/51)" format="0.00" />
@@ -1201,7 +1068,6 @@
         id="1481"
         name="HO2S Heater Bn 1 Sen"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="amps" expression="((((long)x_high*256)+x_low)/50)" format="0.00" />
@@ -1210,7 +1076,6 @@
         id="1482"
         name="HO2S Heater Bn 1 Sen"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="amps" expression="((((long)x_high*256)+x_low)/50)" format="0.00" />
@@ -1219,7 +1084,6 @@
         id="1484"
         name="HO2S Heater Bn 2 Sen"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="amps" expression="((((long)x_high*256)+x_low)/50)" format="0.00" />
@@ -1228,7 +1092,6 @@
         id="1485"
         name="HO2S Heater Bn 1 Sen"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="amps" expression="((((long)x_high*256)+x_low)/50)" format="0.00" />
@@ -1237,7 +1100,6 @@
         id="1617"
         name="Desired IAC Airflow"
         description=""	
-        type="PID"
         byteCount="02"
         bitMapped="False">
         <Conversion units="g/s" expression="((x_high*256)+x_low)/1024" format="0.00" />
@@ -1246,7 +1108,6 @@
         id="1922"
         name="Power Enrichment"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
@@ -1255,7 +1116,6 @@
         id="199A"
         name="Current Gear"
         description=""	
-        type="PID"
         byteCount="01"
         bitMapped="False">
         <Conversion units="Boolean" expression="(x)" format="0.00" />

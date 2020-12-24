@@ -7,8 +7,11 @@ namespace PcmHacking
     public class Conversion
     {
         public string Units { get; private set; }
+
         public string Expression { get; private set; }
+
         public string Format { get; private set; }
+
         public Conversion(string units, string expression, string format)
         {
             this.Units = units;
