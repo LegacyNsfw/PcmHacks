@@ -73,7 +73,16 @@ namespace PcmHacking
 
         private void removeProfileButton_Click(object sender, EventArgs e)
         {
+            int index = this.profileList.SelectedIndex;
             this.profileList.Items.RemoveAt(this.profileList.SelectedIndex);
+
+            if (index >= this.profileList.Items.Count)
+            {
+                index = this.profileList.Items.Count - 1;
+            }
+
+            this.profileList.SelectedIndex = index;
+            this.profileList.Focus();
         }
 
         private void MoveProfileToTop(string path)

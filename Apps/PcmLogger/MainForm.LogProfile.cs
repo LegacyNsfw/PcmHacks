@@ -27,6 +27,49 @@ namespace PcmHacking
             return Path.Combine(Configuration.Settings.LogDirectory, file);
         }
 
+        private void SetDirtyFlag(bool newValue)
+        {
+            if (newValue)
+            {
+                if (this.Text.EndsWith("*"))
+                {
+                    if (!this.currentProfileIsDirty)
+                    {
+                        // This would be a bug - set breakpoint here.
+                        this.Text.EndsWith("*");
+                    }
+                }
+                else
+                {
+                    this.Text = this.Text + "*";
+                }
+            }
+            else
+            {
+                if (this.Text.EndsWith("*") && this.Text != appName)
+                {
+                    this.Text = this.Text.Substring(0, this.Text.Length - 1);
+                }
+                else
+                {
+                    if (this.currentProfileIsDirty)
+                    {
+                        // This would be a bug - set breakpoint here.
+                        this.Text.EndsWith("*");
+                    }
+                }
+            }
+
+            this.currentProfileIsDirty = newValue;
+        }
+
+        private void SetFileName(string fileName)
+        {
+            this.fileName = fileName;
+            this.Text = appName + " - " + fileName;
+        }
+
+
         private void newButton_Click(object sender, EventArgs e)
         {
             if (this.currentProfileIsDirty)
@@ -37,8 +80,8 @@ namespace PcmHacking
                 }
             }
 
-            this.fileName = defaultFileName;
-            this.currentProfileIsDirty = false;
+            this.SetFileName(defaultFileName);
+            this.SetDirtyFlag(false);
             this.ResetProfile();
             this.UpdateGridFromProfile();
         }
@@ -75,7 +118,7 @@ namespace PcmHacking
             }
 
             LogProfileWriter.Write(this.currentProfile, this.currentProfilePath);
-            this.currentProfileIsDirty = false;
+            this.SetDirtyFlag(false);
         }
 
         private void saveAsButton_Click(object sender, EventArgs e)
@@ -127,12 +170,12 @@ namespace PcmHacking
             if (result == DialogResult.OK)
             {
                 this.currentProfilePath = dialog.FileName;
-                this.fileName = Path.GetFileNameWithoutExtension(this.currentProfilePath);
+                this.SetFileName(Path.GetFileNameWithoutExtension(this.currentProfilePath));
 
                 try
                 {
                     LogProfileWriter.Write(this.currentProfile, this.currentProfilePath);
-                    this.currentProfileIsDirty = false;
+                    this.SetDirtyFlag(false);
                 }
                 catch (Exception exception)
                 {
@@ -140,8 +183,15 @@ namespace PcmHacking
                     this.AddUserMessage(exception.Message);
                 }
 
-                // BUG: the Remove operation doesn't always work.
-                this.profileList.Items.Remove(this.currentProfilePath);
+                foreach(PathDisplayAdapter adapter in this.profileList.Items)
+                {
+                    if (adapter.Path == this.currentProfilePath)
+                    {
+                        this.profileList.Items.Remove(adapter);
+                        break;
+                    }
+                }
+
                 this.profileList.Items.Insert(0, new PathDisplayAdapter(this.currentProfilePath));
             }
 
@@ -172,12 +222,12 @@ namespace PcmHacking
             }
 
             this.currentProfilePath = path;
-            this.fileName = Path.GetFileNameWithoutExtension(this.currentProfilePath);
+            this.SetFileName(Path.GetFileNameWithoutExtension(this.currentProfilePath));
 
             LogProfileReader reader = new LogProfileReader(this.database, this.osid, this);
             this.currentProfile = reader.Read(this.currentProfilePath);
             this.UpdateGridFromProfile();
-            this.currentProfileIsDirty = false;
+            this.SetDirtyFlag(false);
         }
     }
 }

@@ -110,7 +110,7 @@ namespace PcmHacking
 
             this.CreateProfileFromGrid();
 
-            this.currentProfileIsDirty = true;
+            this.SetDirtyFlag(true);
         }
 
         private void CreateProfileFromGrid()

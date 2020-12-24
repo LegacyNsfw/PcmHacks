@@ -2,7 +2,7 @@
 
 namespace PcmHacking
 {
-    public class PathDisplayAdapter : IEquatable<string>
+    public class PathDisplayAdapter
     {
         private string path;
 
@@ -21,11 +21,6 @@ namespace PcmHacking
             // Have to use the fully qualified name here 
             // since it conflicts with the Path property.
             return System.IO.Path.GetFileNameWithoutExtension(this.path);
-        }
-
-        public bool Equals(string that)
-        {
-            return this.path == that;
         }
     }
 }

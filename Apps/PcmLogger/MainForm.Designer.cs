@@ -394,7 +394,7 @@
             this.startStopSaving.Name = "startStopSaving";
             this.startStopSaving.Size = new System.Drawing.Size(215, 23);
             this.startStopSaving.TabIndex = 4;
-            this.startStopSaving.Text = "Start &Logging";
+            this.startStopSaving.Text = "Start &Recording";
             this.startStopSaving.UseVisualStyleBackColor = true;
             this.startStopSaving.Click += new System.EventHandler(this.startStopSaving_Click);
             // 
@@ -407,7 +407,7 @@
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.startStopSaving);
             this.Name = "MainForm";
-            this.Text = "PCM Logger";
+            this.Text = "(window title is set programmatically)";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.tabs.ResumeLayout(false);

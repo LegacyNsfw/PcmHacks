@@ -23,6 +23,7 @@ namespace PcmHacking
         private TaskScheduler uiThreadScheduler;
         private uint osid;
 
+        private const string appName = "PCM Logger";
         private const string defaultFileName = "Data";
         private string fileName = defaultFileName;
 
@@ -160,6 +161,10 @@ namespace PcmHacking
                 Configuration.Settings.Save();
             }
 
+            // This just saves the trouble of having to keep a const string in 
+            // sync with whatever window text is entered in the designer view.
+            this.Text = appName;
+
             this.LoadProfileHistory();
 
             ThreadPool.QueueUserWorkItem(BackgroundInitialization);
@@ -269,7 +274,7 @@ namespace PcmHacking
             if (saving)
             {
                 this.saving = false;
-                this.startStopSaving.Text = "Start &Logging";
+                this.startStopSaving.Text = "Start &Recording";
                 this.loggerProgress.MarqueeAnimationSpeed = 0;
                 this.loggerProgress.Visible = false;
                 this.logState = LogState.StopSaving;
@@ -277,7 +282,7 @@ namespace PcmHacking
             else
             {
                 this.saving = true;
-                this.startStopSaving.Text = "Stop &Logging";
+                this.startStopSaving.Text = "Stop &Recording";
                 this.loggerProgress.MarqueeAnimationSpeed = 100;
                 this.loggerProgress.Visible = true;
                 this.logState = LogState.StartSaving;
