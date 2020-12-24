@@ -1,0 +1,19 @@
+﻿<LogProfile>
+    <PidParameters>
+        <PidParameter id="0005" units="°C" />
+        <PidParameter id="0006" units="%" />
+        <PidParameter id="0007" units="%" />
+        <PidParameter id="0008" units="%" />
+        <PidParameter id="0009" units="%" />
+        <PidParameter id="000C" units="RPM" />
+        <PidParameter id="000F" units="°C" />
+        <PidParameter id="0010" units="g/s" />
+        <PidParameter id="11A6" units="°" />
+        <PidParameter id="12B4" units="%" />
+        <PidParameter id="199A" units="Boolean" />
+    </PidParameters>
+    <RamParameters />
+    <MathParameters>
+        <MathParameter id="MathLoadFromPids" units="g/cyl" />
+    </MathParameters>
+</LogProfile>

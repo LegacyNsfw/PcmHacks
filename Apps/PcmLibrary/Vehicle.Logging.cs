@@ -14,31 +14,72 @@ namespace PcmHacking
     public partial class Vehicle : IDisposable
     {
         /// <summary>
-        /// Start logging
+        /// Prepare the PCM to begin sending collections of parameters.
         /// </summary>
-        public async Task<DpidCollection> ConfigureDpids(LogProfile profile)
+        public async Task<DpidCollection> ConfigureDpids(DpidConfiguration dpidConfiguration, uint osid)
         {
             List<byte> dpids = new List<byte>();
-            foreach (ParameterGroup group in profile.ParameterGroups)
+
+            foreach (ParameterGroup group in dpidConfiguration.ParameterGroups)
             {
                 int position = 1;
-                foreach (ProfileParameter parameter in group.Parameters)
+                foreach (LogColumn column in group.LogColumns)
                 {
-                    Message configurationMessage = this.protocol.ConfigureDynamicData(
-                        (byte)group.Dpid,
-                        parameter.DefineBy,
-                        position,
-                        parameter.ByteCount,
-                        parameter.Address);
+                    PidParameter pidParameter = column.Parameter as PidParameter;
+                    RamParameter ramParameter = column.Parameter as RamParameter;
+                    int byteCount;
 
-                    if (!await this.SendMessage(configurationMessage))
+                    if (pidParameter != null)
                     {
-                        return null;
+                        Message configurationMessage = this.protocol.ConfigureDynamicData(
+                            (byte)group.Dpid,
+                            DefineBy.Pid,
+                            position,
+                            pidParameter.ByteCount,
+                            pidParameter.PID);
+
+                        if (!await this.SendMessage(configurationMessage))
+                        {
+                            return null;
+                        }
+
+                        byteCount = pidParameter.ByteCount;
+                    }
+                    else if (ramParameter != null)
+                    {
+                        uint address;
+                        if (ramParameter.TryGetAddress(osid, out address))
+                        {
+                            Message configurationMessage = this.protocol.ConfigureDynamicData(
+                                (byte)group.Dpid,
+                                DefineBy.Address,
+                                position,
+                                ramParameter.ByteCount,
+                                address);
+
+                            if (!await this.SendMessage(configurationMessage))
+                            {
+                                return null;
+                            }
+
+                            byteCount = ramParameter.ByteCount;
+                        }
+                        else
+                        {
+                            this.logger.AddUserMessage(
+                                string.Format("Parameter {0} is not defined for PCM {1}",
+                                ramParameter.Name,
+                                osid));
+                            byteCount = 0;
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("Why does this ParameterGroup contain a " + column.Parameter.GetType().Name + "?");
                     }
 
                     // Wait for a success or fail message.
                     // TODO: move this into the protocol layer.
-                    //
                     for (int attempt = 0; attempt < 3; attempt++)
                     {
                         Message responseMessage = await this.ReceiveMessage();
@@ -55,19 +96,19 @@ namespace PcmHacking
 
                         if (responseMessage[3] == 0x6C)
                         {
-                            this.logger.AddDebugMessage("Configured " + parameter.ToString());
+                            this.logger.AddDebugMessage("Configured " + column.ToString());
                             break;
                         }
 
                         if (responseMessage[3] == 0x7F && responseMessage[4] == 0x2C)
                         {
-                            this.logger.AddUserMessage("Unable to configure " + parameter.ToString());
+                            this.logger.AddUserMessage("Unable to configure " + column.ToString());
                             break;
                         }
                     }
 
 
-                    position += parameter.ByteCount;
+                    position += byteCount;
                 }
                 dpids.Add((byte)group.Dpid);
             }
@@ -120,6 +161,11 @@ namespace PcmHacking
             return result;
         }
 
+        /// <summary>
+        /// Currently only used by VpwExplorer for testing.
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
         public async Task<Response<int>> GetPid(UInt32 pid)
         {
             Message request = this.protocol.CreatePidRequest(pid);
@@ -137,6 +183,10 @@ namespace PcmHacking
             return this.protocol.ParsePidResponse(responseMessage);
         }
 
+        /// <summary>
+        /// For historical reference only.
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> StartLogging_Old()
         {
             // NOT SUPPORTED (in my ROM anyway, need to try others)

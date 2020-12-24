@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Logging\MathValueConfiguration.cs" />
     <Compile Remove="Module.cs" />
   </ItemGroup>
 

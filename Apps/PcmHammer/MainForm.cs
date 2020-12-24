@@ -118,15 +118,25 @@ namespace PcmHacking
         /// <summary>
         /// Invoked when a device is selected and successfully initialized.
         /// </summary>
-        protected override void ValidDeviceSelected(string deviceName)
+        protected override Task ValidDeviceSelectedAsync(string deviceName)
         {
-            this.deviceDescription.Text = deviceName;
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.deviceDescription.Text = deviceName;
+            });
+
+            return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Show the save-as dialog box (after a full read has completed).
-        /// </summary>
-        private string ShowSaveAsDialog()
+        protected override void SetSelectedDeviceText(string message)
+        {
+            this.deviceDescription.Text = message;
+        }
+
+    /// <summary>
+    /// Show the save-as dialog box (after a full read has completed).
+    /// </summary>
+    private string ShowSaveAsDialog()
         {
             SaveFileDialog dialog = new SaveFileDialog();
             dialog.DefaultExt = ".bin";
