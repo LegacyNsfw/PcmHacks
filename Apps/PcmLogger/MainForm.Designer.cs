@@ -92,7 +92,6 @@
             this.tabs.Controls.Add(this.configurationTab);
             this.tabs.Controls.Add(this.profilesTab);
             this.tabs.Controls.Add(this.parametersTab);
-            this.tabs.Controls.Add(this.dashboardTab);
             this.tabs.Controls.Add(this.debugTab);
             this.tabs.Location = new System.Drawing.Point(12, 40);
             this.tabs.Name = "tabs";
