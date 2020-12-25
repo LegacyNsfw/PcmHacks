@@ -103,8 +103,6 @@ namespace PcmHacking
 
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadMemoryBlock);
 
-                this.logger.AddUserMessage("Address\t% Done\tTime Remaining");
-
                 byte[] image = new byte[flashChip.Size];
                 int retryCount = 0;
                 int startAddress = 0;
@@ -157,6 +155,8 @@ namespace PcmHacking
 
                     startAddress += blockSize;
                     retryCount += readResponse.RetryCount;
+
+                    logger.StatusUpdateRetryCount((retryCount > 0) ? retryCount.ToString() + ((retryCount > 1) ? " Retries" : " Retry") : string.Empty);
                 }
 
                 logger.AddUserMessage("Read complete.");
@@ -172,6 +172,8 @@ namespace PcmHacking
                         this.vehicle,
                         this.protocol,
                         this.logger);
+
+                    logger.StatusUpdateReset();
 
                     if (await verifier.CompareRanges(
                         image,
@@ -203,6 +205,7 @@ namespace PcmHacking
             {
                 // Sending the exit command at both speeds and revert to 1x.
                 await this.vehicle.Cleanup();
+                logger.StatusUpdateReset();
             }
         }
 
@@ -251,38 +254,27 @@ namespace PcmHacking
 
                 Buffer.BlockCopy(payload, 0, image, startAddress, payload.Length);
 
-                int percentDone = (startAddress * 100) / image.Length;
                 TimeSpan elapsed = DateTime.Now - startTime;
-                string timeRemaining;
+                string timeRemaining = string.Empty;
 
-                // Wait 10 seconds before showing time estimate.
-                if (elapsed.TotalSeconds < 10)
-                {
-                    timeRemaining = "Measuring read speed...";
-                }
-                else
-                {
-                    UInt32 bytesPerSecond = (UInt32)(startAddress / elapsed.TotalSeconds);
-                    UInt32 bytesRemaining = (UInt32)(image.Length - startAddress);
+                UInt32 bytesPerSecond = 0;
+                UInt32 bytesRemaining = 0;
 
-                    // Don't divide by zero.
-                    if (bytesPerSecond > 0)
-                    {
-                        UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
-                        timeRemaining = TimeSpan.FromSeconds(secondsRemaining).ToString("mm\\:ss");
-                    }
-                    else
-                    {
-                        timeRemaining = "??:??";
-                    }
+                bytesPerSecond = (UInt32)(startAddress / elapsed.TotalSeconds);
+                bytesRemaining = (UInt32)(image.Length - startAddress);
+
+                // Don't divide by zero.
+                if (bytesPerSecond > 0)
+                {
+                    UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
+                    timeRemaining = TimeSpan.FromSeconds(secondsRemaining).ToString("mm\\:ss");
                 }
 
-                logger.AddUserMessage(
-                    string.Format(
-                        "0x{0:X6}\t{1}%\t{2}",
-                        startAddress,
-                        startAddress * 100 / image.Length,
-                        timeRemaining));
+                logger.StatusUpdateActivity($"Reading {payload.Length} bytes from 0x{startAddress:X6}");
+                logger.StatusUpdatePercentDone((startAddress * 100 / image.Length > 0) ? $"{startAddress * 100 / image.Length}%" : string.Empty);
+                logger.StatusUpdateTimeRemaining($"T-{timeRemaining}");
+                logger.StatusUpdateKbps((bytesPerSecond > 0) ? $"{(double)bytesPerSecond * 8.00 / 1000.00:0.00} Kbps" : string.Empty);
+                logger.StatusUpdateProgressBar((double)(startAddress + payload.Length) / image.Length, true);
 
                 return Response.Create(ResponseStatus.Success, true, retryCount);
             }

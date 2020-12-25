@@ -70,6 +70,7 @@ namespace PcmHacking
                     () => this.ReceivedMessageCount,
                     this.Port, 
                     this.Logger);
+
                 if (await allProDevice.Initialize())
                 {
                     this.implementation = allProDevice;
@@ -110,7 +111,7 @@ namespace PcmHacking
             catch (Exception exception)
             {
                 this.Logger.AddUserMessage("Unable to initalize " + this.ToString());
-                this.Logger.AddUserMessage(exception.ToString());
+                this.Logger.AddDebugMessage(exception.ToString());
                 return false;
             }
         }

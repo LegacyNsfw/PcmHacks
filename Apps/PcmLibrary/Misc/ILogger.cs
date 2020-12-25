@@ -27,5 +27,16 @@ namespace PcmHacking
         /// These should be things that we can use to diagnose errors.
         /// Feel free to include raw sequences of bytes.
         void AddDebugMessage(string message);
+
+        /// <summary>
+        /// Status Strip Updater's
+        /// </summary>
+        void StatusUpdateActivity(string activity);
+        void StatusUpdateTimeRemaining(string remaining);
+        void StatusUpdatePercentDone(string percent);
+        void StatusUpdateRetryCount(string retries);
+        void StatusUpdateProgressBar(double completed, bool visible);
+        void StatusUpdateKbps(string Kbps);
+        void StatusUpdateReset();
     }
 }
