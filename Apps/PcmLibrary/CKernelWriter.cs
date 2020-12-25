@@ -345,7 +345,10 @@ namespace PcmHacking
 
             if (allRangesMatch)
             {
-                this.logger.AddUserMessage("Flash successful!");
+                if (this.writeType != WriteType.Compare && this.writeType != WriteType.TestWrite)
+                {
+                    this.logger.AddUserMessage("Flash successful!");
+                }
                 return true;
             }
 
