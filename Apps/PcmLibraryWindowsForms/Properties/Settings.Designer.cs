@@ -94,17 +94,5 @@ namespace PcmLibraryWindowsForms.Properties {
                 this["DeviceCategoryJ2534"] = value;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool Enable4xReadWrite {
-            get {
-                return ((bool)(this["Enable4xReadWrite"]));
-            }
-            set {
-                this["Enable4xReadWrite"] = value;
-            }
-        }
     }
 }

@@ -149,7 +149,7 @@ namespace PcmHacking
         /// <summary>
         /// Enable Disable VPW 4x.
         /// </summary>
-        public bool Enable4xReadWrite { get; set; }
+        public bool Enable4xReadWrite { get; set; } = true;
 
         /// <summary>
         /// Constructor.

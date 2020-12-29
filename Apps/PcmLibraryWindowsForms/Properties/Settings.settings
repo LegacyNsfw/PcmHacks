@@ -20,8 +20,5 @@
     <Setting Name="DeviceCategoryJ2534" Type="System.String" Scope="User">
       <Value Profile="(Default)">DeviceCategoryJ2534</Value>
     </Setting>
-    <Setting Name="Enable4xReadWrite" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
   </Settings>
 </SettingsFile>

@@ -196,6 +196,7 @@ namespace PcmHacking
             this.Invoke((MethodInvoker)delegate ()
             {
                 this.deviceDescription.Text = deviceName;
+                this.menuItemEnable4xReadWrite.Checked = this.Vehicle.Enable4xReadWrite;
             });
 
             return Task.CompletedTask;
@@ -383,8 +384,6 @@ namespace PcmHacking
                 await this.ResetDevice();
 
                 this.MinimumSize = new Size(800, 600);
-
-                menuItemEnable4xReadWrite.Checked = DeviceConfiguration.Settings.Enable4xReadWrite;
 
                 if (string.IsNullOrWhiteSpace(Configuration.Settings.LogDirectory) || !Directory.Exists(Configuration.Settings.LogDirectory))
                 {
@@ -677,8 +676,7 @@ namespace PcmHacking
         /// </summary>
         private void enable4xReadWrite_Click(object sender, EventArgs e)
         {
-            Vehicle.Enable4xReadWrite = menuItemEnable4xReadWrite.Checked = DeviceConfiguration.Settings.Enable4xReadWrite ^= true;
-            DeviceConfiguration.Settings.Save();
+            this.Vehicle.Enable4xReadWrite = menuItemEnable4xReadWrite.Checked ^= true;
         }
 
         /// <summary>

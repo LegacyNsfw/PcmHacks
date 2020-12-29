@@ -136,8 +136,6 @@ namespace PcmHacking
                 this.SetSelectedDeviceText("Connecting, please wait...");
             });
 
-            device.Enable4xReadWrite = DeviceConfiguration.Settings.Enable4xReadWrite;
-
             Protocol protocol = new Protocol();
             this.vehicle = new Vehicle(
                 device,
