@@ -206,10 +206,10 @@ namespace PcmHacking
             this.deviceDescription.Text = message;
         }
 
-    /// <summary>
-    /// Show the save-as dialog box (after a full read has completed).
-    /// </summary>
-    private string ShowSaveAsDialog()
+        /// <summary>
+        /// Show the save-as dialog box (after a full read has completed).
+        /// </summary>
+        private string ShowSaveAsDialog()
         {
             string fileName = null;
 
