@@ -56,6 +56,14 @@ goto beginning
   echo       Set path to GNU m68k bin dir. (no space)
   echo       Value: %GCC_LOCATION%
   echo.
+  echo     -m
+  echo       Set flag to dump kernel Map or not.
+  if defined DUMP_MAP (
+    echo       Value: True
+  ) else (
+    echo       Value: False
+  )
+  echo.
   echo     -p^<path^>
   echo       Set path\^<filename^> where to copy kernel.bin. (no space)
   echo       Value: %BIN_LOCATION%
@@ -106,6 +114,9 @@ set COPY_BIN=True
 rem * Set default to NOT dump kernel.elf > kernel.disassembly
 set DUMP_ELF=
 
+rem * Set flag to dump kernel Map or not.
+set DUMP_MAP=
+
 rem * Handle command line options.
 (
   setlocal enabledelayedexpansion
@@ -115,6 +126,7 @@ rem * Handle command line options.
     if /i "!VAR!" == "-c"      set COPY_BIN=
     if /i "!VAR!" == "-d"      set DUMP_ELF=True
     if /i "!VAR:~0,2!" == "-g" set "GCC_LOCATION=!VAR:~2!"
+    if /i "!VAR!" == "-m"      set "DUMP_MAP=-Map kernel.map"
     if /i "!VAR:~0,2!" == "-p" set "BIN_LOCATION=!VAR:~2!"
     if /i "!VAR!" == "/h"      goto Usage
     if /i "!VAR!" == "-h"      goto Usage
@@ -131,7 +143,7 @@ rem *** All that for this ...
 "%GCC_LOCATION%\m68k-elf-gcc.exe" -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 -O0 main.c write-kernel.c crc.c common.c common-readwrite.c flash-intel.c flash-amd.c
 if %errorlevel% neq 0 goto :EOF
 
-"%GCC_LOCATION%\m68k-elf-ld.exe" --section-start .kernel_code=0x%BASE_ADDRESS% -T kernel.ld -Map kernel.map -o kernel.elf main.o write-kernel.o crc.o common.o common-readwrite.o flash-intel.o flash-amd.o
+"%GCC_LOCATION%\m68k-elf-ld.exe" --section-start .kernel_code=0x%BASE_ADDRESS% -T kernel.ld %DUMP_MAP% -o kernel.elf main.o write-kernel.o crc.o common.o common-readwrite.o flash-intel.o flash-amd.o
 if %errorlevel% neq 0 goto :EOF
 
 "%GCC_LOCATION%\m68k-elf-objcopy.exe" -O binary --only-section=.kernel_code --only-section=.rodata kernel.elf kernel.bin
