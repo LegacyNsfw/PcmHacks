@@ -37,7 +37,7 @@ void HandleWriteRequestMode34()
 	unsigned length = (MessageBuffer[5] << 8) + MessageBuffer[6];
 	unsigned start = (MessageBuffer[7] << 16) + (MessageBuffer[8] << 8) + MessageBuffer[9];
 
-	if ((length > 4096) || (start != 0xFFA000))
+	if (length > 4096)
 	{
 		MessageBuffer[0] = 0x6C;
 		MessageBuffer[1] = 0xF0;
@@ -148,9 +148,6 @@ void HandleWriteMode36()
 
 		// Notify the tool that the write succeeded.
 		SendWriteSuccess(command);
-
-		// Let the success message flush.
-		LongSleepWithWatchdog();
 
 		// Execute if requested to do so.
 		if (command == 0x80)
