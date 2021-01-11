@@ -91,6 +91,7 @@ namespace PcmHacking
                     }
                 }
 
+                DeviceConfiguration.Settings.Enable4xReadWrite = picker.Enable4xReadWrite;
                 DeviceConfiguration.Settings.DeviceCategory = picker.DeviceCategory;
                 DeviceConfiguration.Settings.J2534DeviceType = picker.J2534DeviceType;
                 DeviceConfiguration.Settings.SerialPort = picker.SerialPort;
@@ -129,8 +130,6 @@ namespace PcmHacking
             {
                 this.SetSelectedDeviceText("Connecting, please wait...");
             });
-
-            device.Enable4xReadWrite = DeviceConfiguration.Settings.Enable4xReadWrite;
 
             Protocol protocol = new Protocol();
             this.vehicle = new Vehicle(
@@ -209,6 +208,16 @@ namespace PcmHacking
                 });
                 return false;
             }
+
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                if (!this.vehicle.Supports4X)
+                {
+                    DeviceConfiguration.Settings.Enable4xReadWrite = true;
+                    DeviceConfiguration.Settings.Save();
+                }
+                this.vehicle.Enable4xReadWrite = DeviceConfiguration.Settings.Enable4xReadWrite;
+            });
 
             await this.ValidDeviceSelectedAsync(this.vehicle.DeviceDescription);
 

@@ -384,8 +384,6 @@ namespace PcmHacking
 
                 this.MinimumSize = new Size(800, 600);
 
-                menuItemEnable4xReadWrite.Checked = DeviceConfiguration.Settings.Enable4xReadWrite;
-
                 if (string.IsNullOrWhiteSpace(Configuration.Settings.LogDirectory) || !Directory.Exists(Configuration.Settings.LogDirectory))
                 {
                     Configuration.Settings.LogDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -561,8 +559,6 @@ namespace PcmHacking
             this.writeCalibrationButton.Enabled = false;
             this.exitKernelButton.Enabled = false;
             this.reinitializeButton.Enabled = false;
-
-            this.menuItemEnable4xReadWrite.Enabled = false;
         }
 
         /// <summary>
@@ -594,11 +590,6 @@ namespace PcmHacking
                 this.writeCalibrationButton.Enabled = true;
                 this.exitKernelButton.Enabled = true;
                 this.reinitializeButton.Enabled = true;
-
-                if (this.Vehicle.Supports4X)
-                {
-                    this.menuItemEnable4xReadWrite.Enabled = true;
-                }
             });
         }
 
@@ -670,15 +661,6 @@ namespace PcmHacking
             {
                 this.Vehicle.UserDefinedKey = -1;
             }
-        }
-
-        /// <summary>
-        /// Enable/Disable 4x
-        /// </summary>
-        private void enable4xReadWrite_Click(object sender, EventArgs e)
-        {
-            Vehicle.Enable4xReadWrite = menuItemEnable4xReadWrite.Checked = DeviceConfiguration.Settings.Enable4xReadWrite ^= true;
-            DeviceConfiguration.Settings.Save();
         }
 
         /// <summary>

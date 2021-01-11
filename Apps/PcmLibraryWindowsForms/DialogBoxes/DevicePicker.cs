@@ -38,6 +38,11 @@ namespace PcmHacking
         public string SerialPortDeviceType { get; set; }
 
         /// <summary>
+        /// Enable Disable VPW 4x.
+        /// </summary>
+        public bool Enable4xReadWrite { get; set; }
+
+        /// <summary>
         /// Prompt to put into drop-down lists to let the user know that they need to make a selection.
         /// </summary>
         private const string prompt = "Select...";
@@ -96,6 +101,8 @@ namespace PcmHacking
                 this.j2534DeviceList, 
                 x => x.ToString(),
                 DeviceConfiguration.Settings.J2534DeviceType);
+
+            this.Enable4xReadWrite = this.enable4xReadWriteCheckBox.Checked = DeviceConfiguration.Settings.Enable4xReadWrite;
         }
 
         /// <summary>
@@ -238,6 +245,14 @@ namespace PcmHacking
         private void j2534DeviceList_SelectedIndexChanged(object sender, EventArgs e)
         {
             this.J2534DeviceType = this.j2534DeviceList.SelectedItem?.ToString();
+        }
+
+        /// <summary>
+        /// Enable/disable VPW 4x
+        /// </summary>
+        private void enable4xReadWriteCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            this.Enable4xReadWrite = this.enable4xReadWriteCheckBox.Checked;
         }
 
         /// <summary>
