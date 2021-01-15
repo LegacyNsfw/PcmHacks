@@ -66,12 +66,6 @@ namespace PcmHacking
         /// <returns></returns>
         public async Task<bool> HandleSelectButtonClick()
         {
-            if (this.vehicle != null)
-            {
-                this.vehicle.Dispose();
-                this.vehicle = null;
-            }
-
             DevicePicker picker = new DevicePicker(this);
             DialogResult result = picker.ShowDialog();
             if (result == DialogResult.OK)
