@@ -179,7 +179,6 @@ namespace PcmHacking
         private void okButton_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.OK;
-            this.Close();
         }
 
         /// <summary>
@@ -188,7 +187,6 @@ namespace PcmHacking
         private void cancelButton_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
-            this.Close();
         }
 
         /// <summary>

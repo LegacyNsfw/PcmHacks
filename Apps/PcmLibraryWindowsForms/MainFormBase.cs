@@ -66,38 +66,40 @@ namespace PcmHacking
         /// <returns></returns>
         public async Task<bool> HandleSelectButtonClick()
         {
-            DevicePicker picker = new DevicePicker(this);
-            DialogResult result = picker.ShowDialog();
-            if (result == DialogResult.OK)
+            using (DevicePicker picker = new DevicePicker(this))
             {
-                if (picker.DeviceCategory == DeviceConfiguration.Constants.DeviceCategorySerial)
+                DialogResult result = picker.ShowDialog();
+                if (result == DialogResult.OK)
                 {
-                    if (string.IsNullOrEmpty(picker.SerialPort))
+                    if (picker.DeviceCategory == DeviceConfiguration.Constants.DeviceCategorySerial)
                     {
-                        return false;
+                        if (string.IsNullOrEmpty(picker.SerialPort))
+                        {
+                            return false;
+                        }
+
+                        if (string.IsNullOrEmpty(picker.SerialPortDeviceType))
+                        {
+                            return false;
+                        }
                     }
 
-                    if (string.IsNullOrEmpty(picker.SerialPortDeviceType))
+                    if (picker.DeviceCategory == DeviceConfiguration.Constants.DeviceCategoryJ2534)
                     {
-                        return false;
+                        if (string.IsNullOrEmpty(picker.J2534DeviceType))
+                        {
+                            return false;
+                        }
                     }
+
+                    DeviceConfiguration.Settings.Enable4xReadWrite = picker.Enable4xReadWrite;
+                    DeviceConfiguration.Settings.DeviceCategory = picker.DeviceCategory;
+                    DeviceConfiguration.Settings.J2534DeviceType = picker.J2534DeviceType;
+                    DeviceConfiguration.Settings.SerialPort = picker.SerialPort;
+                    DeviceConfiguration.Settings.SerialPortDeviceType = picker.SerialPortDeviceType;
+                    DeviceConfiguration.Settings.Save();
+                    return await this.ResetDevice();
                 }
-
-                if (picker.DeviceCategory == DeviceConfiguration.Constants.DeviceCategoryJ2534)
-                {
-                    if (string.IsNullOrEmpty(picker.J2534DeviceType))
-                    {
-                        return false;
-                    }
-                }
-
-                DeviceConfiguration.Settings.Enable4xReadWrite = picker.Enable4xReadWrite;
-                DeviceConfiguration.Settings.DeviceCategory = picker.DeviceCategory;
-                DeviceConfiguration.Settings.J2534DeviceType = picker.J2534DeviceType;
-                DeviceConfiguration.Settings.SerialPort = picker.SerialPort;
-                DeviceConfiguration.Settings.SerialPortDeviceType = picker.SerialPortDeviceType;
-                DeviceConfiguration.Settings.Save();
-                return await this.ResetDevice();
             }
             return false;
         }
@@ -152,22 +154,14 @@ namespace PcmHacking
         /// </summary>
         protected async Task<bool> InitializeCurrentDevice()
         {
-            this.Invoke((MethodInvoker)delegate ()
-            {
-                this.DisableUserInput();
-            });
-            
             if (this.vehicle == null)
             {
-                this.Invoke((MethodInvoker)delegate ()
-                {
-                    this.EnableInterfaceSelection();
-                });
                 return false;
             }
 
             this.Invoke((MethodInvoker)delegate ()
             {
+                this.DisableUserInput();
                 this.ResetLogs();
             });
 
