@@ -92,7 +92,7 @@
     <Compile Include="DialogBoxes\UserDefinedKeyDialogBox.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DialogBoxes\UserDefinedKeyDialogBox.designer.cs">
+    <Compile Include="DialogBoxes\UserDefinedKeyDialogBox.Designer.cs">
       <DependentUpon>UserDefinedKeyDialogBox.cs</DependentUpon>
     </Compile>
     <Compile Include="DialogBoxes\VinForm.cs">
