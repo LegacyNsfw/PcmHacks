@@ -27,15 +27,15 @@ namespace PcmHacking
         /// Constructor.
         /// </summary>
         public AllProDeviceImplementation(
-            Action<Message> enqueue, 
-            Func<int> getRecievedMessageCount, 
-            IPort port, 
-            ILogger logger) : 
+            Action<Message> enqueue,
+            Func<int> getRecievedMessageCount,
+            IPort port,
+            ILogger logger) :
             base(enqueue, getRecievedMessageCount, port, logger)
         {
             // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
             this.MaxSendSize = 1024 + 12;
-            this.MaxReceiveSize = 1024 + 12;   
+            this.MaxReceiveSize = 1024 + 12;
             this.Supports4X = true;
         }
 
