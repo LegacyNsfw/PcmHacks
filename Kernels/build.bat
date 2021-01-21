@@ -10,7 +10,7 @@ if -%KernelBuild%- == -- call fixpath.bat
 call clean.bat
 
 REM * See: Build.cmd -h
-call Build.cmd -c -d -aFF8000 -gc:\SysGCC\m68k-elf\bin\ -p..\Apps\PcmHammer\bin\debug\kernel.bin
+call Build.cmd -m -c -d -aFF8000 -gc:\SysGCC\m68k-elf\bin\ -p..\Apps\PcmHammer\bin\debug\kernel.bin
 
 c:\mingw\bin\g++ -o test.exe test.cpp crc.c
 
