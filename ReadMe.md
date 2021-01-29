@@ -29,5 +29,3 @@ Extract the contents of the zip file, and run PcmHammer.exe or PcmLogger.exe.
 [BoredTruckOwner's LS-based repository](https://github.com/BoredTruckOwner/LS_Based_Engine_Repository)
 
 [Snoman002's repository - only the P01 and P59 sections are useful for PCM Hammer](https://github.com/Snoman002/Engine-Tune-Repository-TunerPro-EFIlive-TunerCat/tree/master/General%20Motors)
-
-[The GM section of SnoMan's multi-manufacturer repository](https://github.com/Snoman002/Engine-Tune-Repository-TunerPro-EFIlive-TunerCat/tree/master/General%20Motors)
