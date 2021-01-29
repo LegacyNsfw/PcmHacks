@@ -116,7 +116,11 @@ namespace PcmHacking
 
             if (TryVerifyInitialBytes(response, unlocked, out status))
             {
-                return true;
+                // To short to be a seed?
+                if (response.Length < 7)
+                {
+                    return true;
+                }
             }
 
             return false;
