@@ -41,7 +41,7 @@ if (-not $Preview)
 	git add $file
 
 	write-host ===============================================================================
-	write-host = Confirm changes to MainForm.cs and help.html now.
+	write-host = Running difftool - confirm changes to MainForm.cs and help.html now.
 	git difftool --cached
 }
 else

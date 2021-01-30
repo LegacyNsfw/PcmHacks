@@ -462,7 +462,7 @@ void HandleVersionQuery(uint8_t kernelType)
 	MessageBuffer[4] = 0x00;
 	MessageBuffer[5] = 0x01; // major
 	MessageBuffer[6] = 0x03; // minor
-	MessageBuffer[7] = 0x01; // patch
+	MessageBuffer[7] = 0x02; // patch
 	MessageBuffer[8] = kernelType; // AA = read, BB = write
 
 	// The AllPro and ScanTool devices need a short delay to switch from
