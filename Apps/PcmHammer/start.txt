@@ -1,1 +1,1 @@
-WARNING: This version of PCM Hammer is obsolete! Please get the latest release from https://github.com/LegacyNsfw/PcmHacks/releases
+This version of PCM Hammer is obsolete! Please get the latest release from https://github.com/LegacyNsfw/PcmHacks/releases
