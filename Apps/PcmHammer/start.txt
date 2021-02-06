@@ -1,1 +1,1 @@
-Thanks for using PCM Hammer.
+WARNING: This version of PCM Hammer is obsolete! Please get the latest release from https://github.com/LegacyNsfw/PcmHacks/releases
