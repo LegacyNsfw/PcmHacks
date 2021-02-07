@@ -20,7 +20,16 @@ namespace PcmHacking
         {
             if ((algo >= 0) && (algo <= 255))
             {
-                return unchecked((UInt16)KeyAlgo(seed, algo));
+                if (seed != 0xFFFF)
+                {
+                    return unchecked((UInt16)KeyAlgo(seed, algo));
+                }
+                else
+                {
+                    // 0xFFFF seed is non-standard and indicates that Parameter block is not programmed
+                    // so the key is also 0xFFFF. This sometimes happens after SPS flashing.
+                    return 0xFFFF;
+                }
             }
             else
             {
@@ -300,12 +309,12 @@ namespace PcmHacking
 
         public static void Op_code_comp(int high_byte, int low_byte)
         {
-            if (high_byte >= low_byte)
+            if (high_byte > low_byte)
             {
                 key_value = (65535 & (~key_value));
             }
             else
-                key_value = (65535 & (~(key_value + 1)));
+                key_value = (65535 & (~(key_value) + 1));
         }
 
         public static void Op_code_rot_lt(int high_byte, int low_byte)

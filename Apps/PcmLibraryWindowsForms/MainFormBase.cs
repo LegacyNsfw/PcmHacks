@@ -13,13 +13,25 @@ namespace PcmHacking
     public partial class MainFormBase : Form, ILogger
     {
         /// <summary>
+        /// Impolite, but it needs to be short enough to fit in the device-description box.
+        /// </summary>
+        private const string selectAnotherDevice = "Select another device.";
+
+        /// <summary>
         /// The Vehicle object is our interface to the car. It has the device, the message generator, and the message parser.
         /// </summary>
         private Vehicle vehicle;
         protected Vehicle Vehicle { get { return this.vehicle; } }
-               
+
         public virtual void AddDebugMessage(string message) { }
         public virtual void AddUserMessage(string message) { }
+        public virtual void StatusUpdateActivity(string activity) { }
+        public virtual void StatusUpdateTimeRemaining(string remaining) { }
+        public virtual void StatusUpdatePercentDone(string percent) { }
+        public virtual void StatusUpdateRetryCount(string retries) { }
+        public virtual void StatusUpdateProgressBar(double completed, bool visible) { }
+        public virtual void StatusUpdateKbps(string Kbps) { }
+        public virtual void StatusUpdateReset() { }
         public virtual void ResetLogs() { }
 
         public virtual string GetAppNameAndVersion() { return "MainFormBase.GetAppNameAndVersion is not implemented"; }
@@ -28,60 +40,66 @@ namespace PcmHacking
         protected virtual void EnableUserInput() { }
         protected virtual void DisableUserInput() { }
 
+        protected virtual void SetSelectedDeviceText(string message)
+        {
+
+        }
+
         protected virtual void NoDeviceSelected()
         {
             // disable re-init button
             // set device name to "no device selected"
         }
 
-        protected virtual void ValidDeviceSelected(string deviceName)
+        protected virtual async Task ValidDeviceSelectedAsync(string deviceName)
         {
             // enable re-init button
             // show device name
+
+            // This is just here to suppress a compiler warning.
+            await Task.CompletedTask;
         }
-        
+
         /// <summary>
         /// Handle clicking the "Select Interface" button
         /// </summary>
         /// <returns></returns>
         public async Task<bool> HandleSelectButtonClick()
         {
-            if (this.vehicle != null)
+            using (DevicePicker picker = new DevicePicker(this))
             {
-                this.vehicle.Dispose();
-                this.vehicle = null;
-            }
-
-            DevicePicker picker = new DevicePicker(this);
-            DialogResult result = picker.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                if (picker.DeviceCategory == Configuration.Constants.DeviceCategorySerial)
+                DialogResult result = picker.ShowDialog();
+                if (result == DialogResult.OK)
                 {
-                    if (string.IsNullOrEmpty(picker.SerialPort))
+                    if (picker.DeviceCategory == DeviceConfiguration.Constants.DeviceCategorySerial)
                     {
-                        return false;
+                        if (string.IsNullOrEmpty(picker.SerialPort))
+                        {
+                            return false;
+                        }
+
+                        if (string.IsNullOrEmpty(picker.SerialPortDeviceType))
+                        {
+                            return false;
+                        }
                     }
 
-                    if (string.IsNullOrEmpty(picker.SerialPortDeviceType))
+                    if (picker.DeviceCategory == DeviceConfiguration.Constants.DeviceCategoryJ2534)
                     {
-                        return false;
+                        if (string.IsNullOrEmpty(picker.J2534DeviceType))
+                        {
+                            return false;
+                        }
                     }
+
+                    DeviceConfiguration.Settings.Enable4xReadWrite = picker.Enable4xReadWrite;
+                    DeviceConfiguration.Settings.DeviceCategory = picker.DeviceCategory;
+                    DeviceConfiguration.Settings.J2534DeviceType = picker.J2534DeviceType;
+                    DeviceConfiguration.Settings.SerialPort = picker.SerialPort;
+                    DeviceConfiguration.Settings.SerialPortDeviceType = picker.SerialPortDeviceType;
+                    DeviceConfiguration.Settings.Save();
+                    return await this.ResetDevice();
                 }
-
-                if (picker.DeviceCategory == Configuration.Constants.DeviceCategoryJ2534)
-                {
-                    if (string.IsNullOrEmpty(picker.J2534DeviceType))
-                    {
-                        return false;
-                    }
-                }
-
-                Configuration.DeviceCategory = picker.DeviceCategory;
-                Configuration.J2534DeviceType = picker.J2534DeviceType;
-                Configuration.SerialPort = picker.SerialPort;
-                Configuration.SerialPortDeviceType = picker.SerialPortDeviceType;
-                return await this.ResetDevice();
             }
             return false;
         }
@@ -96,15 +114,24 @@ namespace PcmHacking
                 this.vehicle.Dispose();
                 this.vehicle = null;
             }
-
+                        
             Device device = DeviceFactory.CreateDeviceFromConfigurationSettings(this);
             if (device == null)
             {
-                this.NoDeviceSelected();
-                this.DisableUserInput();
-                this.EnableInterfaceSelection();
+                this.Invoke((MethodInvoker)delegate()
+                {
+                    this.NoDeviceSelected();
+                    this.SetSelectedDeviceText(selectAnotherDevice);
+                    this.DisableUserInput();
+                    this.EnableInterfaceSelection();
+                });
                 return false;
             }
+
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.SetSelectedDeviceText("Connecting, please wait...");
+            });
 
             Protocol protocol = new Protocol();
             this.vehicle = new Vehicle(
@@ -112,6 +139,7 @@ namespace PcmHacking
                 protocol,
                 this,
                 new ToolPresentNotifier(device, protocol, this));
+
             if (!await this.InitializeCurrentDevice())
             {
                 this.vehicle = null;
@@ -126,15 +154,16 @@ namespace PcmHacking
         /// </summary>
         protected async Task<bool> InitializeCurrentDevice()
         {
-            this.DisableUserInput();
-
             if (this.vehicle == null)
             {
-                this.EnableInterfaceSelection();
                 return false;
             }
 
-            this.ResetLogs();
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.DisableUserInput();
+                this.ResetLogs();
+            });
 
             this.AddUserMessage(GetAppNameAndVersion());
 
@@ -142,24 +171,54 @@ namespace PcmHacking
             {
                 // TODO: this should not return a boolean, it should just throw 
                 // an exception if it is not able to initialize the device.
-                bool initialized = await this.vehicle.ResetConnection();
-                if (!initialized)
+                Task<bool> initializationTask = this.vehicle.ResetConnection();
+                bool completed = await initializationTask.AwaitWithTimeout(TimeSpan.FromSeconds(5));
+                if (!completed)
+                {
+                    throw new TimeoutException("Vehicle.ResetConnection timed out.");
+                }
+
+                if (!initializationTask.Result)
                 {
                     this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
-                    this.EnableInterfaceSelection();
+
+                    this.Invoke((MethodInvoker)delegate ()
+                    {
+                        this.SetSelectedDeviceText(selectAnotherDevice);
+                        this.EnableInterfaceSelection();
+                    });
                     return false;
                 }
             }
             catch (Exception exception)
             {
                 this.AddUserMessage("Unable to initialize " + this.vehicle.DeviceDescription);
+
                 this.AddDebugMessage(exception.ToString());
-                this.EnableInterfaceSelection();
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.SetSelectedDeviceText(selectAnotherDevice);
+                    this.EnableInterfaceSelection();
+                });
                 return false;
             }
 
-            this.ValidDeviceSelected(this.vehicle.DeviceDescription);
-            this.EnableUserInput();
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                if (!this.vehicle.Supports4X)
+                {
+                    DeviceConfiguration.Settings.Enable4xReadWrite = true;
+                    DeviceConfiguration.Settings.Save();
+                }
+                this.vehicle.Enable4xReadWrite = DeviceConfiguration.Settings.Enable4xReadWrite;
+            });
+
+            await this.ValidDeviceSelectedAsync(this.vehicle.DeviceDescription);
+
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.EnableUserInput();
+            });
             return true;
         }
     }

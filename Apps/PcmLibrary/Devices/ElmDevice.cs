@@ -70,6 +70,7 @@ namespace PcmHacking
                     () => this.ReceivedMessageCount,
                     this.Port, 
                     this.Logger);
+
                 if (await allProDevice.Initialize())
                 {
                     this.implementation = allProDevice;
@@ -105,15 +106,14 @@ namespace PcmHacking
                 this.MaxSendSize = this.implementation.MaxSendSize;
                 this.MaxReceiveSize = this.implementation.MaxReceiveSize;
                 this.Supports4X = this.implementation.Supports4X;
+                return true;
             }
             catch (Exception exception)
             {
-                this.Logger.AddDebugMessage("Unable to initalize " + this.ToString());
+                this.Logger.AddUserMessage("Unable to initalize " + this.ToString());
                 this.Logger.AddDebugMessage(exception.ToString());
                 return false;
             }
-
-            return true;
         }
 
         private async Task<bool> SharedInitialization()

@@ -1,0 +1,27 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="PcmLibraryWindowsForms.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="DeviceCategory" Type="System.String" Scope="User">
+      <Value Profile="(Default)">DeviceCategory</Value>
+    </Setting>
+    <Setting Name="J2534DeviceType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">J2534DeviceType</Value>
+    </Setting>
+    <Setting Name="SerialPort" Type="System.String" Scope="User">
+      <Value Profile="(Default)">SerialPort</Value>
+    </Setting>
+    <Setting Name="SerialPortDeviceType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">SerialPortDeviceType</Value>
+    </Setting>
+    <Setting Name="DeviceCategorySerial" Type="System.String" Scope="User">
+      <Value Profile="(Default)">DeviceCategorySerial</Value>
+    </Setting>
+    <Setting Name="DeviceCategoryJ2534" Type="System.String" Scope="User">
+      <Value Profile="(Default)">DeviceCategoryJ2534</Value>
+    </Setting>
+    <Setting Name="Enable4xReadWrite" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

@@ -35,7 +35,7 @@ namespace PcmHacking
             UInt16 result = 0;
 
             byte[] unlocked = { Priority.Physical0, 0x70, DeviceId.Pcm, Mode.Seed + Mode.Response, 0x01, 0x37 };
-            byte[] seed = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.Seed + Mode.Response, 0x01, };
+            byte[] seed = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.Seed + Mode.Response, 0x01 };
 
             if (TryVerifyInitialBytes(response, unlocked, out status))
             {
@@ -116,7 +116,11 @@ namespace PcmHacking
 
             if (TryVerifyInitialBytes(response, unlocked, out status))
             {
-                return true;
+                // To short to be a seed?
+                if (response.Length < 7)
+                {
+                    return true;
+                }
             }
 
             return false;

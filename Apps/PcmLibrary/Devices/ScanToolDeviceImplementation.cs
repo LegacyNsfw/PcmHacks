@@ -72,18 +72,34 @@ namespace PcmHacking
 
                 this.Logger.AddUserMessage("ScanTool device ID: " + stID);
 
-                if (stID.Contains("STN1130")) // SX
-                {
-                    this.MaxSendSize = 192 + 12;
-                    this.MaxReceiveSize = 500 + 12;
-                }
-                else if (stID.Contains("STN1110") || // SparkFun OBD-II UART
-                    stID.Contains("STN1150") || // MX version 1
-                    stID.Contains("STN1151") || // MX version 2
+                // The following table was provided by ScanTool.net Support - ticket #33419
+                // Device                     Max Msg Size    Max Tested Baudrate
+                // STN1110                    2k              2 Mbps *
+                // STN1130 (OBDLink SX)       2k              2 Mbps *
+                // STN1150 (OBDLink MX v1)    2k              N/A
+                // STN1151 (OBDLink MX v2)    2k              N/A
+                // STN1155 (OBDLink LX)       2k              N/A
+                // STN1170                    2k              2 Mbps *
+                // STN2100                    4k              2 Mbps
+                // STN2120                    4k              2 Mbps
+                // STN2230 (OBDLink EX)       4k              N/A
+                // STN2255 (OBDLink MX+)      4k              N/A
+                //
+                // * With character echo off (ATE 0), 1 Mbps with character echo on (ATE 1)
+
+                // Here 1024 bytes = 2048 ASCII hex bytes, without spaces
+                if (stID.Contains("STN1110") || // SparkFun OBD-II UART
+                    stID.Contains("STN1130") || // SX
+                    stID.Contains("STN1150") || // MX v1
+                    stID.Contains("STN1151") || // MX v2
                     stID.Contains("STN1155") || // LX
+                    stID.Contains("STN1170") || //
+                    stID.Contains("STN2100") || //
+                    stID.Contains("STN2120") || //
+                    stID.Contains("STN2230") || // EX
                     stID.Contains("STN2255"))   // MX+
                 {
-                    // 2048 works, but doesn't write measurably faster.
+                    // Testing shows larger packet sizes do not equate to faster transfers
                     this.MaxSendSize = 1024 + 12;
                     this.MaxReceiveSize = 1024 + 12;
                 }
@@ -136,7 +152,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
-                        milliseconds = 110;
+                        milliseconds = 250;
                         break;
 
                     case TimeoutScenario.EraseMemoryBlock:

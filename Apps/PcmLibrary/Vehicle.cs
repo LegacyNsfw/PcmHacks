@@ -81,6 +81,37 @@ namespace PcmHacking
             }
         }
 
+        public bool Supports4X
+        {
+            get => this.device.Supports4X;
+        }
+
+        public bool Enable4xReadWrite
+        {
+            set
+            {
+                this.device.Enable4xReadWrite = value;
+            }
+
+            get => this.device.Enable4xReadWrite;
+        }
+
+        public Int32 UserDefinedKey
+        {
+            get; set;
+        } = -1;
+
+        /// <summary>
+        /// Silences Kernel ID reporting
+        /// </summary>
+        /// <remarks>
+        /// See note Vehicle.Kernel PCMExecute(...)
+        /// </remarks>
+        public bool ReportKernelID
+        {
+            get; set;
+        } = true;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -130,7 +161,9 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> ResetConnection()
         {
-            return await this.device.Initialize().AwaitWithTimeout(TimeSpan.FromSeconds(10));
+            Task<bool> task = this.device.Initialize();
+            bool completedWithoutTimeout = await task.AwaitWithTimeout(TimeSpan.FromSeconds(10));
+            return task.Result;
         }
 
         /// <summary>
@@ -290,7 +323,16 @@ namespace PcmHacking
                 return true;
             }
 
-            UInt16 key = KeyAlgorithm.GetKey(keyAlgorithm, seedValue);
+            UInt16 key;
+            if (UserDefinedKey == -1)
+            {
+                key = KeyAlgorithm.GetKey(keyAlgorithm, seedValue);
+            }
+            else
+            {
+                this.logger.AddUserMessage($"User Defined Key: 0x{UserDefinedKey.ToString("X4")}");
+                key = (UInt16)UserDefinedKey;
+            }
 
             this.logger.AddDebugMessage("Sending unlock request (" + seedValue.ToString("X4") + ", " + key.ToString("X4") + ")");
             Message unlockRequest = this.protocol.CreateUnlockRequest(key);

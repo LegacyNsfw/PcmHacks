@@ -39,16 +39,6 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Save configuration settings to app.config.
-        /// </summary>
-        public void UpdateAppConfiguration()
-        {
-            Configuration.DeviceCategory = Configuration.Constants.DeviceCategorySerial;
-            Configuration.SerialPort = this.Port.ToString();
-            Configuration.SerialPortDeviceType = this.GetDeviceType();
-        }
-
-        /// <summary>
         /// Generate a descriptive string for this device and the port that it is using.
         /// </summary>
         public override string ToString()

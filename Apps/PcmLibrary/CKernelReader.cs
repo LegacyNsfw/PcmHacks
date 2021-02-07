@@ -14,12 +14,19 @@ namespace PcmHacking
     public class CKernelReader
     {
         private readonly Vehicle vehicle;
+        private readonly PcmInfo pcmInfo;
         private readonly Protocol protocol;
         private readonly ILogger logger;
 
-        public CKernelReader(Vehicle vehicle, ILogger logger)
+        public bool VerifyFile
+        {
+            get; set;
+        } = true;
+
+        public CKernelReader(Vehicle vehicle, PcmInfo pcmInfo, ILogger logger)
         {
             this.vehicle = vehicle;
+            this.pcmInfo = pcmInfo;
 
             // This seems wrong... Some alternatives:
             // a) Have the caller pass in the message factory and message-parser methods
@@ -44,7 +51,7 @@ namespace PcmHacking
                 this.vehicle.ClearDeviceMessageQueue();
 
                 // Switch to 4x, if possible. But continue either way.
-                if (Configuration.Enable4xReadWrite)
+                if (this.vehicle.Enable4xReadWrite)
                 {
                     // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
                     if (!await this.vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
@@ -61,13 +68,13 @@ namespace PcmHacking
                 await this.vehicle.SendToolPresentNotification();
 
                 // execute read kernel
-                Response<byte[]> response = await vehicle.LoadKernelFromFile("kernel.bin");
+                Response<byte[]> response = await vehicle.LoadKernelFromFile(this.pcmInfo.KernelFileName);
                 if (response.Status != ResponseStatus.Success)
                 {
                     logger.AddUserMessage("Failed to load kernel from file.");
                     return new Response<Stream>(response.Status, null);
                 }
-                
+
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return Response.Create(ResponseStatus.Cancelled, (Stream)null);
@@ -77,7 +84,7 @@ namespace PcmHacking
 
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
                 // TODO: choose kernel at run time? Because now it's FF8000...
-                if (!await this.vehicle.PCMExecute(response.Value, 0xFF8000, cancellationToken))
+                if (!await this.vehicle.PCMExecute(response.Value, this.pcmInfo.KernelBaseAddress, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -95,8 +102,6 @@ namespace PcmHacking
                 logger.AddUserMessage("Flash chip: " + flashChip.ToString());
 
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadMemoryBlock);
-
-                this.logger.AddUserMessage("Address\t% Done\tTime Remaining");
 
                 byte[] image = new byte[flashChip.Size];
                 int retryCount = 0;
@@ -150,31 +155,39 @@ namespace PcmHacking
 
                     startAddress += blockSize;
                     retryCount += readResponse.RetryCount;
+
+                    logger.StatusUpdateRetryCount((retryCount > 0) ? retryCount.ToString() + ((retryCount > 1) ? " Retries" : " Retry") : string.Empty);
                 }
 
                 logger.AddUserMessage("Read complete.");
                 Utility.ReportRetryCount("Read", retryCount, flashChip.Size, this.logger);
-                logger.AddUserMessage("Starting verification...");
 
-                CKernelVerifier verifier = new CKernelVerifier(
-                    image,
-                    flashChip.MemoryRanges,
-                    this.vehicle,
-                    this.protocol,
-                    this.logger);
+                if (VerifyFile)
+                {
+                    logger.AddUserMessage("Starting verification...");
 
-                if (await verifier.CompareRanges(
-                    image,
-                    BlockType.All,
-                    cancellationToken))
-                {
-                    logger.AddUserMessage("The contents of the file match the contents of the PCM.");
-                }
-                else
-                {
-                    logger.AddUserMessage("##############################################################################");
-                    logger.AddUserMessage("There are errors in the data that was read from the PCM. Do not use this file.");
-                    logger.AddUserMessage("##############################################################################");
+                    CKernelVerifier verifier = new CKernelVerifier(
+                        image,
+                        flashChip.MemoryRanges,
+                        this.vehicle,
+                        this.protocol,
+                        this.logger);
+
+                    logger.StatusUpdateReset();
+
+                    if (await verifier.CompareRanges(
+                        image,
+                        BlockType.All,
+                        cancellationToken))
+                    {
+                        logger.AddUserMessage("The contents of the file match the contents of the PCM.");
+                    }
+                    else
+                    {
+                        logger.AddUserMessage("##############################################################################");
+                        logger.AddUserMessage("There are errors in the data that was read from the PCM. Do not use this file.");
+                        logger.AddUserMessage("##############################################################################");
+                    }
                 }
 
                 await this.vehicle.Cleanup(); // Not sure why this does not get called in the finally block on successfull read?
@@ -192,6 +205,7 @@ namespace PcmHacking
             {
                 // Sending the exit command at both speeds and revert to 1x.
                 await this.vehicle.Cleanup();
+                logger.StatusUpdateReset();
             }
         }
 
@@ -240,38 +254,27 @@ namespace PcmHacking
 
                 Buffer.BlockCopy(payload, 0, image, startAddress, payload.Length);
 
-                int percentDone = (startAddress * 100) / image.Length;
                 TimeSpan elapsed = DateTime.Now - startTime;
-                string timeRemaining;
+                string timeRemaining = string.Empty;
 
-                // Wait 10 seconds before showing time estimate.
-                if (elapsed.TotalSeconds < 10)
-                {
-                    timeRemaining = "Measuring read speed...";
-                }
-                else
-                {
-                    UInt32 bytesPerSecond = (UInt32)(startAddress / elapsed.TotalSeconds);
-                    UInt32 bytesRemaining = (UInt32)(image.Length - startAddress);
+                UInt32 bytesPerSecond = 0;
+                UInt32 bytesRemaining = 0;
 
-                    // Don't divide by zero.
-                    if (bytesPerSecond > 0)
-                    {
-                        UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
-                        timeRemaining = TimeSpan.FromSeconds(secondsRemaining).ToString("mm\\:ss");
-                    }
-                    else
-                    {
-                        timeRemaining = "??:??";
-                    }
+                bytesPerSecond = (UInt32)(startAddress / elapsed.TotalSeconds);
+                bytesRemaining = (UInt32)(image.Length - startAddress);
+
+                // Don't divide by zero.
+                if (bytesPerSecond > 0)
+                {
+                    UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
+                    timeRemaining = TimeSpan.FromSeconds(secondsRemaining).ToString("mm\\:ss");
                 }
 
-                logger.AddUserMessage(
-                    string.Format(
-                        "0x{0:X6}\t{1}%\t{2}",
-                        startAddress,
-                        startAddress * 100 / image.Length,
-                        timeRemaining));
+                logger.StatusUpdateActivity($"Reading {payload.Length} bytes from 0x{startAddress:X6}");
+                logger.StatusUpdatePercentDone((startAddress * 100 / image.Length > 0) ? $"{startAddress * 100 / image.Length}%" : string.Empty);
+                logger.StatusUpdateTimeRemaining($"T-{timeRemaining}");
+                logger.StatusUpdateKbps((bytesPerSecond > 0) ? $"{(double)bytesPerSecond * 8.00 / 1000.00:0.00} Kbps" : string.Empty);
+                logger.StatusUpdateProgressBar((double)(startAddress + payload.Length) / image.Length, true);
 
                 return Response.Create(ResponseStatus.Success, true, retryCount);
             }

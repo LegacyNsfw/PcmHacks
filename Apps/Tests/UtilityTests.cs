@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using PcmHacking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

@@ -25,13 +25,15 @@ namespace PcmHacking
     public class CKernelWriter
     {
         private readonly Vehicle vehicle;
+        private readonly PcmInfo pcmInfo;
         private readonly Protocol protocol;
         private readonly WriteType writeType;
         private readonly ILogger logger;
 
-        public CKernelWriter(Vehicle vehicle, Protocol protocol, WriteType writeType, ILogger logger)
+        public CKernelWriter(Vehicle vehicle, PcmInfo pcmInfo, Protocol protocol, WriteType writeType, ILogger logger)
         {
             this.vehicle = vehicle;
+            this.pcmInfo = pcmInfo;
             this.protocol = protocol;
             this.writeType = writeType;
             this.logger = logger;
@@ -60,7 +62,7 @@ namespace PcmHacking
                 if (kernelVersion == 0)
                 {
                     // Switch to 4x, if possible. But continue either way.
-                    if (Configuration.Enable4xReadWrite)
+                    if (this.vehicle.Enable4xReadWrite)
                     {
                         // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
                         if (!await this.vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
@@ -74,7 +76,7 @@ namespace PcmHacking
                         this.logger.AddUserMessage("4X communications disabled by configuration.");
                     }
 
-                    Response<byte[]> response = await this.vehicle.LoadKernelFromFile("kernel.bin");
+                    Response<byte[]> response = await this.vehicle.LoadKernelFromFile(this.pcmInfo.KernelFileName);
                     if (response.Status != ResponseStatus.Success)
                     {
                         logger.AddUserMessage("Failed to load kernel from file.");
@@ -87,7 +89,7 @@ namespace PcmHacking
                     }
 
                     // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await this.vehicle.PCMExecute(response.Value, 0xFF8000, cancellationToken))
+                    if (!await this.vehicle.PCMExecute(response.Value, this.pcmInfo.KernelBaseAddress, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -158,6 +160,10 @@ namespace PcmHacking
                 }
 
                 return success;
+            }
+            finally
+            {
+                logger.StatusUpdateReset();
             }
         }
 
@@ -230,6 +236,8 @@ namespace PcmHacking
             await this.vehicle.SendToolPresentNotification();
             for (int attempt = 1; attempt <= 5; attempt++)
             {
+                logger.StatusUpdateReset();
+
                 if (await verifier.CompareRanges(
                     image,
                     relevantBlocks,
@@ -252,7 +260,7 @@ namespace PcmHacking
                         {
                             Utility.ReportRetryCount("Write", messageRetryCount, flashChip.Size, this.logger);
                         }
-                        return true;
+                        break;
                     }
                 }
 
@@ -311,8 +319,6 @@ namespace PcmHacking
                         this.logger.AddUserMessage("Writing...");
                     }
 
-                    this.logger.AddUserMessage("Address\t% Done\tTime Remaining");
-
                     Response<bool> writeResponse = await WriteMemoryRange(
                         range,
                         image,
@@ -328,6 +334,8 @@ namespace PcmHacking
                         messageRetryCount += writeResponse.RetryCount;
                     }
 
+                    logger.StatusUpdateRetryCount((messageRetryCount > 0) ? messageRetryCount.ToString() + ((messageRetryCount > 1) ? " Retries" : " Retry") : string.Empty);
+
                     if (writeResponse.Value)
                     {
                         bytesRemaining -= range.Size;
@@ -337,13 +345,10 @@ namespace PcmHacking
 
             if (allRangesMatch)
             {
-                this.logger.AddUserMessage("Flash successful!");
-
-                if (messageRetryCount > 2)
+                if (this.writeType != WriteType.Compare && this.writeType != WriteType.TestWrite)
                 {
-                    logger.AddUserMessage("Write request messages had to be re-sent " + messageRetryCount + " times.");
+                    this.logger.AddUserMessage("Flash successful!");
                 }
-
                 return true;
             }
 
@@ -490,38 +495,26 @@ namespace PcmHacking
                     startAddress,
                     justTestWrite ? BlockCopyType.TestWrite : BlockCopyType.Copy);
 
-                string timeRemaining;
+                string timeRemaining = string.Empty;
 
                 TimeSpan elapsed = DateTime.Now - startTime;
                 UInt32 totalWritten = totalSize - bytesRemaining;
+                UInt32 bytesPerSecond = 0;
 
-                // Wait 10 seconds before showing estimates.
-                if (elapsed.TotalSeconds < 10)
-                {
-                    timeRemaining = "Measuring write speed...";
-                }
-                else
-                {
-                    UInt32 bytesPerSecond = (UInt32)(totalWritten / elapsed.TotalSeconds);
+                bytesPerSecond = (UInt32)(totalWritten / elapsed.TotalSeconds);
 
-                    // Don't divide by zero.
-                    if (bytesPerSecond > 0)
-                    {
-                        UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
-                        timeRemaining = TimeSpan.FromSeconds(secondsRemaining).ToString("mm\\:ss");
-                    }
-                    else
-                    {
-                        timeRemaining = "??:??";
-                    }
+                // Don't divide by zero.
+                if (bytesPerSecond > 0)
+                {
+                    UInt32 secondsRemaining = (UInt32)(bytesRemaining / bytesPerSecond);
+                    timeRemaining = TimeSpan.FromSeconds(secondsRemaining).ToString("mm\\:ss");
                 }
 
-                logger.AddUserMessage(
-                    string.Format(
-                        "0x{0:X6}\t{1}%\t{2}",
-                        startAddress,
-                        totalWritten * 100 / totalSize,
-                        timeRemaining));
+                logger.StatusUpdateActivity($"Writing {thisPayloadSize} bytes to 0x{startAddress:X6}");
+                logger.StatusUpdatePercentDone((totalWritten * 100 / totalSize > 0) ? $"{totalWritten * 100 / totalSize}%" : string.Empty);
+                logger.StatusUpdateTimeRemaining($"T-{timeRemaining}");
+                logger.StatusUpdateKbps((bytesPerSecond > 0) ? $"{(double)bytesPerSecond * 8.00 / 1000.00:0.00} Kbps" : string.Empty);
+                logger.StatusUpdateProgressBar((double)(totalWritten + thisPayloadSize) / totalSize, true);
 
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.WriteMemoryBlock);
 

@@ -6,110 +6,86 @@ using System.Text;
 
 namespace PcmHacking
 {
-    public class MathValueAndDependencies
+    /// <summary>
+    /// Combines a math column with the columns that it depends on.
+    /// </summary>
+    public class MathColumnAndDependencies
     {
-        public MathValue MathValue { get; private set; }
-        public ProfileParameter XParameter { get; private set; }
-        public Conversion XConversion { get; private set; }
-        public ProfileParameter YParameter { get; private set; }
-        public Conversion YConversion { get; private set; }
-
-        public MathValueAndDependencies(
-            MathValue mathValue,
-            ProfileParameter xParameter,
-            Conversion xConversion,
-            ProfileParameter yParameter,
-            Conversion yConversion)
+        public LogColumn MathColumn { get; private set; }
+        public LogColumn XColumn { get; private set; }
+        public LogColumn YColumn { get; private set; }
+        
+        public MathColumnAndDependencies(
+            LogColumn mathColumn,
+            LogColumn xColumn,
+            LogColumn yColumn)
         {
-            this.MathValue = mathValue;
-            this.XParameter = xParameter;
-            this.XConversion = xConversion;
-            this.YParameter = yParameter;
-            this.YConversion = yConversion;
+            this.MathColumn = mathColumn;
+            this.XColumn = xColumn;
+            this.YColumn = yColumn;
         }
     }
 
+    /// <summary>
+    /// Computes the values for math columns, based on data read from the PCM.
+    /// </summary>
     public class MathValueProcessor
     {
-        private readonly LogProfile profile;
-        private List<MathValueAndDependencies> mathValues;
+        private readonly DpidConfiguration dpidConfiguration;
+        private IEnumerable<MathColumnAndDependencies> mathColumns;
 
-        public MathValueProcessor(LogProfile profile, MathValueConfiguration mathValueConfiguration)
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public MathValueProcessor(DpidConfiguration dpidConfiguration, IEnumerable<MathColumnAndDependencies> mathColumns)
         {
-            this.profile = profile;
-            this.mathValues = new List<MathValueAndDependencies>();
-
-            foreach (MathValue mathValue in mathValueConfiguration.MathValues)
-            {
-                ProfileParameter xParameter = null;
-                Conversion xConversion = null;
-                ProfileParameter yParameter = null;
-                Conversion yConversion = null;
-
-                foreach (ProfileParameter parameter in this.profile.AllParameters)
-                {
-                    // TODO: Find the parameter in a configuration file that contains all parameters and conversions,
-                    // pick the appropriate conversion even if it's not what the user chose for this log profile.
-                    if (parameter.Name == mathValue.XParameter)
-                    {
-                        xParameter = parameter;
-                        xConversion = parameter.Conversion;
-                    }
-
-                    if (parameter.Name == mathValue.YParameter)
-                    {
-                        yParameter = parameter;
-                        yConversion = parameter.Conversion;
-                    }
-                }
-
-                if ((xParameter != null) &&
-                    (xConversion != null) &&
-                    (yParameter != null) &&
-                    (yConversion != null))
-                {
-                    MathValueAndDependencies valueAndDependencies = new MathValueAndDependencies(
-                        mathValue, 
-                        xParameter, 
-                        xConversion, 
-                        yParameter, 
-                        yConversion);
-
-                    this.mathValues.Add(valueAndDependencies);
-                }
-            }
+            this.dpidConfiguration = dpidConfiguration;
+            this.mathColumns = mathColumns;
         }
 
-        public IEnumerable<string> GetHeaders()
+        /// <summary>
+        /// Returns the names of the math columns.
+        /// </summary>
+        public IEnumerable<string> GetHeaderNames()
         {
-            return this.mathValues.Select(x => x.MathValue.Name);
+            return this.mathColumns.Select(x => x.MathColumn.Parameter.Name);
         }
 
-        public IEnumerable<MathValue> GetMathValues()
+        /// <summary>
+        /// Gets the math columns - the logger will concatenate these with the PCM columns.
+        /// </summary>
+        public IEnumerable<LogColumn> GetMathColumns()
         {
-            return this.mathValues.Select(x => x.MathValue);
+            return this.mathColumns.Select(x => x.MathColumn);
         }
 
-        public IEnumerable<string> GetMathValues(DpidValues dpidValues)
+        /// <summary>
+        /// Get the values of the math columns as strings, suitable for display or writing to a log file.
+        /// </summary>
+        public IEnumerable<string> GetMathValues(PcmParameterValues dpidValues)
         {
             List<string> result = new List<string>();
-            foreach(MathValueAndDependencies value in this.mathValues)
+            foreach(MathColumnAndDependencies value in this.mathColumns)
             {
-                double xParameterValue = dpidValues[value.XParameter].RawValue;
+                Int16 xParameterValue = dpidValues[value.XColumn].RawValue;
                 Interpreter xConverter = new Interpreter();
                 xConverter.SetVariable("x", xParameterValue);
-                double xConverted = xConverter.Eval<double>(value.XConversion.Expression);
+                xConverter.SetVariable("x_high", xParameterValue >> 8);
+                xConverter.SetVariable("x_low", xParameterValue & 0xFF);
+                double xConverted = xConverter.Eval<double>(value.XColumn.Conversion.Expression);
 
-                double yParameterValue = dpidValues[value.YParameter].RawValue;
+                Int16 yParameterValue = dpidValues[value.YColumn].RawValue;
                 Interpreter yConverter = new Interpreter();
                 xConverter.SetVariable("x", yParameterValue);
-                double YConverted = xConverter.Eval<double>(value.YConversion.Expression);
+                yConverter.SetVariable("x_high", yParameterValue >> 8);
+                yConverter.SetVariable("x_low", yParameterValue & 0xFF); 
+                double YConverted = xConverter.Eval<double>(value.YColumn.Conversion.Expression);
 
                 Interpreter finalConverter = new Interpreter();
                 finalConverter.SetVariable("x", xConverted);
                 finalConverter.SetVariable("y", YConverted);
-                double converted = finalConverter.Eval<double>(value.MathValue.Formula);
-                result.Add(converted.ToString(value.MathValue.Format));
+                double converted = finalConverter.Eval<double>(value.MathColumn.Conversion.Expression);
+                result.Add(converted.ToString(value.MathColumn.Conversion.Format));
             }
 
             return result;

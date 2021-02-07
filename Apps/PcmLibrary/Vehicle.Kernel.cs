@@ -35,6 +35,7 @@ namespace PcmHacking
                 if (received != null)
                 {
                     this.logger.AddDebugMessage("Ignoring chatter: " + received.ToString());
+                    break;
                 }
                 else
                 {
@@ -42,7 +43,7 @@ namespace PcmHacking
                 }
             }
         }
-        
+
         /// <summary>
         /// Writes a block of data to the PCM
         /// Requires an unlocked PCM
@@ -79,7 +80,10 @@ namespace PcmHacking
         {
             byte[] file = { 0x00 }; // dummy value
 
-            if (path == "") return Response.Create(ResponseStatus.Error, file);
+            if (path == "")
+            {
+                return Response.Create(ResponseStatus.Error, file);
+            }
 
             string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
             string exeDirectory = Path.GetDirectoryName(exePath);
@@ -104,7 +108,7 @@ namespace PcmHacking
                         return Response.Create(ResponseStatus.Truncated, file);
                     }
                 }
-                
+
                 logger.AddDebugMessage("Loaded " + path);
             }
             catch (ArgumentException)
@@ -135,7 +139,7 @@ namespace PcmHacking
 
             return Response.Create(ResponseStatus.Success, file);
         }
-        
+
         /// <summary>
         /// Cleanup calls the various cleanup routines to get everything back to normal
         /// </summary>
@@ -182,7 +186,7 @@ namespace PcmHacking
 
             // No timeout because we don't care about responses to these messages.
             await this.device.SetTimeout(TimeoutScenario.Minimum);
-            
+
             // The response is not checked because the priority byte and destination address are odd.
             // Different devices will handle this differently. Scantool won't recieve it.
             // so we send it twice just to be sure.
@@ -418,9 +422,13 @@ namespace PcmHacking
 
             this.logger.AddUserMessage("Kernel upload 100% complete.");
 
-            // Consider: return kernel version rather than boolean?
-            UInt32 kernelVersion = await this.GetKernelVersion();
-            this.logger.AddUserMessage("Kernel Version: " + kernelVersion.ToString("X8"));
+            if (ReportKernelID)
+            {
+                // Consider: Allowing caller to call GetKernelVersion(...)?
+                // Consider: return kernel version rather than boolean?
+                UInt32 kernelVersion = await this.GetKernelVersion();
+                this.logger.AddUserMessage("Kernel Version: " + kernelVersion.ToString("X8"));
+            }
 
             return true;
         }
@@ -439,7 +447,13 @@ namespace PcmHacking
                 }
                 return true;
             }
-            
+
+            if ((newSpeed == VpwSpeed.FourX) && !this.device.Enable4xReadWrite)
+            {
+                logger.AddUserMessage("4X communications disabled by configuration.");
+                return true;
+            }
+
             // Configure the vehicle bus when switching to 4x
             if (newSpeed == VpwSpeed.FourX)
             {
@@ -505,7 +519,7 @@ namespace PcmHacking
 
             return true;
         }
-        
+
         /// <summary>
         /// Ask all of the devices on the VPW bus for permission to switch to 4X speed.
         /// </summary>
@@ -545,7 +559,7 @@ namespace PcmHacking
                 this.logger.AddUserMessage(string.Format("Module 0x{0:X2} ({1}) has refused to enter high-speed mode.", parsed.DeviceId, DeviceId.DeviceCategory(parsed.DeviceId)));
                 anyRefused = true;
             }
-            
+
             if (anyRefused)
             {
                 return null;

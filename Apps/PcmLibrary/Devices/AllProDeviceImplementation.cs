@@ -27,15 +27,15 @@ namespace PcmHacking
         /// Constructor.
         /// </summary>
         public AllProDeviceImplementation(
-            Action<Message> enqueue, 
-            Func<int> getRecievedMessageCount, 
-            IPort port, 
-            ILogger logger) : 
+            Action<Message> enqueue,
+            Func<int> getRecievedMessageCount,
+            IPort port,
+            ILogger logger) :
             base(enqueue, getRecievedMessageCount, port, logger)
         {
             // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
             this.MaxSendSize = 1024 + 12;
-            this.MaxReceiveSize = 1024 + 12;   
+            this.MaxReceiveSize = 1024 + 12;
             this.Supports4X = true;
         }
 
@@ -107,7 +107,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
-                        milliseconds = 250;
+                        milliseconds = 300;
                         break;
 
                     case TimeoutScenario.EraseMemoryBlock:
@@ -115,7 +115,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.WriteMemoryBlock:
-                        milliseconds = 200;
+                        milliseconds = 250;
                         break;
 
                     case TimeoutScenario.SendKernel:

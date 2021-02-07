@@ -61,12 +61,6 @@ namespace PcmHacking
         public MainForm()
         {
             InitializeComponent();
-
-            // Wide enough for the CRC comparison table
-            this.Width = 1000;
-
-            // Golden ratio
-            this.Height = 618;
         }
 
         /// <summary>
@@ -83,7 +77,6 @@ namespace PcmHacking
 
                     // User messages are added to the debug log as well, so that the debug log has everything.
                     this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
-
                 });
         }
 
@@ -99,6 +92,79 @@ namespace PcmHacking
                 {
                     this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
                 });
+        }
+
+        public override void StatusUpdateActivity(string activity)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.activityToolStripStatusLabel.Text = activity;
+                });
+        }
+
+        public override void StatusUpdateTimeRemaining(string remaining)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.timeRemainingToolStripStatusLabel.Text = remaining;
+                });
+        }
+
+        public override void StatusUpdatePercentDone(string percent)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.percentDoneToolStripStatusLabel.Text = percent;
+                });
+        }
+
+        public override void StatusUpdateRetryCount(string retries)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.retryCountToolStripStatusLabel.Text = retries;
+                });
+        }
+
+        public override void StatusUpdateProgressBar(double completed, bool visible)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    if (visible)
+                    {
+                        this.progressBarToolStripProgressBar.Visible = true;
+                    }
+                    else
+                    {
+                        this.progressBarToolStripProgressBar.Visible = false;
+                    }
+
+                    this.progressBarToolStripProgressBar.Value = (int)(completed * 100);
+                });
+        }
+
+        public override void StatusUpdateKbps(string Kbps)
+        {
+            this.statusStatusStrip.Invoke(
+                (MethodInvoker)delegate ()
+                {
+                    this.kbpsToolStripStatusLabel.Text = Kbps;
+                });
+        }
+
+        public override void StatusUpdateReset()
+        {
+            this.StatusUpdateActivity(string.Empty);
+            this.StatusUpdateTimeRemaining(string.Empty);
+            this.StatusUpdatePercentDone(string.Empty);
+            this.StatusUpdateRetryCount(string.Empty);
+            this.StatusUpdateProgressBar(0, false);
+            this.StatusUpdateKbps(string.Empty);
         }
 
         /// <summary>
@@ -125,9 +191,19 @@ namespace PcmHacking
         /// <summary>
         /// Invoked when a device is selected and successfully initialized.
         /// </summary>
-        protected override void ValidDeviceSelected(string deviceName)
+        protected override Task ValidDeviceSelectedAsync(string deviceName)
         {
-            this.deviceDescription.Text = deviceName;
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.deviceDescription.Text = deviceName;
+            });
+
+            return Task.CompletedTask;
+        }
+
+        protected override void SetSelectedDeviceText(string message)
+        {
+            this.deviceDescription.Text = message;
         }
 
         /// <summary>
@@ -135,19 +211,29 @@ namespace PcmHacking
         /// </summary>
         private string ShowSaveAsDialog()
         {
-            SaveFileDialog dialog = new SaveFileDialog();
-            dialog.DefaultExt = ".bin";
-            dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
-            dialog.FilterIndex = 0;
-            dialog.OverwritePrompt = true;
-            dialog.ValidateNames = true;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
-            {
-                return dialog.FileName;
-            }
+            string fileName = null;
 
-            return null;
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.DefaultExt = ".bin";
+                dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
+                dialog.FilterIndex = 1;
+                dialog.OverwritePrompt = true;
+                dialog.ValidateNames = true;
+                dialog.RestoreDirectory = true;
+
+                if (!string.IsNullOrWhiteSpace(Configuration.Settings.BinDirectory))
+                {
+                    dialog.InitialDirectory = Configuration.Settings.BinDirectory;
+                }
+
+                DialogResult result = dialog.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    fileName = dialog.FileName;
+                }
+            }
+            return fileName;
         }
 
         /// <summary>
@@ -155,17 +241,75 @@ namespace PcmHacking
         /// </summary>
         private string ShowOpenDialog()
         {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.DefaultExt = ".bin";
-            dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
-            dialog.FilterIndex = 0;
-            DialogResult result = dialog.ShowDialog();
-            if (result == DialogResult.OK)
+            string fileName = null;
+
+            using (OpenFileDialog dialog = new OpenFileDialog())
             {
-                return dialog.FileName;
+                dialog.DefaultExt = ".bin";
+                dialog.Filter = "Binary Files (*.bin)|*.bin|All Files (*.*)|*.*";
+                dialog.FilterIndex = 1;
+                dialog.RestoreDirectory = true;
+
+                if (!string.IsNullOrWhiteSpace(Configuration.Settings.BinDirectory))
+                {
+                    dialog.InitialDirectory = Configuration.Settings.BinDirectory;
+                }
+
+                DialogResult result = dialog.ShowDialog();
+                if (result == DialogResult.OK)
+                {
+                    fileName = dialog.FileName;
+                }
+            }
+            return fileName;
+        }
+
+        /// <summary>
+        /// Generate a filename based on Log Name and Timestamp.
+        /// </summary>
+        /// <remarks>
+        /// i.e. userLog.Name or debugLog.Name
+        /// </remarks>
+        private string GetLogFilename(string logName)
+        {
+            string fileName =
+                "PcmHammer_"
+                + logName
+                + "_"
+                + DateTime.Now.ToString("yyyyMMdd@HHmmss")
+                + ".txt";
+            return fileName;
+        }
+
+        /// <summary>
+        /// Show a save-as dialog box for saving log files.
+        /// </summary>
+        /// <remarks>
+        /// i.e. userLog.Name or debugLog.Name
+        /// </remarks>
+        private string ShowLogSaveAsDialog(string logName)
+        {
+            string fileName = string.Empty;
+
+            if (!Configuration.Settings.UseLogSaveAsDialog)
+            {
+                return Configuration.Settings.LogDirectory + "\\" + GetLogFilename(logName);
             }
 
-            return null;
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+                dialog.FilterIndex = 1;
+                dialog.RestoreDirectory = true;
+                dialog.InitialDirectory = Configuration.Settings.LogDirectory;
+                dialog.FileName = GetLogFilename(logName);
+
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    fileName = dialog.FileName;
+                }
+            }
+            return fileName;
         }
 
         /// <summary>
@@ -176,7 +320,7 @@ namespace PcmHacking
             string versionString = AppVersion;
             if (versionString == null)
             {
-                DateTime localTime = Generated.BuildTime.ToLocalTime();
+                DateTime localTime = new DateTime(Generated.BuildTime).ToLocalTime();
                 versionString = String.Format(
                     "({0}, {1})",
                     localTime.ToShortDateString(),
@@ -184,6 +328,37 @@ namespace PcmHacking
             }
 
             return AppName + " " + versionString;
+        }
+
+        /// <summary>
+        /// Save the selected log
+        /// </summary>
+        protected void SaveLog(TextBox logBox, string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(logBox.Text))
+            {
+                return;
+            }
+
+            try
+            {
+                using (System.IO.StreamWriter file = new System.IO.StreamWriter(fileName))
+                {
+                    file.WriteLine(logBox.Text);
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(this, fileName,
+                    "ERROR file NOT Saved." + Environment.NewLine + e.Message,
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
         }
 
         /// <summary>
@@ -209,7 +384,27 @@ namespace PcmHacking
 
                 this.MinimumSize = new Size(800, 600);
 
-                menuItemEnable4xReadWrite.Checked = Configuration.Enable4xReadWrite;
+                if (string.IsNullOrWhiteSpace(Configuration.Settings.LogDirectory) || !Directory.Exists(Configuration.Settings.LogDirectory))
+                {
+                    Configuration.Settings.LogDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    Configuration.Settings.Save();
+                }
+
+                if (Configuration.Settings.MainWindowPersistence)
+                {
+                    if (Configuration.Settings.MainWindowSize.Width > 0 || Configuration.Settings.MainWindowSize.Height > 0)
+                    {
+                        this.WindowState = Configuration.Settings.MainWindowState;
+                        if (this.WindowState == FormWindowState.Minimized)
+                        {
+                            this.WindowState = FormWindowState.Normal;
+                        }
+                        this.Location = Configuration.Settings.MainWindowLocation;
+                        this.Size = Configuration.Settings.MainWindowSize;
+                    }
+                }
+
+                this.StatusUpdateReset();
             }
             catch (Exception exception)
             {
@@ -286,26 +481,54 @@ namespace PcmHacking
         /// </summary>
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (this.currentWriteType == WriteType.None)
+            switch (this.currentWriteType)
             {
-                return;
+                case WriteType.None:
+                case WriteType.TestWrite:
+                    break;
+
+                default:
+                    DialogResult choice = MessageBox.Show(
+                        this,
+                        "Closing PCM Hammer now could make your PCM unusable." + Environment.NewLine +
+                        "Are you sure you want to take that risk?",
+                        "PCM Hammer",
+                        MessageBoxButtons.YesNo);
+
+                    if (choice == DialogResult.No)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                    break;
             }
 
-            if (this.currentWriteType == WriteType.TestWrite)
+            if (Configuration.Settings.MainWindowPersistence)
             {
-                return;
+                Configuration.Settings.MainWindowState = this.WindowState;
+                if (this.WindowState == FormWindowState.Normal)
+                {
+                    Configuration.Settings.MainWindowLocation = this.Location;
+                    Configuration.Settings.MainWindowSize = this.Size;
+                }
+                else
+                {
+                    Configuration.Settings.MainWindowLocation = this.RestoreBounds.Location;
+                    Configuration.Settings.MainWindowSize = this.RestoreBounds.Size;
+                }
+                Configuration.Settings.Save();
             }
 
-            var choice = MessageBox.Show(
-                this,
-                "Closing PCM Hammer now could make your PCM unusable." + Environment.NewLine +
-                "Are you sure you want to take that risk?",
-                "PCM Hammer",
-                MessageBoxButtons.YesNo);
-
-            if (choice == DialogResult.No)
+            if (Configuration.Settings.SaveUserLogOnExit)
             {
-                e.Cancel = true;
+                string fileName = Configuration.Settings.LogDirectory + "\\" + GetLogFilename(userLog.Name);
+                SaveLog(this.userLog, fileName);
+            }
+
+            if (Configuration.Settings.SaveDebugLogOnExit)
+            {
+                string fileName = Configuration.Settings.LogDirectory + "\\" + GetLogFilename(debugLog.Name);
+                SaveLog(this.debugLog, fileName);
             }
         }
 
@@ -325,6 +548,10 @@ namespace PcmHacking
             this.writeParmetersCloneToolStripMenuItem.Enabled = false;
             this.writeOSCalibrationBootToolStripMenuItem.Enabled = false;
             this.writeFullToolStripMenuItem.Enabled = false;
+            this.settingsToolStripMenuItem.Enabled = false;
+            this.saveToolStripMenuItem.Enabled = false;
+            this.exitApplicationToolStripMenuItem.Enabled = false;
+            this.userDefinedKeyToolStripMenuItem.Enabled = false;
 
             this.readPropertiesButton.Enabled = false;
 
@@ -332,8 +559,6 @@ namespace PcmHacking
             this.writeCalibrationButton.Enabled = false;
             this.exitKernelButton.Enabled = false;
             this.reinitializeButton.Enabled = false;
-
-            this.menuItemEnable4xReadWrite.Enabled = false;
         }
 
         /// <summary>
@@ -354,6 +579,10 @@ namespace PcmHacking
                 this.writeParmetersCloneToolStripMenuItem.Enabled = true;
                 this.writeOSCalibrationBootToolStripMenuItem.Enabled = true;
                 this.writeFullToolStripMenuItem.Enabled = true;
+                this.settingsToolStripMenuItem.Enabled = true;
+                this.saveToolStripMenuItem.Enabled = true;
+                this.exitApplicationToolStripMenuItem.Enabled = true;
+                this.userDefinedKeyToolStripMenuItem.Enabled = true;
 
                 this.readPropertiesButton.Enabled = true;
 
@@ -361,22 +590,77 @@ namespace PcmHacking
                 this.writeCalibrationButton.Enabled = true;
                 this.exitKernelButton.Enabled = true;
                 this.reinitializeButton.Enabled = true;
-
-                this.menuItemEnable4xReadWrite.Enabled = true;
             });
         }
 
         protected override void EnableInterfaceSelection()
         {
             this.interfaceBox.Enabled = true;
+            this.settingsToolStripMenuItem.Enabled = true;
+            this.exitApplicationToolStripMenuItem.Enabled = true;
         }
 
         /// <summary>
-        /// Enable/Disable 4x
+        /// Save Debug Log
         /// </summary>
-        private void enable4xReadWrite_Click(object sender, EventArgs e)
+        private void saveDebugLogToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            menuItemEnable4xReadWrite.Checked = Configuration.Enable4xReadWrite ^= true;
+            string fileName = ShowLogSaveAsDialog(debugLog.Name);
+            SaveLog(debugLog, fileName);
+        }
+
+        /// <summary>
+        /// Save Results Log
+        /// </summary>
+        private void saveResultsLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string fileName = ShowLogSaveAsDialog(userLog.Name);
+            SaveLog(userLog, fileName);
+        }
+
+        /// <summary>
+        /// Exit Application
+        /// </summary>
+        private void exitApplicationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+
+        /// <summary>
+        /// Settings Dialog
+        /// </summary>
+        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (DialogBoxes.SettingsDialogBox settingsDialog = new DialogBoxes.SettingsDialogBox())
+            {
+                DialogResult dialogResult = settingsDialog.ShowDialog();
+            }
+        }
+
+        /// <summary>
+        /// User Defined Key
+        /// </summary>
+        private void userDefinedKeyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (userDefinedKeyToolStripMenuItem.Checked)
+            {
+                using (DialogBoxes.UserDefinedKeyDialogBox keyDialog = new DialogBoxes.UserDefinedKeyDialogBox())
+                {
+                    DialogResult dialogResult = keyDialog.ShowDialog();
+                    if (dialogResult == DialogResult.OK)
+                    {
+                        this.Vehicle.UserDefinedKey = keyDialog.UserDefinedKey;
+                    }
+                    else
+                    {
+                        this.userDefinedKeyToolStripMenuItem.Checked = false;
+                    }
+                }
+            }
+            else
+            {
+                this.Vehicle.UserDefinedKey = -1;
+            }
         }
 
         /// <summary>
@@ -834,6 +1118,7 @@ namespace PcmHacking
 
                     CKernelReader reader = new CKernelReader(
                         this.Vehicle,
+                        info,
                         this);
 
                     Response<Stream> readResponse = await reader.ReadContents(cancellationTokenSource.Token);
@@ -936,7 +1221,6 @@ namespace PcmHacking
                         }
                     });
 
-
                     if (path == null)
                     {
                         this.AddUserMessage(
@@ -973,6 +1257,7 @@ namespace PcmHacking
                     bool needUnlock;
                     int keyAlgorithm = 1;
                     bool shouldHalt;
+                    PcmInfo pcmInfo = null;
                     bool needToCheckOperatingSystem =
                         (writeType != WriteType.OsPlusCalibrationPlusBoot) &&
                         (writeType != WriteType.Full) &&
@@ -982,8 +1267,8 @@ namespace PcmHacking
                     Response<uint> osidResponse = await this.Vehicle.QueryOperatingSystemId(this.cancellationTokenSource.Token);
                     if (osidResponse.Status == ResponseStatus.Success)
                     {
-                        PcmInfo info = new PcmInfo(osidResponse.Value);
-                        keyAlgorithm = info.KeyAlgorithm;
+                        pcmInfo = new PcmInfo(osidResponse.Value);
+                        keyAlgorithm = pcmInfo.KeyAlgorithm;
                         needUnlock = true;
 
                         if (!validator.IsSameOperatingSystem(osidResponse.Value))
@@ -1023,6 +1308,7 @@ namespace PcmHacking
                                 this.AddUserMessage("Unlock may not work, but we'll try...");
                                 needUnlock = true;
                             }
+                            pcmInfo = new PcmInfo(0); // Prevent Null Reference Exceptions from breaking Recovery Mode
                         }
                         else
                         {
@@ -1047,6 +1333,8 @@ namespace PcmHacking
                                 {
                                     return;
                                 }
+
+                                pcmInfo = new PcmInfo(osidResponse.Value);
                             }
 
                             needToCheckOperatingSystem = false;
@@ -1072,6 +1360,7 @@ namespace PcmHacking
 
                     CKernelWriter writer = new CKernelWriter(
                         this.Vehicle,
+                        pcmInfo,
                         new Protocol(),
                         writeType,
                         this);

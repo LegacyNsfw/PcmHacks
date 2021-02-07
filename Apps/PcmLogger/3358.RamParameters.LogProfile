@@ -1,0 +1,15 @@
+﻿<LogProfile>
+    <PidParameters>
+        <PidParameter id="000C" units="RPM" />
+        <PidParameter id="000D" units="km/h" />
+        <PidParameter id="1143" units="Volts" />
+    </PidParameters>
+    <RamParameters>
+        <RamParameter id="RamThrottleCrackerAirflow" units="g/s" />
+        <RamParameter id="RamThrottleFollowerAirflow" units="g/s" />
+        <RamParameter id="RamIdleProportional" units="g/s" />
+        <RamParameter id="RamIdleIntegral" units="g/s" />
+        <RamParameter id="RamIdleDerivative" units="g/s" />
+    </RamParameters>
+    <MathParameters />
+</LogProfile>
