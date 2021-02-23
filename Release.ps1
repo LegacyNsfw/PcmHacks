@@ -5,7 +5,7 @@ param
 	[Switch] $Preview
 )
 
-if ($ReleaseNumber.Length -ne 3)
+if (($ReleaseNumber.Length -ne 3) -and -not $Preview)
 {
 	write-host You must provide a 3-digit release number.
 	exit
