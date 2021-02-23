@@ -41,6 +41,7 @@ namespace PcmHacking
 
                 DataGridViewComboBoxCell cell = (DataGridViewComboBoxCell)row.Cells[2];
                 cell.DisplayMember = "Units";
+                cell.ValueMember = "Units";
                 foreach (Conversion conversion in parameter.Conversions)
                 {
                     cell.Items.Add(conversion);
@@ -76,6 +77,18 @@ namespace PcmHacking
                     if (this.parameterIdsToRows.TryGetValue(column.Parameter.Id, out row))
                     {
                         row.Cells[0].Value = true;
+
+                        DataGridViewComboBoxCell cell = (DataGridViewComboBoxCell)(row.Cells[2]);
+                        Conversion profileConversion = column.Conversion;
+                        string profileUnits = column.Conversion.Units;
+
+                        foreach (Conversion conversion in cell.Items)
+                        {
+                            if ((conversion == profileConversion) || (conversion.Units == profileUnits))
+                            {
+                                cell.Value = conversion;
+                            }
+                        }
                     }
                 }
             }
@@ -121,8 +134,23 @@ namespace PcmHacking
             {
                 if ((bool)row.Cells[0].Value == true)
                 {
-                    Conversion conversion = (Conversion)row.Cells[2].Value;
-                    LogColumn column = new LogColumn((Parameter)row.Cells[1].Value, conversion);
+                    Parameter parameter = (Parameter)row.Cells[1].Value;
+                    Conversion conversion = null;
+
+                    DataGridViewComboBoxCell cell = (DataGridViewComboBoxCell)(row.Cells[2]);
+                    foreach (Conversion candidate in cell.Items)
+                    {
+                        // The fact that we have to do both kinds of comparisons here really
+                        // seems like a bug in the DataGridViewComboBoxCell code:
+                        if ((candidate.Units == cell.Value as string) ||
+                            (candidate == cell.Value as Conversion))
+                        {
+                            conversion = candidate;
+                            break;
+                        }
+                    }
+
+                    LogColumn column = new LogColumn(parameter, conversion);
                     this.currentProfile.AddColumn(column);
                 }
             }

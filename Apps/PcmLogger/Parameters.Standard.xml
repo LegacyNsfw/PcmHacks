@@ -23,6 +23,7 @@
         byteCount="01"
         bitMapped="False">
         <Conversion units="°C" expression="(x-40)" format="0.00" />
+        <Conversion units="°F" expression="(x-40) * 1.8 + 32.0" format="0.00" />
     </Parameter>
     <Parameter
         id="0006"
@@ -78,7 +79,8 @@
         description=""	
         byteCount="01"
         bitMapped="False">
-        <Conversion units="km/h" expression="(x)" format="0.00" />
+        <Conversion units="kph" expression="(x)" format="0.00" />
+        <Conversion units="mph" expression="(x*0.60934)" format="0.00" />
     </Parameter>
     <Parameter
         id="000E"
@@ -95,6 +97,7 @@
         byteCount="01"
         bitMapped="False">
         <Conversion units="°C" expression="(x-40)" format="0.00" />
+        <Conversion units="°F" expression="((x-40) * 1.8 + 32.0)" format="0.00" />
     </Parameter>
     <Parameter
         id="0010"
@@ -104,6 +107,15 @@
         bitMapped="False">
         <Conversion units="g/s" expression="(((x_high*256)+x_low)/100)" format="0.00" />
     </Parameter>
+    <Parameter
+        id="0011"
+        name="Throttle Position"
+        description=""	
+        byteCount="01"
+        bitMapped="False">
+        <Conversion units="%" expression="(x*100)/255" format="0.00" />
+    </Parameter>
+
     <Parameter
         id="1100"
         name="A/C Relay Command"
@@ -920,7 +932,15 @@
         bitMapped="True">
         <Conversion units="Boolean" expression="(x>>4)" format="0.00" />
     </Parameter>
-    <Parameter
+  <Parameter
+      id="12F3"
+      name="Ethanol percentage"
+      description=""
+      byteCount="01"
+      bitMapped="False">
+    <Conversion units="Percent" expression="x" format="0" />
+  </Parameter>
+  <Parameter
         id="1315"
         name="Cruise Disengage 1 History"
         description=""	
