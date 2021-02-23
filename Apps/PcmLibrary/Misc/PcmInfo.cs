@@ -78,7 +78,7 @@ namespace PcmHacking
             this.KernelFileName = "kernel.bin";
             this.KernelBaseAddress = 0xFF8000;
             this.ValidationMethod = ValidationMethod.P01_P59;
-            
+
             // This will be overwritten for known-to-be-unsupported operating systems.
             this.IsSupported = true;
 
@@ -605,7 +605,7 @@ namespace PcmHacking
                 case 12201461:
                 case 12201462:
                 case 12201463:
-                    
+
                 //LL8 - Atlas I6 (4200) P12
                 case 12604440:
                 case 12606400:
@@ -615,7 +615,7 @@ namespace PcmHacking
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 1024 * 1024;
                     break;
-                    
+
                 //L52 - Atlas I5 (3500) P12
                 case 12606374:
                 case 12606375:
@@ -624,7 +624,7 @@ namespace PcmHacking
                     this.Description = "L52 Atlas P12";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 1024 * 1024;
-                    break;                    
+                    break;
                 case 12201465:
                 case 12201466:
                 case 12201467:
