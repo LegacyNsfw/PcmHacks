@@ -35,7 +35,7 @@ namespace PcmHacking
         /// <returns></returns>
         public override string ToString()
         {
-            return base.ToString() + ", " + this.Conversion.ToString();
+            return this.Parameter.ToString() + ", " + this.Conversion.ToString();
         }
     }
 }

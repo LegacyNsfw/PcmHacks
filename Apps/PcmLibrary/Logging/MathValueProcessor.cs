@@ -67,28 +67,63 @@ namespace PcmHacking
             List<string> result = new List<string>();
             foreach(MathColumnAndDependencies value in this.mathColumns)
             {
-                Int16 xParameterValue = dpidValues[value.XColumn].RawValue;
-                Interpreter xConverter = new Interpreter();
-                xConverter.SetVariable("x", xParameterValue);
-                xConverter.SetVariable("x_high", xParameterValue >> 8);
-                xConverter.SetVariable("x_low", xParameterValue & 0xFF);
-                double xConverted = xConverter.Eval<double>(value.XColumn.Conversion.Expression);
+                double xConverted = 0;
+                double yConverted = 0;
+                string error = null;
 
-                Int16 yParameterValue = dpidValues[value.YColumn].RawValue;
-                Interpreter yConverter = new Interpreter();
-                xConverter.SetVariable("x", yParameterValue);
-                yConverter.SetVariable("x_high", yParameterValue >> 8);
-                yConverter.SetVariable("x_low", yParameterValue & 0xFF); 
-                double YConverted = xConverter.Eval<double>(value.YColumn.Conversion.Expression);
+                try
+                {
+                    Int16 xParameterValue = dpidValues[value.XColumn].RawValue;
+                    Interpreter xConverter = new Interpreter();
+                    xConverter.SetVariable("x", xParameterValue);
+                    xConverter.SetVariable("x_high", xParameterValue >> 8);
+                    xConverter.SetVariable("x_low", xParameterValue & 0xFF);
+                    xConverted = xConverter.Eval<double>(value.XColumn.Conversion.Expression);
+                }
+                catch (Exception exception)
+                {
+                    error = "X: " + exception.Message;
+                    xConverted = 0;
+                }
 
-                Interpreter finalConverter = new Interpreter();
-                finalConverter.SetVariable("x", xConverted);
-                finalConverter.SetVariable("y", YConverted);
-                double converted = finalConverter.Eval<double>(value.MathColumn.Conversion.Expression);
-                result.Add(converted.ToString(value.MathColumn.Conversion.Format));
+                try
+                {
+                    Int16 yParameterValue = dpidValues[value.YColumn].RawValue;
+                    Interpreter yConverter = new Interpreter();
+                    yConverter.SetVariable("x", yParameterValue);
+                    yConverter.SetVariable("x_high", yParameterValue >> 8);
+                    yConverter.SetVariable("x_low", yParameterValue & 0xFF);
+                    yConverted = yConverter.Eval<double>(value.YColumn.Conversion.Expression);
+                }
+                catch (Exception exception)
+                {
+                    error = "Y: " + exception.Message;
+                    yConverted = 0;
+                }
+
+                if (error != null)
+                {
+                    result.Add(error);
+                }
+                else
+                {
+                    try
+                    {
+                        Interpreter finalConverter = new Interpreter();
+                        finalConverter.SetVariable("x", xConverted);
+                        finalConverter.SetVariable("y", yConverted);
+                        double converted = finalConverter.Eval<double>(value.MathColumn.Conversion.Expression);
+                        result.Add(converted.ToString(value.MathColumn.Conversion.Format));
+                    }
+                    catch (Exception exception)
+                    {
+                        result.Add("Error: " + exception.Message);
+                    }
+                }
             }
 
             return result;
         }
     }
 }
+
