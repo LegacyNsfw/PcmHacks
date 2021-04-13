@@ -98,6 +98,17 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Set the timeout to the device. If this is set too low, the device
+        /// will return 'No Data'. ELM327 is limited to 1020 milliseconds maximum.
+        /// </summary>
+        public virtual async Task<bool> SetTimeoutMilliseconds(int milliseconds)
+        {
+           int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 255);
+           string value = parameter.ToString("X2");
+           return await this.SendAndVerify("AT ST " + value, "OK");
+        }
+
+        /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>
         public virtual Task<bool> SendMessage(Message message)

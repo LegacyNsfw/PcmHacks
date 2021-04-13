@@ -112,10 +112,10 @@ namespace PcmHacking
                     this.MaxReceiveSize = 128 + 12;
                 }
 
-                // Setting timeout to maximum. Since we use STPX commands, the device will stop
-                // listening when it receives the expected number of responses, rather than 
-                // waiting for the timeout.
-                this.Logger.AddDebugMessage(await this.SendRequest("AT ST FF"));
+                // Setting timeout to a large value. Since we use STPX commands,
+                // the device will stop listening when it receives the expected
+                // number of responses, rather than waiting for the timeout.
+                this.Logger.AddDebugMessage(await this.SendRequest("STPTO 3000"));
 
             }
             catch (Exception exception)
@@ -192,6 +192,17 @@ namespace PcmHacking
             }
 
             return milliseconds;
+        }
+
+        /// <summary>
+        /// Set the timeout to the device. If this is set too low, the device
+        /// will return 'No Data'. The ST Equivalent timeout command doesn't have
+        /// the same 1020 millisecond limit since it takes an integer milliseconds
+        /// as a paramter.
+        /// </summary>
+        public override async Task<bool> SetTimeoutMilliseconds(int milliseconds)
+        {
+           return await this.SendAndVerify("STPTO " + milliseconds, "OK");
         }
 
         /// <summary>
