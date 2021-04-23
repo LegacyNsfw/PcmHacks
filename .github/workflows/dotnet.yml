@@ -1,0 +1,34 @@
+name: .NET
+
+on: [ push ]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout Code
+
+    - uses: microsoft/setup-msbuild@v1.0.2
+      name: Setup MSBuild Path
+
+    - uses: NuGet/setup-nuget@v1.0.2
+      name: Setup NuGet
+      env:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+
+    - run: nuget restore Apps/PcmApps.sln
+      name: Restore NuGet Packages
+
+    - run: msbuild Apps/PcmApps.sln
+      name: Build Applications
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: PCMHacks-${{github.sha}}
+        path: |
+          Apps\PcmHammer\bin\Debug\
+          Apps\PcmLogger\bin\Debug\
+          Apps\VpwExplorer\bin\Debug\
