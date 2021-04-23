@@ -157,9 +157,7 @@ namespace PcmHacking
             // I briefly tried hard-coding timeout values for the AT ST command,
             // but that's a recipe for failure. If the port timeout is shorter
             // than the device timeout, reads will consistently fail.
-            int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 255);
-            string value = parameter.ToString("X2");
-            await this.implementation.SendAndVerify("AT ST " + value, "OK");
+            await this.implementation.SetTimeoutMilliseconds(milliseconds);
             
             TimeoutScenario result = this.currentTimeoutScenario;
             this.currentTimeoutScenario = scenario;
