@@ -96,7 +96,7 @@ namespace PcmHacking
                         UnsignedHex.GetUnsignedHex("0x" + parameterElement.Attribute("id").Value),
                         parameterName,
                         parameterElement.Attribute("description").Value,
-                        int.Parse(parameterElement.Attribute("byteCount").Value),
+                        parameterElement.Attribute("storageType").Value,
                         bool.Parse(parameterElement.Attribute("bitMapped").Value),
                         conversions);
 
@@ -159,7 +159,7 @@ namespace PcmHacking
                         parameterElement.Attribute("id").Value,
                         parameterName,
                         parameterElement.Attribute("description").Value,
-                        int.Parse(parameterElement.Attribute("byteCount").Value),
+                        parameterElement.Attribute("storageType").Value,
                         bool.Parse(parameterElement.Attribute("bitMapped").Value),
                         conversions,
                         addresses);

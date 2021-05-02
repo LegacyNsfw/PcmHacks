@@ -73,11 +73,9 @@ namespace PcmHacking
 
                 try
                 {
-                    Int16 xParameterValue = dpidValues[value.XColumn].RawValue;
+                    double xParameterValue = dpidValues[value.XColumn].ValueAsDouble;
                     Interpreter xConverter = new Interpreter();
                     xConverter.SetVariable("x", xParameterValue);
-                    xConverter.SetVariable("x_high", xParameterValue >> 8);
-                    xConverter.SetVariable("x_low", xParameterValue & 0xFF);
                     xConverted = xConverter.Eval<double>(value.XColumn.Conversion.Expression);
                 }
                 catch (Exception exception)
@@ -88,11 +86,9 @@ namespace PcmHacking
 
                 try
                 {
-                    Int16 yParameterValue = dpidValues[value.YColumn].RawValue;
+                    double yParameterValue = dpidValues[value.YColumn].ValueAsDouble;
                     Interpreter yConverter = new Interpreter();
                     yConverter.SetVariable("x", yParameterValue);
-                    yConverter.SetVariable("x_high", yParameterValue >> 8);
-                    yConverter.SetVariable("x_low", yParameterValue & 0xFF);
                     yConverted = yConverter.Eval<double>(value.YColumn.Conversion.Expression);
                 }
                 catch (Exception exception)

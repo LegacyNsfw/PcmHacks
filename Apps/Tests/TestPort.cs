@@ -89,8 +89,7 @@ namespace PcmHacking
         /// </summary>
         Task<int> IPort.GetReceiveQueueSize()
         {
-            // return Task.FromResult(0);
-            throw new NotImplementedException();
+            return Task.FromResult((int)(this.BytesToReceive.Length - this.BytesToReceive.Position));
         }
     }
 }

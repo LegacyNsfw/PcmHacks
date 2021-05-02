@@ -17,8 +17,10 @@ namespace Tests
             TestLogger logger = new TestLogger();
             TestPort port = new TestPort(logger);
             Message response = null;
-            Action<Message> responseSetter = (x) => { response = x; };
-            ScanToolDeviceImplementation device = new ScanToolDeviceImplementation(responseSetter, null, port, logger);
+            int receivedMessageCount = 0;
+            ScanToolDeviceImplementation device = new ScanToolDeviceImplementation(
+                x => response = x, 
+                () => receivedMessageCount, port, logger);
 
             // Specify the sequence of bytes that we would expect to get back from the serial port.
             // Note that the test passes, but the first sequence ends with ">\r\n" and the second ends with "\r\n>"  - this seems suspicious.
@@ -34,10 +36,11 @@ namespace Tests
             Assert.IsTrue(sendSuccess, "Send success.");
 
             // Confirm that the device sent the bytes we expect it to send.
-            Assert.AreEqual("AT SH 6C 10 F0 \r\n", System.Text.Encoding.ASCII.GetString(port.MessagesSent[0]), "Set-header command");
-            Assert.AreEqual("3C 01\r\n", Encoding.ASCII.GetString(port.MessagesSent[1]), "Read block 1 command");
+            Assert.AreEqual("STPX H:6C10F0, R:1, D:3C01 \r", System.Text.Encoding.ASCII.GetString(port.MessagesSent[0]), "Set-header command");
 
             // Confirm that the device interpreted the response as expected.
+            // Confirm that the device interpreted the response as expected.
+            await device.Receive();
             Assert.IsNotNull(response, "Response should not be null.");
             Assert.AreEqual("6C F0 10 7C 01 00 31 47 31 59 59", response.GetBytes().ToHex(), "Response message");
         }

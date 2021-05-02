@@ -175,9 +175,6 @@ namespace PcmHacking
                     this.Logger.AddDebugMessage("Waited 2seconds.. no data present");
                     return Response.Create(ResponseStatus.Timeout, (Message)null);
                 }
-
-
-                 
             }
             catch (Exception) // timeout exception - log no data, return error.
             {
