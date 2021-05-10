@@ -63,7 +63,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="kPa" expression="(x)" format="0.00" />
+        <Conversion units="kPa" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="000C"
@@ -71,7 +71,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="RPM" expression="(((x_high*256)+x_low)*0.25)" format="0.00" />
+        <Conversion units="RPM" expression="x*0.25" format="0.00" />
     </Parameter>
     <Parameter
         id="000D"
@@ -79,7 +79,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="kph" expression="(x)" format="0.00" />
+        <Conversion units="kph" expression="x" format="0.00" />
         <Conversion units="mph" expression="(x*0.60934)" format="0.00" />
     </Parameter>
     <Parameter
@@ -105,7 +105,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="g/s" expression="(((x_high*256)+x_low)/100)" format="0.00" />
+        <Conversion units="g/s" expression="(x/100)" format="0.00" />
     </Parameter>
     <Parameter
         id="0011"
@@ -476,7 +476,17 @@
         bitMapped="False">
         <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
     </Parameter>
-    <Parameter
+  <Parameter
+        id="114B"
+        name="EGR Wideband A/F Ratio"
+        description=""
+        type="PID"
+        storageType="uint8"
+        bitMapped="False">
+    <Conversion units=":1" expression="((x/51.00) /.5) +9.58" format="0.00" />
+  </Parameter>
+
+  <Parameter
         id="114D"
         name="GEN F-Terminal Signal"
         description=""	
@@ -484,7 +494,8 @@
         bitMapped="False">
         <Conversion units="%" expression="(x/2.55)" format="0.00" />
     </Parameter>
-    <Parameter
+
+  <Parameter
         id="114E"
         name="Fuel Tank Pressure Sensor"
         description=""	
@@ -538,7 +549,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1192"
@@ -578,7 +589,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="11A6"
@@ -594,7 +605,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="11EB"
@@ -602,7 +613,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="11EC"
@@ -610,7 +621,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="11ED"
@@ -618,7 +629,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="11F8"
@@ -626,7 +637,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="11F9"
@@ -634,7 +645,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="11FA"
@@ -642,7 +653,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="11FB"
@@ -650,7 +661,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1201"
@@ -658,7 +669,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1202"
@@ -666,7 +677,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1203"
@@ -674,7 +685,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1204"
@@ -682,7 +693,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1205"
@@ -690,7 +701,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1206"
@@ -698,7 +709,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1207"
@@ -706,7 +717,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1208"
@@ -714,7 +725,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="120A"
@@ -746,7 +757,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1232"
@@ -754,7 +765,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1233"
@@ -762,7 +773,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1234"
@@ -770,7 +781,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="km" expression="(((x_high*256)+x_low)*5)" format="0.00" />
+        <Conversion units="km" expression="(x*5)" format="0.00" />
     </Parameter>
     <Parameter
         id="123A"
@@ -786,7 +797,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Hz" expression="(((x_high*256)+x_low)/2.048)" format="0.00" />
+        <Conversion units="Hz" expression="(x/2.048)" format="0.00" />
     </Parameter>
     <Parameter
         id="125A"
@@ -794,7 +805,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="ms" expression="(((x_high*256)+x_low)/65.535)" format="0.00" />
+        <Conversion units="ms" expression="(x/65.535)" format="0.00" />
     </Parameter>
     <Parameter
         id="125B"
@@ -802,7 +813,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="ms" expression="(((x_high*256)+x_low)/65.535)" format="0.00" />
+        <Conversion units="ms" expression="(x/65.535)" format="0.00" />
     </Parameter>
     <Parameter
         id="12B0"
@@ -810,7 +821,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="12B1"
@@ -818,7 +829,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="%" expression="(((x_high*256)+x_low)*5/256)" format="0.00" />
+        <Conversion units="%" expression="(x*5/256)" format="0.00" />
     </Parameter>
     <Parameter
         id="12B4"
@@ -826,7 +837,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="%" expression="(x)" format="0.00" />
+        <Conversion units="%" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="12B5"
@@ -834,7 +845,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="%" expression="(x)" format="0.00" />
+        <Conversion units="%" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="12B6"
@@ -842,7 +853,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="%" expression="(x)" format="0.00" />
+        <Conversion units="%" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="12B7"
@@ -850,7 +861,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="%" expression="(x)" format="0.00" />
+        <Conversion units="%" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="12B8"
@@ -858,7 +869,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="%" expression="(x)" format="0.00" />
+        <Conversion units="%" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="12B9"
@@ -1010,7 +1021,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Liters" expression="(((x_high*256)+x_low)/64)" format="0.00" />
+        <Conversion units="Liters" expression="(x/64)" format="0.00" />
     </Parameter>
     <Parameter
         id="131E"
@@ -1018,7 +1029,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="%" expression="(((x_high*256)+x_low)*5/256)" format="0.00" />
+        <Conversion units="%" expression="(x*5/256)" format="0.00" />
     </Parameter>
     <Parameter
         id="131F"
@@ -1026,15 +1037,16 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="%" expression="(((x_high*256)+x_low)*5/256)" format="0.00" />
+        <Conversion units="%" expression="(x*5/256)" format="0.00" />
     </Parameter>
     <Parameter
         id="132A"
         name="Fuel Tank Level Remaining"
         description=""	
-        byteCount="04"
+        storageType="uint64"
+        comment="uint64 is not supported yet"
         bitMapped="False">
-        <Conversion units="%" expression="(((x_high*256)+x_low))/((((x[2]*256)+x[3])/100))" format="0.00" />
+        <Conversion units="%" expression="x/100" format="0.00" />
     </Parameter>
     <Parameter
         id="132A"
@@ -1042,7 +1054,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Liters" expression="(((x_high*256)+x_low)/64)" format="0.00" />
+        <Conversion units="Liters" expression="(x/64)" format="0.00" />
     </Parameter>
     <Parameter
         id="132B"
@@ -1050,7 +1062,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="132C"
@@ -1058,7 +1070,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="Boolean" expression="((x_high*256)+x_low)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1336"
@@ -1066,7 +1078,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="N-m" expression="(((x_high*256)+x_low)*0.02646484375)" format="0.00" />
+        <Conversion units="N-m" expression="(x*0.02646484375)" format="0.00" />
     </Parameter>
     <Parameter
         id="1337"
@@ -1074,7 +1086,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="N-m" expression="(((x_high*256)+x_low)*0.02646484375)" format="0.00" />
+        <Conversion units="N-m" expression="(x*0.02646484375)" format="0.00" />
     </Parameter>
     <Parameter
         id="1338"
@@ -1122,7 +1134,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="g/s" expression="((x_high*256)+x_low)/1024" format="0.00" />
+        <Conversion units="g/s" expression="x/1024" format="0.00" />
     </Parameter>
     <Parameter
         id="1922"
@@ -1138,6 +1150,6 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="(x)" format="0.00" />
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
 </Parameters>

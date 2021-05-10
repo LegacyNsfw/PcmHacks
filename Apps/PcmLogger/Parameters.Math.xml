@@ -8,6 +8,6 @@
       xParameterConversion="g/s"
       yParameterId="000C"
       yParameterConversion="RPM">
-    <Conversion units="g/cyl" expression="x*60.0/(y*2)" format="0.00" />
+    <Conversion units="g/cyl" expression="x*15.0/(y*2)" format="0.00" />
   </MathParameter>
 </MathParameters>
