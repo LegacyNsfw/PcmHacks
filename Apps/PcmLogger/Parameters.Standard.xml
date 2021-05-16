@@ -618,7 +618,7 @@
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="kpa?" expression="(x/51)" format="0.00" />
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
         id="1143"
@@ -627,6 +627,14 @@
         storageType="uint8"
         bitMapped="False">
         <Conversion units="Volts" expression="(x/51)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1144"
+        name="A/C Wideband A/F Ratio"
+        description=""
+        storageType="uint8"
+        bitMapped="False">
+      <Conversion units=":1" expression="((x/51.00) /.5) +9.58" format="0.00" />
     </Parameter>
     <Parameter
         id="1144"
@@ -687,7 +695,6 @@
         bitMapped="False">
     <Conversion units=":1" expression="((x/51.00) /.5) +9.58" format="0.00" />
   </Parameter>
-
   <Parameter
         id="114D"
         name="GEN F-Terminal Signal"
@@ -696,8 +703,7 @@
         bitMapped="False">
         <Conversion units="%" expression="(x/2.55)" format="0.00" />
     </Parameter>
-
-  <Parameter
+    <Parameter
         id="114E"
         name="Fuel Tank Pressure Sensor"
         description=""	
@@ -811,7 +817,7 @@
     </Parameter>
     <Parameter
         id="119E"
-        name="Target AFR"
+        name="Target A/F Ratio"
         description=""	
         storageType="uint8"
         bitMapped="False">
@@ -1026,7 +1032,6 @@
         bitMapped="False">
         <Conversion units="Raw" expression="x" format="0" />
     </Parameter>
-
     <Parameter
         id="122A"
         name="Cycles of Misfire Data"
@@ -1246,15 +1251,23 @@
         bitIndex="4">
         <Conversion units="Boolean" expression="True,False" format="0.00" />
     </Parameter>
-  <Parameter
-      id="12F3"
-      name="Ethanol percentage"
-      description=""
-      storageType="uint8"
-      bitMapped="False">
-    <Conversion units="Percent" expression="x" format="0" />
-  </Parameter>
-  <Parameter
+    <Parameter
+        id="12F3"
+        name="Ethanol percentage"
+        description=""
+        storageType="uint8"
+        bitMapped="False">
+      <Conversion units="Percent" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+          id="12F7"
+          name="Desired IAC Position"
+          description=""
+          storageType="uint8"
+          bitMapped="False">
+      <Conversion units="Counts" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
         id="1315"
         name="Cruise Disengage 1 History"
         description=""	
@@ -1344,10 +1357,10 @@
     </Parameter>
     <Parameter
         id="132A"
-        name="Fuel Tank Level Remaining"
+        name="Fuel Tank Level Remaining (Unsupported)"
         description=""	
-        storageType="uint64"
-        comment="uint64 is not supported yet"
+        storageType="uint16"
+        comment="Should be uint64, but that is not supported yet"
         bitMapped="False">
         <Conversion units="%" expression="x/100" format="0.00" />
     </Parameter>
