@@ -19,7 +19,7 @@ namespace Tests
         [TestMethod]
         public void DecodeDpid()
         {
-            Conversion conversion = new Conversion("units", "x/10", "0.00");
+            Conversion conversion = new Conversion("units", "x*0.9", "0.00");
             Conversion[] conversions = new Conversion[] { conversion };
 
             Parameter signed8 =    new RamParameter("S8",  "signed 8-bit",    "", "int8",   false, conversions, GetAddress(0));
@@ -44,7 +44,7 @@ namespace Tests
             LogRowParser parser = new LogRowParser(dpid);
 
             Int16 int16 = -3000;
-            UInt16 uint16 = 40000;
+            UInt16 uint16 = 50000;
             byte[] bytesOfSigned16 = BitConverter.GetBytes(int16);
             Byte[] bytesOfUnsigned16 = BitConverter.GetBytes(uint16);
 
@@ -69,11 +69,11 @@ namespace Tests
             parser.ParseData(data);
             PcmParameterValues values = parser.Evaluate();
 
-            // Values are divided by 10 by the conversion
-            Assert.AreEqual(-2, values[signed8Column].ValueAsDouble, "signed 8");
-            Assert.AreEqual(20, values[unsigned8Column].ValueAsDouble, "unsigned 8");
-            Assert.AreEqual(int16 / 10, values[signed16Column].ValueAsDouble, "signed 16");
-            Assert.AreEqual(uint16 / 10, values[unsigned16Column].ValueAsDouble, "unsigned 16");
+            // Values are scaled here to match the conversion formula.
+            Assert.AreEqual(-20 * 0.9, values[signed8Column].ValueAsDouble, "signed 8");
+            Assert.AreEqual(200 * 0.9, values[unsigned8Column].ValueAsDouble, "unsigned 8");
+            Assert.AreEqual(int16 * 0.9, values[signed16Column].ValueAsDouble, "signed 16");
+            Assert.AreEqual(uint16 * 0.9, values[unsigned16Column].ValueAsDouble, "unsigned 16");
         }
     }
 }

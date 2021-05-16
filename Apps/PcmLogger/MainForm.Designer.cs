@@ -31,6 +31,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.loggerProgress = new System.Windows.Forms.ProgressBar();
             this.tabs = new System.Windows.Forms.TabControl();
             this.configurationTab = new System.Windows.Forms.TabPage();
@@ -54,10 +55,11 @@
             this.nameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.unitsColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.logValues = new System.Windows.Forms.TextBox();
-            this.dashboardTab = new System.Windows.Forms.TabPage();
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
+            this.dashboardTab = new System.Windows.Forms.TabPage();
             this.startStopSaving = new System.Windows.Forms.Button();
+            this.disclaimer = new System.Windows.Forms.Label();
             this.tabs.SuspendLayout();
             this.configurationTab.SuspendLayout();
             this.profilesTab.SuspendLayout();
@@ -101,6 +103,7 @@
             // 
             // configurationTab
             // 
+            this.configurationTab.Controls.Add(this.disclaimer);
             this.configurationTab.Controls.Add(this.logFilePath);
             this.configurationTab.Controls.Add(this.openDirectory);
             this.configurationTab.Controls.Add(this.selectButton);
@@ -354,16 +357,6 @@
             this.logValues.Size = new System.Drawing.Size(339, 427);
             this.logValues.TabIndex = 0;
             // 
-            // dashboardTab
-            // 
-            this.dashboardTab.Location = new System.Drawing.Point(4, 22);
-            this.dashboardTab.Name = "dashboardTab";
-            this.dashboardTab.Padding = new System.Windows.Forms.Padding(3);
-            this.dashboardTab.Size = new System.Drawing.Size(743, 427);
-            this.dashboardTab.TabIndex = 0;
-            this.dashboardTab.Text = "Dashboard";
-            this.dashboardTab.UseVisualStyleBackColor = true;
-            // 
             // debugTab
             // 
             this.debugTab.Controls.Add(this.debugLog);
@@ -386,6 +379,16 @@
             this.debugLog.Size = new System.Drawing.Size(737, 421);
             this.debugLog.TabIndex = 0;
             // 
+            // dashboardTab
+            // 
+            this.dashboardTab.Location = new System.Drawing.Point(4, 22);
+            this.dashboardTab.Name = "dashboardTab";
+            this.dashboardTab.Padding = new System.Windows.Forms.Padding(3);
+            this.dashboardTab.Size = new System.Drawing.Size(743, 427);
+            this.dashboardTab.TabIndex = 0;
+            this.dashboardTab.Text = "Dashboard";
+            this.dashboardTab.UseVisualStyleBackColor = true;
+            // 
             // startStopSaving
             // 
             this.startStopSaving.Enabled = false;
@@ -396,6 +399,16 @@
             this.startStopSaving.Text = "Start &Recording";
             this.startStopSaving.UseVisualStyleBackColor = true;
             this.startStopSaving.Click += new System.EventHandler(this.startStopSaving_Click);
+            // 
+            // disclaimer
+            // 
+            this.disclaimer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.disclaimer.Location = new System.Drawing.Point(4, 145);
+            this.disclaimer.Name = "disclaimer";
+            this.disclaimer.Size = new System.Drawing.Size(739, 140);
+            this.disclaimer.TabIndex = 10;
+            this.disclaimer.Text = resources.GetString("disclaimer.Text");
             // 
             // MainForm
             // 
@@ -454,6 +467,7 @@
         private System.Windows.Forms.SplitContainer parametersSplitter;
         private System.Windows.Forms.TextBox parameterSearch;
         private System.Windows.Forms.Button removeProfileButton;
+        private System.Windows.Forms.Label disclaimer;
     }
 }
 
