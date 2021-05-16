@@ -185,48 +185,54 @@
         name="A/C Relay Command"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>3)" format="0.00" />
+        bitMapped="True"
+        bitIndex="3">
+        <Conversion units="Boolean" expression="On,Off" format="0.00" />
     </Parameter>
     <Parameter
         id="1100"
         name="A/C Request Signal"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="On,Off" format="0.00" />
     </Parameter>
     <Parameter
         id="1100"
         name="A/C Clutch Feedback Signal"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>1)" format="0.00" />
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="On,Off" format="0.00" />
     </Parameter>
     <Parameter
         id="1100"
         name="PCM Reset"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="True,False" format="0.00" />
     </Parameter>
     <Parameter
         id="1100"
         name="GEN L-Terminal Signal Command"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>7)" format="0.00" />
+        bitMapped="True"
+        bitIndex="7">
+        <Conversion units="Boolean" expression="True,False" format="0.00" />
     </Parameter>
     <Parameter
         id="1101"
         name="EVAP Vent Solenoid Command"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="x" format="0" />
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1102"
@@ -235,7 +241,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="1">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Enable,Disable" format="0" />
     </Parameter>
     <Parameter
         id="1102"
@@ -244,7 +250,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="2">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1102"
@@ -253,7 +259,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="0">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Active,Inactive" format="0" />
     </Parameter>
     <Parameter
         id="1102"
@@ -262,7 +268,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="5">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Active,Inactive" format="0" />
     </Parameter>
     <Parameter
         id="1102"
@@ -271,7 +277,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="6">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1102"
@@ -280,7 +286,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="3">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1103"
@@ -289,7 +295,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="7">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Reduced,Normal" format="0" />
     </Parameter>
     <Parameter
         id="1103"
@@ -298,7 +304,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="5">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Low,Normal" format="0" />
     </Parameter>
     <Parameter
         id="1103"
@@ -307,7 +313,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="1">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1104"
@@ -316,7 +322,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="4">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Active,Inactive" format="0" />
     </Parameter>
     <Parameter
         id="1104"
@@ -325,7 +331,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="2">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Set,Not Set" format="0" />
     </Parameter>
     <Parameter
         id="1104"
@@ -334,7 +340,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="1">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1104"
@@ -343,7 +349,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="0">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1105"
@@ -352,7 +358,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="0">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Open,Closed" format="0" />
     </Parameter>
     <Parameter
         id="1105"
@@ -361,7 +367,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="7">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Active,Inactive" format="0" />
     </Parameter>
     <Parameter
         id="1105"
@@ -370,7 +376,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="5">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Active,Inactive" format="0" />
     </Parameter>
     <Parameter
         id="1105"
@@ -379,7 +385,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="6">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Yes,No" format="0" />
     </Parameter>
     <Parameter
         id="1106"
@@ -388,7 +394,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="0">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1106"
@@ -397,14 +403,15 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="1">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1107"
         name="Throttle Status"
         description=""	
         storageType="uint8"
-        bitMapped="True">
+        bitMapped="False"
+        comment="This actually is bitmapped but the bits are unknown.">
         <Conversion units="Bitmap" expression="x" format="0" />
     </Parameter>    
     <Parameter
@@ -484,24 +491,27 @@
         name="TBD Sw"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="x" format="0" />
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1112"
         name="TFP Sw"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="x" format="0" />
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1113"
         name="TR Sw"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="x" format="0" />
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1115"
@@ -510,7 +520,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="7">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Good,Bad" format="0" />
     </Parameter>
     <Parameter
         id="1116"
@@ -519,7 +529,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="6">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Presed,Relased" format="0" />
     </Parameter>
     <Parameter
         id="1116"
@@ -528,7 +538,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="5">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="Pressed,Released" format="0" />
     </Parameter>
     <Parameter
         id="1116"
@@ -537,7 +547,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="4">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1116"
@@ -545,8 +555,9 @@
         description=""	
         storageType="uint8"
         bitMapped="True"
-        bitIndex="0">
-        <Conversion units="Boolean" expression="x" format="0" />
+        bitIndex="0"
+        comment="Good,Bad?">
+        <Conversion units="Boolean" expression="True,False" format="0" />
     </Parameter>
     <Parameter
         id="1116"
@@ -555,7 +566,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="7">
-        <Conversion units="Boolean" expression="7" format="0" />
+        <Conversion units="Boolean" expression="On,Off" format="0" />
     </Parameter>
     <Parameter
         id="1116"
@@ -563,8 +574,9 @@
         description=""	
         storageType="uint8"
         bitMapped="True"
-        bitIndex="3">
-        <Conversion units="Boolean" expression="x" format="0" />
+        bitIndex="3"
+        comment="Good,Bad?">
+        <Conversion units="Boolean" expression="True,False" format="0" />
     </Parameter>
     <Parameter
         id="1116"
@@ -573,7 +585,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="1">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="True,False" format="0" />
     </Parameter>
     <Parameter
         id="1116"
@@ -582,7 +594,7 @@
         storageType="uint8"
         bitMapped="True"
         bitIndex="2">
-        <Conversion units="Boolean" expression="x" format="0" />
+        <Conversion units="Boolean" expression="True,False" format="0" />
     </Parameter>
     <Parameter
         id="1140"
@@ -1212,24 +1224,27 @@
         name="VTD Fuel Disable Until Ign"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="True,False" format="0.00" />
     </Parameter>
     <Parameter
         id="12EE"
         name="VTD Auto"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>3)" format="0.00" />
+        bitMapped="True"
+        bitIndex="3">
+        <Conversion units="Boolean" expression="True,False" format="0.00" />
     </Parameter>
     <Parameter
         id="12EE"
         name="PCM/VCM in VTD Fail Enable"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>4)" format="0.00" />
+        bitMapped="True"
+        bitIndex="4">
+        <Conversion units="Boolean" expression="True,False" format="0.00" />
     </Parameter>
   <Parameter
       id="12F3"
@@ -1244,64 +1259,64 @@
         name="Cruise Disengage 1 History"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1316"
         name="Cruise Disengage 2 History"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1317"
         name="Cruise Disengage 3 History"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1318"
         name="Cruise Disengage 4 History"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="1319"
         name="Cruise Disengage 5 History"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="131A"
         name="Cruise Disengage 6 History"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="131B"
         name="Cruise Disengage 7 History"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="131C"
         name="Cruise Disengage 8 History"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)" format="0.00" />
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
     </Parameter>
     <Parameter
         id="131D"
@@ -1429,8 +1444,9 @@
         name="Power Enrichment"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>2)" format="0.00" />
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="Active,Inactive" format="0.00" />
     </Parameter>
     <Parameter
         id="1926"
