@@ -16,11 +16,34 @@ namespace PcmHacking
 
         public string Format { get; private set; }
 
+        public bool IsBitMapped { get; private set; }
+
+        public int BitIndex { get; private set; }
+
+        public string TrueValue { get; private set; }
+
+        public string FalseValue { get; private set; }
+
         public Conversion(string units, string expression, string format)
         {
             this.Units = units;
             this.Expression = Sanitize(expression);
             this.Format = format;
+            this.IsBitMapped = false;
+            this.BitIndex = -1;
+            this.TrueValue = null;
+            this.FalseValue = null;
+        }
+
+        public Conversion(string units, int bitIndex, string trueValue, string falseValue)
+        {
+            this.Units = units;
+            this.Expression = "x";
+            this.Format = "";
+            this.IsBitMapped = true;
+            this.BitIndex = bitIndex;
+            this.TrueValue = trueValue;
+            this.FalseValue = falseValue;
         }
 
         public override string ToString()
