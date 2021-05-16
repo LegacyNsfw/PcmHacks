@@ -233,152 +233,171 @@
         name="VTD Fuel Disable"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>1)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1102"
         name="TCC Enable Solenoid Command"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>2)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1102"
         name="Traction Control Status"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1102"
         name="Powertrain Induced Chassis Pitch Command"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>5)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="5">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1102"
         name="Extended Travel Brake Pedal Switch"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>6)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="6">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1102"
         name="TCC/Cruise Brake Pedal Switch"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>3)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="3">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1103"
         name="Reduced Engine Power"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>7)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="7">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1103"
         name="Engine Oil Level Switch"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>5)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="5">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1103"
         name="MIL Command"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>1)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1104"
         name="Cruise Control Active"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>4)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="4">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1104"
         name="DTC Set This Ignition"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>2)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1104"
         name="AIR Solenoid Command "
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>1)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1104"
         name="AIR Pump Relay Command "
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1105"
         name="Loop Status"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1105"
         name="Decel"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>7)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="7">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1105"
         name="Fuel Trim Learn"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>5)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="5">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1105"
         name="Cold Startup"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>6)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="6">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1106"
         name="FC Relay 1 Command"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>0)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1106"
         name="FC Relay 2 and 3 Command"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x>>1)&amp;1" format="0" />
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1107"
@@ -489,72 +508,81 @@
         name="TAC/PCM Communication Signal"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x >> 7) &amp; 1" format="0" />
+        bitMapped="True"
+        bitIndex="7">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1116"
         name="Cruise Resume/Accel"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x >> 6) &amp; 1" format="0" />
+        bitMapped="True"
+        bitIndex="6">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1116"
         name="Cruise Set/Coast Switch"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x >> 5) &amp; 1" format="0" />
+        bitMapped="True"
+        bitIndex="5">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1116"
         name="Cruise On/Off Switch"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x >> 4) &amp; 1" format="0" />
+        bitMapped="True"
+        bitIndex="4">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1116"
         name="APP Sensor 1 and 2"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x >> 0) &amp; 1" format="0" />
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1116"
         name="Stoplamp Pedal Switch"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x >> 7) &amp; 1" format="0" />
+        bitMapped="True"
+        bitIndex="7">
+        <Conversion units="Boolean" expression="7" format="0" />
     </Parameter>
     <Parameter
         id="1116"
         name="TP Sensors 1 and 2"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x >> 3) &amp; 1" format="0" />
+        bitMapped="True"
+        bitIndex="3">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1116"
         name="APP Sensor 1 and 3"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x >> 1) &amp; 1" format="0" />
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1116"
         name="APP Sensor 2 and 3"
         description=""	
         storageType="uint8"
-        bitMapped="True">
-        <Conversion units="Boolean" expression="(x >> 2) &amp; 1" format="0" />
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="x" format="0" />
     </Parameter>
     <Parameter
         id="1140"
