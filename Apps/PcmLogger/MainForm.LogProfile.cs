@@ -81,7 +81,10 @@ namespace PcmHacking
             }
 
             this.SetFileName(defaultFileName);
+            this.currentProfilePath = null;
+
             this.SetDirtyFlag(false);
+
             this.ResetProfile();
             this.UpdateGridFromProfile();
         }

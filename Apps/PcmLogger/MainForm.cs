@@ -24,7 +24,7 @@ namespace PcmHacking
         private uint osid;
 
         private const string appName = "PCM Logger";
-        private const string defaultFileName = "Data";
+        private const string defaultFileName = "New Profile";
         private string fileName = defaultFileName;
 
         /// <summary>
