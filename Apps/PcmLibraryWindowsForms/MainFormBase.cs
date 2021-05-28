@@ -184,6 +184,7 @@ namespace PcmHacking
 
                     this.Invoke((MethodInvoker)delegate ()
                     {
+                        this.NoDeviceSelected();
                         this.SetSelectedDeviceText(selectAnotherDevice);
                         this.EnableInterfaceSelection();
                     });
@@ -197,6 +198,7 @@ namespace PcmHacking
                 this.AddDebugMessage(exception.ToString());
                 this.Invoke((MethodInvoker)delegate ()
                 {
+                    this.NoDeviceSelected();
                     this.SetSelectedDeviceText(selectAnotherDevice);
                     this.EnableInterfaceSelection();
                 });

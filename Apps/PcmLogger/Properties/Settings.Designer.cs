@@ -57,5 +57,17 @@ namespace PcmLogger.Properties {
                 this["RecentProfiles"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastProfile {
+            get {
+                return ((string)(this["LastProfile"]));
+            }
+            set {
+                this["LastProfile"] = value;
+            }
+        }
     }
 }

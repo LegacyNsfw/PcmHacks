@@ -81,22 +81,14 @@ namespace PcmHacking
                 string parameterName = null;
                 try
                 {
-                    List<Conversion> conversions = new List<Conversion>();
-                    foreach (XElement conversion in parameterElement.Elements("Conversion"))
-                    {
-                        conversions.Add(
-                            new Conversion(
-                                conversion.Attribute("units").Value,
-                                conversion.Attribute("expression").Value,
-                                conversion.Attribute("format").Value));
-                    }
+                    List<Conversion> conversions = GetConversions(parameterElement);
 
                     parameterName = (string)parameterElement.Attribute("name").Value;
                     PidParameter parameter = new PidParameter(
                         UnsignedHex.GetUnsignedHex("0x" + parameterElement.Attribute("id").Value),
                         parameterName,
                         parameterElement.Attribute("description").Value,
-                        int.Parse(parameterElement.Attribute("byteCount").Value),
+                        parameterElement.Attribute("storageType").Value,
                         bool.Parse(parameterElement.Attribute("bitMapped").Value),
                         conversions);
 
@@ -118,6 +110,70 @@ namespace PcmHacking
             return true;
         }
 
+        List<Conversion> GetConversions(XElement parameterElement)
+        {
+            List<Conversion> conversions = new List<Conversion>();
+            bool bitMapped = GetBitMappedFlag(parameterElement);
+            if (bitMapped)
+            {
+                string bitIndexString = parameterElement.Attribute("bitIndex").Value;
+                int bitIndex = int.Parse(bitIndexString);
+                foreach (XElement conversion in parameterElement.Elements("Conversion"))
+                {
+                    conversions.Add(CreateBooleanConversion(conversion, bitIndex));
+                }
+            }
+            else
+            {
+                foreach (XElement conversion in parameterElement.Elements("Conversion"))
+                {
+                    conversions.Add(CreateNumericConversion(conversion));
+                }
+            }
+
+            return conversions;
+        }
+
+        private bool GetBitMappedFlag(XElement parameterElement)
+        {
+            string bitMappedAttributeValue = parameterElement.Attribute("bitMapped")?.Value;
+            if (string.IsNullOrEmpty(bitMappedAttributeValue))
+            {
+                return false;
+            }
+
+            bool result;
+            if (bool.TryParse(bitMappedAttributeValue, out result))
+            {
+                return result;
+            }
+
+            return false;
+        }
+
+        private Conversion CreateBooleanConversion(XElement conversion, int bitIndex)
+        {
+            string[] values = conversion.Attribute("expression").Value.Split(',');
+            if (values.Length != 2)
+            {
+                throw new InvalidDataException("Boolean expression must have two values separated by a comma");
+            }
+
+            return new Conversion(
+                conversion.Attribute("units").Value,
+                bitIndex,
+                values[0],
+                values[1]);
+        }
+
+        private Conversion CreateNumericConversion(XElement conversion)
+        {
+            return new Conversion(
+                conversion.Attribute("units").Value,
+                conversion.Attribute("expression").Value,
+                conversion.Attribute("format").Value);
+        }
+
         /// <summary>
         /// Load RAM parameters.
         /// </summary>
@@ -131,15 +187,7 @@ namespace PcmHacking
                 string parameterName = null;
                 try
                 {
-                    List<Conversion> conversions = new List<Conversion>();
-                    foreach (XElement conversion in parameterElement.Elements("Conversion"))
-                    {
-                        conversions.Add(
-                            new Conversion(
-                                conversion.Attribute("units").Value,
-                                conversion.Attribute("expression").Value,
-                                conversion.Attribute("format").Value));
-                    }
+                    List<Conversion> conversions = GetConversions(parameterElement);
 
                     Dictionary<uint, uint> addresses = new Dictionary<uint, uint>();
                     foreach (XElement location in parameterElement.Elements("Location"))
@@ -159,7 +207,7 @@ namespace PcmHacking
                         parameterElement.Attribute("id").Value,
                         parameterName,
                         parameterElement.Attribute("description").Value,
-                        int.Parse(parameterElement.Attribute("byteCount").Value),
+                        parameterElement.Attribute("storageType").Value,
                         bool.Parse(parameterElement.Attribute("bitMapped").Value),
                         conversions,
                         addresses);
@@ -195,15 +243,7 @@ namespace PcmHacking
                 string parameterName = null;
                 try
                 {
-                    List<Conversion> conversions = new List<Conversion>();
-                    foreach (XElement conversion in parameterElement.Elements("Conversion"))
-                    {
-                        conversions.Add(
-                            new Conversion(
-                                conversion.Attribute("units").Value,
-                                conversion.Attribute("expression").Value,
-                                conversion.Attribute("format").Value));
-                    }
+                    List<Conversion> conversions = GetConversions(parameterElement);
 
                     parameterName = (string)parameterElement.Attribute("name").Value;
 

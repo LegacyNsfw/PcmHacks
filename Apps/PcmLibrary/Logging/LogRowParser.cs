@@ -14,7 +14,6 @@ namespace PcmHacking
     /// </summary>
     public class PcmParameterValue
     {
-        public Int16 RawValue { get; set; }
         public string ValueAsString { get; set; }
         public double ValueAsDouble { get; set; }
     }
@@ -103,7 +102,7 @@ namespace PcmHacking
             int startIndex = 0;
             foreach (LogColumn column in group.LogColumns)
             {
-                Int16 value = 0;
+                double value;
                 PcmParameter pcmParameter = column.Parameter as PcmParameter;
                 if (pcmParameter == null)
                 {
@@ -115,22 +114,41 @@ namespace PcmHacking
                     case 1:
                         if (startIndex < payload.Length)
                         {
-                            value = payload[startIndex++];
+                            if (pcmParameter.IsSigned)
+                            {
+                                value = (sbyte)payload[startIndex++];
+                            }
+                            else
+                            {
+                                value = (byte)payload[startIndex++];
+                            }                            
                         }
+                        else
+                        {
+                            value = 0;
+                        }
+
                         break;
 
                     case 2:
-                        if (startIndex < payload.Length)
+                        if (startIndex + 1 < payload.Length)
                         {
-                            value = payload[startIndex++];
+                            if (pcmParameter.IsSigned)
+                            {
+                                value = BitConverter.ToInt16(payload, startIndex);
+                            }
+                            else
+                            {
+                                value = BitConverter.ToUInt16(payload, startIndex);
+                            }
+
+                            startIndex += 2;
+                        }
+                        else
+                        {
+                            value = 0;
                         }
 
-                        value <<= 8;
-
-                        if (startIndex < payload.Length)
-                        {
-                            value = (Int16)((UInt16)value | (byte)payload[startIndex++]);
-                        }
                         break;
 
                     default:
@@ -145,7 +163,6 @@ namespace PcmHacking
                         column,
                         new PcmParameterValue()
                         {
-                            RawValue = value,
                             ValueAsDouble = value,
                             ValueAsString = value.ToString(format)
                         });
@@ -153,49 +170,50 @@ namespace PcmHacking
                 else
                 {
                     double convertedValue = 0;
+                    string formattedValue;
 
-                    try
+                    if (column.Conversion.IsBitMapped)
                     {
-                        Interpreter interpreter = new Interpreter();
-                        interpreter.SetVariable("x", value);
-                        interpreter.SetVariable("x_high", value >> 8);
-                        interpreter.SetVariable("x_low", value & 0xFF);
+                        int bits = (int)value;
+                        bits = bits >> column.Conversion.BitIndex;
+                        bool flag = (bits & 1) != 0;
 
-                        convertedValue = interpreter.Eval<double>(column.Conversion.Expression);
-                    }
-                    catch(Exception exception)
-                    {
-                        throw new InvalidOperationException(
-                            string.Format("Unable to evaluate expression \"{0}\" for parameter \"{1}\"",
-                                column.Conversion.Expression,
-                                column.Parameter.Name),
-                            exception);
-                    }
-
-                    string formatted;
-                    if (pcmParameter.BitMapped)
-                    {
-                        int flag = ((int)convertedValue) & 1;
-                        formatted = (flag > 0).ToString();
+                        convertedValue = value;
+                        formattedValue = flag ? column.Conversion.TrueValue : column.Conversion.FalseValue;
                     }
                     else
                     {
+                        try
+                        {
+                            Interpreter interpreter = new Interpreter();
+                            interpreter.SetVariable("x", value);
+
+                            convertedValue = interpreter.Eval<double>(column.Conversion.Expression);
+                        }
+                        catch (Exception exception)
+                        {
+                            throw new InvalidOperationException(
+                                string.Format("Unable to evaluate expression \"{0}\" for parameter \"{1}\"",
+                                    column.Conversion.Expression,
+                                    column.Parameter.Name),
+                                exception);
+                        }
+
                         string format = column.Conversion.Format;
                         if (string.IsNullOrWhiteSpace(format))
                         {
                             format = "0.00";
                         }
 
-                        formatted = convertedValue.ToString(format);
+                        formattedValue = convertedValue.ToString(format);
                     }
 
                     results.Add(
                         column,
                         new PcmParameterValue()
                         {
-                            RawValue = value,
                             ValueAsDouble = convertedValue,
-                            ValueAsString = formatted
+                            ValueAsString = formattedValue
                         });
                 }
             }

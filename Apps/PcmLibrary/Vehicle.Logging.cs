@@ -149,8 +149,6 @@ namespace PcmHacking
                 {
                     break;
                 }
-
-                this.logger.AddDebugMessage("ReadLogData: " + message.ToString());
                 
                 if (this.protocol.TryParseRawLogData(message, out result))
                 {

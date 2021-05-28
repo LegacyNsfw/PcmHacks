@@ -81,7 +81,10 @@ namespace PcmHacking
             }
 
             this.SetFileName(defaultFileName);
+            this.currentProfilePath = null;
+
             this.SetDirtyFlag(false);
+
             this.ResetProfile();
             this.UpdateGridFromProfile();
         }
@@ -226,6 +229,7 @@ namespace PcmHacking
 
             LogProfileReader reader = new LogProfileReader(this.database, this.osid, this);
             this.currentProfile = reader.Read(this.currentProfilePath);
+            Configuration.Settings.LastProfile = this.currentProfilePath;
             this.UpdateGridFromProfile();
             this.SetDirtyFlag(false);
         }

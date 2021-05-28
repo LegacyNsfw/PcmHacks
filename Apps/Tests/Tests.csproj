@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AvtTests.cs" />
+    <Compile Include="LoggingTests.cs" />
     <Compile Include="MockLogger.cs" />
     <Compile Include="TestLogger.cs" />
     <Compile Include="TestPort.cs" />

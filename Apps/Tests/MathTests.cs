@@ -14,13 +14,13 @@ namespace Tests
         {
             Conversion rpmConversion = new Conversion("RPM", "x", "0");
             LogColumn rpm = new LogColumn(
-                new PidParameter(0x3456, "Engine Speed", "", 2, false, 
+                new PidParameter(0x3456, "Engine Speed", "", "uint16", false, 
                     new Conversion[] { rpmConversion }),
                 rpmConversion);
 
             Conversion mafConversion = new Conversion("RPM", "x", "0");
             LogColumn maf = new LogColumn(
-                new PidParameter(0x1234, "Mass Air Flow", "", 2, false,
+                new PidParameter(0x1234, "Mass Air Flow", "", "uint16", false,
                     new Conversion[] { mafConversion }),
                 mafConversion);
 
@@ -53,8 +53,8 @@ namespace Tests
 
 
             PcmParameterValues dpidValues = new PcmParameterValues();
-            dpidValues.Add(rpm, new PcmParameterValue() { RawValue = 1000 });
-            dpidValues.Add(maf, new PcmParameterValue() { RawValue = 100 });
+            dpidValues.Add(rpm, new PcmParameterValue() { ValueAsDouble = 1000 });
+            dpidValues.Add(maf, new PcmParameterValue() { ValueAsDouble = 100 });
 
             MathColumnAndDependencies dependencies = new MathColumnAndDependencies(mathColumn, rpm, maf);
             
