@@ -101,6 +101,10 @@ namespace PcmHacking
         {
             this.selectButton.Enabled = true;
             this.deviceDescription.Text = "No device selected";
+
+            // This or ValidDeviceSelected will be called after the form loads.
+            // Either way, we should let users manipulate profiles.
+            this.EnableProfileButtons(true);
         }
 
         protected override void SetSelectedDeviceText(string message)
@@ -132,6 +136,7 @@ namespace PcmHacking
                 this.deviceDescription.Text = deviceName + " " + osid.ToString();
                 this.startStopSaving.Enabled = true;
                 this.parameterGrid.Enabled = true;
+                this.EnableProfileButtons(true);
             });
 
             // Start pulling data from the PCM
@@ -165,6 +170,8 @@ namespace PcmHacking
             // sync with whatever window text is entered in the designer view.
             this.Text = appName;
 
+            this.EnableProfileButtons(false);
+
             this.LoadProfileHistory();
 
             ThreadPool.QueueUserWorkItem(BackgroundInitialization);
@@ -181,6 +188,15 @@ namespace PcmHacking
                 this.AddDebugMessage("Device reset started.");
 
                 this.FillParameterGrid();
+
+                string lastProfile = Configuration.Settings.LastProfile;
+                if (!string.IsNullOrEmpty(lastProfile) && File.Exists(lastProfile))
+                {
+                    this.Invoke((MethodInvoker)delegate ()
+                    {
+                        this.OpenProfile(lastProfile);
+                    });
+                }
 
                 // This will cause the ValidDeviceSelectedAsync callback to be invoked.
                 await this.ResetDevice();
@@ -208,6 +224,14 @@ namespace PcmHacking
                         });
                 }
             }
+        }
+
+        private void EnableProfileButtons(bool enable)
+        {
+            this.newButton.Enabled = enable;
+            this.openButton.Enabled = enable;
+            this.saveButton.Enabled = enable;
+            this.saveAsButton.Enabled = enable;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
