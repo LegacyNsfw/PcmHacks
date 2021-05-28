@@ -694,8 +694,8 @@
         storageType="uint8"
         bitMapped="False">
     <Conversion units=":1" expression="((x/51.00) /.5) +9.58" format="0.00" />
-  </Parameter>
-  <Parameter
+    </Parameter>
+    <Parameter
         id="114D"
         name="GEN F-Terminal Signal"
         description=""	
@@ -729,11 +729,12 @@
     </Parameter>
     <Parameter
         id="115C"
-        name="Engine Oil Pressure Sensor"
+        name="Engine Oil Pressure"
         description=""	
         storageType="uint8"
         bitMapped="False">
         <Conversion units="Volts" expression="(x/51)" format="0.00" />
+        <Conversion units="kpa" expression="(x * 4.326) - 110.313" format="0.00" />
     </Parameter>
     <Parameter
         id="115C"
@@ -1074,7 +1075,7 @@
     </Parameter>
     <Parameter
         id="1250"
-        name="MAF Sensor"
+        name="MAF Sensor Frequency"
         description=""	
         storageType="uint16"
         bitMapped="False">
@@ -1082,7 +1083,15 @@
     </Parameter>
     <Parameter
         id="125A"
-        name="Injector PWM Bank 1 Average"
+        name="Injector PWM Left Bank Average"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="ms" expression="(x/65.535)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="125B"
+        name="Injector PWM Right Bank Average"
         description=""	
         storageType="uint16"
         bitMapped="False">
@@ -1122,11 +1131,11 @@
     </Parameter>
     <Parameter
         id="12B0"
-        name="APP Average"
+        name="Accelerator Pedal Position"
         description=""	
         storageType="uint8"
         bitMapped="False">
-        <Conversion units="Boolean" expression="x" format="0.00" />
+        <Conversion units="%" expression="x / 1.11" format="0.00" />
     </Parameter>
     <Parameter
         id="12B1"
@@ -1217,6 +1226,14 @@
         <Conversion units="Volt" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
+        id="12C5"
+        name="Fuel Level"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="x / 2.55" format="0" />
+    </Parameter>
+    <Parameter
         id="12E3"
         name="Fuel Tank Pressure Sensor"
         description=""	
@@ -1253,11 +1270,11 @@
     </Parameter>
     <Parameter
         id="12F3"
-        name="Ethanol percentage"
+        name="Ethanol Content"
         description=""
         storageType="uint8"
         bitMapped="False">
-      <Conversion units="Percent" expression="x" format="0" />
+      <Conversion units="%" expression="x/2.55" format="0" />
     </Parameter>
     <Parameter
           id="12F7"
@@ -1413,6 +1430,14 @@
         <Conversion units="Volts" expression="(x/51)" format="0.00" />
     </Parameter>
     <Parameter
+        id="139C"
+        name="Ethanol Content Sensor Frequency"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Hz" expression="x" format="0" />
+    </Parameter>
+    <Parameter
         id="1481"
         name="HO2S Heater Bn 1 Sen"
         description=""	
@@ -1485,6 +1510,14 @@
         storageType="uint8"
         bitMapped="False">
         <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1940"
+        name="Transmissinon Fluid Temperature"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="C" expression="x - 40" format="0" />
     </Parameter>
     <Parameter
         id="1941"
@@ -1574,5 +1607,13 @@
         storageType="uint8"
         bitMapped="False">
         <Conversion units="%" expression="x*(100/256)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="FC05"
+        name="Target Equivalence Ratio"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="EQR" expression="x / 1024" format="0.00" />
     </Parameter>
 </Parameters>
