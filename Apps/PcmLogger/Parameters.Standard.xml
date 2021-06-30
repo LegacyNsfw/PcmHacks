@@ -602,7 +602,7 @@
         description=""	
         storageType="uint16"
         bitMapped="False">
-        <Conversion units="g/sec" expression="x(512/65536)" format="0.00" />
+        <Conversion units="g/sec" expression="x*(512/65536)" format="0.00" />
     </Parameter>
     <Parameter
         id="1141"
