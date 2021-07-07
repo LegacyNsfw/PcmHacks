@@ -135,11 +135,15 @@ namespace PcmHacking
                         {
                             if (pcmParameter.IsSigned)
                             {
-                                value = BitConverter.ToInt16(payload, startIndex);
+                                Int16 temp = (Int16)(payload[startIndex] << 8);
+                                temp += (byte)payload[startIndex + 1];
+                                value = temp;
                             }
                             else
                             {
-                                value = BitConverter.ToUInt16(payload, startIndex);
+                                UInt16 temp = (UInt16)(payload[startIndex] << 8);
+                                temp += payload[startIndex + 1];
+                                value = temp;
                             }
 
                             startIndex += 2;

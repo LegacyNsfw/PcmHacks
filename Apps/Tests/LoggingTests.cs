@@ -45,8 +45,8 @@ namespace Tests
 
             Int16 int16 = -3000;
             UInt16 uint16 = 50000;
-            byte[] bytesOfSigned16 = BitConverter.GetBytes(int16);
-            Byte[] bytesOfUnsigned16 = BitConverter.GetBytes(uint16);
+            byte[] bytesOfSigned16 =   new byte[] { (byte) ((int16 & 0xFF00) >> 8), (byte) (int16 & 0xFF) };
+            byte[] bytesOfUnsigned16 = new byte[] { (byte) ((uint16 & 0xFF00) >> 8), (byte) (uint16 & 0xFF) };
 
             byte signed8Byte;
             unchecked
