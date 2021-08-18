@@ -81,6 +81,10 @@ namespace PcmHacking
 
         protected override void DisableUserInput()
         {
+            this.EnableProfileButtons(false);
+            this.profileList.Enabled = false;
+            this.parameterGrid.Enabled = false;
+            this.parameterSearch.Enabled = false;
             this.selectButton.Enabled = false;
             this.startStopSaving.Enabled = false;
         }
@@ -92,6 +96,10 @@ namespace PcmHacking
 
         protected override void EnableUserInput()
         {
+            this.EnableProfileButtons(true);
+            this.profileList.Enabled = true;
+            this.parameterGrid.Enabled = true;
+            this.parameterSearch.Enabled = true;
             this.selectButton.Enabled = true;
             this.startStopSaving.Enabled = true;
             this.startStopSaving.Focus();
@@ -129,6 +137,8 @@ namespace PcmHacking
                 return;
             }
 
+            // This must be assigned prior to calling FillParameterGrid(), 
+            // otherwise the RAM parameters will not appear in the grid.
             this.osid = response.Value;
             
             this.Invoke((MethodInvoker)delegate ()
@@ -137,7 +147,17 @@ namespace PcmHacking
                 this.startStopSaving.Enabled = true;
                 this.parameterGrid.Enabled = true;
                 this.EnableProfileButtons(true);
+                this.FillParameterGrid();
             });
+
+            string lastProfile = Configuration.Settings.LastProfile;
+            if (!string.IsNullOrEmpty(lastProfile) && File.Exists(lastProfile))
+            {
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.OpenProfile(lastProfile);
+                });
+            }
 
             // Start pulling data from the PCM
             ThreadPool.QueueUserWorkItem(new WaitCallback(LoggingThread), null);
@@ -186,17 +206,6 @@ namespace PcmHacking
             try
             {
                 this.AddDebugMessage("Device reset started.");
-
-                this.FillParameterGrid();
-
-                string lastProfile = Configuration.Settings.LastProfile;
-                if (!string.IsNullOrEmpty(lastProfile) && File.Exists(lastProfile))
-                {
-                    this.Invoke((MethodInvoker)delegate ()
-                    {
-                        this.OpenProfile(lastProfile);
-                    });
-                }
 
                 // This will cause the ValidDeviceSelectedAsync callback to be invoked.
                 await this.ResetDevice();
