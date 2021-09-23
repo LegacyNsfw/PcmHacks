@@ -82,7 +82,7 @@
   
   <RamParameter
     id="RamManifoldAbsolutePressure"
-    name="ManifoldAbsolutePressure"
+    name="Manifold Absolute Pressure"
     description="2-Byte Manifold Pressure"
     storageType="uint16"
     bitMapped="False">
