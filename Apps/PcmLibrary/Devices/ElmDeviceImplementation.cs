@@ -62,9 +62,17 @@ namespace PcmHacking
         /// </summary>
         public virtual async Task<bool> Initialize()
         {
+            string response;
             // This is common across all ELM-based devices.
             await this.SendRequest(""); // send a cr/lf to prevent the ATZ failing.
-            this.Logger.AddDebugMessage(await this.SendRequest("AT Z"));  // reset
+            this.Logger.AddDebugMessage(response = await this.SendRequest("AT Z"));  // reset
+
+            if(string.IsNullOrWhiteSpace(response))
+            {
+                this.Logger.AddDebugMessage($"No device found on {this.Port.ToString()}");
+                return false;
+            }
+
             this.Logger.AddDebugMessage(await this.SendRequest("AT E0")); // disable echo
             this.Logger.AddDebugMessage(await this.SendRequest("AT S0")); // no spaces on responses
 
