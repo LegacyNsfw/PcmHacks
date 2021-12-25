@@ -111,7 +111,7 @@ set BIN_LOCATION=..\Apps\PcmHammer\bin\debug\
 rem * Set default to copy kernel.bin to PcmHammer's build directory.
 set COPY_BIN=True
 
-rem * Set default to NOT dump kernel.elf > kernel.disassembly
+rem * Set default to NOT dump kernel.elf ^> kernel.disassembly
 set DUMP_ELF=
 
 rem * Set flag to dump kernel Map or not.
