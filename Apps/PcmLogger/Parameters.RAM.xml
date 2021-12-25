@@ -17,6 +17,7 @@
     storageType="uint16"
     bitMapped="False">
     <Location os="12593358" address="0xFFB04C" />
+    <Location os="12587603" address="0xFFB544" />
     <Conversion units="Seconds" expression="x/160.0" format="0.00" />
   </RamParameter>
 
