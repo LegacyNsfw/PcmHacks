@@ -55,8 +55,7 @@ namespace PcmHacking
             Response<Message> m;
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
-            //configuration.BaudRate = 115200;
-            configuration.BaudRate = 57600; // for actual com port to 838
+            configuration.BaudRate = 57600; // default RS232 speed for 838, 842. ignored by the USB 852.
             await this.Port.OpenAsync(configuration);
             await this.Port.DiscardBuffers();
 
