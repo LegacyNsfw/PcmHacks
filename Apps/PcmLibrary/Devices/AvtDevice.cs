@@ -92,7 +92,11 @@ namespace PcmHacking
             }
 
             this.Logger.AddDebugMessage("Looking for Firmware message");
-            await this.Port.Send(AvtDevice.AVT_REQUEST_FIRMWARE.GetBytes()); // we request this on 838 but earlier models send it without being asked. Might break 852/842?
+            if (this.Model == 838)
+            {
+                await this.Port.Send(AvtDevice.AVT_REQUEST_FIRMWARE.GetBytes()); // we need to request this on 838 but the 852 sends it without being asked. 842 needs testing.
+            }
+
             m = await this.FindResponse(AVT_FIRMWARE);
             if ( m.Status == ResponseStatus.Success )
             {
