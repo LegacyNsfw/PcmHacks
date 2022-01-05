@@ -187,6 +187,8 @@ namespace PcmHacking
                 string parameterName = null;
                 try
                 {
+                    parameterName = (string)parameterElement.Attribute("name").Value;
+
                     List<Conversion> conversions = GetConversions(parameterElement);
 
                     Dictionary<uint, uint> addresses = new Dictionary<uint, uint>();
@@ -200,8 +202,6 @@ namespace PcmHacking
 
                         addresses[osid] = address;
                     }
-
-                    parameterName = (string)parameterElement.Attribute("name").Value;
 
                     RamParameter parameter = new RamParameter(
                         parameterElement.Attribute("id").Value,
