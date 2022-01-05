@@ -1441,5 +1441,40 @@ namespace PcmHacking
                 this.cancellationTokenSource = null;
             }
         }
+
+        private async void testFileChecksumsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string path = this.ShowOpenDialog();
+            if (path == null)
+            {
+                return;
+            }
+
+            this.AddUserMessage("Examining " + path);
+
+            byte[] image;
+            using (Stream stream = File.OpenRead(path))
+            {
+                image = new byte[stream.Length];
+                int bytesRead = await stream.ReadAsync(image, 0, (int)stream.Length);
+                if (bytesRead != stream.Length)
+                {
+                    // If this happens too much, we should try looping rather than reading the whole file in one shot.
+                    this.AddUserMessage("Unable to load file.");
+                    return;
+                }
+            }
+
+            // Sanity checks. 
+            FileValidator validator = new FileValidator(image, this);
+            if (validator.IsValid())
+            {
+                this.AddUserMessage("All checksums are valid.");
+            }
+            else
+            {
+                this.AddUserMessage("This file is corrupt. It would render your PCM unusable.");
+            }
+        }
     }
 }
