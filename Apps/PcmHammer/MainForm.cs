@@ -409,10 +409,20 @@ namespace PcmHacking
                 string[] args = Environment.GetCommandLineArgs();
                 if (args.Length > 2 && args[1] == "/WRITECALIBRATION" && File.Exists(args[2]))
                 {
-                    BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Calibration, args[2]));
-                    BackgroundWorker.IsBackground = true;
-                    BackgroundWorker.Start();
-
+                    if (!readPropertiesButton.Enabled)
+                    {
+                        await HandleSelectButtonClick();
+                    }
+                    if (readPropertiesButton.Enabled)
+                    {
+                        BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Calibration, args[2]));
+                        BackgroundWorker.IsBackground = true;
+                        BackgroundWorker.Start();
+                    }
+                    else
+                    {
+                        this.AddUserMessage("No device configured");
+                    }
                 }
 
             }
