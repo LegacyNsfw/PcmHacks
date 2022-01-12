@@ -362,14 +362,6 @@ namespace PcmHacking
             }
         }
 
-        /// Options for commandline parameters
-        /// using parser from:
-        /// https://github.com/commandlineparser/commandline
-        public class Options
-        {
-            [Option("writecalibration", Required = false, HelpText = "Write calibration from file")]
-            public string binfile { get; set; }
-        }
 
         /// <summary>
         /// Called when the main window is being created.
@@ -415,19 +407,9 @@ namespace PcmHacking
                 }
 
                 this.StatusUpdateReset();
-<<<<<<< Updated upstream
-=======
 
-                string[] args = Environment.GetCommandLineArgs();
-                Parser.Default.ParseArguments<Options>(args)
-                    .WithParsed<Options>(o =>
-                    {
-                          if (o.binfile != null )
-                          {
-                            WriteCalibration(o.binfile);
-                          }
-                    });
->>>>>>> Stashed changes
+                ParseCmdLine();
+
             }
             catch (Exception exception)
             {
@@ -436,6 +418,31 @@ namespace PcmHacking
             }
         }
 
+        /// Options for commandline parameters
+        /// using parser from:
+        /// https://github.com/commandlineparser/commandline
+        public class Options
+        {
+            [Option("writecalibration", Required = false, HelpText = "Write calibration from file")]
+            public string binfile { get; set; }
+        }
+
+        /// <summary>
+        /// Parse cmdline parameters
+        /// </summary>
+        private async void ParseCmdLine()
+        {
+            string[] args = Environment.GetCommandLineArgs();
+            Parser.Default.ParseArguments<Options>(args)
+                .WithParsed<Options>(o =>
+                {
+                    if (o.binfile != null)
+                    {
+                        WriteCalibration(o.binfile);
+                    }
+                });
+
+        }
 
         /// <summary>
         /// Write calibration automatically after program start, if cmdline parameter 
