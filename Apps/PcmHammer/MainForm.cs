@@ -1236,7 +1236,7 @@ namespace PcmHacking
         /// <summary>
         /// Write changes to the PCM's flash memory.
         /// </summary>
-        private async void write_BackgroundThread(WriteType writeType)
+        private async void write_BackgroundThread(WriteType writeType, string path = null)
         {
             using (new AwayMode())
             {
@@ -1252,14 +1252,14 @@ namespace PcmHacking
                     }
 
                     this.cancellationTokenSource = new CancellationTokenSource();
-
-                    string path = null;
+                    
                     this.Invoke((MethodInvoker)delegate ()
                     {
                         this.DisableUserInput();
                         this.cancelButton.Enabled = true;
 
-                        path = this.ShowOpenDialog();
+                        if (path == null)
+                            path = this.ShowOpenDialog();
 
                         if (path == null)
                         {
