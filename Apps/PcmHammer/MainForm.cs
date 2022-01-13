@@ -1,4 +1,5 @@
-﻿using J2534;
+﻿using CommandLine;
+using J2534;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -361,6 +362,7 @@ namespace PcmHacking
             }
         }
 
+
         /// <summary>
         /// Called when the main window is being created.
         /// </summary>
@@ -405,12 +407,70 @@ namespace PcmHacking
                 }
 
                 this.StatusUpdateReset();
+
+                ParseCmdLine();
+
             }
             catch (Exception exception)
             {
                 this.AddUserMessage(exception.Message);
                 this.AddDebugMessage(exception.ToString());
             }
+        }
+
+        /// Options for commandline parameters
+        /// using parser from:
+        /// https://github.com/commandlineparser/commandline
+        public class Options
+        {
+            [Option("writecalibration", Required = false, HelpText = "Write calibration from file")]
+            public string binfile { get; set; }
+            [Option("version", Required = false, HelpText = "Display version information")]
+            public bool ShowVersion { get; set; }
+        }
+
+        /// <summary>
+        /// Parse cmdline parameters
+        /// </summary>
+        private async void ParseCmdLine()
+        {
+            string[] args = Environment.GetCommandLineArgs();
+            Parser.Default.ParseArguments<Options>(args)
+                .WithParsed<Options>(o =>
+                {
+                    if (o.binfile != null)
+                    {
+                        WriteCalibration(o.binfile);
+                    }
+                    if (o.ShowVersion)
+                    {
+                        Console.WriteLine(GetAppNameAndVersion());
+                    }
+                });
+
+        }
+
+        /// <summary>
+        /// Write calibration automatically after program start, if cmdline parameter 
+        /// "writecalibration" with filename is detected
+        /// </summary>
+        private async void WriteCalibration(string binFileName)
+        {
+            if (!readPropertiesButton.Enabled)
+            {
+                await HandleSelectButtonClick();
+            }
+            if (readPropertiesButton.Enabled)
+            {
+                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Calibration, binFileName));
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
+            }
+            else
+            {
+                this.AddUserMessage("No device configured");
+            }
+
         }
 
         /// <summary>
@@ -1182,7 +1242,7 @@ namespace PcmHacking
         /// <summary>
         /// Write changes to the PCM's flash memory.
         /// </summary>
-        private async void write_BackgroundThread(WriteType writeType)
+        private async void write_BackgroundThread(WriteType writeType, string path = null)
         {
             using (new AwayMode())
             {
@@ -1198,14 +1258,14 @@ namespace PcmHacking
                     }
 
                     this.cancellationTokenSource = new CancellationTokenSource();
-
-                    string path = null;
+                    
                     this.Invoke((MethodInvoker)delegate ()
                     {
                         this.DisableUserInput();
                         this.cancelButton.Enabled = true;
 
-                        path = this.ShowOpenDialog();
+                        if (path == null)
+                            path = this.ShowOpenDialog();
 
                         if (path == null)
                         {
