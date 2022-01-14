@@ -407,9 +407,7 @@ namespace PcmHacking
                 }
 
                 this.StatusUpdateReset();
-
-                ParseCmdLine();
-
+                ProcessCommandLine();
             }
             catch (Exception exception)
             {
@@ -418,51 +416,40 @@ namespace PcmHacking
             }
         }
 
-        /// Options for commandline parameters
-        /// using parser from:
-        /// https://github.com/commandlineparser/commandline
-        public class Options
-        {
-            [Option("writecalibration", Required = false, HelpText = "Write calibration from file")]
-            public string binfile { get; set; }
-            [Option("version", Required = false, HelpText = "Display version information")]
-            public bool ShowVersion { get; set; }
-        }
 
         /// <summary>
         /// Parse cmdline parameters
         /// </summary>
-        private async void ParseCmdLine()
+        private async void ProcessCommandLine()
         {
             string[] args = Environment.GetCommandLineArgs();
-            Parser.Default.ParseArguments<Options>(args)
-                .WithParsed<Options>(o =>
+            Parser.Default.ParseArguments<CommandLineOptions>(args)
+                .WithParsed<CommandLineOptions>(o =>
                 {
-                    if (o.binfile != null)
+                    if (o.BinFilePath != null)
                     {
-                        WriteCalibration(o.binfile);
+                        WriteCalibration(o.BinFilePath);
                     }
                     if (o.ShowVersion)
                     {
                         Console.WriteLine(GetAppNameAndVersion());
                     }
                 });
-
         }
 
         /// <summary>
         /// Write calibration automatically after program start, if cmdline parameter 
         /// "writecalibration" with filename is detected
         /// </summary>
-        private async void WriteCalibration(string binFileName)
+        private async void WriteCalibration(string BinFilePath)
         {
-            if (!readPropertiesButton.Enabled)
+            if (!writeCalibrationButton.Enabled)
             {
                 await HandleSelectButtonClick();
             }
-            if (readPropertiesButton.Enabled)
+            if (writeCalibrationButton.Enabled)
             {
-                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Calibration, binFileName));
+                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Calibration, BinFilePath));
                 BackgroundWorker.IsBackground = true;
                 BackgroundWorker.Start();
             }
@@ -470,7 +457,6 @@ namespace PcmHacking
             {
                 this.AddUserMessage("No device configured");
             }
-
         }
 
         /// <summary>
@@ -1264,10 +1250,11 @@ namespace PcmHacking
                         this.DisableUserInput();
                         this.cancelButton.Enabled = true;
 
-                        if (path == null)
+                        if (string.IsNullOrWhiteSpace(path))
+                        {
                             path = this.ShowOpenDialog();
-
-                        if (path == null)
+                        }
+                        if (string.IsNullOrWhiteSpace(path))
                         {
                             return;
                         }

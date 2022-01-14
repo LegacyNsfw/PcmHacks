@@ -80,6 +80,7 @@
     <Reference Include="netstandard" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandLineOptions.cs" />
     <Compile Include="DialogBoxes\DelayDialogBox.cs">
       <SubType>Form</SubType>
     </Compile>
