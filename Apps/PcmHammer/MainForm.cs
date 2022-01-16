@@ -1,4 +1,5 @@
-﻿using J2534;
+﻿using CommandLine;
+using J2534;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -361,6 +362,7 @@ namespace PcmHacking
             }
         }
 
+
         /// <summary>
         /// Called when the main window is being created.
         /// </summary>
@@ -405,11 +407,55 @@ namespace PcmHacking
                 }
 
                 this.StatusUpdateReset();
+                ProcessCommandLine();
             }
             catch (Exception exception)
             {
                 this.AddUserMessage(exception.Message);
                 this.AddDebugMessage(exception.ToString());
+            }
+        }
+
+
+        /// <summary>
+        /// Parse cmdline parameters
+        /// </summary>
+        private async void ProcessCommandLine()
+        {
+            string[] args = Environment.GetCommandLineArgs();
+            Parser.Default.ParseArguments<CommandLineOptions>(args)
+                .WithParsed<CommandLineOptions>(o =>
+                {
+                    if (o.BinFilePath != null)
+                    {
+                        WriteCalibration(o.BinFilePath);
+                    }
+                    if (o.ShowVersion)
+                    {
+                        Console.WriteLine(GetAppNameAndVersion());
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Write calibration automatically after program start, if cmdline parameter 
+        /// "writecalibration" with filename is detected
+        /// </summary>
+        private async void WriteCalibration(string BinFilePath)
+        {
+            if (!writeCalibrationButton.Enabled)
+            {
+                await HandleSelectButtonClick();
+            }
+            if (writeCalibrationButton.Enabled)
+            {
+                BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Calibration, BinFilePath));
+                BackgroundWorker.IsBackground = true;
+                BackgroundWorker.Start();
+            }
+            else
+            {
+                this.AddUserMessage("No device configured");
             }
         }
 
@@ -1182,7 +1228,7 @@ namespace PcmHacking
         /// <summary>
         /// Write changes to the PCM's flash memory.
         /// </summary>
-        private async void write_BackgroundThread(WriteType writeType)
+        private async void write_BackgroundThread(WriteType writeType, string path = null)
         {
             using (new AwayMode())
             {
@@ -1198,16 +1244,17 @@ namespace PcmHacking
                     }
 
                     this.cancellationTokenSource = new CancellationTokenSource();
-
-                    string path = null;
+                    
                     this.Invoke((MethodInvoker)delegate ()
                     {
                         this.DisableUserInput();
                         this.cancelButton.Enabled = true;
 
-                        path = this.ShowOpenDialog();
-
-                        if (path == null)
+                        if (string.IsNullOrWhiteSpace(path))
+                        {
+                            path = this.ShowOpenDialog();
+                        }
+                        if (string.IsNullOrWhiteSpace(path))
                         {
                             return;
                         }
