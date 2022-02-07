@@ -24,6 +24,7 @@ namespace PcmHacking
         enum LogState
         {
             Nothing,
+            InvalidParameter,
             DisplayOnly,
             StartSaving,
             Saving,
@@ -71,8 +72,9 @@ namespace PcmHacking
         }
 
         private async Task<Logger> RecreateLogger()
-        {            
+        {
             Logger logger = Logger.Create(this.Vehicle, this.osid, this.currentProfile.Columns);
+
 
             if (!await logger.StartLogging())
             {
@@ -168,57 +170,76 @@ namespace PcmHacking
                                     this.logState = LogState.Nothing;
                                     lastProfile = this.currentProfile;
                                     logger = null;
-                                }
-                                else
-                                {
-                                    logger = await this.RecreateLogger();
-                                    if (logger != null)
-                                    {
-                                        lastProfile = this.currentProfile;
 
-                                        // If this was the first profile to load...
-                                        if (this.logState == LogState.Nothing)
-                                        {
-                                            this.logState = LogState.DisplayOnly;
-                                        }
-                                    }
-
-                                    switch (logState)
-                                    {
-                                        case LogState.Nothing:
-                                        case LogState.DisplayOnly:
-                                        case LogState.StopSaving:
-                                            break;
-
-                                        default:
-                                            var tuple = await this.StartSaving(logger);
-                                            logFileWriter = tuple.Item1;
-                                            streamWriter = tuple.Item2;
-                                            logState = LogState.Saving;
-                                            break;
-                                    }
-                                }
-
-                                this.Invoke(
-                                    (MethodInvoker)
-                                    delegate ()
-                                    {
-                                        this.startStopSaving.Enabled = logger != null;
-                                    });
-
-                            }
-
-                            switch (logState)
-                            {
-                                case LogState.Nothing:
                                     this.loggerProgress.Invoke(
                                         (MethodInvoker)
                                         delegate ()
                                         {
+                                            this.startStopSaving.Enabled = false;
                                             this.logValues.Text = "Please select some parameters, or open a log profile.";
                                         });
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        logger = await this.RecreateLogger();
 
-                                    Thread.Sleep(200);
+                                        // TODO: logger should never be null - RecreateLogger should throw instead.
+                                        if (logger != null)
+                                        {
+                                            lastProfile = this.currentProfile;
+
+                                            // If this was the first profile to load...
+                                            if (this.logState == LogState.Nothing)
+                                            {
+                                                this.logState = LogState.DisplayOnly;
+                                            }
+                                        }
+
+                                        switch (logState)
+                                        {
+                                            case LogState.Nothing:
+                                            case LogState.DisplayOnly:
+                                            case LogState.StopSaving:
+                                                break;
+
+                                            default:
+                                                var tuple = await this.StartSaving(logger);
+                                                logFileWriter = tuple.Item1;
+                                                streamWriter = tuple.Item2;
+                                                logState = LogState.Saving;
+                                                break;
+                                        }
+
+                                    }
+                                    catch (ParameterNotSupportedException exception)
+                                    {
+                                        logState = LogState.InvalidParameter;
+                                        this.currentProfile = null;
+                                        lastProfile = null;
+
+                                        this.loggerProgress.Invoke(
+                                            (MethodInvoker)
+                                            delegate ()
+                                            {
+                                                this.startStopSaving.Enabled = false;
+                                                this.logValues.Text = exception.Message;
+                                            });
+                                    }
+                                }
+                            }
+
+                            switch (logState)
+                            {
+                                case LogState.InvalidParameter:
+                                    // UI is updated when exception is thrown from RecreateLogger().
+                                    Thread.Sleep(100);
+                                    break;
+
+                                case LogState.Nothing:
+                                    // UI is updated when the new profile is found to be empty.
+                                    Thread.Sleep(100);
                                     break;
 
                                 case LogState.DisplayOnly:

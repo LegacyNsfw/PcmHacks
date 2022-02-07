@@ -10,6 +10,16 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {    
+    public class ParameterNotSupportedException : Exception
+    {
+        public ParameterNotSupportedException(string message) : base(message)
+        { }
+
+        public ParameterNotSupportedException(Parameter parameter) : base(
+            $"Parameter \"{parameter.Name}\" is not supported by this PCM.")
+        { }
+    }
+
     /// <summary>
     /// Requests log data from the Vehicle.
     /// </summary>
@@ -117,7 +127,12 @@ namespace PcmHacking
                     continue;
                 }
 
-                group.TryAddLogColumn(column);
+                if (!group.TryAddLogColumn(column))
+                {
+                    throw new ParameterNotSupportedException(
+                        $"Parameter \"{column.Parameter.Name}\" is not supported by this PCM.");
+                }
+
                 if (group.TotalBytes == ParameterGroup.MaxBytes)
                 {
                     dpidConfiguration.ParameterGroups.Add(group);
@@ -129,7 +144,12 @@ namespace PcmHacking
             // Add the remaining one-byte values
             foreach (LogColumn column in singleByteColumns)
             {
-                group.TryAddLogColumn(column);
+                if (!group.TryAddLogColumn(column))
+                {
+                    throw new ParameterNotSupportedException(
+                        $"Parameter \"{column.Parameter.Name}\" is not supported by this PCM.");
+                }
+
                 if (group.TotalBytes == ParameterGroup.MaxBytes)
                 {
                     dpidConfiguration.ParameterGroups.Add(group);

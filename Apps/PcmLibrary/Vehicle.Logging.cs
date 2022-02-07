@@ -103,7 +103,7 @@ namespace PcmHacking
                         if (responseMessage[3] == 0x7F && responseMessage[4] == 0x2C)
                         {
                             this.logger.AddUserMessage("Unable to configure " + column.ToString());
-                            break;
+                            throw new ParameterNotSupportedException(column.Parameter);
                         }
                     }
 
