@@ -123,9 +123,9 @@ namespace PcmHacking
         /// 
         /// See also the FAST_LOGGING code in the Logger class and Protocol.Logging.cs.
         /// </summary>
-        public async Task<bool> RequestDpids(DpidCollection dpids)
+        public async Task<bool> RequestDpids(DpidCollection dpids, byte submode)
         {
-            Message startMessage = this.protocol.RequestDpids(dpids);
+            Message startMessage = this.protocol.RequestDpids(dpids, submode);
             if (!await this.SendMessage(startMessage))
             {
                 return false;

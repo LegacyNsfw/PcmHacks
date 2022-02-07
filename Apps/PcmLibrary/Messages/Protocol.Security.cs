@@ -21,7 +21,7 @@ namespace PcmHacking
         /// </summary>
         public Message CreateSeedRequest()
         {
-            byte[] Bytes = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.Seed, SubMode.GetSeed };
+            byte[] Bytes = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.Seed, Submode.GetSeed };
             return new Message(Bytes);
         }
 
@@ -61,7 +61,7 @@ namespace PcmHacking
         {
             byte KeyHigh = (byte)((Key & 0xFF00) >> 8);
             byte KeyLow = (byte)(Key & 0xFF);
-            byte[] Bytes = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.Seed, SubMode.SendKey, KeyHigh, KeyLow };
+            byte[] Bytes = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.Seed, Submode.SendKey, KeyHigh, KeyLow };
             return new Message(Bytes);
         }
 

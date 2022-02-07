@@ -153,7 +153,7 @@ namespace PcmHacking
     /// <summary>
     /// Sub-mode values. Note that the sub-modes vary by mode.
     /// </summary>
-    public static class SubMode
+    public static class Submode
     {
         public const byte Null = 0x00;
 
@@ -164,6 +164,10 @@ namespace PcmHacking
         public const byte Execute = 0x80;
 
         public const byte UploadOK = 0x00;
+
+        // Logging
+        public const byte SingleRow = 0x01;
+        public const byte Streaming = 0x24;
     }
 
     /// <summary>

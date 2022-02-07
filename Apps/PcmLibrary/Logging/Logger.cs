@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {    
+    /// <summary>
+    /// Thrown when the PCM does not support a requested parameter.
+    /// </summary>
     public class ParameterNotSupportedException : Exception
     {
         public ParameterNotSupportedException(string message) : base(message)
@@ -24,13 +27,11 @@ namespace PcmHacking
     /// Requests log data from the Vehicle.
     /// </summary>
     /// <remarks>
-    /// In theory we can send a single message to command the PCM to spew data
-    /// continuously. In practice, I haven't been able to get that to work.
-    /// 
-    /// But I still have hope, so the code for that is in the FAST_LOGGING
-    /// sections. We'll get faster data rates if we can figure this out.
+    /// There are two derived classes:
+    /// SlowLogger - sends one request for each row of log data. Works, but it's slow.
+    /// FastLogger - sends one request, receives many rows of log data. Does not work (yet).
     /// </remarks>
-    public class Logger
+    public abstract class Logger
     {
         private readonly Vehicle vehicle;
         private readonly uint osid;
@@ -38,17 +39,19 @@ namespace PcmHacking
         private readonly MathValueProcessor mathValueProcessor;
 
         private DpidCollection dpids;
-#if FAST_LOGGING
-        private DateTime lastRequestTime;
-#endif
 
         public DpidConfiguration DpidConfiguration {  get { return this.dpidConfiguration; } }
+
         public MathValueProcessor MathValueProcessor {  get { return this.mathValueProcessor; } }
+
+        protected Vehicle Vehicle { get { return this.vehicle; } }
+
+        protected DpidCollection Dpids {  get { return this.dpids; } }
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        private Logger(Vehicle vehicle, uint osid, DpidConfiguration dpidConfiguration, MathValueProcessor mathValueProcessor)
+        protected Logger(Vehicle vehicle, uint osid, DpidConfiguration dpidConfiguration, MathValueProcessor mathValueProcessor)
         {
             this.vehicle = vehicle;
             this.osid = osid;
@@ -165,7 +168,7 @@ namespace PcmHacking
                 group = null;
             }
 
-            return new Logger(
+            return new SlowLogger(
                 vehicle,
                 osid,
                 dpidConfiguration,
@@ -195,16 +198,13 @@ namespace PcmHacking
             scenario += this.dpidConfiguration.ParameterGroups.Count;
             await this.vehicle.SetDeviceTimeout((TimeoutScenario)scenario);
 
-#if FAST_LOGGING
-            if (!await this.vehicle.RequestDpids(this.dpids))
-            {
-                return false;
-            }
+            // This part differs for the fast and slow loggers.
+            await this.StartLoggingInternal();
 
-            this.lastRequestTime = DateTime.Now;
-#endif
             return true;
         }
+
+        protected abstract Task<bool> StartLoggingInternal();
 
         /// <summary>
         /// Invoke this repeatedly to get each row of data from the PCM.
@@ -214,41 +214,8 @@ namespace PcmHacking
         {
             LogRowParser row = new LogRowParser(this.dpidConfiguration);
 
-            try
-            {
-#if FAST_LOGGING
-//          if (DateTime.Now.Subtract(lastRequestTime) > TimeSpan.FromSeconds(2))
-            {
-                await this.vehicle.ForceSendToolPresentNotification();
-            }
-#endif
-#if !FAST_LOGGING
-                Thread.CurrentThread.Priority = ThreadPriority.Highest;
-                if (!await this.vehicle.RequestDpids(this.dpids))
-                {
-                    return null;
-                }
-#endif
-
-                while (!row.IsComplete)
-                {
-
-                    RawLogData rawData = await this.vehicle.ReadLogData();
-                    if (rawData == null)
-                    {
-                        return null;
-                    }
-
-                    row.ParseData(rawData);
-                }
-
-            }
-            finally
-            {
-#if !FAST_LOGGING
-                Thread.CurrentThread.Priority = ThreadPriority.Normal;
-#endif
-            }
+            // This part differs for the fast and slow loggers.
+            await this.GetNextRowInternal(row);
 
             PcmParameterValues dpidValues = row.Evaluate();
 
@@ -259,5 +226,7 @@ namespace PcmHacking
                     .Concat(mathValues)
                     .ToArray();
         }
+
+        protected abstract Task GetNextRowInternal(LogRowParser row);
     }
 }

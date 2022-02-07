@@ -97,7 +97,7 @@ namespace PcmHacking
         /// <summary>
         /// Create a request to read data from the PCM
         /// </summary>
-        public Message RequestDpids(DpidCollection dpids)
+        public Message RequestDpids(DpidCollection dpids, byte submode)
         {
 #if FAST_LOGGING
             // ResponseType values:
@@ -112,7 +112,7 @@ namespace PcmHacking
             IEnumerable<byte> test = padding.Take(5 - dpids.Values.Length);
             return new Message(header.Concat(dpids.Values).Concat(test).ToArray());
 #else
-            byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, 0x01 };
+            byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, submode };
             return new Message(header.Concat(dpids.Values).ToArray());
 #endif
         }
