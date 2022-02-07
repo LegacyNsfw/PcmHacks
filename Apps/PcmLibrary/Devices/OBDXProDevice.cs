@@ -909,6 +909,14 @@ namespace PcmHacking
                         result = 60;
                         break;
 
+                    case TimeoutScenario.DataLogging4:
+                        result = 80;
+                        break;
+
+                    case TimeoutScenario.DataLoggingStreaming:
+                        result = 0;
+                        break;
+
                     case TimeoutScenario.Maximum:
                         result = 1020;
                         break;

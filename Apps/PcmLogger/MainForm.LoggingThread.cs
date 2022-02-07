@@ -73,7 +73,7 @@ namespace PcmHacking
 
         private async Task<Logger> RecreateLogger()
         {
-            Logger logger = Logger.Create(this.Vehicle, this.osid, this.currentProfile.Columns);
+            Logger logger = Logger.Create(this.Vehicle, this.osid, this.currentProfile.Columns, this);
 
 
             if (!await logger.StartLogging())
@@ -120,6 +120,13 @@ namespace PcmHacking
             IEnumerable<string> rowValues = await logger.GetNextRow();
             if (rowValues != null)
             {
+                this.loggerProgress.Invoke(
+                    (MethodInvoker)
+                    delegate ()
+                    {
+                        this.AddDebugMessage("Row received.");
+                    });
+
                 // Hand this data off to be written to disk and displayed in the UI.
                 this.logRowQueue.Enqueue(
                     new Tuple<Logger, LogFileWriter, IEnumerable<string>>(
@@ -183,6 +190,9 @@ namespace PcmHacking
                                 {
                                     try
                                     {
+                                        // It may be counterintuitive that we update lastProfile here, but that 
+                                        // prevents the invalid parameter exception from being thrown repeatedly.
+                                        lastProfile = this.currentProfile;
                                         logger = await this.RecreateLogger();
 
                                         // TODO: logger should never be null - RecreateLogger should throw instead.
@@ -216,8 +226,6 @@ namespace PcmHacking
                                     catch (ParameterNotSupportedException exception)
                                     {
                                         logState = LogState.InvalidParameter;
-                                        this.currentProfile = null;
-                                        lastProfile = null;
 
                                         this.loggerProgress.Invoke(
                                             (MethodInvoker)
@@ -243,18 +251,27 @@ namespace PcmHacking
                                     break;
 
                                 case LogState.DisplayOnly:
-                                    await this.ProcessRow(logger, null);
+                                    if (logger != null)
+                                    {
+                                        await this.ProcessRow(logger, null);
+                                    }
                                     break;
 
                                 case LogState.StartSaving:
-                                    var tuple = await this.StartSaving(logger);
-                                    logFileWriter = tuple.Item1;
-                                    streamWriter = tuple.Item2;
-                                    logState = LogState.Saving;
+                                    if (logger != null)
+                                    {
+                                        var tuple = await this.StartSaving(logger);
+                                        logFileWriter = tuple.Item1;
+                                        streamWriter = tuple.Item2;
+                                        logState = LogState.Saving;
+                                    }
                                     break;
 
                                 case LogState.Saving:
-                                    await this.ProcessRow(logger, logFileWriter);
+                                    if (logger != null)
+                                    {
+                                        await this.ProcessRow(logger, logFileWriter);
+                                    }
                                     break;
 
                                 case LogState.StopSaving:

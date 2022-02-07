@@ -179,6 +179,14 @@ namespace PcmHacking
                         milliseconds = 60;
                         break;
 
+                    case TimeoutScenario.DataLogging4:
+                        milliseconds = 80;
+                        break;
+
+                    case TimeoutScenario.DataLoggingStreaming:
+                        milliseconds = 0;
+                        break;
+
                     case TimeoutScenario.Maximum:
                         return 1020;
 
@@ -226,12 +234,20 @@ namespace PcmHacking
             int responses;
             switch (this.TimeoutScenario)
             {
+                case TimeoutScenario.DataLogging4:
+                    responses = 4;
+                    break;
+
                 case TimeoutScenario.DataLogging3:
                     responses = 3;
                     break;
 
                 case TimeoutScenario.DataLogging2:
                     responses = 2;
+                    break;
+
+                case TimeoutScenario.DataLogging1:
+                    responses = 1;
                     break;
 
                 default:
@@ -246,7 +262,10 @@ namespace PcmHacking
                 responses = 0;
             }
 
-            builder.AppendFormat(", R:{0}", responses);
+            if (this.TimeoutScenario != TimeoutScenario.DataLoggingStreaming)
+            {
+                builder.AppendFormat(", R:{0}", responses);
+            }
 
             if (messageBytes.Length < 200)
             {

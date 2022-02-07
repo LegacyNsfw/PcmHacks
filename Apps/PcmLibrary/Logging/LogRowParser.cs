@@ -59,10 +59,10 @@ namespace PcmHacking
         /// <param name="rawData"></param>
         public void ParseData(RawLogData rawData)
         {
-            if (this.IsComplete)
-            {
-                throw new InvalidOperationException("This log row is already complete.");
-            }
+//            if (this.IsComplete)
+//            {
+//                throw new InvalidOperationException("This log row is already complete.");
+//            }
 
             this.responseData[rawData.Dpid] = rawData.Payload;
             this.dpidsReceived.Add(rawData.Dpid);

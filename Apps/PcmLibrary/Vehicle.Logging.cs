@@ -20,6 +20,8 @@ namespace PcmHacking
         {
             List<byte> dpids = new List<byte>();
 
+            await this.SetDeviceTimeout(TimeoutScenario.ReadProperty);
+
             foreach (ParameterGroup group in dpidConfiguration.ParameterGroups)
             {
                 int position = 1;
@@ -117,11 +119,6 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// I was hoping to invoke this only once, after ConfigureDpids (which was 
-        /// supposed to be named "BeginLogging") but I can't get the devices to 
-        /// relay information without periodically requesting it.
-        /// 
-        /// See also the FAST_LOGGING code in the Logger class and Protocol.Logging.cs.
         /// </summary>
         public async Task<bool> RequestDpids(DpidCollection dpids, byte submode)
         {
@@ -142,7 +139,7 @@ namespace PcmHacking
             Message message;
             RawLogData result = null;
 
-            for (int attempt = 1; attempt < 3; attempt++)
+            for (int attempt = 1; attempt < 5; attempt++)
             {
                 message = await this.ReceiveMessage();
                 if (message == null)

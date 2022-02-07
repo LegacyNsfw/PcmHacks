@@ -37,8 +37,8 @@ namespace PcmHacking
         private readonly uint osid;
         private readonly DpidConfiguration dpidConfiguration;
         private readonly MathValueProcessor mathValueProcessor;
-
         private DpidCollection dpids;
+        private ILogger uiLogger;
 
         public DpidConfiguration DpidConfiguration {  get { return this.dpidConfiguration; } }
 
@@ -48,21 +48,29 @@ namespace PcmHacking
 
         protected DpidCollection Dpids {  get { return this.dpids; } }
 
+        protected Logger UILogger { get { return this.uiLogger; } }
+
         /// <summary>
         /// Constructor.
         /// </summary>
-        protected Logger(Vehicle vehicle, uint osid, DpidConfiguration dpidConfiguration, MathValueProcessor mathValueProcessor)
+        protected Logger(
+            Vehicle vehicle, 
+            uint osid, 
+            DpidConfiguration dpidConfiguration, 
+            MathValueProcessor mathValueProcessor, 
+            ILogger uiLogger)
         {
             this.vehicle = vehicle;
             this.osid = osid;
             this.dpidConfiguration = dpidConfiguration;
             this.mathValueProcessor = mathValueProcessor;
+            this.uiLogger = uiLogger;
         }
 
         /// <summary>
         /// The factory method converts the list of columns to a DPID configuration and math-value processor.
         /// </summary>
-        public static Logger Create(Vehicle vehicle, uint osid, IEnumerable<LogColumn> columns)
+        public static Logger Create(Vehicle vehicle, uint osid, IEnumerable<LogColumn> columns, ILogger uiLogger)
         {
             DpidConfiguration dpidConfiguration = new DpidConfiguration();
 
@@ -168,13 +176,14 @@ namespace PcmHacking
                 group = null;
             }
 
-            return new SlowLogger(
+            return new FastLogger(
                 vehicle,
                 osid,
                 dpidConfiguration,
                 new MathValueProcessor(
                     dpidConfiguration,
-                    dependencies));
+                    dependencies),
+                uiLogger);
         }
 
         public IEnumerable<string> GetColumnNames()
@@ -194,9 +203,6 @@ namespace PcmHacking
                 return false;
             }
 
-            int scenario = ((int)TimeoutScenario.DataLogging1 - 1);
-            scenario += this.dpidConfiguration.ParameterGroups.Count;
-            await this.vehicle.SetDeviceTimeout((TimeoutScenario)scenario);
 
             // This part differs for the fast and slow loggers.
             await this.StartLoggingInternal();
@@ -216,15 +222,21 @@ namespace PcmHacking
 
             // This part differs for the fast and slow loggers.
             await this.GetNextRowInternal(row);
+            if (row.IsComplete)
+            {
+                PcmParameterValues dpidValues = row.Evaluate();
 
-            PcmParameterValues dpidValues = row.Evaluate();
+                IEnumerable<string> mathValues = this.mathValueProcessor.GetMathValues(dpidValues);
 
-            IEnumerable<string> mathValues = this.mathValueProcessor.GetMathValues(dpidValues);
-
-            return dpidValues
-                    .Select(x => x.Value.ValueAsString)
-                    .Concat(mathValues)
-                    .ToArray();
+                return dpidValues
+                        .Select(x => x.Value.ValueAsString)
+                        .Concat(mathValues)
+                        .ToArray();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         protected abstract Task GetNextRowInternal(LogRowParser row);

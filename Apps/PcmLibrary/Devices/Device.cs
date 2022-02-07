@@ -20,6 +20,8 @@ namespace PcmHacking
         DataLogging1,
         DataLogging2,
         DataLogging3,
+        DataLogging4,
+        DataLoggingStreaming,
         Maximum,
     }
 
@@ -330,6 +332,15 @@ namespace PcmHacking
                 // 64 works for the LX, but the AllPro needs 70.
                 case TimeoutScenario.DataLogging3:
                     packetSize = 70;
+                    break;
+
+                // TODO: Tune.
+                case TimeoutScenario.DataLogging4:
+                    packetSize = 90;
+                    break;
+
+                case TimeoutScenario.DataLoggingStreaming:
+                    packetSize = 0;
                     break;
 
                 case TimeoutScenario.Maximum:
