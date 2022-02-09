@@ -134,6 +134,19 @@ namespace PcmHacking
         public bool Supports4X { get; protected set; }
 
         /// <summary>
+        /// Indicates whether or not the device supports stream data logging.
+        /// </summary>
+        /// <remarks>
+        /// The default approach to logging uses one message from the app to request
+        /// one row of data from the PCM.
+        /// 
+        /// The stream approach causes the PCM to send a continuous stream of data 
+        /// after the inital "start logging" request, which allows it to send 
+        /// 25%-50% more rows per second.
+        /// </remarks>
+        public bool SupportsStreamLogging { get; protected set; }
+
+        /// <summary>
         /// Number of messages recevied so far.
         /// </summary>
         public int ReceivedMessageCount { get { return this.queue.Count; } }
@@ -228,6 +241,8 @@ namespace PcmHacking
             {
                 if (this.queue.Count > 0)
                 {
+                    // This can be useful for debugging, but is generally too noisy.
+                    // this.Logger.AddDebugMessage("Dequeue.");
                     return this.queue.Dequeue();
                 }
                 else
@@ -276,6 +291,8 @@ namespace PcmHacking
                 this.queue.Enqueue(message);
             }
         }
+
+        protected int QueueSize { get { return this.queue.Count; } }
 
         /// <summary>
         /// List for an incoming message of the VPW bus.

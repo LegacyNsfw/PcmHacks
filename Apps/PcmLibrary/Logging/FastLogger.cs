@@ -55,7 +55,7 @@ namespace PcmHacking
         {
             await this.Vehicle.SetDeviceTimeout(TimeoutScenario.Minimum);
 
-            if (!await this.Vehicle.RequestDpids(this.Dpids, 0x24))
+            if (!await this.Vehicle.RequestDpids(this.Dpids, true))
             {
                 return false;
             }
@@ -76,13 +76,18 @@ namespace PcmHacking
             for (int count = 0; count < 6 && !row.IsComplete; count++)
             {
                 RawLogData rawData = await this.Vehicle.ReadLogData();
-                if (rawData != null)
+                if (rawData == null)
                 {
-                    this.UILogger.add
+                    this.UILogger.AddDebugMessage("Received nothing.");
+                }
+                else
+                {
                     row.ParseData(rawData);
                 }
             }
 
+            // This can be usefl for debugging, but is generally too noisy.
+            // this.UILogger.AddDebugMessage("Row " + (row.IsComplete ? "complete" : "failed"));
             if (DateTime.Now.Subtract(lastNotificationTime) > TimeSpan.FromSeconds(2))
             {
                 this.lastNotificationTime = DateTime.Now;

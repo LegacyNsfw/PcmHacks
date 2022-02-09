@@ -247,6 +247,7 @@ namespace PcmHacking
             {
                 if (allowEmpty)
                 {
+                    this.Logger.AddDebugMessage("Empty response to " + context + ". OK.");
                     return true;
                 }
                 else

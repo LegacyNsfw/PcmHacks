@@ -35,7 +35,21 @@ namespace PcmHacking
         private HashSet<byte> dpidsReceived = new HashSet<byte>();
         private int dpidCount;
         
-        public bool IsComplete { get { return this.dpidCount == this.dpidsReceived.Count; } }
+        public bool IsComplete
+        {
+            get
+            {
+                foreach(var group in this.dpidConfiguration.ParameterGroups)
+                {
+                    if (!this.dpidsReceived.Contains(group.Dpid))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
 
         /// <summary>
         /// Constructor.

@@ -14,6 +14,25 @@ namespace PcmHacking
     public partial class Vehicle : IDisposable
     {
         /// <summary>
+        /// Create a logger.
+        /// </summary>
+        /// <remarks>
+        /// The Logger implementation will vary depending on the device capability.
+        /// </remarks>
+        public Logger CreateLogger(
+            uint osid,
+            IEnumerable<LogColumn> columns,
+            ILogger uiLogger)
+        {
+            return Logger.Create(
+                this, 
+                osid, 
+                columns, 
+                this.device.SupportsStreamLogging, 
+                uiLogger);
+        }
+
+        /// <summary>
         /// Prepare the PCM to begin sending collections of parameters.
         /// </summary>
         public async Task<DpidCollection> ConfigureDpids(DpidConfiguration dpidConfiguration, uint osid)
@@ -119,13 +138,41 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Begin data logging.
         /// </summary>
-        public async Task<bool> RequestDpids(DpidCollection dpids, byte submode)
+        /// <remarks>
+        /// In the future we could make "bool streaming" into an enum, and 
+        /// request some parameters at 10hz and others at 5hz.
+        /// 
+        /// The PCM always sends an error response to these messages, so
+        /// we just ignore responses in all cases.
+        /// </remarks>
+        public async Task<bool> RequestDpids(DpidCollection dpids, bool streaming)
         {
-            Message startMessage = this.protocol.RequestDpids(dpids, submode);
-            if (!await this.SendMessage(startMessage))
+            if (streaming)
             {
-                return false;
+                // Request all of the parameters at 5hz using stream 1.
+                Message step1 = this.protocol.RequestDpids(dpids, Protocol.DpidRequestType.Stream1);
+                if (!await this.SendMessage(step1))
+                {
+                    return false;
+                }
+
+                // Request all of the parameters at 5hz using stream 2. Now we get them all at 10hz.
+                Message step2 = this.protocol.RequestDpids(dpids, Protocol.DpidRequestType.Stream2);
+                if (!await this.SendMessage(step2))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // Request one row of data.
+                Message startMessage = this.protocol.RequestDpids(dpids, Protocol.DpidRequestType.SingleRow);
+                if (!await this.SendMessage(startMessage))
+                {
+                    return false;
+                }
             }
 
             return true;

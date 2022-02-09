@@ -48,7 +48,7 @@ namespace PcmHacking
 
         protected DpidCollection Dpids {  get { return this.dpids; } }
 
-        protected Logger UILogger { get { return this.uiLogger; } }
+        protected ILogger UILogger { get { return this.uiLogger; } }
 
         /// <summary>
         /// Constructor.
@@ -70,7 +70,12 @@ namespace PcmHacking
         /// <summary>
         /// The factory method converts the list of columns to a DPID configuration and math-value processor.
         /// </summary>
-        public static Logger Create(Vehicle vehicle, uint osid, IEnumerable<LogColumn> columns, ILogger uiLogger)
+        public static Logger Create(
+            Vehicle vehicle, 
+            uint osid, 
+            IEnumerable<LogColumn> columns, 
+            bool deviceSupportsStreaming,
+            ILogger uiLogger)
         {
             DpidConfiguration dpidConfiguration = new DpidConfiguration();
 
@@ -176,14 +181,34 @@ namespace PcmHacking
                 group = null;
             }
 
-            return new FastLogger(
-                vehicle,
-                osid,
-                dpidConfiguration,
-                new MathValueProcessor(
+            // In theory we could also create a "mixed logger" that gets the 
+            // FE, FD, FC DPIDs at 10hz and the FB & FA DPIDs at 5hz.
+            //
+            // This implies that the user specifies, or the app just knows,
+            // which parameters to poll at 5hz rather than 10hz. A list of
+            // 5hz-friendly parameters is not out of the question...
+            if (deviceSupportsStreaming)
+            {
+                return new FastLogger(
+                    vehicle,
+                    osid,
                     dpidConfiguration,
-                    dependencies),
-                uiLogger);
+                    new MathValueProcessor(
+                        dpidConfiguration,
+                        dependencies),
+                    uiLogger);
+            }
+            else
+            {
+                return new SlowLogger(
+                    vehicle,
+                    osid,
+                    dpidConfiguration,
+                    new MathValueProcessor(
+                        dpidConfiguration,
+                        dependencies),
+                    uiLogger);
+            }
         }
 
         public IEnumerable<string> GetColumnNames()

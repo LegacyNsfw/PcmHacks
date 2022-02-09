@@ -73,7 +73,7 @@ namespace PcmHacking
 
         private async Task<Logger> RecreateLogger()
         {
-            Logger logger = Logger.Create(this.Vehicle, this.osid, this.currentProfile.Columns, this);
+            Logger logger = this.Vehicle.CreateLogger(this.osid, this.currentProfile.Columns, this);
 
 
             if (!await logger.StartLogging())

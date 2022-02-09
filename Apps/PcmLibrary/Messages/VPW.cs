@@ -167,7 +167,8 @@ namespace PcmHacking
 
         // Logging
         public const byte SingleRow = 0x01;
-        public const byte Streaming = 0x24;
+        public const byte Stream1 = 0x14;
+        public const byte Stream2= 0x24;
     }
 
     /// <summary>

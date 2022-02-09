@@ -56,7 +56,7 @@ namespace PcmHacking
             try
             {
                 Thread.CurrentThread.Priority = ThreadPriority.Highest;
-                if (!await this.Vehicle.RequestDpids(this.Dpids, Submode.SingleRow))
+                if (!await this.Vehicle.RequestDpids(this.Dpids, false))
                 {
                     return;
                 }

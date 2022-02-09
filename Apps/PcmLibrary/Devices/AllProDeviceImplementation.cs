@@ -194,6 +194,14 @@ namespace PcmHacking
                         milliseconds = 15;
                         break;
 
+                    case TimeoutScenario.DataLogging4:
+                        milliseconds = 25;
+                        break;
+
+                    case TimeoutScenario.DataLoggingStreaming:
+                        milliseconds = 15;
+                        break;
+
                     case TimeoutScenario.Maximum:
                         return 1020;
 
