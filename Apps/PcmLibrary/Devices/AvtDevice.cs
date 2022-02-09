@@ -40,6 +40,7 @@ namespace PcmHacking
             this.MaxSendSize = 4096+10+2;    // packets up to 4112 but we want 4096 byte data blocks
             this.MaxReceiveSize = 4096+10+2; // with 10 byte header and 2 byte block checksum
             this.Supports4X = true;
+            this.SupportsStreamLogging = true;
         }
 
         public override string GetDeviceType()
