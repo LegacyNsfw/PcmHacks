@@ -223,9 +223,20 @@ namespace PcmHacking
                                         }
 
                                     }
+                                    catch (NeedMoreParametersException exception)
+                                    {
+                                        logState = LogState.Nothing;
+                                        this.loggerProgress.Invoke(
+                                            (MethodInvoker)
+                                            delegate ()
+                                            {
+                                                this.startStopSaving.Enabled = false;
+                                                this.logValues.Text = exception.Message;
+                                            });
+                                    }
                                     catch (ParameterNotSupportedException exception)
                                     {
-                                        logState = LogState.InvalidParameter;
+                                        logState = LogState.Nothing;
 
                                         this.loggerProgress.Invoke(
                                             (MethodInvoker)

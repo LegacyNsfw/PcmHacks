@@ -22,6 +22,13 @@ namespace PcmHacking
             $"Parameter \"{parameter.Name}\" is not supported by this PCM.")
         { }
     }
+        
+    public class NeedMoreParametersException : Exception
+    {
+        public NeedMoreParametersException(string message) : base(message)
+        { }
+    }
+
 
     /// <summary>
     /// Requests log data from the Vehicle.
@@ -74,6 +81,7 @@ namespace PcmHacking
             Vehicle vehicle, 
             uint osid, 
             IEnumerable<LogColumn> columns, 
+            bool deviceSupportsSingleDpid,
             bool deviceSupportsStreaming,
             ILogger uiLogger)
         {
@@ -179,6 +187,11 @@ namespace PcmHacking
             {
                 dpidConfiguration.ParameterGroups.Add(group);
                 group = null;
+            }
+
+            if (!deviceSupportsSingleDpid && dpidConfiguration.ParameterGroups.Count == 1)
+            {
+                throw new NeedMoreParametersException("Add more parameters to begin logging.");
             }
 
             // In theory we could also create a "mixed logger" that gets the 

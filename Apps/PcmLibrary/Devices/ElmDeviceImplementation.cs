@@ -22,6 +22,8 @@ namespace PcmHacking
 
         public bool Supports4X { get; protected set; }
 
+        public bool SupportsStreamLogging { get; protected set; }
+
         public TimeoutScenario TimeoutScenario { get; set; }
 
         protected readonly Action<Message> enqueue;
@@ -172,7 +174,7 @@ namespace PcmHacking
                 return true;
             }
 
-            this.Logger.AddDebugMessage("Did not recieve expected response. " + actualResponse + " does not equal " + expectedResponse);
+            this.Logger.AddDebugMessage("Did not recieve expected response. Received \"" + actualResponse + "\" expected \"" + expectedResponse + "\"");
             return false;
         }
 

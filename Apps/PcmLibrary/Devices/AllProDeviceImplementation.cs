@@ -37,6 +37,10 @@ namespace PcmHacking
             this.MaxSendSize = 1024 + 12;
             this.MaxReceiveSize = 1024 + 12;
             this.Supports4X = true;
+
+            // For this to work, the AllPro would need a firmware update that
+            // adds ATMA support so that we could monitor the bus and log data. 
+            this.SupportsStreamLogging = false;
         }
 
         /// <summary>

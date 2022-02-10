@@ -44,6 +44,10 @@ namespace PcmHacking
             // This would need a firmware upgrade at the very least, and likely isn't even possible 
             // with current hardware.
             this.Supports4X = false;
+
+            // In theory we could use ATMA or STMA to monitor the bus and read data log streams.
+            // In practice I couldn't get that to work. See SetTimeout & SetTimeoutMilliseconds.
+            this.SupportsStreamLogging = false;
         }
 
         /// <summary>
@@ -184,7 +188,10 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.DataLoggingStreaming:
-                        milliseconds = 0;
+                        // This is hacky, but the code path is not supported anyway.
+                        // I had hoped to use ATMA or STMA to monitor the bus and log
+                        // data, but that hasn't worked.  Also see SetTimeoutMilliseconds.
+                        milliseconds = -1;
                         break;
 
                     case TimeoutScenario.Maximum:
@@ -210,7 +217,14 @@ namespace PcmHacking
         /// </summary>
         public override async Task<bool> SetTimeoutMilliseconds(int milliseconds)
         {
-           return await this.SendAndVerify("STPTO " + milliseconds, "OK");
+            if (milliseconds == -1)
+            {
+                return await this.SendAndVerify("STMA", "");
+            }
+            else
+            {
+                return await this.SendAndVerify("STPTO " + milliseconds, "OK");
+            }           
         }
 
         /// <summary>

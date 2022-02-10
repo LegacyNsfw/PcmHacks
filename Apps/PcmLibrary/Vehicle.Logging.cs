@@ -28,6 +28,7 @@ namespace PcmHacking
                 this, 
                 osid, 
                 columns, 
+                this.device.SupportsSingleDpidLogging,
                 this.device.SupportsStreamLogging, 
                 uiLogger);
         }

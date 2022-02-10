@@ -63,6 +63,7 @@ namespace PcmHacking
             this.MaxSendSize = 2048 + 12;    // J2534 Standard is 4KB
             this.MaxReceiveSize = 2048 + 12; // J2534 Standard is 4KB
             this.Supports4X = true;
+            this.SupportsSingleDpidLogging = true;
             this.SupportsStreamLogging = true;
         }
 

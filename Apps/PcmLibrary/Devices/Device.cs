@@ -134,6 +134,16 @@ namespace PcmHacking
         public bool Supports4X { get; protected set; }
 
         /// <summary>
+        /// Indicates whether or no the device supports logging just one DPID.
+        /// </summary>
+        /// <remarks>
+        /// ELM devices generally need at least two DPIDs to work. Apparently if
+        /// there is only one DPID, it comes back from the PCM before the device 
+        /// is ready to listen. So the device times out, and logging is broken.
+        /// </remarks>
+        public bool SupportsSingleDpidLogging { get; protected set; }
+
+        /// <summary>
         /// Indicates whether or not the device supports stream data logging.
         /// </summary>
         /// <remarks>

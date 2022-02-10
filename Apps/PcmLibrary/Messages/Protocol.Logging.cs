@@ -40,11 +40,11 @@ namespace PcmHacking
     /// </summary>
     public class DpidCollection
     {
-        public byte[] Values { get; private set; }
+        public byte[] Dpids { get; private set; }
 
         public DpidCollection(byte[] dpids)
         {
-            this.Values = dpids;
+            this.Dpids = dpids;
         }
     }
 
@@ -113,10 +113,18 @@ namespace PcmHacking
         /// <summary>
         /// Create a request to read data from the PCM
         /// </summary>
-        public Message RequestDpids(DpidCollection dpids, DpidRequestType requestType)
+        public Message RequestDpids(DpidCollection dpidCollection, DpidRequestType requestType)
         {
+            IEnumerable<byte> dpidBytes = dpidCollection.Dpids;
+            int length = dpidCollection.Dpids.Length;
+            if (length < 4)
+            {
+                byte padding = (requestType == DpidRequestType.SingleRow) ? (byte)0x00 : (byte)0xFF;
+                dpidBytes = dpidBytes.Concat(Enumerable.Repeat((byte)0xFF, 4 - length));
+            }
+
             byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, (byte)requestType };
-            return new Message(header.Concat(dpids.Values).ToArray());
+            return new Message(header.Concat(dpidBytes).ToArray());
         }
 
         /// <summary>
