@@ -119,8 +119,8 @@ namespace PcmHacking
             int length = dpidCollection.Dpids.Length;
             if (length < 4)
             {
-                byte padding = (requestType == DpidRequestType.SingleRow) ? (byte)0x00 : (byte)0xFF;
-                dpidBytes = dpidBytes.Concat(Enumerable.Repeat((byte)0xFF, 4 - length));
+                byte padding = (requestType == DpidRequestType.SingleRow) ? (byte)0xFF : (byte)0x00;
+                dpidBytes = dpidBytes.Concat(Enumerable.Repeat((byte)padding, 4 - length));
             }
 
             byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, (byte)requestType };
