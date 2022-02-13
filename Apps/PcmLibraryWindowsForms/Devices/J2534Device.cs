@@ -62,7 +62,9 @@ namespace PcmHacking
             // Reduced from 4096+12 for the MDI2
             this.MaxSendSize = 2048 + 12;    // J2534 Standard is 4KB
             this.MaxReceiveSize = 2048 + 12; // J2534 Standard is 4KB
-            this.Supports4X = true;       
+            this.Supports4X = true;
+            this.SupportsSingleDpidLogging = true;
+            this.SupportsStreamLogging = true;
         }
 
         protected override void Dispose(bool disposing)

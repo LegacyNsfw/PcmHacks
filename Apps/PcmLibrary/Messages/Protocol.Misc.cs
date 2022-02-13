@@ -38,7 +38,7 @@ namespace PcmHacking
         /// </summary>
         public Message CreateDisableNormalMessageTransmission()
         {
-            byte[] Bytes = new byte[] { Priority.Physical0, DeviceId.Broadcast, DeviceId.Tool, Mode.SilenceBus, SubMode.Null };
+            byte[] Bytes = new byte[] { Priority.Physical0, DeviceId.Broadcast, DeviceId.Tool, Mode.SilenceBus, Submode.Null };
             return new Message(Bytes);
         }
 
@@ -47,7 +47,7 @@ namespace PcmHacking
         /// </summary>
         public Message CreateDisableNormalMessageTransmissionOK()
         {
-            byte[] bytes = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.SilenceBus + Mode.Response, SubMode.Null };
+            byte[] bytes = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.SilenceBus + Mode.Response, Submode.Null };
             return new Message(bytes);
         }
 

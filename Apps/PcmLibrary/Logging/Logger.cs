@@ -11,45 +11,88 @@ using System.Threading.Tasks;
 namespace PcmHacking
 {    
     /// <summary>
+    /// Thrown when the PCM does not support a requested parameter.
+    /// </summary>
+    public class ParameterNotSupportedException : Exception
+    {
+        public ParameterNotSupportedException(string message) : base(message)
+        { }
+
+        public ParameterNotSupportedException(Parameter parameter) : base(
+            $"Parameter \"{parameter.Name}\" is not supported by this PCM.")
+        { }
+    }
+
+    /// <summary>
+    /// Thrown when the interface device requires more data in order to log reliably.
+    /// </summary>
+    /// <remarks>
+    /// ELM devices are unreliable when only one DPID is configured.
+    /// </remarks>
+    public class NeedMoreParametersException : Exception
+    {
+        public NeedMoreParametersException(string message) : base(message)
+        { }
+    }
+
+    /// <summary>
     /// Requests log data from the Vehicle.
     /// </summary>
     /// <remarks>
-    /// In theory we can send a single message to command the PCM to spew data
-    /// continuously. In practice, I haven't been able to get that to work.
+    /// There are two derived classes:
     /// 
-    /// But I still have hope, so the code for that is in the FAST_LOGGING
-    /// sections. We'll get faster data rates if we can figure this out.
+    /// SlowLogger - sends one request for each row of log data. 
+    /// Works, but it's slow.
+    /// 
+    /// FastLogger - sends one request, receives many rows of log data.
+    /// Preferable, but doesn't work for all devices.
     /// </remarks>
-    public class Logger
+    public abstract class Logger
     {
         private readonly Vehicle vehicle;
         private readonly uint osid;
         private readonly DpidConfiguration dpidConfiguration;
         private readonly MathValueProcessor mathValueProcessor;
-
         private DpidCollection dpids;
-#if FAST_LOGGING
-        private DateTime lastRequestTime;
-#endif
+        private ILogger uiLogger;
 
         public DpidConfiguration DpidConfiguration {  get { return this.dpidConfiguration; } }
+
         public MathValueProcessor MathValueProcessor {  get { return this.mathValueProcessor; } }
+
+        protected Vehicle Vehicle { get { return this.vehicle; } }
+
+        protected DpidCollection Dpids {  get { return this.dpids; } }
+
+        protected ILogger UILogger { get { return this.uiLogger; } }
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        private Logger(Vehicle vehicle, uint osid, DpidConfiguration dpidConfiguration, MathValueProcessor mathValueProcessor)
+        protected Logger(
+            Vehicle vehicle, 
+            uint osid, 
+            DpidConfiguration dpidConfiguration, 
+            MathValueProcessor mathValueProcessor, 
+            ILogger uiLogger)
         {
             this.vehicle = vehicle;
             this.osid = osid;
             this.dpidConfiguration = dpidConfiguration;
             this.mathValueProcessor = mathValueProcessor;
+            this.uiLogger = uiLogger;
         }
 
         /// <summary>
         /// The factory method converts the list of columns to a DPID configuration and math-value processor.
         /// </summary>
-        public static Logger Create(Vehicle vehicle, uint osid, IEnumerable<LogColumn> columns)
+        public static Logger Create(
+            Vehicle vehicle, 
+            uint osid, 
+            IEnumerable<LogColumn> columns, 
+            bool deviceSupportsSingleDpid,
+            bool deviceSupportsStreaming,
+            ILogger uiLogger)
         {
             DpidConfiguration dpidConfiguration = new DpidConfiguration();
 
@@ -117,7 +160,12 @@ namespace PcmHacking
                     continue;
                 }
 
-                group.TryAddLogColumn(column);
+                if (!group.TryAddLogColumn(column))
+                {
+                    throw new ParameterNotSupportedException(
+                        $"Parameter \"{column.Parameter.Name}\" is not supported by this PCM.");
+                }
+
                 if (group.TotalBytes == ParameterGroup.MaxBytes)
                 {
                     dpidConfiguration.ParameterGroups.Add(group);
@@ -129,7 +177,12 @@ namespace PcmHacking
             // Add the remaining one-byte values
             foreach (LogColumn column in singleByteColumns)
             {
-                group.TryAddLogColumn(column);
+                if (!group.TryAddLogColumn(column))
+                {
+                    throw new ParameterNotSupportedException(
+                        $"Parameter \"{column.Parameter.Name}\" is not supported by this PCM.");
+                }
+
                 if (group.TotalBytes == ParameterGroup.MaxBytes)
                 {
                     dpidConfiguration.ParameterGroups.Add(group);
@@ -145,13 +198,39 @@ namespace PcmHacking
                 group = null;
             }
 
-            return new Logger(
-                vehicle,
-                osid,
-                dpidConfiguration,
-                new MathValueProcessor(
+            if (!deviceSupportsSingleDpid && dpidConfiguration.ParameterGroups.Count == 1)
+            {
+                throw new NeedMoreParametersException("Add more parameters to begin logging.");
+            }
+
+            // In theory we could also create a "mixed logger" that gets the 
+            // FE, FD, FC DPIDs at 10hz and the FB & FA DPIDs at 5hz.
+            //
+            // This would require the user to specify, or the app to just know,
+            // which parameters to poll at 5hz rather than 10hz. A list of
+            // 5hz-friendly parameters is not out of the question. Some day.
+            if (deviceSupportsStreaming)
+            {
+                return new FastLogger(
+                    vehicle,
+                    osid,
                     dpidConfiguration,
-                    dependencies));
+                    new MathValueProcessor(
+                        dpidConfiguration,
+                        dependencies),
+                    uiLogger);
+            }
+            else
+            {
+                return new SlowLogger(
+                    vehicle,
+                    osid,
+                    dpidConfiguration,
+                    new MathValueProcessor(
+                        dpidConfiguration,
+                        dependencies),
+                    uiLogger);
+            }
         }
 
         public IEnumerable<string> GetColumnNames()
@@ -171,20 +250,13 @@ namespace PcmHacking
                 return false;
             }
 
-            int scenario = ((int)TimeoutScenario.DataLogging1 - 1);
-            scenario += this.dpidConfiguration.ParameterGroups.Count;
-            await this.vehicle.SetDeviceTimeout((TimeoutScenario)scenario);
+            // This part differs for the fast and slow loggers.
+            await this.StartLoggingInternal();
 
-#if FAST_LOGGING
-            if (!await this.vehicle.RequestDpids(this.dpids))
-            {
-                return false;
-            }
-
-            this.lastRequestTime = DateTime.Now;
-#endif
             return true;
         }
+
+        protected abstract Task<bool> StartLoggingInternal();
 
         /// <summary>
         /// Invoke this repeatedly to get each row of data from the PCM.
@@ -194,50 +266,26 @@ namespace PcmHacking
         {
             LogRowParser row = new LogRowParser(this.dpidConfiguration);
 
-            try
+            // This part differs for the fast and slow loggers.
+            await this.GetNextRowInternal(row);
+
+            if (row.IsComplete)
             {
-#if FAST_LOGGING
-//          if (DateTime.Now.Subtract(lastRequestTime) > TimeSpan.FromSeconds(2))
+                PcmParameterValues dpidValues = row.Evaluate();
+
+                IEnumerable<string> mathValues = this.mathValueProcessor.GetMathValues(dpidValues);
+
+                return dpidValues
+                        .Select(x => x.Value.ValueAsString)
+                        .Concat(mathValues)
+                        .ToArray();
+            }
+            else
             {
-                await this.vehicle.ForceSendToolPresentNotification();
+                return null;
             }
-#endif
-#if !FAST_LOGGING
-                Thread.CurrentThread.Priority = ThreadPriority.Highest;
-                if (!await this.vehicle.RequestDpids(this.dpids))
-                {
-                    return null;
-                }
-#endif
-
-                while (!row.IsComplete)
-                {
-
-                    RawLogData rawData = await this.vehicle.ReadLogData();
-                    if (rawData == null)
-                    {
-                        return null;
-                    }
-
-                    row.ParseData(rawData);
-                }
-
-            }
-            finally
-            {
-#if !FAST_LOGGING
-                Thread.CurrentThread.Priority = ThreadPriority.Normal;
-#endif
-            }
-
-            PcmParameterValues dpidValues = row.Evaluate();
-
-            IEnumerable<string> mathValues = this.mathValueProcessor.GetMathValues(dpidValues);
-
-            return dpidValues
-                    .Select(x => x.Value.ValueAsString)
-                    .Concat(mathValues)
-                    .ToArray();
         }
+
+        protected abstract Task GetNextRowInternal(LogRowParser row);
     }
 }

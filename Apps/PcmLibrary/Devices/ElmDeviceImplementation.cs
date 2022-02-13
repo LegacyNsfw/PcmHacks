@@ -22,6 +22,8 @@ namespace PcmHacking
 
         public bool Supports4X { get; protected set; }
 
+        public bool SupportsStreamLogging { get; protected set; }
+
         public TimeoutScenario TimeoutScenario { get; set; }
 
         protected readonly Action<Message> enqueue;
@@ -62,10 +64,13 @@ namespace PcmHacking
         /// </summary>
         public virtual async Task<bool> Initialize()
         {
-            string response;
             // This is common across all ELM-based devices.
-            await this.SendRequest(""); // send a cr/lf to prevent the ATZ failing.
-            this.Logger.AddDebugMessage(response = await this.SendRequest("AT Z"));  // reset
+            // Send a cr/lf to prevent the ATZ failing.
+            await this.SendRequest("");
+
+            // Reset
+            string response = await this.SendRequest("AT Z");
+            this.Logger.AddDebugMessage(response);
 
             if(string.IsNullOrWhiteSpace(response))
             {
@@ -172,7 +177,7 @@ namespace PcmHacking
                 return true;
             }
 
-            this.Logger.AddDebugMessage("Did not recieve expected response. " + actualResponse + " does not equal " + expectedResponse);
+            this.Logger.AddDebugMessage("Did not recieve expected response. Received \"" + actualResponse + "\" expected \"" + expectedResponse + "\"");
             return false;
         }
 
@@ -247,6 +252,7 @@ namespace PcmHacking
             {
                 if (allowEmpty)
                 {
+                    this.Logger.AddDebugMessage("Empty response to " + context + ". OK.");
                     return true;
                 }
                 else

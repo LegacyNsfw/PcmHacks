@@ -37,6 +37,10 @@ namespace PcmHacking
             this.MaxSendSize = 1024 + 12;
             this.MaxReceiveSize = 1024 + 12;
             this.Supports4X = true;
+
+            // For this to work, the AllPro would need a firmware update that
+            // adds ATMA support so that we could monitor the bus and log data. 
+            this.SupportsStreamLogging = false;
         }
 
         /// <summary>
@@ -134,6 +138,14 @@ namespace PcmHacking
                         milliseconds = 60;
                         break;
 
+                    case TimeoutScenario.DataLogging4:
+                        milliseconds = 75;
+                        break;
+
+                    case TimeoutScenario.DataLoggingStreaming:
+                        milliseconds = 0;
+                        break;
+
                     case TimeoutScenario.Maximum:
                         return 1020;
 
@@ -183,6 +195,14 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.DataLogging3:
+                        milliseconds = 15;
+                        break;
+
+                    case TimeoutScenario.DataLogging4:
+                        milliseconds = 25;
+                        break;
+
+                    case TimeoutScenario.DataLoggingStreaming:
                         milliseconds = 15;
                         break;
 

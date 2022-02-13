@@ -86,6 +86,8 @@ namespace PcmHacking
             this.MaxSendSize = 4096 + 10 + 2;    // packets up to 4112 but we want 4096 byte data blocks
             this.MaxReceiveSize = 4096 + 10 + 2; // with 10 byte header and 2 byte block checksum
             this.Supports4X = true;
+            this.SupportsSingleDpidLogging = true;
+            this.SupportsStreamLogging = true;
 
             // This will be used during device initialization.
             this.currentTimeoutScenario = TimeoutScenario.ReadProperty;
@@ -339,8 +341,10 @@ namespace PcmHacking
                 //network frames //Strip header and checksum
                 byte[] StrippedFrame = new byte[Length];
                 Buffer.BlockCopy(receive, 2 + offset, StrippedFrame, 0, Length);
-                this.Logger.AddDebugMessage("RX: " + StrippedFrame.ToHex());
                 this.Enqueue(new Message(StrippedFrame, timestampmicro, 0));
+
+                // This can be useful for debugging, but is generally too noisy.
+                // this.Logger.AddDebugMessage("RX: " + StrippedFrame.ToHex());
                 return null;
             }
             else if (receive[0] == 0x7F)
@@ -907,6 +911,14 @@ namespace PcmHacking
 
                     case TimeoutScenario.DataLogging3:
                         result = 60;
+                        break;
+
+                    case TimeoutScenario.DataLogging4:
+                        result = 80;
+                        break;
+
+                    case TimeoutScenario.DataLoggingStreaming:
+                        result = 0;
                         break;
 
                     case TimeoutScenario.Maximum:
