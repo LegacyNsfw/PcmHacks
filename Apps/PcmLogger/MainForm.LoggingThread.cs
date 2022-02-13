@@ -30,7 +30,6 @@ namespace PcmHacking
         enum LogState
         {
             Nothing,
-            InvalidParameter,
             DisplayOnly,
             StartSaving,
             Saving,

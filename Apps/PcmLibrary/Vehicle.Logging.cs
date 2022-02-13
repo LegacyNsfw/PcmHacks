@@ -142,8 +142,13 @@ namespace PcmHacking
         /// Begin data logging.
         /// </summary>
         /// <remarks>
-        /// In the future we could make "bool streaming" into an enum, and 
-        /// request some parameters at 10hz and others at 5hz.
+        /// In the future we could make "bool streaming" into an enum, with
+        /// Fast, Slow, and  Mixed options. Mixed mode would request some 
+        /// parameters at 10hz and others at 5hz.
+        /// 
+        /// This would require the user to specify, or the app to just know,
+        /// which parameters to poll at 5hz rather than 10hz. A list of
+        /// 5hz-friendly parameters is not out of the question. Some day.
         /// 
         /// The PCM always sends an error response to these messages, so
         /// we just ignore responses in all cases.
