@@ -273,6 +273,7 @@ namespace PcmHacking
         /// </summary>
         protected async void selectButton_Click(object sender, EventArgs e)
         {
+            this.logStopRequested = true;
             await base.HandleSelectButtonClick();
         }
 

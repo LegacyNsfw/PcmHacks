@@ -281,6 +281,8 @@ namespace PcmHacking
                                     break;
                             }
                         }
+
+                        this.logStopRequested = false;
                     }
                     finally
                     {

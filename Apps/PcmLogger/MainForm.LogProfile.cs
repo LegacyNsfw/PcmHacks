@@ -214,6 +214,7 @@ namespace PcmHacking
                 if (adapter.Path == path)
                 {
                     alreadyInList = true;
+                    this.profileList.SelectedItem = adapter;
                     break;
                 }
             }
@@ -222,6 +223,7 @@ namespace PcmHacking
             {
                 PathDisplayAdapter newAdapter = new PathDisplayAdapter(path);
                 this.profileList.Items.Insert(0, newAdapter);
+                this.profileList.SelectedItem = newAdapter;
             }
 
             this.currentProfilePath = path;
