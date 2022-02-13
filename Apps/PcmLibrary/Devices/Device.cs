@@ -61,6 +61,11 @@ namespace PcmHacking
         private int maxSendSize;
 
         /// <summary>
+        /// Queue of messages received from the VPW bus.
+        /// </summary>
+        private Queue<Message> queue = new Queue<Message>();
+
+        /// <summary>
         /// For the AllPro, we need to tell the interface how long to listen for incoming messages.
         /// For other devices this is not so critical, however I suspect it might still be useful to set serial-port timeouts.
         /// </summary>
@@ -162,9 +167,12 @@ namespace PcmHacking
         public int ReceivedMessageCount { get { return this.queue.Count; } }
 
         /// <summary>
-        /// Queue of messages received from the VPW bus.
+        /// Gets the number of messages waiting in the receive queue.
         /// </summary>
-        private Queue<Message> queue = new Queue<Message>();
+        /// <remarks>
+        /// Probably only useful for debug messages.
+        /// </remarks>
+        protected int QueueSize { get { return this.queue.Count; } }
 
         /// <summary>
         /// Current speed of the VPW bus.
@@ -302,8 +310,6 @@ namespace PcmHacking
             }
         }
 
-        protected int QueueSize { get { return this.queue.Count; } }
-
         /// <summary>
         /// List for an incoming message of the VPW bus.
         /// </summary>
@@ -366,6 +372,7 @@ namespace PcmHacking
                     packetSize = 90;
                     break;
 
+                // TODO: Tune.
                 case TimeoutScenario.DataLoggingStreaming:
                     packetSize = 0;
                     break;

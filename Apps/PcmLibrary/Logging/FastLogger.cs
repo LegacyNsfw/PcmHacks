@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace PcmHacking
 {   
     /// <summary>
-    /// Extends the base Logger class with an implemenation of "fast" logging.
+    /// Extends the base Logger class with an implementation of "fast" logging.
     /// </summary>
     /// <remarks>
     /// If you send this...
@@ -20,10 +20,10 @@ namespace PcmHacking
     /// F0 - source = tool
     /// 2A - mode = send DPID
     /// 24 - submode = streaming
-    /// FE
-    /// FD
-    /// FC
-    /// FB
+    /// FE - DPID 1
+    /// FD - DPID 2
+    /// FC - DPID 3
+    /// FB - DPID 4
     /// ...the PCM should respond with a stream of DPID payloads.
     /// </remarks>
     public class FastLogger : Logger
@@ -61,8 +61,6 @@ namespace PcmHacking
             }
 
             await this.Vehicle.SetDeviceTimeout(TimeoutScenario.DataLoggingStreaming);
-
-
             this.lastNotificationTime = DateTime.Now;
             return true;
         }
@@ -86,7 +84,7 @@ namespace PcmHacking
                 }
             }
 
-            // This can be usefl for debugging, but is generally too noisy.
+            // This can be useful for debugging, but is generally too noisy.
             // this.UILogger.AddDebugMessage("Row " + (row.IsComplete ? "complete" : "failed"));
             if (DateTime.Now.Subtract(lastNotificationTime) > TimeSpan.FromSeconds(2))
             {

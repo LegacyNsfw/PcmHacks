@@ -22,21 +22,30 @@ namespace PcmHacking
             $"Parameter \"{parameter.Name}\" is not supported by this PCM.")
         { }
     }
-        
+
+    /// <summary>
+    /// Thrown when the interface device requires more data in order to log reliably.
+    /// </summary>
+    /// <remarks>
+    /// ELM devices are unreliable when only one DPID is configured.
+    /// </remarks>
     public class NeedMoreParametersException : Exception
     {
         public NeedMoreParametersException(string message) : base(message)
         { }
     }
 
-
     /// <summary>
     /// Requests log data from the Vehicle.
     /// </summary>
     /// <remarks>
     /// There are two derived classes:
-    /// SlowLogger - sends one request for each row of log data. Works, but it's slow.
-    /// FastLogger - sends one request, receives many rows of log data. Does not work (yet).
+    /// 
+    /// SlowLogger - sends one request for each row of log data. 
+    /// Works, but it's slow.
+    /// 
+    /// FastLogger - sends one request, receives many rows of log data.
+    /// Preferable, but doesn't work for all devices.
     /// </remarks>
     public abstract class Logger
     {
@@ -197,9 +206,9 @@ namespace PcmHacking
             // In theory we could also create a "mixed logger" that gets the 
             // FE, FD, FC DPIDs at 10hz and the FB & FA DPIDs at 5hz.
             //
-            // This implies that the user specifies, or the app just knows,
+            // This would require the user to specify, or the app to just know,
             // which parameters to poll at 5hz rather than 10hz. A list of
-            // 5hz-friendly parameters is not out of the question...
+            // 5hz-friendly parameters is not out of the question. Some day.
             if (deviceSupportsStreaming)
             {
                 return new FastLogger(
@@ -241,7 +250,6 @@ namespace PcmHacking
                 return false;
             }
 
-
             // This part differs for the fast and slow loggers.
             await this.StartLoggingInternal();
 
@@ -260,6 +268,7 @@ namespace PcmHacking
 
             // This part differs for the fast and slow loggers.
             await this.GetNextRowInternal(row);
+
             if (row.IsComplete)
             {
                 PcmParameterValues dpidValues = row.Evaluate();

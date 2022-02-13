@@ -63,7 +63,6 @@ namespace PcmHacking
 
                 while (!row.IsComplete)
                 {
-
                     RawLogData rawData = await this.Vehicle.ReadLogData();
                     if (rawData == null)
                     {

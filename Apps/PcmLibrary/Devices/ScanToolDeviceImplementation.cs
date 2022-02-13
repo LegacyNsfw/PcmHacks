@@ -219,6 +219,9 @@ namespace PcmHacking
         {
             if (milliseconds == -1)
             {
+                // This doesn't actually work yet, but I think it should be possible.
+                // To test this code path, change this value in the constructor:
+                // this.SupportsStreamLogging = false;
                 return await this.SendAndVerify("STMA", "");
             }
             else

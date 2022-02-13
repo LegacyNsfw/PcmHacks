@@ -29,7 +29,7 @@ namespace PcmHacking
         /// </summary>
         public ElmDevice(IPort port, ILogger logger) : base(port, logger)
         {
-            // So far, none support this.
+            // So far, no ELM devices support this.
             this.SupportsSingleDpidLogging = false;
         }
 

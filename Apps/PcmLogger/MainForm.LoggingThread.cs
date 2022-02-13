@@ -9,6 +9,12 @@ using System.Windows.Forms;
 
 namespace PcmHacking
 {
+    public class LogStartFailedException : Exception
+    {
+        public LogStartFailedException() : base ("Unable to start logging.")
+        { }
+    }
+
     partial class MainForm
     {
         private ConcurrentQueue<Tuple<Logger, LogFileWriter, IEnumerable<string>>> logRowQueue = new ConcurrentQueue<Tuple<Logger, LogFileWriter, IEnumerable<string>>>();
@@ -75,20 +81,9 @@ namespace PcmHacking
         {
             Logger logger = this.Vehicle.CreateLogger(this.osid, this.currentProfile.Columns, this);
 
-
             if (!await logger.StartLogging())
             {
-                this.loggerProgress.Invoke(
-                    (MethodInvoker)
-                    delegate ()
-                    {
-                        this.logValues.Text = "Unable to start logging.";
-                    });
-
-                Thread.Sleep(200);
-
-                // Force a retry.
-                return null;
+                throw new LogStartFailedException();
             }
 
             return logger;
@@ -188,6 +183,8 @@ namespace PcmHacking
                                 }
                                 else
                                 {
+                                    Exception exception = null;
+
                                     try
                                     {
                                         // It may be counterintuitive that we update lastProfile here, but that 
@@ -195,16 +192,10 @@ namespace PcmHacking
                                         lastProfile = this.currentProfile;
                                         logger = await this.RecreateLogger();
 
-                                        // TODO: logger should never be null - RecreateLogger should throw instead.
-                                        if (logger != null)
+                                        // If this was the first profile to load...
+                                        if (this.logState == LogState.Nothing)
                                         {
-                                            lastProfile = this.currentProfile;
-
-                                            // If this was the first profile to load...
-                                            if (this.logState == LogState.Nothing)
-                                            {
-                                                this.logState = LogState.DisplayOnly;
-                                            }
+                                            this.logState = LogState.DisplayOnly;
                                         }
 
                                         switch (logState)
@@ -221,43 +212,43 @@ namespace PcmHacking
                                                 logState = LogState.Saving;
                                                 break;
                                         }
-
                                     }
-                                    catch (NeedMoreParametersException exception)
+                                    catch (NeedMoreParametersException ex)
                                     {
-                                        logState = LogState.Nothing;
-                                        this.loggerProgress.Invoke(
-                                            (MethodInvoker)
-                                            delegate ()
-                                            {
-                                                this.startStopSaving.Enabled = false;
-                                                this.logValues.Text = exception.Message;
-                                            });
+                                        exception = ex;
                                     }
-                                    catch (ParameterNotSupportedException exception)
+                                    catch (ParameterNotSupportedException ex)
                                     {
-                                        logState = LogState.Nothing;
+                                        exception = ex;
+                                    }
+                                    catch (LogStartFailedException ex)
+                                    {
+                                        // This will cause the logger to be recreated on the next iteration.
+                                        lastProfile = null;
 
-                                        this.loggerProgress.Invoke(
-                                            (MethodInvoker)
-                                            delegate ()
-                                            {
-                                                this.startStopSaving.Enabled = false;
-                                                this.logValues.Text = exception.Message;
-                                            });
+                                        exception = ex;
+                                    }
+                                    finally
+                                    {
+                                        if (exception != null)
+                                        {
+                                            logState = LogState.Nothing;
+
+                                            this.loggerProgress.Invoke(
+                                                (MethodInvoker)
+                                                delegate ()
+                                                {
+                                                    this.startStopSaving.Enabled = false;
+                                                    this.logValues.Text = exception.Message;
+                                                });
+                                        }
                                     }
                                 }
                             }
 
                             switch (logState)
                             {
-                                case LogState.InvalidParameter:
-                                    // UI is updated when exception is thrown from RecreateLogger().
-                                    Thread.Sleep(100);
-                                    break;
-
                                 case LogState.Nothing:
-                                    // UI is updated when the new profile is found to be empty.
                                     Thread.Sleep(100);
                                     break;
 

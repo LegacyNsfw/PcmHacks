@@ -64,10 +64,13 @@ namespace PcmHacking
         /// </summary>
         public virtual async Task<bool> Initialize()
         {
-            string response;
             // This is common across all ELM-based devices.
-            await this.SendRequest(""); // send a cr/lf to prevent the ATZ failing.
-            this.Logger.AddDebugMessage(response = await this.SendRequest("AT Z"));  // reset
+            // Send a cr/lf to prevent the ATZ failing.
+            await this.SendRequest("");
+
+            // Reset
+            string response = await this.SendRequest("AT Z");
+            this.Logger.AddDebugMessage(response);
 
             if(string.IsNullOrWhiteSpace(response))
             {
