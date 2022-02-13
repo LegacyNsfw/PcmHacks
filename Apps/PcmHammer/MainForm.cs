@@ -420,7 +420,7 @@ namespace PcmHacking
         /// <summary>
         /// Parse cmdline parameters
         /// </summary>
-        private async void ProcessCommandLine()
+        private void ProcessCommandLine()
         {
             string[] args = Environment.GetCommandLineArgs();
             Parser.Default.ParseArguments<CommandLineOptions>(args)
