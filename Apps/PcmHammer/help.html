@@ -18,6 +18,7 @@
         <li><a target="_self" href="#online">Getting Help Online</a>
         <li><a target="_self" href="#licensing">Licensing</a>
         <li><a target="_self" href="#contributing">Contributing</a>
+        <li><a target="_self" href="#related">Related Resources</a></li>
     </ol>
 
     <hr />
@@ -37,34 +38,41 @@
 
     <p>This app currently supports the following types of devices:
 
-    <p><b><a href="http://obdxpro.com/">OBDX Pro</a></b> - This is the best bang-for-the-buck. It supports 4x bus speeds and large data packets, but costs 
-    well under $100. Full disclosure: the guys behind this company also helped with PCM Hammer development and testing. 
+    <p>
+        <b><a href="http://obdxpro.com/">OBDX Pro</a></b> - This is the best bang-for-the-buck. It supports 4x bus speeds and large data packets, but costs
+        well under $100. Full disclosure: the guys behind this company also helped with PCM Hammer development and testing.
 
-    <p><b><a href="https://www.scantool.net/obdlink-sx/">ObdLink Scantool SX</a></b> - This is inexpensive and superior to ELM knock-off devices, 
-however it does not support 4x (high speed) mode, and it only supports relatively short messages, so a full read from a 512kb PCM takes a little over 20 minutes.
+    <p>
+        <b><a href="https://www.scantool.net/obdlink-sx/">ObdLink Scantool SX</a></b> - This is inexpensive and superior to ELM knock-off devices,
+        however it does not support 4x (high speed) mode, and it only supports relatively short messages, so a full read from a 512kb PCM takes a little over 20 minutes.
 
     <p><b><a href="https://www.scantool.net/obdlink-mxp/">ObdLink Scantool MX+</a></b> - Similar to the SX, but wireless. Note that the MX (without the "+") is <i>not</i> supported.
 
-    <p><b><a href="https://www.scantool.net/obdlink-lx/">ObdLink Scantool LX</a></b> - It's like an SX or MX+, but wireless and significantly faster 
-    because it supports larger messages. But it costs a bit more the SX and is still limited to 1X bus speeds.
+    <p>
+        <b><a href="https://www.scantool.net/obdlink-lx/">ObdLink Scantool LX</a></b> - It's like an SX or MX+, but wireless and significantly faster
+        because it supports larger messages. But it costs a bit more the SX and is still limited to 1X bus speeds.
 
-    <p><b><a href="http://www.avt-hq.com/852_hw.htm">AVT 852</a></b> - This is the most expensive option, and the company doesn't cater to individual purchasers, 
-    but this was one of the first interfaces to properly support J1850 VPW high-speed mode. 
+    <p>
+        <b><a href="http://www.avt-hq.com/852_hw.htm">AVT 852</a></b> - This is the most expensive option, and the company doesn't cater to individual purchasers,
+        but this was one of the first interfaces to properly support J1850 VPW high-speed mode.
 
-    <p><b>Any J2534-compatible interface that supports J1850 VPW</b> - At least in theory, these should all work. There are quite a few of those on the market, 
-    and we cannot test them all, but if you have one, give it a try. As time goes by we'll list the ones that are proven to work. The genuine GM MDI is one 
-    device which is known to work, though it is not cheap. Over time we hope to confirm that other, less expensive devices will also work.
+    <p>
+        <b>Any J2534-compatible interface that supports J1850 VPW</b> - At least in theory, these should all work. There are quite a few of those on the market,
+        and we cannot test them all, but if you have one, give it a try. As time goes by we'll list the ones that are proven to work. The genuine GM MDI is one
+        device which is known to work, though it is not cheap. Over time we hope to confirm that other, less expensive devices will also work.
 
     <P>Note that the Tactrix OpenPort 2.0 does not support J1850 VPW, so it is not supported.
 
-    <p><b><a href="http://www.obddiag.net/products.html">ObdDiag AllPro</a></b> - Only the USB and dev-board versions are supported (not bluetooth). 
-    The AllPro devices were quite inexpensive, and ObdDiag was a great partner in this project, incorporating changes and responding to feedback. 
-    However the man behind the company has moved on to other things, so these devices are no longer available.
-    Also, note that AllPro devices purchased before early June 2018 will need a firmware update to version 1.21 or later.
-    Updating the firmware on the AllPro adapter requires the FlashMagic tool. Instructions are on the <a href="http://www.obddiag.net/">ObdDiag.Net web site.</a> and a link to the firmware can be found <a href="http://www.obddiag.net/allpro.html">here</a>.
+    <p>
+        <b><a href="http://www.obddiag.net/products.html">ObdDiag AllPro</a></b> - Only the USB and dev-board versions are supported (not bluetooth).
+        The AllPro devices were quite inexpensive, and ObdDiag was a great partner in this project, incorporating changes and responding to feedback.
+        However the man behind the company has moved on to other things, so these devices are no longer available.
+        Also, note that AllPro devices purchased before early June 2018 will need a firmware update to version 1.21 or later.
+        Updating the firmware on the AllPro adapter requires the FlashMagic tool. Instructions are on the <a href="http://www.obddiag.net/">ObdDiag.Net web site.</a> and a link to the firmware can be found <a href="http://www.obddiag.net/allpro.html">here</a>.
 
-    <p> Other devices based on the Scantool OBD2 chip may or may not work, depending on their message size limits. 
-    If you find another one that works (or doesn't), please let us know.
+    <p>
+        Other devices based on the Scantool OBD2 chip may or may not work, depending on their message size limits.
+        If you find another one that works (or doesn't), please let us know.
 
     <p>
         Note that most ELM-based devices are <i>not</i> supported, because they do not work. Reading and clearing OBD2 trouble codes is one thing; rewriting firmware is quite another.
@@ -86,17 +94,20 @@ however it does not support 4x (high speed) mode, and it only supports relativel
 
     <p><b>Read Properties</b> - To read the VIN, serial number, and other properties from the PCM, just click the "Read Properties" button. You should generally do this before doing anything else, just to confirm that the device is able to communicate with the PCM.
 
-    <p><b>Test Write</b> - This will simulate the process of updating your PCM's calibration block from a file on your computer. 
-    However, the contents of your PCM will not be changed. This is useful for verifying that quality of the connection between your computer and your PCM.
+    <p>
+        <b>Test Write</b> - This will simulate the process of updating your PCM's calibration block from a file on your computer.
+        However, the contents of your PCM will not be changed. This is useful for verifying that quality of the connection between your computer and your PCM.
 
-    <p><b>Write Calibration</b> - This will erase and reprogram the calibration section of your PCM's flash memory. This is tuning, basically. 
-    It can take several minutes, and if this is interrupted your PCM may be unusable, so make sure your car battery and laptop batter are fully charged. 
-    Also, once the process begins, don't do anything that might interrupt it. Don't close the app, reboot the computer, spill coffee on the keyboard, etc.
+    <p>
+        <b>Write Calibration</b> - This will erase and reprogram the calibration section of your PCM's flash memory. This is tuning, basically.
+        It can take several minutes, and if this is interrupted your PCM may be unusable, so make sure your car battery and laptop batter are fully charged.
+        Also, once the process begins, don't do anything that might interrupt it. Don't close the app, reboot the computer, spill coffee on the keyboard, etc.
 
-    <p><b>Halt Kernel</b> - You will probably never need to use this button. But, if you interupt a read or quick-compare operation by closing
-    the app, you can use this to halt the PCM Hammer kernel and reboot the PCM. 
-    <b>If a write operation is interrupted, do not use this button.</b> Instead, just do another write. The app will detect that the kernel 
-    is already running, and it will restart the write operation.
+    <p>
+        <b>Halt Kernel</b> - You will probably never need to use this button. But, if you interupt a read or quick-compare operation by closing
+        the app, you can use this to halt the PCM Hammer kernel and reboot the PCM.
+        <b>If a write operation is interrupted, do not use this button.</b> Instead, just do another write. The app will detect that the kernel
+        is already running, and it will restart the write operation.
 
     <p>Some additional operations are available in the Tools menu:
 
@@ -108,16 +119,19 @@ however it does not support 4x (high speed) mode, and it only supports relativel
 
     <p>You may find this feature useful if you've purchased a used PCM from a junkyard or online retailer, for example after bricking your PCM with software written by amateurs and downloaded from the internet. (Although, honestly, zero PCMs have been harmed during the development of this app. So far.)
 
-    <p><b>Write Parameters</b> - This will erase and reprogram the parameter sections of your PCM's flash memory. 
-    These sections contain the VIN, serial number, stored OBD2 codes, etc. 
-    This is useful if you are replacing an old PCM with a new one from another vehicle.
+    <p>
+        <b>Write Parameters</b> - This will erase and reprogram the parameter sections of your PCM's flash memory.
+        These sections contain the VIN, serial number, stored OBD2 codes, etc.
+        This is useful if you are replacing an old PCM with a new one from another vehicle.
 
-    <p><b>Write OS, Calibration, and Boot</b> - This will erase and reprogram everything but the parameter sections. 
-    This is useful if you want to update the operating system in your vehicle. 
+    <p>
+        <b>Write OS, Calibration, and Boot</b> - This will erase and reprogram everything but the parameter sections.
+        This is useful if you want to update the operating system in your vehicle.
 
-    <p><b>Write Full Flash (Clone)</b> - This will erase and reprogram the entire contents of the PCM's flash memory. To the best of our knowledge this makes the target PCM
-    indistinguishable from the original PCM.
-    
+    <p>
+        <b>Write Full Flash (Clone)</b> - This will erase and reprogram the entire contents of the PCM's flash memory. To the best of our knowledge this makes the target PCM
+        indistinguishable from the original PCM.
+
     <P id="online"><h3>Getting Help Online</h3>
 
     <p>
@@ -126,7 +140,7 @@ however it does not support 4x (high speed) mode, and it only supports relativel
         <hr />
     <p id="licensing"><h3>Licensing</h3>
 
-  
+
     <p>
         This software is open source, and is licensed under the terms of the GNU General Public License, Version 3.
 
@@ -135,5 +149,23 @@ however it does not support 4x (high speed) mode, and it only supports relativel
 
     <p>The source code is at <a href="https://github.com/LegacyNsfw/PcmHacks">https://github.com/LegacyNsfw/PcmHacks</a>, and the authors welcome contributions.
 
+    <p id="related"><h3>Related Resources</h3>
+
+    <dl>
+        <dt>TunerPro</dt>
+        <dd>After using PCM Hammer to read the contents of your PCM, you will want to edit your new ".bin" file. <a href="http://tunerpro.net/">TunerPro</a> is the recommended tool for that job.</dd>
+
+        <dt>XDF Files</dt>
+        <dd>TunerPro is a generic editing tool. It does not know anything about your PCM or your .bin file. 
+        It needs a <i>definition file</i> to tell it which bytes of the .bin file control which aspects of the PCM. 
+        You can find collections of XDF files <a href="https://github.com/Snoman002/Engine-Tune-Repository-TunerPro-EFIlive-TunerCat/tree/master/General%20Motors">here</a>
+        and <a href="https://github.com/BoredTruckOwner/LS_Based_Engine_Repository">here</a>.</dd>
+
+        <dt>LogViewer</dt>
+        <dd>After using PCM Logger to read data from your PCM, you will want to view the contents of your new ".csv" file.  
+        There are many tools for this.
+        The LogViewer tool is the simplest possible thing you can use - <a href="https://github.com/LegacyNsfw/LogViewer/raw/master/bin/Debug/LogViewer.exe">Click here</a> to download it.</dd>
+    </dl>
+    
 </body>
 </html>

@@ -64,6 +64,8 @@ namespace PcmHacking
         /// </summary>
         public virtual async Task<bool> Initialize()
         {
+            string response;
+          
             // This is common across all ELM-based devices.
             // Send a cr/lf to prevent the ATZ failing.
             await this.SendRequest("");

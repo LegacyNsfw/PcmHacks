@@ -71,6 +71,7 @@
             this.progressBarToolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.percentDoneToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.timeRemainingToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.testFileChecksumsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -327,7 +328,7 @@
             this.saveToolStripMenuItem,
             this.exitApplicationToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(35, 20);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "&File";
             // 
             // saveToolStripMenuItem
@@ -342,14 +343,14 @@
             // saveResultsLogToolStripMenuItem
             // 
             this.saveResultsLogToolStripMenuItem.Name = "saveResultsLogToolStripMenuItem";
-            this.saveResultsLogToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
+            this.saveResultsLogToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
             this.saveResultsLogToolStripMenuItem.Text = "&Results Log";
             this.saveResultsLogToolStripMenuItem.Click += new System.EventHandler(this.saveResultsLogToolStripMenuItem_Click);
             // 
             // saveDebugLogToolStripMenuItem
             // 
             this.saveDebugLogToolStripMenuItem.Name = "saveDebugLogToolStripMenuItem";
-            this.saveDebugLogToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
+            this.saveDebugLogToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
             this.saveDebugLogToolStripMenuItem.Text = "&Debug Log";
             this.saveDebugLogToolStripMenuItem.Click += new System.EventHandler(this.saveDebugLogToolStripMenuItem_Click);
             // 
@@ -368,50 +369,51 @@
             this.modifyVINToolStripMenuItem,
             this.writeParmetersCloneToolStripMenuItem,
             this.writeOSCalibrationBootToolStripMenuItem,
-            this.writeFullToolStripMenuItem});
+            this.writeFullToolStripMenuItem,
+            this.testFileChecksumsToolStripMenuItem});
             this.menuItemTools.Name = "menuItemTools";
-            this.menuItemTools.Size = new System.Drawing.Size(44, 20);
+            this.menuItemTools.Size = new System.Drawing.Size(46, 20);
             this.menuItemTools.Text = "&Tools";
             // 
             // readEntirePCMToolStripMenuItem
             // 
             this.readEntirePCMToolStripMenuItem.Name = "readEntirePCMToolStripMenuItem";
-            this.readEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.readEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
             this.readEntirePCMToolStripMenuItem.Text = "&Read Entire PCM";
             this.readEntirePCMToolStripMenuItem.Click += new System.EventHandler(this.readFullContentsButton_Click);
             // 
             // verifyEntirePCMToolStripMenuItem
             // 
             this.verifyEntirePCMToolStripMenuItem.Name = "verifyEntirePCMToolStripMenuItem";
-            this.verifyEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.verifyEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
             this.verifyEntirePCMToolStripMenuItem.Text = "&Verify Entire PCM";
             this.verifyEntirePCMToolStripMenuItem.Click += new System.EventHandler(this.quickComparisonButton_Click);
             // 
             // modifyVINToolStripMenuItem
             // 
             this.modifyVINToolStripMenuItem.Name = "modifyVINToolStripMenuItem";
-            this.modifyVINToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.modifyVINToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
             this.modifyVINToolStripMenuItem.Text = "&Change VIN";
             this.modifyVINToolStripMenuItem.Click += new System.EventHandler(this.modifyVinButton_Click);
             // 
             // writeParmetersCloneToolStripMenuItem
             // 
             this.writeParmetersCloneToolStripMenuItem.Name = "writeParmetersCloneToolStripMenuItem";
-            this.writeParmetersCloneToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.writeParmetersCloneToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
             this.writeParmetersCloneToolStripMenuItem.Text = "Write &Parameters";
             this.writeParmetersCloneToolStripMenuItem.Click += new System.EventHandler(this.writeParametersButton_Click);
             // 
             // writeOSCalibrationBootToolStripMenuItem
             // 
             this.writeOSCalibrationBootToolStripMenuItem.Name = "writeOSCalibrationBootToolStripMenuItem";
-            this.writeOSCalibrationBootToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.writeOSCalibrationBootToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
             this.writeOSCalibrationBootToolStripMenuItem.Text = "Write &OS, Calibration && Boot";
             this.writeOSCalibrationBootToolStripMenuItem.Click += new System.EventHandler(this.writeOSCalibrationBootToolStripMenuItem_Click);
             // 
             // writeFullToolStripMenuItem
             // 
             this.writeFullToolStripMenuItem.Name = "writeFullToolStripMenuItem";
-            this.writeFullToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.writeFullToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
             this.writeFullToolStripMenuItem.Text = "Write &Full Flash (Clone)";
             this.writeFullToolStripMenuItem.Click += new System.EventHandler(this.writeFullToolStripMenuItem_Click);
             // 
@@ -421,14 +423,14 @@
             this.userDefinedKeyToolStripMenuItem,
             this.settingsToolStripMenuItem});
             this.menuItemOptions.Name = "menuItemOptions";
-            this.menuItemOptions.Size = new System.Drawing.Size(56, 20);
+            this.menuItemOptions.Size = new System.Drawing.Size(61, 20);
             this.menuItemOptions.Text = "&Options";
             // 
             // userDefinedKeyToolStripMenuItem
             // 
             this.userDefinedKeyToolStripMenuItem.CheckOnClick = true;
             this.userDefinedKeyToolStripMenuItem.Name = "userDefinedKeyToolStripMenuItem";
-            this.userDefinedKeyToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.userDefinedKeyToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
             this.userDefinedKeyToolStripMenuItem.Text = "&User Defined Key";
             this.userDefinedKeyToolStripMenuItem.ToolTipText = "Valid for current device selection, Application instance or Toggle Action.";
             this.userDefinedKeyToolStripMenuItem.Click += new System.EventHandler(this.userDefinedKeyToolStripMenuItem_Click);
@@ -436,7 +438,7 @@
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
             this.settingsToolStripMenuItem.Text = "&Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
             // 
@@ -503,6 +505,13 @@
             this.timeRemainingToolStripStatusLabel.Size = new System.Drawing.Size(75, 17);
             this.timeRemainingToolStripStatusLabel.Text = "Time Remaining";
             this.timeRemainingToolStripStatusLabel.ToolTipText = "Time Remaining (T minus)";
+            // 
+            // testFileChecksumsToolStripMenuItem
+            // 
+            this.testFileChecksumsToolStripMenuItem.Name = "testFileChecksumsToolStripMenuItem";
+            this.testFileChecksumsToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
+            this.testFileChecksumsToolStripMenuItem.Text = "&Test File Checksums...";
+            this.testFileChecksumsToolStripMenuItem.Click += new System.EventHandler(this.testFileChecksumsToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -584,6 +593,7 @@
         private System.Windows.Forms.ToolStripStatusLabel retryCountToolStripStatusLabel;
         private System.Windows.Forms.ToolStripProgressBar progressBarToolStripProgressBar;
         private System.Windows.Forms.ToolStripStatusLabel kbpsToolStripStatusLabel;
+        private System.Windows.Forms.ToolStripMenuItem testFileChecksumsToolStripMenuItem;
     }
 }
 
