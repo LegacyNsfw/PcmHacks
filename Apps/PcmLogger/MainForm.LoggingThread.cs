@@ -9,12 +9,6 @@ using System.Windows.Forms;
 
 namespace PcmHacking
 {
-    public class LogStartFailedException : Exception
-    {
-        public LogStartFailedException() : base ("Unable to start logging.")
-        { }
-    }
-
     partial class MainForm
     {
         private ConcurrentQueue<Tuple<Logger, LogFileWriter, IEnumerable<string>>> logRowQueue = new ConcurrentQueue<Tuple<Logger, LogFileWriter, IEnumerable<string>>>();
@@ -237,6 +231,7 @@ namespace PcmHacking
                                                 (MethodInvoker)
                                                 delegate ()
                                                 {
+                                                    this.AddUserMessage(exception.Message);
                                                     this.startStopSaving.Enabled = false;
                                                     this.logValues.Text = exception.Message;
                                                 });

@@ -170,6 +170,13 @@ namespace PcmHacking
                 {
                     dpidConfiguration.ParameterGroups.Add(group);
                     groupId--;
+
+                    if (groupId < 0xFB)
+                    {
+                        throw new ParameterNotSupportedException(
+                            $"The PCM cannot send this much data.{System.Environment.NewLine}Please un-select some parameters.");
+                    }
+
                     group = new ParameterGroup(groupId);
                 }
             }
@@ -187,6 +194,13 @@ namespace PcmHacking
                 {
                     dpidConfiguration.ParameterGroups.Add(group);
                     groupId--;
+
+                    if (groupId < 0xFB)
+                    {
+                        throw new ParameterNotSupportedException(
+                            $"The PCM cannot send this much data.{System.Environment.NewLine}Please un-select some parameters.");
+                    }
+
                     group = new ParameterGroup(groupId);
                 }
             }

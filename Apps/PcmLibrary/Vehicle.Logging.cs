@@ -8,6 +8,15 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+    public class LogStartFailedException : Exception
+    {
+        public LogStartFailedException() : base("Unable to start logging.")
+        { }
+
+        public LogStartFailedException(string message) : base(message)
+        { }
+    }
+
     /// <summary>
     /// From the application's perspective, this class is the API to the vehicle.
     /// </summary>
@@ -60,9 +69,10 @@ namespace PcmHacking
                             pidParameter.ByteCount,
                             pidParameter.PID);
 
+                        // Response parsing happens further below.
                         if (!await this.SendMessage(configurationMessage))
                         {
-                            return null;
+                            throw new LogStartFailedException("Unable to send DPID configuration request.");
                         }
 
                         byteCount = pidParameter.ByteCount;
@@ -79,9 +89,10 @@ namespace PcmHacking
                                 ramParameter.ByteCount,
                                 address);
 
+                            // Response parsing happens further below.
                             if (!await this.SendMessage(configurationMessage))
                             {
-                                return null;
+                                throw new LogStartFailedException("Unable to send DPID configuration request.");
                             }
 
                             byteCount = ramParameter.ByteCount;
@@ -97,7 +108,8 @@ namespace PcmHacking
                     }
                     else
                     {
-                        throw new Exception("Why does this ParameterGroup contain a " + column.Parameter.GetType().Name + "?");
+                        throw new LogStartFailedException(
+                            $"Why does this ParameterGroup contain a {column.Parameter.GetType().Name}? See {column.Parameter.Name}.");
                     }
 
                     // Wait for a success or fail message.

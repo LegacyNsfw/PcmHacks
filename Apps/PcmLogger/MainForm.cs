@@ -43,6 +43,12 @@ namespace PcmHacking
         /// <param name="message"></param>
         public override void AddUserMessage(string message)
         {
+            // The logger app doesn't have a good place for this kind of thing,
+            // so messages are only sent to the debug pane. Important messages
+            // should be displayed in the parameters pane, however that only
+            // works if the logger is stopped, so it is done from the background
+            // thread that handles logging.
+            this.AddDebugMessage(message);
         }
 
         /// <summary>
