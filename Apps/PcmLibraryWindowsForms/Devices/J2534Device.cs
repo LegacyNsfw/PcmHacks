@@ -34,6 +34,7 @@ namespace PcmHacking
         public bool IsProtocolOpen;
         public bool IsJ2534Open;
         private const string PortName = "J2534";
+        private const uint MessageFilter = 0xECF010; // EC = (6C | 8C)
         public string ToolName = "";
 
         /// <summary>
@@ -153,7 +154,7 @@ namespace PcmHacking
             this.Logger.AddDebugMessage("Protocol Set");
 
             //Set filter
-            m = SetFilter(0xFEFFFF, 0x6CF010, 0, TxFlag.NONE, FilterType.PASS_FILTER);
+            m = SetFilter(0xFEFFFF, J2534Device.MessageFilter, 0, TxFlag.NONE, FilterType.PASS_FILTER);
             if (m.Status != ResponseStatus.Success)
             {
                 this.Logger.AddUserMessage("Failed to set filter, J2534 error code: 0x" + m.Value.ToString("X2"));
@@ -452,7 +453,7 @@ namespace PcmHacking
                 ConnectToProtocol(ProtocolID.J1850VPW, BaudRate.J1850VPW_10400, ConnectFlag.NONE);
 
                 //Set Filter
-                SetFilter(0xFEFFFF, 0x6CF010, 0, TxFlag.NONE, FilterType.PASS_FILTER);
+                SetFilter(0xFEFFFF, J2534Device.MessageFilter, 0, TxFlag.NONE, FilterType.PASS_FILTER);
                 //if (m.Status != ResponseStatus.Success)
                 //{
                 //    this.Logger.AddDebugMessage("Failed to set filter, J2534 error code: 0x" + m.Value.ToString("X2"));
@@ -471,7 +472,7 @@ namespace PcmHacking
                 ConnectToProtocol(ProtocolID.J1850VPW, BaudRate.J1850VPW_41600, ConnectFlag.NONE);
 
                 //Set Filter
-                SetFilter(0xFEFFFF, 0x6CF010, 0, TxFlag.NONE, FilterType.PASS_FILTER);
+                SetFilter(0xFEFFFF, J2534Device.MessageFilter, 0, TxFlag.NONE, FilterType.PASS_FILTER);
 
             }
 

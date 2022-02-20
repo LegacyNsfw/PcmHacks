@@ -895,18 +895,33 @@ namespace PcmHacking
         {
             if (!BackgroundWorker.IsAlive)
             {
-                DialogResult result = MessageBox.Show(
-                    "This software is still new, and it is not as reliable as commercial software." + Environment.NewLine +
-                    "The PCM can be rendered unusuable, and special tools may be needed to make the PCM work again." + Environment.NewLine +
-                    "If your PCM stops working, will that make your life difficult?",
-                    "Answer carefully...",
+                DialogResult result;
+                if (Configuration.Settings.ConnectionVerified)
+                {
+                    result = MessageBox.Show(
+                        "This will update the calibration on your PCM.",
+                        "Click OK to continue.",
+                        MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Information,
+                        MessageBoxDefaultButton.Button1);
+                }
+                else
+                {
+                    result = MessageBox.Show(
+                        "If this doesn't work, your vehicle will not be driveable." + Environment.NewLine +
+                        "You should do a successful read before trying to alter the calibration, to ensure" + Environment.NewLine +
+                        "that you have a good connection to your PCM, and to find out whether there are" + Environment.NewLine +
+                        "any other modules in the vehicle that will interrupt the write process." + Environment.NewLine +
+                        "It is dangerous to attempt a calibration flash before doing that test.",
+                        "Are you sure you want to do this?",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning,
                     MessageBoxDefaultButton.Button1);
+                }
 
-                if (result == DialogResult.Yes)
+                if (result == DialogResult.No)
                 {
-                    this.AddUserMessage("Please try again with a less important PCM.");
+                    this.AddUserMessage("You have made a wise choice. Try a full read first.");
                 }
                 else
                 {
@@ -924,18 +939,33 @@ namespace PcmHacking
         {
             if (!BackgroundWorker.IsAlive)
             {
-                DialogResult result = MessageBox.Show(
-                    "This software is still new, and it is not as reliable as commercial software." + Environment.NewLine +
-                    "The PCM can be rendered unusuable, and special tools may be needed to make the PCM work again." + Environment.NewLine +
-                    "If your PCM stops working, will that make your life difficult?",
-                    "Answer carefully...",
+                DialogResult result;
+                if (Configuration.Settings.ConnectionVerified)
+                {
+                    result = MessageBox.Show(
+                        "This will update the parameter block on your PCM.",
+                        "Click OK to continue.",
+                        MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Information,
+                        MessageBoxDefaultButton.Button1);
+                }
+                else
+                {
+                    result = MessageBox.Show(
+                        "If this doesn't work, your vehicle will not be driveable." + Environment.NewLine +
+                        "You should do a successful read before trying to alter the parameters, to ensure" + Environment.NewLine +
+                        "that you have a good connection to your PCM, and to find out whether there are" + Environment.NewLine +
+                        "any other modules in the vehicle that will interrupt the write process." + Environment.NewLine +
+                        "It is dangerous to attempt a parameter flash before doing that test.",
+                        "Are you sure you want to do this?",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning,
                     MessageBoxDefaultButton.Button1);
+                }
 
-                if (result == DialogResult.Yes)
+                if (result == DialogResult.No)
                 {
-                    this.AddUserMessage("Please try again with a less important PCM.");
+                    this.AddUserMessage("You have made a wise choice. Try a full read first.");
                 }
                 else
                 {
@@ -953,18 +983,34 @@ namespace PcmHacking
         {
             if (!BackgroundWorker.IsAlive)
             {
-                DialogResult result = MessageBox.Show(
-                    "Changing the operating system can render the PCM unusable." + Environment.NewLine +
-                    "Special tools may be needed to make the PCM work again." + Environment.NewLine +
-                    "Are you sure you really want to take that risk?",
-                    "This is dangerous.",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning,
-                    MessageBoxDefaultButton.Button2);
+                DialogResult result;
+                if (Configuration.Settings.ConnectionVerified)
+                {
+                    result = MessageBox.Show(
+                        "This will update the operating system and calibration on your PCM.",
+                        "Click OK to continue.",
+                        MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Information,
+                        MessageBoxDefaultButton.Button1);
+                }
+                else
+                {
+                    result = MessageBox.Show(
+                        "Changing the operating system can render the PCM unusable." + Environment.NewLine +
+                        "Special tools may be needed to make the PCM work again." + Environment.NewLine +
+                        "You should do a successful test write before trying to change the operating system," +Environment.NewLine +
+                        "to ensure that you have a good connection to your PCM, and to find out whether" + Environment.NewLine +
+                        "there are any other modules in the vehicle that will interrupt the write process." + Environment.NewLine +
+                        "It is dangerous to attempt an OS replacement before doing that test.",
+                        "Are you sure you want to do this?",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning,
+                        MessageBoxDefaultButton.Button2);
+                }
 
                 if (result == DialogResult.No)
                 {
-                    this.AddUserMessage("You have made a wise choice.");
+                    this.AddUserMessage("You have made a wise choice. Try a test write first.");
                 }
                 else
                 {
@@ -982,18 +1028,33 @@ namespace PcmHacking
         {
             if (!BackgroundWorker.IsAlive)
             {
-                DialogResult result = MessageBox.Show(
-                    "Changing the operating system can render the PCM unusable." + Environment.NewLine +
-                    "Special tools may be needed to make the PCM work again." + Environment.NewLine +
-                    "Are you sure you really want to take that risk?",
-                    "This is dangerous.",
+                DialogResult result;
+                if (Configuration.Settings.ConnectionVerified)
+                {
+                    result = MessageBox.Show(
+                        "This will rewrite the flash memory on your PCM.",
+                        "Click OK to continue.",
+                        MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Information,
+                        MessageBoxDefaultButton.Button1);
+                }
+                else
+                {
+                    result = MessageBox.Show(
+                        "If this doesn't work, your vehicle will not be driveable." + Environment.NewLine +
+                        "You should do a successful read before trying to change the operating system," + Environment.NewLine +
+                        "to ensure that you have a good connection to your PCM, and to find out whether" + Environment.NewLine +
+                        "there are any other modules in the vehicle that will interrupt the write process." + Environment.NewLine +
+                        "It is dangerous to attempt a full write before doing that test.",
+                        "Are you sure you want to do this?",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning,
-                    MessageBoxDefaultButton.Button2);
+                    MessageBoxDefaultButton.Button1);
+                }
 
                 if (result == DialogResult.No)
                 {
-                    this.AddUserMessage("You have made a wise choice.");
+                    this.AddUserMessage("You have made a wise choice. Try a full read first.");
                 }
                 else
                 {
@@ -1175,6 +1236,9 @@ namespace PcmHacking
                         this.AddUserMessage("Read failed, " + readResponse.Status.ToString());
                         return;
                     }
+
+                    // This will suppress the scary warnings prior to writing.
+                    Configuration.Settings.ConnectionVerified = true;
 
                     // Save the contents to the path that the user provided.
                     bool success = false;
@@ -1420,6 +1484,9 @@ namespace PcmHacking
                         this.cancellationTokenSource.Token);
 
                     this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
+
+                    // This will suppress the scary warnings prior to writing.
+                    Configuration.Settings.ConnectionVerified = true;
                 }
                 catch (IOException exception)
                 {
