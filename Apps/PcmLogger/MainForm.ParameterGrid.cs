@@ -14,6 +14,9 @@ namespace PcmHacking
 
         private void FillParameterGrid()
         {
+            // First, empty the grid.
+            this.parameterGrid.Rows.Clear();
+
             string appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
             string appDirectory = Path.GetDirectoryName(appPath);
 

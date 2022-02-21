@@ -8,17 +8,48 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
+    public class LogStartFailedException : Exception
+    {
+        public LogStartFailedException() : base("Unable to start logging.")
+        { }
+
+        public LogStartFailedException(string message) : base(message)
+        { }
+    }
+
     /// <summary>
     /// From the application's perspective, this class is the API to the vehicle.
     /// </summary>
     public partial class Vehicle : IDisposable
     {
         /// <summary>
+        /// Create a logger.
+        /// </summary>
+        /// <remarks>
+        /// The Logger implementation will vary depending on the device capability.
+        /// </remarks>
+        public Logger CreateLogger(
+            uint osid,
+            IEnumerable<LogColumn> columns,
+            ILogger uiLogger)
+        {
+            return Logger.Create(
+                this, 
+                osid, 
+                columns, 
+                this.device.SupportsSingleDpidLogging,
+                this.device.SupportsStreamLogging, 
+                uiLogger);
+        }
+
+        /// <summary>
         /// Prepare the PCM to begin sending collections of parameters.
         /// </summary>
         public async Task<DpidCollection> ConfigureDpids(DpidConfiguration dpidConfiguration, uint osid)
         {
             List<byte> dpids = new List<byte>();
+
+            await this.SetDeviceTimeout(TimeoutScenario.ReadProperty);
 
             foreach (ParameterGroup group in dpidConfiguration.ParameterGroups)
             {
@@ -38,9 +69,10 @@ namespace PcmHacking
                             pidParameter.ByteCount,
                             pidParameter.PID);
 
+                        // Response parsing happens further below.
                         if (!await this.SendMessage(configurationMessage))
                         {
-                            return null;
+                            throw new LogStartFailedException("Unable to send DPID configuration request.");
                         }
 
                         byteCount = pidParameter.ByteCount;
@@ -57,9 +89,10 @@ namespace PcmHacking
                                 ramParameter.ByteCount,
                                 address);
 
+                            // Response parsing happens further below.
                             if (!await this.SendMessage(configurationMessage))
                             {
-                                return null;
+                                throw new LogStartFailedException("Unable to send DPID configuration request.");
                             }
 
                             byteCount = ramParameter.ByteCount;
@@ -75,7 +108,8 @@ namespace PcmHacking
                     }
                     else
                     {
-                        throw new Exception("Why does this ParameterGroup contain a " + column.Parameter.GetType().Name + "?");
+                        throw new LogStartFailedException(
+                            $"Why does this ParameterGroup contain a {column.Parameter.GetType().Name}? See {column.Parameter.Name}.");
                     }
 
                     // Wait for a success or fail message.
@@ -103,7 +137,7 @@ namespace PcmHacking
                         if (responseMessage[3] == 0x7F && responseMessage[4] == 0x2C)
                         {
                             this.logger.AddUserMessage("Unable to configure " + column.ToString());
-                            break;
+                            throw new ParameterNotSupportedException(column.Parameter);
                         }
                     }
 
@@ -117,18 +151,46 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// I was hoping to invoke this only once, after ConfigureDpids (which was 
-        /// supposed to be named "BeginLogging") but I can't get the devices to 
-        /// relay information without periodically requesting it.
-        /// 
-        /// See also the FAST_LOGGING code in the Logger class and Protocol.Logging.cs.
+        /// Begin data logging.
         /// </summary>
-        public async Task<bool> RequestDpids(DpidCollection dpids)
+        /// <remarks>
+        /// In the future we could make "bool streaming" into an enum, with
+        /// Fast, Slow, and  Mixed options. Mixed mode would request some 
+        /// parameters at 10hz and others at 5hz.
+        /// 
+        /// This would require the user to specify, or the app to just know,
+        /// which parameters to poll at 5hz rather than 10hz. A list of
+        /// 5hz-friendly parameters is not out of the question. Some day.
+        /// 
+        /// The PCM always sends an error response to these messages, so
+        /// we just ignore responses in all cases.
+        /// </remarks>
+        public async Task<bool> RequestDpids(DpidCollection dpids, bool streaming)
         {
-            Message startMessage = this.protocol.RequestDpids(dpids);
-            if (!await this.SendMessage(startMessage))
+            if (streaming)
             {
-                return false;
+                // Request all of the parameters at 5hz using stream 1.
+                Message step1 = this.protocol.RequestDpids(dpids, Protocol.DpidRequestType.Stream1);
+                if (!await this.SendMessage(step1))
+                {
+                    return false;
+                }
+
+                // Request all of the parameters at 5hz using stream 2. Now we get them all at 10hz.
+                Message step2 = this.protocol.RequestDpids(dpids, Protocol.DpidRequestType.Stream2);
+                if (!await this.SendMessage(step2))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                // Request one row of data.
+                Message startMessage = this.protocol.RequestDpids(dpids, Protocol.DpidRequestType.SingleRow);
+                if (!await this.SendMessage(startMessage))
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -142,7 +204,7 @@ namespace PcmHacking
             Message message;
             RawLogData result = null;
 
-            for (int attempt = 1; attempt < 3; attempt++)
+            for (int attempt = 1; attempt < 5; attempt++)
             {
                 message = await this.ReceiveMessage();
                 if (message == null)

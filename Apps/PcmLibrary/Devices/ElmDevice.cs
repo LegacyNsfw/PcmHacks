@@ -29,6 +29,8 @@ namespace PcmHacking
         /// </summary>
         public ElmDevice(IPort port, ILogger logger) : base(port, logger)
         {
+            // So far, no ELM devices support this.
+            this.SupportsSingleDpidLogging = false;
         }
 
         /// <summary>
@@ -106,6 +108,7 @@ namespace PcmHacking
                 this.MaxSendSize = this.implementation.MaxSendSize;
                 this.MaxReceiveSize = this.implementation.MaxReceiveSize;
                 this.Supports4X = this.implementation.Supports4X;
+                this.SupportsStreamLogging = this.implementation.SupportsStreamLogging;
                 return true;
             }
             catch (Exception exception)

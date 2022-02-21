@@ -71,22 +71,12 @@ namespace PcmHacking
         }
 
         private async Task<Logger> RecreateLogger()
-        {            
-            Logger logger = Logger.Create(this.Vehicle, this.osid, this.currentProfile.Columns);
+        {
+            Logger logger = this.Vehicle.CreateLogger(this.osid, this.currentProfile.Columns, this);
 
             if (!await logger.StartLogging())
             {
-                this.loggerProgress.Invoke(
-                    (MethodInvoker)
-                    delegate ()
-                    {
-                        this.logValues.Text = "Unable to start logging.";
-                    });
-
-                Thread.Sleep(200);
-
-                // Force a retry.
-                return null;
+                throw new LogStartFailedException();
             }
 
             return logger;
@@ -118,6 +108,13 @@ namespace PcmHacking
             IEnumerable<string> rowValues = await logger.GetNextRow();
             if (rowValues != null)
             {
+                this.loggerProgress.Invoke(
+                    (MethodInvoker)
+                    delegate ()
+                    {
+                        this.AddDebugMessage("Row received.");
+                    });
+
                 // Hand this data off to be written to disk and displayed in the UI.
                 this.logRowQueue.Enqueue(
                     new Tuple<Logger, LogFileWriter, IEnumerable<string>>(
@@ -168,72 +165,109 @@ namespace PcmHacking
                                     this.logState = LogState.Nothing;
                                     lastProfile = this.currentProfile;
                                     logger = null;
+
+                                    this.loggerProgress.Invoke(
+                                        (MethodInvoker)
+                                        delegate ()
+                                        {
+                                            this.startStopSaving.Enabled = false;
+                                            this.logValues.Text = "Please select some parameters, or open a log profile.";
+                                        });
                                 }
                                 else
                                 {
-                                    logger = await this.RecreateLogger();
-                                    if (logger != null)
+                                    Exception exception = null;
+
+                                    try
                                     {
+                                        // It may be counterintuitive that we update lastProfile here, but that 
+                                        // prevents the invalid parameter exception from being thrown repeatedly.
                                         lastProfile = this.currentProfile;
+                                        logger = await this.RecreateLogger();
 
                                         // If this was the first profile to load...
                                         if (this.logState == LogState.Nothing)
                                         {
                                             this.logState = LogState.DisplayOnly;
                                         }
+
+                                        switch (logState)
+                                        {
+                                            case LogState.Nothing:
+                                            case LogState.DisplayOnly:
+                                            case LogState.StopSaving:
+                                                break;
+
+                                            default:
+                                                var tuple = await this.StartSaving(logger);
+                                                logFileWriter = tuple.Item1;
+                                                streamWriter = tuple.Item2;
+                                                logState = LogState.Saving;
+                                                break;
+                                        }
                                     }
-
-                                    switch (logState)
+                                    catch (NeedMoreParametersException ex)
                                     {
-                                        case LogState.Nothing:
-                                        case LogState.DisplayOnly:
-                                        case LogState.StopSaving:
-                                            break;
+                                        exception = ex;
+                                    }
+                                    catch (ParameterNotSupportedException ex)
+                                    {
+                                        exception = ex;
+                                    }
+                                    catch (LogStartFailedException ex)
+                                    {
+                                        // This will cause the logger to be recreated on the next iteration.
+                                        lastProfile = null;
 
-                                        default:
-                                            var tuple = await this.StartSaving(logger);
-                                            logFileWriter = tuple.Item1;
-                                            streamWriter = tuple.Item2;
-                                            logState = LogState.Saving;
-                                            break;
+                                        exception = ex;
+                                    }
+                                    finally
+                                    {
+                                        if (exception != null)
+                                        {
+                                            logState = LogState.Nothing;
+
+                                            this.loggerProgress.Invoke(
+                                                (MethodInvoker)
+                                                delegate ()
+                                                {
+                                                    this.AddUserMessage(exception.Message);
+                                                    this.startStopSaving.Enabled = false;
+                                                    this.logValues.Text = exception.Message;
+                                                });
+                                        }
                                     }
                                 }
-
-                                this.Invoke(
-                                    (MethodInvoker)
-                                    delegate ()
-                                    {
-                                        this.startStopSaving.Enabled = logger != null;
-                                    });
-
                             }
 
                             switch (logState)
                             {
                                 case LogState.Nothing:
-                                    this.loggerProgress.Invoke(
-                                        (MethodInvoker)
-                                        delegate ()
-                                        {
-                                            this.logValues.Text = "Please select some parameters, or open a log profile.";
-                                        });
-
-                                    Thread.Sleep(200);
+                                    Thread.Sleep(100);
                                     break;
 
                                 case LogState.DisplayOnly:
-                                    await this.ProcessRow(logger, null);
+                                    if (logger != null)
+                                    {
+                                        await this.ProcessRow(logger, null);
+                                    }
                                     break;
 
                                 case LogState.StartSaving:
-                                    var tuple = await this.StartSaving(logger);
-                                    logFileWriter = tuple.Item1;
-                                    streamWriter = tuple.Item2;
-                                    logState = LogState.Saving;
+                                    if (logger != null)
+                                    {
+                                        var tuple = await this.StartSaving(logger);
+                                        logFileWriter = tuple.Item1;
+                                        streamWriter = tuple.Item2;
+                                        logState = LogState.Saving;
+                                    }
                                     break;
 
                                 case LogState.Saving:
-                                    await this.ProcessRow(logger, logFileWriter);
+                                    if (logger != null)
+                                    {
+                                        await this.ProcessRow(logger, logFileWriter);
+                                    }
                                     break;
 
                                 case LogState.StopSaving:
@@ -242,6 +276,8 @@ namespace PcmHacking
                                     break;
                             }
                         }
+
+                        this.logStopRequested = false;
                     }
                     finally
                     {

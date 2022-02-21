@@ -44,6 +44,10 @@ namespace PcmHacking
             // This would need a firmware upgrade at the very least, and likely isn't even possible 
             // with current hardware.
             this.Supports4X = false;
+
+            // In theory we could use ATMA or STMA to monitor the bus and read data log streams.
+            // In practice I couldn't get that to work. See SetTimeout & SetTimeoutMilliseconds.
+            this.SupportsStreamLogging = false;
         }
 
         /// <summary>
@@ -179,6 +183,17 @@ namespace PcmHacking
                         milliseconds = 60;
                         break;
 
+                    case TimeoutScenario.DataLogging4:
+                        milliseconds = 80;
+                        break;
+
+                    case TimeoutScenario.DataLoggingStreaming:
+                        // This is hacky, but the code path is not supported anyway.
+                        // I had hoped to use ATMA or STMA to monitor the bus and log
+                        // data, but that hasn't worked.  Also see SetTimeoutMilliseconds.
+                        milliseconds = -1;
+                        break;
+
                     case TimeoutScenario.Maximum:
                         return 1020;
 
@@ -202,7 +217,17 @@ namespace PcmHacking
         /// </summary>
         public override async Task<bool> SetTimeoutMilliseconds(int milliseconds)
         {
-           return await this.SendAndVerify("STPTO " + milliseconds, "OK");
+            if (milliseconds == -1)
+            {
+                // This doesn't actually work yet, but I think it should be possible.
+                // To test this code path, change this value in the constructor:
+                // this.SupportsStreamLogging = false;
+                return await this.SendAndVerify("STMA", "");
+            }
+            else
+            {
+                return await this.SendAndVerify("STPTO " + milliseconds, "OK");
+            }           
         }
 
         /// <summary>
@@ -226,12 +251,20 @@ namespace PcmHacking
             int responses;
             switch (this.TimeoutScenario)
             {
+                case TimeoutScenario.DataLogging4:
+                    responses = 4;
+                    break;
+
                 case TimeoutScenario.DataLogging3:
                     responses = 3;
                     break;
 
                 case TimeoutScenario.DataLogging2:
                     responses = 2;
+                    break;
+
+                case TimeoutScenario.DataLogging1:
+                    responses = 1;
                     break;
 
                 default:
@@ -246,7 +279,10 @@ namespace PcmHacking
                 responses = 0;
             }
 
-            builder.AppendFormat(", R:{0}", responses);
+            if (this.TimeoutScenario != TimeoutScenario.DataLoggingStreaming)
+            {
+                builder.AppendFormat(", R:{0}", responses);
+            }
 
             if (messageBytes.Length < 200)
             {

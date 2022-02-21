@@ -20,6 +20,8 @@ namespace PcmHacking
         DataLogging1,
         DataLogging2,
         DataLogging3,
+        DataLogging4,
+        DataLoggingStreaming,
         Maximum,
     }
 
@@ -57,6 +59,11 @@ namespace PcmHacking
         /// Max transmit size.
         /// </summary>
         private int maxSendSize;
+
+        /// <summary>
+        /// Queue of messages received from the VPW bus.
+        /// </summary>
+        private Queue<Message> queue = new Queue<Message>();
 
         /// <summary>
         /// For the AllPro, we need to tell the interface how long to listen for incoming messages.
@@ -132,14 +139,40 @@ namespace PcmHacking
         public bool Supports4X { get; protected set; }
 
         /// <summary>
+        /// Indicates whether or no the device supports logging just one DPID.
+        /// </summary>
+        /// <remarks>
+        /// ELM devices generally need at least two DPIDs to work. Apparently if
+        /// there is only one DPID, it comes back from the PCM before the device 
+        /// is ready to listen. So the device times out, and logging is broken.
+        /// </remarks>
+        public bool SupportsSingleDpidLogging { get; protected set; }
+
+        /// <summary>
+        /// Indicates whether or not the device supports stream data logging.
+        /// </summary>
+        /// <remarks>
+        /// The default approach to logging uses one message from the app to request
+        /// one row of data from the PCM.
+        /// 
+        /// The stream approach causes the PCM to send a continuous stream of data 
+        /// after the inital "start logging" request, which allows it to send 
+        /// 25%-50% more rows per second.
+        /// </remarks>
+        public bool SupportsStreamLogging { get; protected set; }
+
+        /// <summary>
         /// Number of messages recevied so far.
         /// </summary>
         public int ReceivedMessageCount { get { return this.queue.Count; } }
 
         /// <summary>
-        /// Queue of messages received from the VPW bus.
+        /// Gets the number of messages waiting in the receive queue.
         /// </summary>
-        private Queue<Message> queue = new Queue<Message>();
+        /// <remarks>
+        /// Probably only useful for debug messages.
+        /// </remarks>
+        protected int QueueSize { get { return this.queue.Count; } }
 
         /// <summary>
         /// Current speed of the VPW bus.
@@ -226,6 +259,8 @@ namespace PcmHacking
             {
                 if (this.queue.Count > 0)
                 {
+                    // This can be useful for debugging, but is generally too noisy.
+                    // this.Logger.AddDebugMessage("Dequeue.");
                     return this.queue.Dequeue();
                 }
                 else
@@ -330,6 +365,16 @@ namespace PcmHacking
                 // 64 works for the LX, but the AllPro needs 70.
                 case TimeoutScenario.DataLogging3:
                     packetSize = 70;
+                    break;
+
+                // TODO: Tune.
+                case TimeoutScenario.DataLogging4:
+                    packetSize = 90;
+                    break;
+
+                // TODO: Tune.
+                case TimeoutScenario.DataLoggingStreaming:
+                    packetSize = 0;
                     break;
 
                 case TimeoutScenario.Maximum:

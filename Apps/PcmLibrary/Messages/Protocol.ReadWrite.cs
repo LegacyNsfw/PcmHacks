@@ -57,7 +57,7 @@ namespace PcmHacking
         /// </remarks>
         public Message CreateUploadRequest(int Address, int Size)
         {
-            byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, SubMode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, Submode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
             requestBytes[5] = unchecked((byte)(Size >> 8));
             requestBytes[6] = unchecked((byte)(Size & 0xFF));
             requestBytes[7] = unchecked((byte)(Address >> 16));
