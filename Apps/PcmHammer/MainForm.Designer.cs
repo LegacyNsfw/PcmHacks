@@ -61,6 +61,7 @@
             this.writeParmetersCloneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.writeOSCalibrationBootToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.writeFullToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.testFileChecksumsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemOptions = new System.Windows.Forms.ToolStripMenuItem();
             this.userDefinedKeyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -71,7 +72,8 @@
             this.progressBarToolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.percentDoneToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.timeRemainingToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.testFileChecksumsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -367,9 +369,11 @@
             this.readEntirePCMToolStripMenuItem,
             this.verifyEntirePCMToolStripMenuItem,
             this.modifyVINToolStripMenuItem,
+            this.toolStripSeparator1,
             this.writeParmetersCloneToolStripMenuItem,
             this.writeOSCalibrationBootToolStripMenuItem,
             this.writeFullToolStripMenuItem,
+            this.toolStripSeparator2,
             this.testFileChecksumsToolStripMenuItem});
             this.menuItemTools.Name = "menuItemTools";
             this.menuItemTools.Size = new System.Drawing.Size(46, 20);
@@ -416,6 +420,13 @@
             this.writeFullToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
             this.writeFullToolStripMenuItem.Text = "Write &Full Flash (Clone)";
             this.writeFullToolStripMenuItem.Click += new System.EventHandler(this.writeFullToolStripMenuItem_Click);
+            // 
+            // testFileChecksumsToolStripMenuItem
+            // 
+            this.testFileChecksumsToolStripMenuItem.Name = "testFileChecksumsToolStripMenuItem";
+            this.testFileChecksumsToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
+            this.testFileChecksumsToolStripMenuItem.Text = "&Test File Checksums...";
+            this.testFileChecksumsToolStripMenuItem.Click += new System.EventHandler(this.testFileChecksumsToolStripMenuItem_Click);
             // 
             // menuItemOptions
             // 
@@ -506,12 +517,15 @@
             this.timeRemainingToolStripStatusLabel.Text = "Time Remaining";
             this.timeRemainingToolStripStatusLabel.ToolTipText = "Time Remaining (T minus)";
             // 
-            // testFileChecksumsToolStripMenuItem
+            // toolStripSeparator1
             // 
-            this.testFileChecksumsToolStripMenuItem.Name = "testFileChecksumsToolStripMenuItem";
-            this.testFileChecksumsToolStripMenuItem.Size = new System.Drawing.Size(225, 22);
-            this.testFileChecksumsToolStripMenuItem.Text = "&Test File Checksums...";
-            this.testFileChecksumsToolStripMenuItem.Click += new System.EventHandler(this.testFileChecksumsToolStripMenuItem_Click);
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(222, 6);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(222, 6);
             // 
             // MainForm
             // 
@@ -594,6 +608,8 @@
         private System.Windows.Forms.ToolStripProgressBar progressBarToolStripProgressBar;
         private System.Windows.Forms.ToolStripStatusLabel kbpsToolStripStatusLabel;
         private System.Windows.Forms.ToolStripMenuItem testFileChecksumsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
     }
 }
 
