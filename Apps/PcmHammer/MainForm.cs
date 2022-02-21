@@ -22,6 +22,43 @@ namespace PcmHacking
     public partial class MainForm : MainFormBase, ILogger
     {
         /// <summary>
+        /// This warning will be shown to users who have not yet verified their connectivity.
+        /// </summary>
+        /// <remarks>
+        /// Users can verify connectivity by completing a successful test write, real write, or read.
+        /// The message just encourages users to do a full read, because that's the best test.
+        /// </remarks>
+        private static readonly string UnverifiedConnectionWarning =
+            "{0}" +
+            Environment.NewLine + Environment.NewLine +
+            "If this doesn't work, your vehicle will not be driveable." +
+            Environment.NewLine + Environment.NewLine +
+            "You should read the contents of your PCM before you try this. " +
+            "A successful read will prove that you have a good " +
+            "connection to your PCM, and will determine whether " +
+            "or not there are any other modules in the vehicle " +
+            "that will cause the write process to fail." +
+            Environment.NewLine + Environment.NewLine +
+            "A successful read will also give you a file that you can use to replace your current PCM with a new one if something goes wrong." +
+            Environment.NewLine + Environment.NewLine +
+            "It is dangerous to attempt to modify the PCM's flash memory before completing a successful read of the PCM.";
+
+        /// <summary>
+        /// Title for the unverified-connect warning prompt.
+        /// </summary>
+        private static readonly string UnverifiedConnectionWarningTitle = "Are you sure you want to do this?";
+
+        /// <summary>
+        /// Remind the user how to verify their connection.
+        /// </summary>
+        private static readonly string WiseChoice = "You have made a wise choice. Try a full read first.";
+
+        /// <summary>
+        /// Simple prompt for users who have already verified their connection.
+        /// </summary>
+        private static readonly string ClickOkToContinue = "Click OK to continue.";
+
+        /// <summary>
         /// This will become the first half of the Window caption, and will 
         /// be printed to the user and debug logs each time a device is 
         /// initialized.
@@ -420,7 +457,7 @@ namespace PcmHacking
         /// <summary>
         /// Parse cmdline parameters
         /// </summary>
-        private async void ProcessCommandLine()
+        private void ProcessCommandLine()
         {
             string[] args = Environment.GetCommandLineArgs();
             Parser.Default.ParseArguments<CommandLineOptions>(args)
@@ -889,42 +926,59 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Prompt the user before a write operation.
+        /// </summary>
+        /// <param name="description">The first line of text in the dialog box.</param>
+        /// <returns>True if the user wants to proceed, false if not.</returns>
+        private bool ConfirmBeforeWrite(string description)
+        {
+            DialogResult result;
+            if (Configuration.Settings.ConnectionVerified)
+            {
+                result = MessageBox.Show(
+                    description,
+                    MainForm.ClickOkToContinue,
+                    MessageBoxButtons.OKCancel,
+                    MessageBoxIcon.Information,
+                    MessageBoxDefaultButton.Button1);
+            }
+            else
+            {
+                result = MessageBox.Show(
+                    string.Format(
+                        MainForm.UnverifiedConnectionWarning,
+                        description),
+                    MainForm.UnverifiedConnectionWarningTitle,
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button1); ;
+            }
+
+            switch(result)
+            {
+                case DialogResult.OK:
+                case DialogResult.Yes:
+                    return true;
+
+                case DialogResult.No:
+                    this.AddUserMessage(MainForm.WiseChoice);
+                    return false;
+
+                case DialogResult.Cancel:
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
         /// Write Calibration.
         /// </summary>
         private void writeCalibrationButton_Click(object sender, EventArgs e)
         {
             if (!BackgroundWorker.IsAlive)
             {
-                DialogResult result;
-                if (Configuration.Settings.ConnectionVerified)
-                {
-                    result = MessageBox.Show(
-                        "This will update the calibration on your PCM.",
-                        "Click OK to continue.",
-                        MessageBoxButtons.OKCancel,
-                        MessageBoxIcon.Information,
-                        MessageBoxDefaultButton.Button1);
-                }
-                else
-                {
-                    result = MessageBox.Show(
-                        "If this doesn't work, your vehicle will not be driveable." + Environment.NewLine +
-                        "You should do a successful read before trying to alter the calibration, to ensure" + Environment.NewLine +
-                        "that you have a good connection to your PCM, and to find out whether there are" + Environment.NewLine +
-                        "any other modules in the vehicle that will interrupt the write process." + Environment.NewLine +
-                        "It is dangerous to attempt a calibration flash before doing that test.",
-                        "Are you sure you want to do this?",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning,
-                    MessageBoxDefaultButton.Button1);
-                }
-
-                if (result == DialogResult.No)
-                {
-                    this.AddUserMessage("You have made a wise choice. Try a full read first.");
-                }
-                else
-                {
+                if (ConfirmBeforeWrite("This will update the calibration on your PCM."))
+                { 
                     BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Calibration));
                     BackgroundWorker.IsBackground = true;
                     BackgroundWorker.Start();
@@ -939,35 +993,7 @@ namespace PcmHacking
         {
             if (!BackgroundWorker.IsAlive)
             {
-                DialogResult result;
-                if (Configuration.Settings.ConnectionVerified)
-                {
-                    result = MessageBox.Show(
-                        "This will update the parameter block on your PCM.",
-                        "Click OK to continue.",
-                        MessageBoxButtons.OKCancel,
-                        MessageBoxIcon.Information,
-                        MessageBoxDefaultButton.Button1);
-                }
-                else
-                {
-                    result = MessageBox.Show(
-                        "If this doesn't work, your vehicle will not be driveable." + Environment.NewLine +
-                        "You should do a successful read before trying to alter the parameters, to ensure" + Environment.NewLine +
-                        "that you have a good connection to your PCM, and to find out whether there are" + Environment.NewLine +
-                        "any other modules in the vehicle that will interrupt the write process." + Environment.NewLine +
-                        "It is dangerous to attempt a parameter flash before doing that test.",
-                        "Are you sure you want to do this?",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning,
-                    MessageBoxDefaultButton.Button1);
-                }
-
-                if (result == DialogResult.No)
-                {
-                    this.AddUserMessage("You have made a wise choice. Try a full read first.");
-                }
-                else
+                if (ConfirmBeforeWrite("This will update the parameter block on your PCM."))
                 {
                     BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Parameters));
                     BackgroundWorker.IsBackground = true;
@@ -983,36 +1009,7 @@ namespace PcmHacking
         {
             if (!BackgroundWorker.IsAlive)
             {
-                DialogResult result;
-                if (Configuration.Settings.ConnectionVerified)
-                {
-                    result = MessageBox.Show(
-                        "This will update the operating system and calibration on your PCM.",
-                        "Click OK to continue.",
-                        MessageBoxButtons.OKCancel,
-                        MessageBoxIcon.Information,
-                        MessageBoxDefaultButton.Button1);
-                }
-                else
-                {
-                    result = MessageBox.Show(
-                        "Changing the operating system can render the PCM unusable." + Environment.NewLine +
-                        "Special tools may be needed to make the PCM work again." + Environment.NewLine +
-                        "You should do a successful test write before trying to change the operating system," +Environment.NewLine +
-                        "to ensure that you have a good connection to your PCM, and to find out whether" + Environment.NewLine +
-                        "there are any other modules in the vehicle that will interrupt the write process." + Environment.NewLine +
-                        "It is dangerous to attempt an OS replacement before doing that test.",
-                        "Are you sure you want to do this?",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Warning,
-                        MessageBoxDefaultButton.Button2);
-                }
-
-                if (result == DialogResult.No)
-                {
-                    this.AddUserMessage("You have made a wise choice. Try a test write first.");
-                }
-                else
+                if (ConfirmBeforeWrite("This will replace the operating system and calibration on your PCM."))
                 {
                     BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.OsPlusCalibrationPlusBoot));
                     BackgroundWorker.IsBackground = true;
@@ -1028,36 +1025,8 @@ namespace PcmHacking
         {
             if (!BackgroundWorker.IsAlive)
             {
-                DialogResult result;
-                if (Configuration.Settings.ConnectionVerified)
-                {
-                    result = MessageBox.Show(
-                        "This will rewrite the flash memory on your PCM.",
-                        "Click OK to continue.",
-                        MessageBoxButtons.OKCancel,
-                        MessageBoxIcon.Information,
-                        MessageBoxDefaultButton.Button1);
-                }
-                else
-                {
-                    result = MessageBox.Show(
-                        "If this doesn't work, your vehicle will not be driveable." + Environment.NewLine +
-                        "You should do a successful read before trying to change the operating system," + Environment.NewLine +
-                        "to ensure that you have a good connection to your PCM, and to find out whether" + Environment.NewLine +
-                        "there are any other modules in the vehicle that will interrupt the write process." + Environment.NewLine +
-                        "It is dangerous to attempt a full write before doing that test.",
-                        "Are you sure you want to do this?",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning,
-                    MessageBoxDefaultButton.Button1);
-                }
-
-                if (result == DialogResult.No)
-                {
-                    this.AddUserMessage("You have made a wise choice. Try a full read first.");
-                }
-                else
-                {
+                if (ConfirmBeforeWrite("This will replace the contents of the flash memory on your PCM."))
+                { 
                     BackgroundWorker = new System.Threading.Thread(() => write_BackgroundThread(WriteType.Full));
                     BackgroundWorker.IsBackground = true;
                     BackgroundWorker.Start();

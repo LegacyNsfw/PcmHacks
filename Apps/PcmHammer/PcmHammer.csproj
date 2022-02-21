@@ -36,7 +36,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\joukoy\AppData\Local\Temp\vs6D0.tmp\Debug\</IntermediateOutputPath>
+    <IntermediateOutputPath>C:\Users\nate\AppData\Local\Temp\vsC90C.tmp\Debug\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -46,7 +46,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\joukoy\AppData\Local\Temp\vs6D0.tmp\Release\</IntermediateOutputPath>
+    <IntermediateOutputPath>C:\Users\nate\AppData\Local\Temp\vsC90C.tmp\Release\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>0411_256px.ico</ApplicationIcon>
