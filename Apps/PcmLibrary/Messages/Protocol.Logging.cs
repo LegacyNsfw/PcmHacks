@@ -135,9 +135,7 @@ namespace PcmHacking
             ResponseStatus unused;
 
             // The priority byte changes from 6C to 8C after the first tool-present message is sent.
-            if (!TryVerifyInitialBytes(message.GetBytes(), new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x6A }, out unused)
-                &&
-                !TryVerifyInitialBytes(message.GetBytes(), new byte[] { 0x8C, DeviceId.Tool, DeviceId.Pcm, 0x6A }, out unused))
+            if (!TryVerifyInitialBytes(message.GetBytes(), new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, 0x6A }, out unused))
             {
                 rawLogData = null;
                 return false;

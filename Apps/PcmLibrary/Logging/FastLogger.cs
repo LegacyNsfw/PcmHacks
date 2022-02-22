@@ -89,7 +89,7 @@ namespace PcmHacking
             if (DateTime.Now.Subtract(lastNotificationTime) > TimeSpan.FromSeconds(2))
             {
                 this.lastNotificationTime = DateTime.Now;
-                await this.Vehicle.ForceSendToolPresentNotification();
+                await this.Vehicle.SendDataLoggerPresentNotification();
             }
         }
     }
