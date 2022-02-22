@@ -14,6 +14,11 @@ namespace PcmHacking
     /// 
     public class OBDXProDevice : SerialDevice
     {
+        //Supported tools:
+        //OBDX Pro VT v3- VPW only with USB, Wifi, BT, BLE
+        //OBDX Pro VC - VPW only with USB
+        //OBDX Pro GT - VPW with USB, Wifi, BT, BLE
+        public string ToolConnected = "";
         public const string DeviceType = "OBDX Pro";
         public bool TimeStampsEnabled = false;
         public bool CRCInReceivedFrame = false;
@@ -571,6 +576,9 @@ namespace PcmHacking
             await this.Port.Send(MsgATZ);
             System.Threading.Thread.Sleep(100);
             await this.Port.DiscardBuffers();
+            await this.Port.Send(MsgATZ);
+            System.Threading.Thread.Sleep(100);
+            await this.Port.DiscardBuffers();
 
             //AT@1 will return OBDX Pro VT - will then need to change its API to DVI bytes.
             byte[] MsgAT1 = { (byte)'A', (byte)'T', (byte)'@', (byte)'1', 0xD };
@@ -599,7 +607,7 @@ namespace PcmHacking
             if (m.Status == ResponseStatus.Success)
             {
                 byte[] Val = m.Value.GetBytes();
-                Details = System.Text.Encoding.ASCII.GetString(Val, 3, Val[1] - 1);
+                ToolConnected = System.Text.Encoding.ASCII.GetString(Val, 3, Val[1] - 1);
                 //  this.Logger.AddUserMessage("Device Found: " + name);
                 // return new Response<String>(ResponseStatus.Success, name);
             }
@@ -608,7 +616,13 @@ namespace PcmHacking
                 this.Logger.AddUserMessage("OBDX Pro device not found or failed response");
                 return new Response<String>(ResponseStatus.Error, null);
             }
+            Details = ToolConnected;
 
+            if (ToolConnected == "OBDX Pro VC") //Must reduce block size
+            {
+                this.MaxSendSize = 2048 + 10 + 2;    // 2048 byte data blocks with 10 byte 
+                this.MaxReceiveSize = 2048 + 10 + 2; // header and 2 byte block checksum
+            }
 
             //Firmware version
             Msg = OBDXProDevice.DVI_BOARD_FIRMWARE_VERSION.GetBytes();
@@ -618,7 +632,16 @@ namespace PcmHacking
             if (m.Status == ResponseStatus.Success)
             {
                 byte[] Val = m.Value.GetBytes();
-                string Firmware = ((float)(Val[3] * 0x100 + Val[4]) / 100).ToString("n2");
+                string Firmware = "";
+                if (ToolConnected == "OBDX Pro VT")
+                {
+                    Firmware = ((float)(Val[3] * 0x100 + Val[4]) / 100).ToString("n2");
+                }
+                else //new firmware standard
+                {
+                    Firmware = Val[3].ToString() + "." + Val[4].ToString() + "." + Val[5].ToString() + "." + Val[6].ToString();
+                }
+               
                 this.Logger.AddDebugMessage("Firmware version: v" + Firmware);
                 Details += " - Firmware: v" + Firmware;
             }
@@ -636,7 +659,16 @@ namespace PcmHacking
             if (m.Status == ResponseStatus.Success)
             {
                 byte[] Val = m.Value.GetBytes();
-                string Hardware = ((float)(Val[3] * 0x100 + Val[4]) / 100).ToString("n2");
+                string Hardware = "";
+                if (ToolConnected == "OBDX Pro VT")
+                {
+                    Hardware = ((float)(Val[3] * 0x100 + Val[4]) / 100).ToString("n2");
+                }
+                else //new firmware standard
+                {
+                    Hardware = Val[3].ToString() + "." + Val[4].ToString() + "." + Val[5].ToString() + "." + Val[6].ToString();
+                }
+                 
                 this.Logger.AddDebugMessage("Hardware version: v" + Hardware);
                 Details += " - Hardware: v" + Hardware;
             }
