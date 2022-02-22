@@ -9,9 +9,28 @@ namespace PcmHacking
         /// <summary>
         /// Tell the bus that a test device is present.
         /// </summary>
+        /// <remarks>
+        /// Changing the priority byte to Physical0 (rather than Physical0High) 
+        /// broke PCM Hammer's flash operations. 
+        /// </remarks>
         public Message CreateTestDevicePresentNotification()
         {
             byte[] bytes = new byte[] { Priority.Physical0High, DeviceId.Broadcast, DeviceId.Tool, Mode.TestDevicePresent };
+            return new Message(bytes);
+        }
+
+        /// <summary>
+        /// Tell the bus that a test device is present.
+        /// </summary>
+        /// <remarks>
+        /// Using Physical0 priority keeps subsequent data log messages using 
+        /// Physical0. Using Physical0High caused the PCM to switch to 
+        /// Physical0High for subsequent data log messages. Using Physical0
+        /// simplifies the code that receives data logging messages.
+        /// </remarks>
+        public Message CreateDataLoggerPresentNotification()
+        {
+            byte[] bytes = new byte[] { Priority.Physical0, DeviceId.Broadcast, DeviceId.Tool, Mode.TestDevicePresent };
             return new Message(bytes);
         }
 

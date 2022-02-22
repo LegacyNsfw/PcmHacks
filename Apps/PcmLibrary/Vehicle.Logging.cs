@@ -222,6 +222,15 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// This is needed to keep streaming logging active.
+        /// </summary>
+        public async Task SendDataLoggerPresentNotification()
+        {
+            Message message = this.protocol.CreateDataLoggerPresentNotification();
+            await this.device.SendMessage(message);
+        }
+
+        /// <summary>
         /// Currently only used by VpwExplorer for testing.
         /// </summary>
         /// <param name="pid"></param>
