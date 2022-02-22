@@ -53,6 +53,8 @@ namespace PcmHacking
             this.port.DataBits = 8;
             this.port.Parity = Parity.None;
             this.port.StopBits = StopBits.One;
+            this.port.ReadBufferSize = 12000;
+            this.port.WriteBufferSize = 12000;
             if (config.Timeout == 0) config.Timeout = 1000; // default to 1 second but allow override.
             this.port.ReadTimeout = config.Timeout;
 
