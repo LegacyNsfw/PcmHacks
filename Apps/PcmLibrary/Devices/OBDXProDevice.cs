@@ -620,8 +620,8 @@ namespace PcmHacking
 
             if (ToolConnected == "OBDX Pro VC") //Must reduce block size
             {
-                this.MaxSendSize = 2048 + 10 + 2;    // packets up to 4112 but we want 4096 byte data blocks
-                this.MaxReceiveSize = 2048 + 10 + 2; // with 10 byte header and 2 byte block checksum
+                this.MaxSendSize = 2048 + 10 + 2;    // 2048 byte data blocks with 10 byte 
+                this.MaxReceiveSize = 2048 + 10 + 2; // header and 2 byte block checksum
             }
 
             //Firmware version
