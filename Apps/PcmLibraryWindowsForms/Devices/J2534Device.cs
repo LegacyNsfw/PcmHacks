@@ -34,7 +34,7 @@ namespace PcmHacking
         public bool IsProtocolOpen;
         public bool IsJ2534Open;
         private const string PortName = "J2534";
-        private const uint MessageFilter = 0xECF010; // EC = (6C | 8C)
+        private const uint MessageFilter = 0x6CF010;
         public string ToolName = "";
 
         /// <summary>
