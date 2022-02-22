@@ -1,4 +1,4 @@
-﻿namespace PcmHacking
+namespace PcmHacking
 {
     partial class DevicePicker
     {
@@ -44,9 +44,12 @@
             this.cancelButton = new System.Windows.Forms.Button();
             this.testButton = new System.Windows.Forms.Button();
             this.status = new System.Windows.Forms.Label();
+            this.enable4xReadWriteCheckBox = new System.Windows.Forms.CheckBox();
+            this.optionsGroupBox = new System.Windows.Forms.GroupBox();
             this.categories.SuspendLayout();
             this.serialOptionsGroupBox.SuspendLayout();
             this.j2534OptionsGroupBox.SuspendLayout();
+            this.optionsGroupBox.SuspendLayout();
             this.SuspendLayout();
             // 
             // categories
@@ -90,9 +93,9 @@
             this.serialOptionsGroupBox.Controls.Add(this.label2);
             this.serialOptionsGroupBox.Controls.Add(this.serialPortList);
             this.serialOptionsGroupBox.Controls.Add(this.label1);
-            this.serialOptionsGroupBox.Location = new System.Drawing.Point(13, 68);
+            this.serialOptionsGroupBox.Location = new System.Drawing.Point(12, 68);
             this.serialOptionsGroupBox.Name = "serialOptionsGroupBox";
-            this.serialOptionsGroupBox.Size = new System.Drawing.Size(282, 122);
+            this.serialOptionsGroupBox.Size = new System.Drawing.Size(283, 122);
             this.serialOptionsGroupBox.TabIndex = 1;
             this.serialOptionsGroupBox.TabStop = false;
             this.serialOptionsGroupBox.Text = "Serial Device Options";
@@ -101,7 +104,7 @@
             // 
             this.serialDeviceList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.serialDeviceList.FormattingEnabled = true;
-            this.serialDeviceList.Location = new System.Drawing.Point(10, 82);
+            this.serialDeviceList.Location = new System.Drawing.Point(7, 82);
             this.serialDeviceList.Name = "serialDeviceList";
             this.serialDeviceList.Size = new System.Drawing.Size(266, 21);
             this.serialDeviceList.TabIndex = 3;
@@ -120,9 +123,9 @@
             // 
             this.serialPortList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.serialPortList.FormattingEnabled = true;
-            this.serialPortList.Location = new System.Drawing.Point(10, 36);
+            this.serialPortList.Location = new System.Drawing.Point(7, 36);
             this.serialPortList.Name = "serialPortList";
-            this.serialPortList.Size = new System.Drawing.Size(130, 21);
+            this.serialPortList.Size = new System.Drawing.Size(266, 21);
             this.serialPortList.TabIndex = 1;
             this.serialPortList.SelectedIndexChanged += new System.EventHandler(this.serialPortList_SelectedIndexChanged);
             // 
@@ -167,8 +170,8 @@
             // 
             // autoDetectButton
             // 
-            this.autoDetectButton.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.autoDetectButton.Location = new System.Drawing.Point(13, 302);
+            this.autoDetectButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.autoDetectButton.Location = new System.Drawing.Point(13, 330);
             this.autoDetectButton.Name = "autoDetectButton";
             this.autoDetectButton.Size = new System.Drawing.Size(94, 23);
             this.autoDetectButton.TabIndex = 3;
@@ -203,8 +206,8 @@
             // 
             // testButton
             // 
-            this.testButton.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.testButton.Location = new System.Drawing.Point(201, 302);
+            this.testButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.testButton.Location = new System.Drawing.Point(201, 330);
             this.testButton.Name = "testButton";
             this.testButton.Size = new System.Drawing.Size(94, 23);
             this.testButton.TabIndex = 4;
@@ -220,12 +223,34 @@
             this.status.Size = new System.Drawing.Size(0, 13);
             this.status.TabIndex = 7;
             // 
+            // enable4xReadWriteCheckBox
+            // 
+            this.enable4xReadWriteCheckBox.AutoSize = true;
+            this.enable4xReadWriteCheckBox.Location = new System.Drawing.Point(7, 19);
+            this.enable4xReadWriteCheckBox.Name = "enable4xReadWriteCheckBox";
+            this.enable4xReadWriteCheckBox.Size = new System.Drawing.Size(148, 17);
+            this.enable4xReadWriteCheckBox.TabIndex = 8;
+            this.enable4xReadWriteCheckBox.Text = "Enable &4x Communication";
+            this.enable4xReadWriteCheckBox.UseVisualStyleBackColor = true;
+            this.enable4xReadWriteCheckBox.CheckedChanged += new System.EventHandler(this.enable4xReadWriteCheckBox_CheckedChanged);
+            // 
+            // optionsGroupBox
+            // 
+            this.optionsGroupBox.Controls.Add(this.enable4xReadWriteCheckBox);
+            this.optionsGroupBox.Location = new System.Drawing.Point(12, 275);
+            this.optionsGroupBox.Name = "optionsGroupBox";
+            this.optionsGroupBox.Size = new System.Drawing.Size(283, 39);
+            this.optionsGroupBox.TabIndex = 9;
+            this.optionsGroupBox.TabStop = false;
+            this.optionsGroupBox.Text = "Options";
+            // 
             // DevicePicker
             // 
             this.AcceptButton = this.okButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(407, 337);
+            this.ClientSize = new System.Drawing.Size(407, 365);
+            this.Controls.Add(this.optionsGroupBox);
             this.Controls.Add(this.status);
             this.Controls.Add(this.testButton);
             this.Controls.Add(this.cancelButton);
@@ -235,6 +260,7 @@
             this.Controls.Add(this.serialOptionsGroupBox);
             this.Controls.Add(this.categories);
             this.Name = "DevicePicker";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Select Device";
             this.Load += new System.EventHandler(this.DevicePicker_Load);
             this.categories.ResumeLayout(false);
@@ -243,6 +269,8 @@
             this.serialOptionsGroupBox.PerformLayout();
             this.j2534OptionsGroupBox.ResumeLayout(false);
             this.j2534OptionsGroupBox.PerformLayout();
+            this.optionsGroupBox.ResumeLayout(false);
+            this.optionsGroupBox.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -266,5 +294,7 @@
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Button testButton;
         private System.Windows.Forms.Label status;
+        private System.Windows.Forms.CheckBox enable4xReadWriteCheckBox;
+        private System.Windows.Forms.GroupBox optionsGroupBox;
     }
 }

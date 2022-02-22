@@ -1,0 +1,62 @@
+    <Parameter Name="On Time" DefineBy="Address" ByteCount="2" Address="0xFFB04C">
+      <Conversion Name="Seconds" Expression="x/160.0" />
+    </Parameter>
+    <Parameter Name="Throttle Follower Air Flow" DefineBy="Address" ByteCount="2" Address="0xFF980A">
+      <Conversion Name="Raw" Expression="x/1024.0" />
+    </Parameter>
+    <Parameter Name="Throttle Cracker Air Flow" DefineBy="Address" ByteCount="2" Address="0xFF97F0">
+      <Conversion Name="Raw" Expression="x/1024.0" />
+    </Parameter>
+    <Parameter Name="Load" DefineBy="Address" ByteCount="2" Address="0xFFAAEA">
+      <Conversion Name="g/cyl" Expression="x/2048.0" />
+    </Parameter>
+
+    <Parameter Name="Rolling Idle Enabled" DefineBy="Address" ByteCount="1" Address="0xFF97CC">
+      <Conversion Name="Flag" Expression="x" />
+    </Parameter>
+
+<Parameter Name="Idle P term" DefineBy="Address" ByteCount="2" Address="0xFFA2A2">
+  <Conversion Name="g/cyl" Expression="x/16.0" />
+</Parameter>
+<Parameter Name="Idle I term" DefineBy="Address" ByteCount="2" Address="0xFFA296">
+  <Conversion Name="g/cyl" Expression="x/16.0" />
+</Parameter>
+<Parameter Name="Idle D term" DefineBy="Address" ByteCount="2" Address="0xFFA28C">
+  <Conversion Name="g/cyl" Expression="(x-2000.0)/1000.0" />
+</Parameter>
+
+    <Parameter Name="Desired Idle Airflow" DefineBy="Pid" ByteCount="2" Address="0x1617">
+      <Conversion Name="g/s" Expression="x*0.00009765625" />
+    </Parameter>
+    <Parameter Name="Target throttle position" DefineBy="Pid" ByteCount="2" Address="0x131E">
+      <Conversion Name="%" Expression="x*0.00390625" />
+    </Parameter>
+
+
+    <Parameter Name="Knock Retard" DefineBy="Pid" ByteCount="1" Address="0x11A6">
+      <Conversion Name="Degrees" Expression="(x/256)*22.5" />
+    </Parameter>
+    <Parameter Name="Target AFR" DefineBy="Pid" ByteCount="1" Address="0x119E">
+      <Conversion Name="AFR" Expression="x/10" />
+    </Parameter>
+
+    <Parameter Name="Cracker Plus Follower" DefineBy="Address" ByteCount="2" Address="0xFF97F4">
+      <Conversion Name="Raw" Expression="x/1024.0" />
+    </Parameter>
+    <Parameter Name="Total Desired Idle Airflow" DefineBy="Address" ByteCount="2" Address="0xFF97DA">
+      <Conversion Name="Raw" Expression="x/1024.0" />
+    </Parameter>
+
+    <Parameter Name="Additional Startup Airflow?" DefineBy="Address" ByteCount="2" Address="0xFF97B8">
+      <Conversion Name="Raw" Expression="x/1024.0" />
+    </Parameter>
+    <Parameter Name="Long Term Idle Trim?" DefineBy="Address" ByteCount="2" Address="0xFF81E4">
+      <Conversion Name="Raw" Expression="x/1024.0" />
+    </Parameter>
+
+    <Parameter Name="Knock Retard?" DefineBy="Address" ByteCount="2" Address="0xFF968E">
+      <Conversion Name="Degrees?" Expression="x" />
+    </Parameter>
+    <Parameter Name="Ignition Advance Multiplier?" DefineBy="Address" ByteCount="2" Address="0xFF8250">
+      <Conversion Name="Multiplier" Expression="x/4096.0" />
+    </Parameter>

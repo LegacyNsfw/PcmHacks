@@ -14,7 +14,8 @@ namespace PcmHacking
     /// 
     public class AvtDevice : SerialDevice
     {
-        public const string DeviceType = "AVT (842/852)";
+        public const string DeviceType = "AVT (838/842/852)";
+        public short Model = 0; // 0 = unknown or 838, 842, 852
 
         public static readonly Message AVT_RESET                = new Message(new byte[] { 0xF1, 0xA5 });
         public static readonly Message AVT_ENTER_VPW_MODE       = new Message(new byte[] { 0xE1, 0x33 });
@@ -40,6 +41,8 @@ namespace PcmHacking
             this.MaxSendSize = 4096+10+2;    // packets up to 4112 but we want 4096 byte data blocks
             this.MaxReceiveSize = 4096+10+2; // with 10 byte header and 2 byte block checksum
             this.Supports4X = true;
+            this.SupportsSingleDpidLogging = true;
+            this.SupportsStreamLogging = true;
         }
 
         public override string GetDeviceType()
@@ -54,7 +57,7 @@ namespace PcmHacking
             Response<Message> m;
 
             SerialPortConfiguration configuration = new SerialPortConfiguration();
-            configuration.BaudRate = 115200;
+            configuration.BaudRate = 57600; // default RS232 speed for 838, 842. ignored by the USB 852.
             await this.Port.OpenAsync(configuration);
             await this.Port.DiscardBuffers();
 
@@ -67,9 +70,17 @@ namespace PcmHacking
                 {
                     case 0x27:
                         this.Logger.AddUserMessage("AVT 852 Reset OK");
+                        this.Model = 852;
                         break;
                     case 0x12:
                         this.Logger.AddUserMessage("AVT 842 Reset OK");
+                        this.Model = 842;
+                        break;
+                    case 0x07:
+                        this.Logger.AddUserMessage("AVT 838 Reset OK");
+                        this.Model = 838;
+                        this.MaxSendSize = 2048 + 10 + 2;
+                        this.MaxReceiveSize = 2048 + 10 + 2;
                         break;
                     default:
                         this.Logger.AddUserMessage("Unknown and unsupported AVT device detected. Please add support and submit a patch!");
@@ -83,6 +94,11 @@ namespace PcmHacking
             }
 
             this.Logger.AddDebugMessage("Looking for Firmware message");
+            if (this.Model == 838)
+            {
+                await this.Port.Send(AvtDevice.AVT_REQUEST_FIRMWARE.GetBytes()); // we need to request this on 838 but the 852 sends it without being asked. 842 needs testing.
+            }
+
             m = await this.FindResponse(AVT_FIRMWARE);
             if ( m.Status == ResponseStatus.Success )
             {
@@ -98,17 +114,20 @@ namespace PcmHacking
                 return false;
             }
 
-            await this.Port.Send(AvtDevice.AVT_ENTER_VPW_MODE.GetBytes());
-            m = await FindResponse(AVT_VPW);
-            if (m.Status == ResponseStatus.Success)
-            {
-                this.Logger.AddDebugMessage("Set VPW Mode");
-            }
-            else
-            {
-                this.Logger.AddUserMessage("Unable to set AVT device to VPW mode");
-                this.Logger.AddDebugMessage("Expected " + AvtDevice.AVT_VPW.ToString());
-                return false;
+            // 838 defaults to vpw mode, so dont set it on that device.
+            if (this.Model != 838) {
+                await this.Port.Send(AvtDevice.AVT_ENTER_VPW_MODE.GetBytes());
+                m = await FindResponse(AVT_VPW);
+                if (m.Status == ResponseStatus.Success)
+                {
+                    this.Logger.AddDebugMessage("Set VPW Mode");
+                }
+                else
+                {
+                    this.Logger.AddUserMessage("Unable to set AVT device to VPW mode");
+                    this.Logger.AddDebugMessage("Expected " + AvtDevice.AVT_VPW.ToString());
+                    return false;
+                }
             }
 
             await AVTSetup();
@@ -175,9 +194,6 @@ namespace PcmHacking
                     this.Logger.AddDebugMessage("Waited 2seconds.. no data present");
                     return Response.Create(ResponseStatus.Timeout, (Message)null);
                 }
-
-
-                 
             }
             catch (Exception) // timeout exception - log no data, return error.
             {
@@ -202,7 +218,8 @@ namespace PcmHacking
                     //this.Logger.AddDebugMessage("RX: Header " + rx[0].ToString("X2"));
                     int type = rx[0] >> 4;
                     switch (type) {
-                        case 0x0: // standard < 16 byte data packet
+                        case 0xF: // standard < 16 byte data packet (AVT 838)
+                        case 0x0: // standard < 16 byte data packet (AVT 842/852)
                             length = rx[0] & 0x0F;
                             break;
                         case 0x2:

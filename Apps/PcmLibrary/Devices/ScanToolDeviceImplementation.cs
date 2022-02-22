@@ -44,6 +44,10 @@ namespace PcmHacking
             // This would need a firmware upgrade at the very least, and likely isn't even possible 
             // with current hardware.
             this.Supports4X = false;
+
+            // In theory we could use ATMA or STMA to monitor the bus and read data log streams.
+            // In practice I couldn't get that to work. See SetTimeout & SetTimeoutMilliseconds.
+            this.SupportsStreamLogging = false;
         }
 
         /// <summary>
@@ -72,17 +76,34 @@ namespace PcmHacking
 
                 this.Logger.AddUserMessage("ScanTool device ID: " + stID);
 
-                if (stID.Contains("STN1130")) // SX
+                // The following table was provided by ScanTool.net Support - ticket #33419
+                // Device                     Max Msg Size    Max Tested Baudrate
+                // STN1110                    2k              2 Mbps *
+                // STN1130 (OBDLink SX)       2k              2 Mbps *
+                // STN1150 (OBDLink MX v1)    2k              N/A
+                // STN1151 (OBDLink MX v2)    2k              N/A
+                // STN1155 (OBDLink LX)       2k              N/A
+                // STN1170                    2k              2 Mbps *
+                // STN2100                    4k              2 Mbps
+                // STN2120                    4k              2 Mbps
+                // STN2230 (OBDLink EX)       4k              N/A
+                // STN2255 (OBDLink MX+)      4k              N/A
+                //
+                // * With character echo off (ATE 0), 1 Mbps with character echo on (ATE 1)
+
+                // Here 1024 bytes = 2048 ASCII hex bytes, without spaces
+                if (stID.Contains("STN1110") || // SparkFun OBD-II UART
+                    stID.Contains("STN1130") || // SX
+                    stID.Contains("STN1150") || // MX v1
+                    stID.Contains("STN1151") || // MX v2
+                    stID.Contains("STN1155") || // LX
+                    stID.Contains("STN1170") || //
+                    stID.Contains("STN2100") || //
+                    stID.Contains("STN2120") || //
+                    stID.Contains("STN2230") || // EX
+                    stID.Contains("STN2255"))   // MX+
                 {
-                    this.MaxSendSize = 192 + 12;
-                    this.MaxReceiveSize = 500 + 12;
-                }
-                else if (stID.Contains("STN1155") || // LX
-                    stID.Contains("STN1150") || // MX version 1
-                    stID.Contains("STN1151") || // MX version 2
-                    stID.Contains("STN2255")) // MX+
-                {
-                    // 2048 works, but doesn't write measurably faster.
+                    // Testing shows larger packet sizes do not equate to faster transfers
                     this.MaxSendSize = 1024 + 12;
                     this.MaxReceiveSize = 1024 + 12;
                 }
@@ -95,10 +116,10 @@ namespace PcmHacking
                     this.MaxReceiveSize = 128 + 12;
                 }
 
-                // Setting timeout to maximum. Since we use STPX commands, the device will stop
-                // listening when it receives the expected number of responses, rather than 
-                // waiting for the timeout.
-                this.Logger.AddDebugMessage(await this.SendRequest("AT ST FF"));
+                // Setting timeout to a large value. Since we use STPX commands,
+                // the device will stop listening when it receives the expected
+                // number of responses, rather than waiting for the timeout.
+                this.Logger.AddDebugMessage(await this.SendRequest("STPTO 3000"));
 
             }
             catch (Exception exception)
@@ -109,6 +130,104 @@ namespace PcmHacking
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Get the time required for the given scenario.
+        /// </summary>
+        public override int GetTimeoutMilliseconds(TimeoutScenario scenario, VpwSpeed speed)
+        {
+            int milliseconds;
+
+            if (speed == VpwSpeed.Standard)
+            {
+                switch (scenario)
+                {
+                    case TimeoutScenario.Minimum:
+                        milliseconds = 0;
+                        break;
+
+                    case TimeoutScenario.ReadProperty:
+                        milliseconds = 25;
+                        break;
+
+                    case TimeoutScenario.ReadCrc:
+                        milliseconds = 100;
+                        break;
+
+                    case TimeoutScenario.ReadMemoryBlock:
+                        milliseconds = 250;
+                        break;
+
+                    case TimeoutScenario.EraseMemoryBlock:
+                        milliseconds = 3000;
+                        break;
+
+                    case TimeoutScenario.WriteMemoryBlock:
+                        milliseconds = 140; // 125 works, added some for safety
+                        break;
+
+                    case TimeoutScenario.SendKernel:
+                        milliseconds = 50;
+                        break;
+
+                    case TimeoutScenario.DataLogging1:
+                        milliseconds = 25;
+                        break;
+
+                    case TimeoutScenario.DataLogging2:
+                        milliseconds = 40;
+                        break;
+
+                    case TimeoutScenario.DataLogging3:
+                        milliseconds = 60;
+                        break;
+
+                    case TimeoutScenario.DataLogging4:
+                        milliseconds = 80;
+                        break;
+
+                    case TimeoutScenario.DataLoggingStreaming:
+                        // This is hacky, but the code path is not supported anyway.
+                        // I had hoped to use ATMA or STMA to monitor the bus and log
+                        // data, but that hasn't worked.  Also see SetTimeoutMilliseconds.
+                        milliseconds = -1;
+                        break;
+
+                    case TimeoutScenario.Maximum:
+                        return 1020;
+
+                    default:
+                        throw new NotImplementedException("Unknown timeout scenario " + scenario);
+                }
+            }
+            else
+            {
+                throw new NotImplementedException("Since when did ScanTool devices support 4x?");
+            }
+
+            return milliseconds;
+        }
+
+        /// <summary>
+        /// Set the timeout to the device. If this is set too low, the device
+        /// will return 'No Data'. The ST Equivalent timeout command doesn't have
+        /// the same 1020 millisecond limit since it takes an integer milliseconds
+        /// as a paramter.
+        /// </summary>
+        public override async Task<bool> SetTimeoutMilliseconds(int milliseconds)
+        {
+            if (milliseconds == -1)
+            {
+                // This doesn't actually work yet, but I think it should be possible.
+                // To test this code path, change this value in the constructor:
+                // this.SupportsStreamLogging = false;
+                return await this.SendAndVerify("STMA", "");
+            }
+            else
+            {
+                return await this.SendAndVerify("STPTO " + milliseconds, "OK");
+            }           
         }
 
         /// <summary>
@@ -132,12 +251,20 @@ namespace PcmHacking
             int responses;
             switch (this.TimeoutScenario)
             {
+                case TimeoutScenario.DataLogging4:
+                    responses = 4;
+                    break;
+
                 case TimeoutScenario.DataLogging3:
                     responses = 3;
                     break;
 
                 case TimeoutScenario.DataLogging2:
                     responses = 2;
+                    break;
+
+                case TimeoutScenario.DataLogging1:
+                    responses = 1;
                     break;
 
                 default:
@@ -152,7 +279,10 @@ namespace PcmHacking
                 responses = 0;
             }
 
-            builder.AppendFormat(", R:{0}", responses);
+            if (this.TimeoutScenario != TimeoutScenario.DataLoggingStreaming)
+            {
+                builder.AppendFormat(", R:{0}", responses);
+            }
 
             if (messageBytes.Length < 200)
             {

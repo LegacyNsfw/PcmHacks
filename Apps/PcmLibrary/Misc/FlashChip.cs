@@ -141,6 +141,26 @@ namespace PcmHacking
                     };
                     break;
 
+                // AM29F400BB   
+                case 0x000122AB:
+                    size = 512 * 1024;
+                    description = "AMD AM29F400BB, 512kb";
+                    memoryRanges = new MemoryRange[]
+                    {
+                        new MemoryRange(0x70000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x60000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x50000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x40000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x30000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x20000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x10000, 0x10000, BlockType.Calibration), //  64kb calibration block
+                        new MemoryRange(0x08000, 0x08000, BlockType.Calibration), //  32kb calibration block
+                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //  8kb parameter block
+                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //  8kb parameter block
+                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
+                    };
+                    break;
+
                 // Both of these have eight 8kb blocks at the low end, the rest are
                 // 64kb. Not sure if they're actually used in any PCMs though.
                 case 0x00898893: // Intel 2F008B3 

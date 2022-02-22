@@ -10,13 +10,18 @@ namespace PcmHacking
     public enum TimeoutScenario
     {
         Undefined = 0,
+        Minimum,
         ReadProperty,
         ReadCrc,
         SendKernel,
         ReadMemoryBlock,
+        EraseMemoryBlock,
+        WriteMemoryBlock,
         DataLogging1,
         DataLogging2,
         DataLogging3,
+        DataLogging4,
+        DataLoggingStreaming,
         Maximum,
     }
 
@@ -56,6 +61,11 @@ namespace PcmHacking
         private int maxSendSize;
 
         /// <summary>
+        /// Queue of messages received from the VPW bus.
+        /// </summary>
+        private Queue<Message> queue = new Queue<Message>();
+
+        /// <summary>
         /// For the AllPro, we need to tell the interface how long to listen for incoming messages.
         /// For other devices this is not so critical, however I suspect it might still be useful to set serial-port timeouts.
         /// </summary>
@@ -70,20 +80,51 @@ namespace PcmHacking
         /// Maximum size of sent messages.
         /// </summary>
         /// <remarks>
-        /// Max send size is currently limited to 2k, because the kernel
-        /// crashes at startup with a 4k buffer.
-        /// TODO: Make the kernel happy with a 4k buffer, remove this limit.
+        /// This is protected, not public, because consumers should use MaxKernelSendSize or MaxFlashWriteSendSize.
         /// </remarks>
-        public int MaxSendSize
+        protected int MaxSendSize
         {
             get
             {
-                return Math.Min(2048+12, this.maxSendSize);
+                return this.maxSendSize;
             }
 
-            protected set
+            set
             {
                 this.maxSendSize = value;
+            }
+        }
+
+        /// <summary>
+        /// Maximum packet size when sending the kernel.
+        /// </summary>
+        /// <remarks>
+        /// For the P04 PCM, the kernel must be sent in a single message,
+        /// so the constraint that we use for flash writing needs to be 
+        /// ignored for that request.
+        /// </remarks>
+        public int MaxKernelSendSize
+        {
+            get
+            {
+                return this.maxSendSize;
+            }
+        }
+
+        /// <summary>
+        /// Maximum packet size when writing to flash memory.
+        /// </summary>
+        /// <remarks>
+        /// This is smaller than the device's actual max send size, for 3 reasons:
+        /// 1) P01/P59 kernels will currently crash with large writes.
+        /// 2) Large packets are increasingly susceptible to noise corruption on the VPW bus.
+        /// 3) Even on a clean VPW bus, the speed increases negligibly above 2kb.
+        /// </remarks>
+        public int MaxFlashWriteSendSize
+        {
+            get
+            {
+                return Math.Min(1024 + 12, this.maxSendSize);
             }
         }
 
@@ -98,19 +139,50 @@ namespace PcmHacking
         public bool Supports4X { get; protected set; }
 
         /// <summary>
+        /// Indicates whether or no the device supports logging just one DPID.
+        /// </summary>
+        /// <remarks>
+        /// ELM devices generally need at least two DPIDs to work. Apparently if
+        /// there is only one DPID, it comes back from the PCM before the device 
+        /// is ready to listen. So the device times out, and logging is broken.
+        /// </remarks>
+        public bool SupportsSingleDpidLogging { get; protected set; }
+
+        /// <summary>
+        /// Indicates whether or not the device supports stream data logging.
+        /// </summary>
+        /// <remarks>
+        /// The default approach to logging uses one message from the app to request
+        /// one row of data from the PCM.
+        /// 
+        /// The stream approach causes the PCM to send a continuous stream of data 
+        /// after the inital "start logging" request, which allows it to send 
+        /// 25%-50% more rows per second.
+        /// </remarks>
+        public bool SupportsStreamLogging { get; protected set; }
+
+        /// <summary>
         /// Number of messages recevied so far.
         /// </summary>
         public int ReceivedMessageCount { get { return this.queue.Count; } }
 
         /// <summary>
-        /// Queue of messages received from the VPW bus.
+        /// Gets the number of messages waiting in the receive queue.
         /// </summary>
-        private Queue<Message> queue = new Queue<Message>();
+        /// <remarks>
+        /// Probably only useful for debug messages.
+        /// </remarks>
+        protected int QueueSize { get { return this.queue.Count; } }
 
         /// <summary>
         /// Current speed of the VPW bus.
         /// </summary>
-        private VpwSpeed speed;
+        protected VpwSpeed Speed { get; private set; }
+
+        /// <summary>
+        /// Enable Disable VPW 4x.
+        /// </summary>
+        public bool Enable4xReadWrite { get; set; }
 
         /// <summary>
         /// Constructor.
@@ -123,7 +195,7 @@ namespace PcmHacking
             this.MaxSendSize = 100;
             this.MaxReceiveSize = 100;
             this.Supports4X = false;
-            this.speed = VpwSpeed.Standard;
+            this.Speed = VpwSpeed.Standard;
         }
 
         /// <summary>
@@ -187,6 +259,8 @@ namespace PcmHacking
             {
                 if (this.queue.Count > 0)
                 {
+                    // This can be useful for debugging, but is generally too noisy.
+                    // this.Logger.AddDebugMessage("Dequeue.");
                     return this.queue.Dequeue();
                 }
                 else
@@ -201,17 +275,17 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> SetVpwSpeed(VpwSpeed newSpeed)
         {
-            if (this.speed == newSpeed)
+            if (this.Speed == newSpeed)
             {
                 return true;
             }
 
-            if (!await this.SetVpwSpeedInternal(newSpeed))
+            if (((newSpeed == VpwSpeed.FourX) && !this.Enable4xReadWrite) || (!await this.SetVpwSpeedInternal(newSpeed)))
             {
                 return false;
             }
 
-            this.speed = newSpeed;
+            this.Speed = newSpeed;
             return true;
         }
 
@@ -242,7 +316,9 @@ namespace PcmHacking
         protected abstract Task Receive();
 
         /// <summary>
-        /// Calculates the time required for the given scenario at the current VPW speed.
+        /// This is no longer used, but is being kept for now since the comments
+        /// shed some light on the differences between AllPro and Scantool LX 
+        /// (probably not SX) interfaces.
         /// </summary>
         protected int GetVpwTimeoutMilliseconds(TimeoutScenario scenario)
         {
@@ -273,14 +349,14 @@ namespace PcmHacking
                     break;
 
                 case TimeoutScenario.SendKernel:
-                    packetSize = this.MaxSendSize + 20;
+                    packetSize = this.MaxKernelSendSize + 20;
                     break;
 
                 // Not tuned manually yet.
                 case TimeoutScenario.DataLogging1:
                     packetSize = 30;
                     break;
-                
+
                 // This one was tuned by hand to avoid timeouts with STPX, and it work well for the AllPro too.
                 case TimeoutScenario.DataLogging2:
                     packetSize = 47;
@@ -291,6 +367,16 @@ namespace PcmHacking
                     packetSize = 70;
                     break;
 
+                // TODO: Tune.
+                case TimeoutScenario.DataLogging4:
+                    packetSize = 90;
+                    break;
+
+                // TODO: Tune.
+                case TimeoutScenario.DataLoggingStreaming:
+                    packetSize = 0;
+                    break;
+
                 case TimeoutScenario.Maximum:
                     return 0xFF * 4; 
 
@@ -299,7 +385,7 @@ namespace PcmHacking
             }
 
             int bitsPerByte = 9; // 8N1 serial
-            double bitsPerSecond = this.speed == VpwSpeed.Standard ? 10.4 : 41.6;
+            double bitsPerSecond = this.Speed == VpwSpeed.Standard ? 10.4 : 41.6;
             double milliseconds = (packetSize * bitsPerByte) / bitsPerSecond;
 
             // Add 10% just in case.

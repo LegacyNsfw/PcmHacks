@@ -30,7 +30,7 @@ namespace PcmHacking
         /// Might be worth making this a parameter to the retry loops since
         /// in most cases when only need about 5.
         /// </remarks>
-        public const int MaxReceiveAttempts = 15;
+        public const int MaxReceiveAttempts = 5;
 
         /// <summary>
         /// The device we'll use to talk to the PCM.
@@ -65,11 +65,11 @@ namespace PcmHacking
             }
         }
 
-        public int DeviceMaxSendSize
+        public int DeviceMaxFlashWriteSendSize
         {
             get
             {
-                return this.device.MaxSendSize;
+                return this.device.MaxFlashWriteSendSize;
             }
         }
 
@@ -80,6 +80,37 @@ namespace PcmHacking
                 return this.device.MaxReceiveSize;
             }
         }
+
+        public bool Supports4X
+        {
+            get => this.device.Supports4X;
+        }
+
+        public bool Enable4xReadWrite
+        {
+            set
+            {
+                this.device.Enable4xReadWrite = value;
+            }
+
+            get => this.device.Enable4xReadWrite;
+        }
+
+        public Int32 UserDefinedKey
+        {
+            get; set;
+        } = -1;
+
+        /// <summary>
+        /// Silences Kernel ID reporting
+        /// </summary>
+        /// <remarks>
+        /// See note Vehicle.Kernel PCMExecute(...)
+        /// </remarks>
+        public bool ReportKernelID
+        {
+            get; set;
+        } = true;
 
         /// <summary>
         /// Constructor.
@@ -130,7 +161,9 @@ namespace PcmHacking
         /// </summary>
         public async Task<bool> ResetConnection()
         {
-            return await this.device.Initialize();
+            Task<bool> task = this.device.Initialize();
+            bool completedWithoutTimeout = await task.AwaitWithTimeout(TimeSpan.FromSeconds(10));
+            return task.Result;
         }
 
         /// <summary>
@@ -140,7 +173,7 @@ namespace PcmHacking
         /// <returns></returns>
         public async Task SendToolPresentNotification()
         {
-            if (!this.device.Supports4X && (this.device.MaxSendSize > 600 || this.device.MaxReceiveSize > 600))
+            if (!this.device.Supports4X && (this.device.MaxFlashWriteSendSize > 600 || this.device.MaxReceiveSize > 600))
             {
                 await this.notifier.ForceNotify();
             }
@@ -290,7 +323,16 @@ namespace PcmHacking
                 return true;
             }
 
-            UInt16 key = KeyAlgorithm.GetKey(keyAlgorithm, seedValue);
+            UInt16 key;
+            if (UserDefinedKey == -1)
+            {
+                key = KeyAlgorithm.GetKey(keyAlgorithm, seedValue);
+            }
+            else
+            {
+                this.logger.AddUserMessage($"User Defined Key: 0x{UserDefinedKey.ToString("X4")}");
+                key = (UInt16)UserDefinedKey;
+            }
 
             this.logger.AddDebugMessage("Sending unlock request (" + seedValue.ToString("X4") + ", " + key.ToString("X4") + ")");
             Message unlockRequest = this.protocol.CreateUnlockRequest(key);
@@ -391,7 +433,7 @@ namespace PcmHacking
                 Response<bool> response = filter(message);
                 if ((response.Status != ResponseStatus.Success) && (response.Status != ResponseStatus.Refused))
                 {
-                    this.logger.AddDebugMessage("Ignoring message: " + response.Status);
+                    this.logger.AddDebugMessage("Ignoring message: " + response.Status + "  " + message.ToString());
                     continue;
                 }
 
@@ -442,7 +484,7 @@ namespace PcmHacking
                 }
 
                 lastStatus = payloadResponse.Status;
-                this.logger.AddDebugMessage("Unable to process response: " + lastStatus);
+                this.logger.AddDebugMessage("Unable to process response: " + lastStatus + " " + payloadMessage.ToString());
             }
 
             return Response.Create<byte[]>(lastStatus, new byte[0]);

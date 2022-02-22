@@ -28,6 +28,11 @@ namespace PcmHacking
             this.Dpid = dpid;
             this.Payload = payload;
         }
+
+        public override string ToString()
+        {
+            return Utility.ToHex(this.Payload);
+        }
     }
 
     /// <summary>
@@ -35,11 +40,11 @@ namespace PcmHacking
     /// </summary>
     public class DpidCollection
     {
-        public byte[] Values { get; private set; }
+        public byte[] Dpids { get; private set; }
 
         public DpidCollection(byte[] dpids)
         {
-            this.Values = dpids;
+            this.Dpids = dpids;
         }
     }
 
@@ -95,26 +100,31 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Possibly over-engineered, I'll admit. But the Vehicle layer
+        /// is slightly less coupled to the protocol details this way.
+        /// </summary>
+        public enum DpidRequestType : byte
+        {
+            SingleRow = Submode.SingleRow,
+            Stream1 = Submode.Stream1,
+            Stream2 = Submode.Stream2
+        }
+
+        /// <summary>
         /// Create a request to read data from the PCM
         /// </summary>
-        public Message RequestDpids(DpidCollection dpids)
+        public Message RequestDpids(DpidCollection dpidCollection, DpidRequestType requestType)
         {
-#if FAST_LOGGING
-            // ResponseType values:
-            // 0x01 = send once
-            // 0x12 = send slowly
-            // 0x13 = send medium
-            // 0x14 = send medium
-            // 0x24 = send fast
-            byte responseType = 0x01;
-            byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, responseType };
-            byte[] padding = new byte[4];// { 0xFF, 0xFF, 0xFF, 0xFF };
-            IEnumerable<byte> test = padding.Take(5 - dpids.Values.Length);
-            return new Message(header.Concat(dpids.Values).Concat(test).ToArray());
-#else
-            byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, 0x01 };
-            return new Message(header.Concat(dpids.Values).ToArray());
-#endif
+            IEnumerable<byte> dpidBytes = dpidCollection.Dpids;
+            int length = dpidCollection.Dpids.Length;
+            if (length < 4)
+            {
+                byte padding = (requestType == DpidRequestType.SingleRow) ? (byte)0xFF : (byte)0x00;
+                dpidBytes = dpidBytes.Concat(Enumerable.Repeat((byte)padding, 4 - length));
+            }
+
+            byte[] header = new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.SendDynamicData, (byte)requestType };
+            return new Message(header.Concat(dpidBytes).ToArray());
         }
 
         /// <summary>
@@ -123,7 +133,17 @@ namespace PcmHacking
         public bool TryParseRawLogData(Message message, out RawLogData rawLogData)
         {
             ResponseStatus unused;
-            if (!TryVerifyInitialBytes(message.GetBytes(), new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x6A }, out unused))
+
+            // The priority byte changes from 6C to 8C after the first tool-present message is sent.
+            if (!TryVerifyInitialBytes(message.GetBytes(), new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x6A }, out unused)
+                &&
+                !TryVerifyInitialBytes(message.GetBytes(), new byte[] { 0x8C, DeviceId.Tool, DeviceId.Pcm, 0x6A }, out unused))
+            {
+                rawLogData = null;
+                return false;
+            }
+
+            if (message.Length < 11)
             {
                 rawLogData = null;
                 return false;

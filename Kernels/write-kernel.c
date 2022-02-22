@@ -92,17 +92,8 @@ void HandleFlashChipQuery()
 ///////////////////////////////////////////////////////////////////////////////
 void HandleCrcQuery()
 {
-	unsigned length = MessageBuffer[5];
-	length <<= 8;
-	length |= MessageBuffer[6];
-	length <<= 8;
-	length |= MessageBuffer[7];
-
-	unsigned address = MessageBuffer[8];
-	address <<= 8;
-	address |= MessageBuffer[9];
-	address <<= 8;
-	address |= MessageBuffer[10];
+	unsigned length = (MessageBuffer[5] << 16) + (MessageBuffer[6] << 8) + MessageBuffer[7];
+	unsigned address = (MessageBuffer[8] << 16) + (MessageBuffer[9] << 8) + MessageBuffer[10];
 
 	// Convert to names and types that match the CRC code.
 	unsigned char *message = (unsigned char*)address;
@@ -117,6 +108,7 @@ void HandleCrcQuery()
 	else
 	{
 		path = 2;
+		crcProcessSlice();
 	}
 
 	ElmSleep();
@@ -195,31 +187,7 @@ void HandleOperatingSystemQuery()
 ///////////////////////////////////////////////////////////////////////////////
 void HandleEraseBlock()
 {
-	unsigned address = MessageBuffer[5];
-	address <<= 8;
-	address |= MessageBuffer[6];
-	address <<= 8;
-	address |= MessageBuffer[7];
-
-	// Only allow known addresses for AMD.
-	// Intel full write is tested
-	if ((flashIdentifier >> 16) == 1) {
-		switch (address)
-		{
-		//	case 0: // Boot
-		case 0x004000: // Parameters
-		case 0x006000: // Parameters
-		case 0x008000: // Calibration
-		case 0x010000: // Calibration (P59 upper portion)
-			break;
-
-		default:
-			VariableSleep(2);
-			SendReply(0, 0x05, 0xFF, 0xFF);
-			return;
-		}
-	}
-
+	unsigned address = (MessageBuffer[5] << 16) + (MessageBuffer[6] << 8) + MessageBuffer[7];
 	uint8_t status = 0;
 
 	switch (flashIdentifier)
@@ -234,7 +202,8 @@ void HandleEraseBlock()
 			break;
 
 		default:
-			status = 0xFF;
+			VariableSleep(2);
+			SendReply(0, 0x05, 0xFF, 0xFF);
 			return;
 	}
 
@@ -294,6 +263,7 @@ unsigned char WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 	switch (flashIdentifier)
 	{
 	case FLASH_ID_INTEL_512:
+	case FLASH_ID_INTEL_1024:
 		return Intel_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
 
 	case FLASH_ID_AMD_1024:
@@ -307,7 +277,7 @@ unsigned char WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 ///////////////////////////////////////////////////////////////////////////////
 // Process an incoming message.
 ///////////////////////////////////////////////////////////////////////////////
-void ProcessMessage()
+void ProcessMessage(int iterations)
 {
 	if ((MessageBuffer[1] != 0x10) && (MessageBuffer[1] != 0xFE))
 	{
@@ -323,6 +293,11 @@ void ProcessMessage()
 
 	switch (MessageBuffer[3])
 	{
+	case 0x20:
+		LongSleepWithWatchdog();
+		Reboot(0xCC000000 | iterations);
+		break;
+
 	case 0x34:
 		HandleWriteRequestMode34();
 		ClearBreadcrumbBuffer();
@@ -433,12 +408,6 @@ KernelStart(void)
 	SendToolPresent(1, 2, 3, 4);
 	LongSleepWithWatchdog();
 
-	// This loop runs out quickly, to force the PCM to reboot, to speed up testing.
-	// The real kernel should probably loop for a much longer time (possibly forever),
-	// to allow the app to recover from any failures.
-	// If we choose to loop forever we need a good story for how to get out of that state.
-	// Pull the PCM fuse? Give the app button to tell the kernel to reboot?
-	// for(int iterations = 0; iterations < 100; iterations++)
 	uint32_t iterations = 0;
 	uint32_t timeout = 2500; // Timeout of 2500 = 2.2 seconds between messages. 5,000 = 3.9 seconds.
 	uint32_t lastMessage = (iterations - timeout) + 1;
@@ -449,8 +418,6 @@ KernelStart(void)
 		iterations++;
 
 		ScratchWatchdog();
-
-		crcProcessSlice();
 
 		char completionCode = 0xFF;
 		char readState = 0xFF;
@@ -486,21 +453,13 @@ KernelStart(void)
 		if (readState != 1)
 		{
 			SendToolPresent(0xBB, 0xBB, readState, readState);
-			LongSleepWithWatchdog();
 			continue;
 		}
 
 		lastMessage = iterations;
 		lastActivity = iterations;
 
-		// Did the tool just request a reboot?
-		if (MessageBuffer[3] == 0x20)
-		{
-			LongSleepWithWatchdog();
-			Reboot(0xCC000000 | iterations);
-		}
-
-		ProcessMessage();
+		ProcessMessage(iterations);
 	}
 
 	// This shouldn't happen. But, just in case...

@@ -22,6 +22,8 @@ namespace PcmHacking
 
         public bool Supports4X { get; protected set; }
 
+        public bool SupportsStreamLogging { get; protected set; }
+
         public TimeoutScenario TimeoutScenario { get; set; }
 
         protected readonly Action<Message> enqueue;
@@ -63,8 +65,19 @@ namespace PcmHacking
         public virtual async Task<bool> Initialize()
         {
             // This is common across all ELM-based devices.
-            await this.SendRequest(""); // send a cr/lf to prevent the ATZ failing.
-            this.Logger.AddDebugMessage(await this.SendRequest("AT Z"));  // reset
+            // Send a cr/lf to prevent the ATZ failing.
+            await this.SendRequest("");
+
+            // Reset
+            string response = await this.SendRequest("AT Z");
+            this.Logger.AddDebugMessage(response);
+
+            if(string.IsNullOrWhiteSpace(response))
+            {
+                this.Logger.AddDebugMessage($"No device found on {this.Port.ToString()}");
+                return false;
+            }
+
             this.Logger.AddDebugMessage(await this.SendRequest("AT E0")); // disable echo
             this.Logger.AddDebugMessage(await this.SendRequest("AT S0")); // no spaces on responses
 
@@ -86,6 +99,26 @@ namespace PcmHacking
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Get the time required for the given scenario.
+        /// </summary>
+        public virtual int GetTimeoutMilliseconds(TimeoutScenario scenario, VpwSpeed speed)
+        {
+            // This base class is only instantiated for device-independent initialization.
+            return 250;
+        }
+
+        /// <summary>
+        /// Set the timeout to the device. If this is set too low, the device
+        /// will return 'No Data'. ELM327 is limited to 1020 milliseconds maximum.
+        /// </summary>
+        public virtual async Task<bool> SetTimeoutMilliseconds(int milliseconds)
+        {
+           int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 255);
+           string value = parameter.ToString("X2");
+           return await this.SendAndVerify("AT ST " + value, "OK");
         }
 
         /// <summary>
@@ -114,12 +147,11 @@ namespace PcmHacking
         public async Task<string> SendRequest(string request)
         {
             this.Logger.AddDebugMessage("TX: " + request);
-            await this.Port.Send(Encoding.ASCII.GetBytes(request + " \r"));
-
+            
             try
             {
+                await this.Port.Send(Encoding.ASCII.GetBytes(request + " \r"));
                 string response = await ReadELMLine();
-
                 return response;
             }
             catch (TimeoutException)
@@ -145,7 +177,7 @@ namespace PcmHacking
                 return true;
             }
 
-            this.Logger.AddDebugMessage("Did not recieve expected response. " + actualResponse + " does not equal " + expectedResponse);
+            this.Logger.AddDebugMessage("Did not recieve expected response. Received \"" + actualResponse + "\" expected \"" + expectedResponse + "\"");
             return false;
         }
 
@@ -157,58 +189,44 @@ namespace PcmHacking
         /// </remarks>
         protected async Task<string> ReadELMLine()
         {
-            int buffersize = (MaxReceiveSize * 3) + 7; // payload with spaces (3 bytes per character) plus the longest possible prompt
-            byte[] buffer = new byte[buffersize];
+            // (MaxReceiveSize * 2) + 2 for Checksum + longest possible prompt. Minimum prompt 2 CR + 1 Prompt, +2 extra
+            int maxPayload = (MaxReceiveSize * 2) + 7;
 
-            // collect bytes until we hit the end of the buffer or see a CR or LF
-            int i = 0;
-            byte[] b = new byte[1]; // FIXME: If I dont copy to this buffer, and instead use buffer[i] inline in the next loop, the test for '>' does not work in the while clause.
-            do
+            // A buffer to receive a single byte.
+            byte[] b = new byte[1];
+
+            // Use StringBuilder to collect the bytes.
+            StringBuilder builtString = new StringBuilder();
+
+            for (int i = 0; i < maxPayload; i++)
             {
-                // TODO: check for -1 return value
+                // Receive a single byte.
                 await this.Port.Receive(b, 0, 1);
 
-                //this.Logger.AddDebugMessage("Byte: " + b[0].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(b));
-                buffer[i] = b[0];
-                i++;
-            } while ((i < buffersize) && (b[0] != '>')); // continue until the next prompt. TODO: try checking for \r here as well, see Issue #114 at GitHub.
-
-            //this.Logger.AddDebugMessage("Found terminator '>'");
-
-            // count the wanted bytes and replace CR with space
-            int wanted = 0;
-            int j;
-            for (j = 0; j < i; j++)
-            {
-                if (buffer[j] == 13) buffer[j] = 32; // CR -> Space
-                if (buffer[j] >= 32 && buffer[j] <= 126 && buffer[j] != '>') wanted++; // printable characters only, and not '>'
-            }
-
-            //this.Logger.AddDebugMessage(wanted + " bytes to keep from " + i);
-
-            // build a message of the correct length
-            // i is the length of the data in the original buffer
-            // j is pointer to the offset in the filtered buffer
-            // k is the pointer in to the original buffer
-            int k;
-            byte[] filtered = new byte[wanted]; // create a new filtered buffer of the correct size
-            for (k = 0, j = 0; k < i; k++) // start both buffers from 0, always increment the original buffer 
-            {
-                if (buffer[k] >= 32 && buffer[k] <= 126 && buffer[k] != '>') // do we want THIS byte?
+                // Is it the prompt '>'.
+                if (b[0] == '>')
                 {
-                    b[0] = buffer[k];
-                    //this.Logger.AddDebugMessage("Filtered Byte: " + buffer[k].ToString("X2") + " Ascii: " + System.Text.Encoding.ASCII.GetString(b));
-                    filtered[j++] = buffer[k];  // save it, and increment the pointer in the filtered buffer
+                    // Prompt found, we're done.
+                    break;
+                }
+
+                // Is it a CR
+                if (b[0] == 13)
+                {
+                    // CR found, replace with space.
+                    b[0] = 32;
+                }
+
+                // Printable characters only.
+                if (b[0] >= 32 && b[0] <= 126)
+                {
+                    // Append it to builtString.
+                    builtString.Append((char)b[0]);
                 }
             }
 
-            //this.Logger.AddDebugMessage("built filtered string kept " + j + " bytes filtered is " + filtered.Length + " long");
-            //this.Logger.AddDebugMessage("filtered: " + filtered.ToHex());
-            string line = System.Text.Encoding.ASCII.GetString(filtered).Trim(); // strip leading and trailing whitespace, too
-
-            //this.Logger.AddDebugMessage("Read \"" + line + "\"");
-
-            return line;
+            // Convert to string, trim and return
+            return builtString.ToString().Trim();
         }
 
         /// <summary>
@@ -226,23 +244,20 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Process responses from the EML/ST devices.
+        /// Process responses from the ELM/ST devices.
         /// </summary>
         protected bool ProcessResponse(string rawResponse, string context, bool allowEmpty = false)
         {
             if (string.IsNullOrWhiteSpace(rawResponse))
             {
-                this.Logger.AddDebugMessage(
-                    string.Format("Empty response to {0}. {1}",
-                    context,
-                    allowEmpty ? "That's OK" : "That's not OK."));
-
                 if (allowEmpty)
                 {
+                    this.Logger.AddDebugMessage("Empty response to " + context + ". OK.");
                     return true;
                 }
                 else
                 {
+                    this.Logger.AddDebugMessage("Empty response to " + context + ". That's not OK.");
                     return false;
                 }
             }

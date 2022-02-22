@@ -57,7 +57,7 @@ namespace PcmHacking
         /// </remarks>
         public Message CreateUploadRequest(int Address, int Size)
         {
-            byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, SubMode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, Submode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
             requestBytes[5] = unchecked((byte)(Size >> 8));
             requestBytes[6] = unchecked((byte)(Size & 0xFF));
             requestBytes[7] = unchecked((byte)(Address >> 16));
@@ -72,7 +72,15 @@ namespace PcmHacking
         /// </summary>
         public Response<bool> ParseUploadPermissionResponse(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6C, 0x34);
+            Response<bool> response = this.DoSimpleValidation(message, Priority.Physical0, Mode.PCMUploadRequest);
+
+            if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
+            {
+                return response;
+            }
+
+            // In case the PCM sends back a 7F message with an 8C priority byte...
+            return this.DoSimpleValidation(message, Priority.Physical0High, Mode.PCMUploadRequest);
         }
 
         /// <summary>
@@ -80,7 +88,7 @@ namespace PcmHacking
         /// </summary>
         public Response<bool> ParseUploadResponse(Message message)
         {
-            return this.DoSimpleValidation(message, 0x6D, 0x36);
+            return this.DoSimpleValidation(message, Priority.Block, Mode.PCMUpload);
         }
 
         /// <summary>
@@ -108,20 +116,12 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Parse the response to a read request. (Obsolete?)
-        /// </summary>
-        public Response<bool> ParseReadResponse(Message message)
-        {
-            return this.DoSimpleValidation(message, 0x6C, 0x35); 
-        }
-
-        /// <summary>
         /// Parse the payload of a read request.
         /// </summary>
         /// <remarks>
         /// It is the callers responsability to check the ResponseStatus for errors
         /// </remarks>
-        public Response<byte[]> ParsePayload(Message message, int length, int address)
+        public Response<byte[]> ParsePayload(Message message, int length, int expectedAddress)
         {
             ResponseStatus status;
             byte[] actual = message.GetBytes();
@@ -131,49 +131,60 @@ namespace PcmHacking
                 return Response.Create(status, new byte[0]);
             }
 
-            if (actual.Length < 10) // 7 byte header, 2 byte sum
+            // Ensure that we can read the data length and start address from the message.
+            if (actual.Length < 10) 
             {
                 return Response.Create(ResponseStatus.Truncated, new byte[0]);
             }
 
-            int raddr = ((actual[7] << 16) + (actual[8] << 8) + actual[9]);
-            if (raddr != address)
+            // Read the data length.
+            int dataLength = (actual[5] << 8) + actual[6];
+
+            // Read and validate the data start address.
+            int actualAddress = ((actual[7] << 16) + (actual[8] << 8) + actual[9]);
+            if (actualAddress != expectedAddress)
             {
                 return Response.Create(ResponseStatus.UnexpectedResponse, new byte[0]);
             }
 
-            byte[] result = new byte[length];
+            byte[] result = new byte[dataLength];
 
-            // Normal read
+            // Normal block
             if (actual[4] == 1)
             {
-                //Regular encoding should be an exact match for size
-                int rlen = (actual[5] << 8) + actual[6];
-                if (rlen != length) // did we get the expected length?
+                // With normal encoding, data length should be actual length minus header size
+                if (actual.Length - 12 < dataLength)
                 {
                     return Response.Create(ResponseStatus.Truncated, new byte[0]);
                 }
 
                 // Verify block checksum
                 UInt16 ValidSum = VpwUtilities.CalcBlockChecksum(actual);
-                int PayloadSum = (actual[rlen + 10] << 8) + actual[rlen + 11];
-                Buffer.BlockCopy(actual, 10, result, 0, length);
-                if (PayloadSum != ValidSum) return Response.Create(ResponseStatus.Error, result);
+                int PayloadSum = (actual[dataLength + 10] << 8) + actual[dataLength + 11];
+                Buffer.BlockCopy(actual, 10, result, 0, dataLength);
+                if (PayloadSum != ValidSum)
+                {
+                    return Response.Create(ResponseStatus.Error, result);
+                }
+
+                return Response.Create(ResponseStatus.Success, result);
             }
             // RLE block
-            else if (actual[4] == 2) // TODO check length
+            else if (actual[4] == 2)
             {
                 // This isnt going to work with existing kernels... need to support variable length.
-                int runLength = actual[5] << 8 + actual[6];
                 byte value = actual[10];
-                for (int index = 0; index < runLength; index++)
+                for (int index = 0; index < dataLength; index++)
                 {
                     result[index] = value;
                 }
+
                 return Response.Create(ResponseStatus.Error, result);
             }
-
-            return Response.Create(ResponseStatus.Success, result);
+            else
+            {
+                return Response.Create(ResponseStatus.Error, result);
+            }
         }
     }
 }

@@ -97,13 +97,14 @@ void ElmSleep()
 ///////////////////////////////////////////////////////////////////////////////
 void VariableSleep(unsigned int iterations)
 {
-	PrivateSleep(iterations, 15);
+	PrivateSleep(iterations, 250);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // All outgoing messages must be written into this buffer. The WriteMessage
 // function will copy from this buffer to the DLC. Resetting the buffer should
-// not really be necessary, but it helps to simplify debugging.
+// not really be necessary, but it helps to simplify debugging. Use sparingly,
+// this is a slow function and contributes to blocking the DLC.
 ///////////////////////////////////////////////////////////////////////////////
 void ClearMessageBuffer()
 {
@@ -230,8 +231,6 @@ void WriteMessage(unsigned char *start, unsigned short length, Segment segment)
 			ScratchWatchdog();
 			status = DLC_STATUS & 0x03;
 		}
-
-		ClearMessageBuffer();
 	}
 }
 
@@ -240,67 +239,46 @@ void WriteMessage(unsigned char *start, unsigned short length, Segment segment)
 ///////////////////////////////////////////////////////////////////////////////
 int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 {
-	//ScratchWatchdog();
+	ScratchWatchdog();
 	unsigned char status;
 
-	int countWDT = 0;
-	int iterations = 0;
-	int timeout = 10000;
-	int lastMessage = (iterations - timeout) + 1;
-
+	unsigned int iterations = 0;
 	int length = 0;
 	for (;;)
 	{
-	
-		if (countWDT > 25)
-		{
-			ScratchWatchdog();
-			countWDT = 0;
-		}
-		countWDT++;
+		ScratchWatchdog();
 		iterations++;
 
 		// If no message received for N iterations, exit.
-		//if ((length == 0) && iterations > (lastMessage + timeout)) return 0;
+		if (iterations > 0x30000)
+		{
+			return 0;
+		}
 
-		// Artificial message-length limit for debugging.
-		if (length == MessageBufferSize)
+		// Let us not overflow MessageBuffer.
+		if (length > MessageBufferSize)
 		{
 			*readState = 0xEE;
 			return length;
 		}
 
-		status = (DLC_STATUS & 0xE0) >> 5;
+		status = DLC_STATUS >> 5;
 		switch (status)
 		{
-		case 0: // No data to process. This wait period may need more tuning.
-			
-			if (length > 0)
-			{
-				VariableSleep(0);
-				break;
-			}
-			else
-			{
-				return 0; //if no data to process, go back to main loop
-				break;
-			}			
-		case 1: // Buffer contains data bytes.
-			lastMessage = iterations;
-			MessageBuffer[length++] = DLC_RECEIVE_FIFO;
+		case 0: // No data to process.
 			break;
-		case 2: // Buffer contains data followed by a completion code
-			lastMessage = iterations;
-			MessageBuffer[length++] = DLC_RECEIVE_FIFO;
-			break;
+		case 1: // Buffer contains 2-12 data bytes.
+		case 2: // Buffer contains data followed by a completion code.
 		case 4: // Buffer contains just one data byte.
-			lastMessage = iterations;
-			MessageBuffer[length++] = DLC_RECEIVE_FIFO;
+			do {
+				MessageBuffer[length++] = DLC_RECEIVE_FIFO;
+				status = (DLC_STATUS >> 5);
+			} while ( status == 1 || status == 2 || status == 4 );
+			iterations = 0; // reset the timer every byte received
 			break;
 		case 5: // Buffer contains a completion code, followed by more data bytes.
 		case 6: // Buffer contains a completion code, followed by a full frame.
 		case 7: // Buffer contains a completion code only.
-			lastMessage = iterations;
 			*completionCode = DLC_RECEIVE_FIFO;
 
 			// Not sure if this is necessary - the code works without it, but it seems
@@ -309,9 +287,12 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 
 			// If we return here when the length is zero, we'll never return
 			// any message data at all. Not sure why.
-			if (length == 0) 	return 0;
+			if (length == 0)
+			{
+				break;
+			}
 
-			if ((*completionCode & 0x30) == 0x30)
+			if (*completionCode & 0x30)
 			{
 				*readState = 2;
 				return 0;
@@ -320,13 +301,12 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 			*readState = 1;
 			return length;
 
-		case 3:  // Buffer overflow. What do do here?
+		case 3:  // Buffer overflow. What to do here?
 			// Just throw the message away and hope the tool sends again?
 			while (DLC_STATUS & 0xE0 == 0x60) MessageBuffer[length] = DLC_RECEIVE_FIFO;
 			*readState = 0x0B;
 			return 0;
 		}
-		//ScratchWatchdog();
 	}
 
 	// If we reach this point, the loop above probably just hit maxIterations.
@@ -389,14 +369,8 @@ void Reboot(unsigned int value)
 ///////////////////////////////////////////////////////////////////////////////
 void SendToolPresent(unsigned char b1, unsigned char b2, unsigned char b3, unsigned char b4)
 {
-	unsigned char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, 0x00, 0x00, 0x00, 0x00 };
-	toolPresent[4] = b1;
-	toolPresent[5] = b2;
-	toolPresent[6] = b3;
-	toolPresent[7] = b4;
-
+	unsigned char toolPresent[] = { 0x8C, 0xFE, 0xF0, 0x3F, b1, b2, b3, b4 };
 	WriteMessage(toolPresent, 8, Complete);
-	ClearMessageBuffer();
 }
 
 void SendToolPresent2(unsigned int value)
@@ -488,7 +462,7 @@ void HandleVersionQuery(uint8_t kernelType)
 	MessageBuffer[4] = 0x00;
 	MessageBuffer[5] = 0x01; // major
 	MessageBuffer[6] = 0x03; // minor
-	MessageBuffer[7] = 0x00; // patch
+	MessageBuffer[7] = 0x03; // patch
 	MessageBuffer[8] = kernelType; // AA = read, BB = write
 
 	// The AllPro and ScanTool devices need a short delay to switch from

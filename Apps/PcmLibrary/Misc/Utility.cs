@@ -148,7 +148,11 @@ namespace PcmHacking
                 var completedTask = await Task.WhenAny(task, Task.Delay(timeout, cts.Token));
                 if (completedTask == task)
                 {
+                    // Release the cancellation token.
                     cts.Cancel();
+
+                    // Ensure that exceptions from the task are propagated
+                    await task;
                     return true;
                 }
                 else
@@ -170,9 +174,9 @@ namespace PcmHacking
             }
             else
             {
-                if (writeType == WriteType.Full)
+                if ((writeType == WriteType.OsPlusCalibrationPlusBoot) || (writeType == WriteType.Full))
                 {
-                    logger.AddUserMessage("Changing PCM to operating system" + fileOs);
+                    logger.AddUserMessage("Changing PCM to operating system " + fileOs);
                 }
                 else if (writeType == WriteType.TestWrite)
                 {
@@ -194,18 +198,18 @@ namespace PcmHacking
         {
             if (retryCount == 0)
             {
-                logger.AddUserMessage("All write-request messages succeeded on the first try. You have an excellent connection to the PCM.");
+                logger.AddUserMessage("All " + operation.ToLower() + "-request messages succeeded on the first try. You have an excellent connection to the PCM.");
             }
             else if (retryCount < 3)
             {
-                logger.AddUserMessage("Write-request messages had to be re-sent " + (retryCount == 1 ? "once." : "twice."));
+                logger.AddUserMessage(operation + "-request messages had to be re-sent " + (retryCount == 1 ? "once." : "twice."));
             }
             else
             {
-                logger.AddUserMessage("Write request messages had to be re-sent " + retryCount + " times.");
+                logger.AddUserMessage(operation + "-request messages had to be re-sent " + retryCount + " times.");
             }
 
-            logger.AddUserMessage("We're not sure how much retrying is normal for a " + operation + " operation on a " + (flashChipSize / 1024).ToString() + "kb PCM."); 
+            logger.AddUserMessage("We're not sure how much retrying is normal for a " + operation.ToLower() + " operation on a " + (flashChipSize / 1024).ToString() + "kb PCM."); 
             logger.AddUserMessage("Please help by sharing your results in the PCM Hammer thread at pcmhacking.net.");
         }
 

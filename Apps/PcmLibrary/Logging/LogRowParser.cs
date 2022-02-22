@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,31 +10,61 @@ using DynamicExpresso;
 namespace PcmHacking
 {
     /// <summary>
-    /// Reads bytes from the PCM and turns them into readable strings.
+    /// Combines the raw value read from the PCM with string and double representations.
+    /// </summary>
+    public class PcmParameterValue
+    {
+        public string ValueAsString { get; set; }
+        public double ValueAsDouble { get; set; }
+    }
+
+    /// <summary>
+    /// Maps log columns to values.
+    /// </summary>
+    public class PcmParameterValues : Dictionary<LogColumn, PcmParameterValue>
+    {
+    }
+
+    /// <summary>
+    /// Reads bytes from the PCM and turns them into doubles and readable strings.
     /// </summary>
     public class LogRowParser
     {
-        private LogProfile profile;
+        private DpidConfiguration dpidConfiguration;
         private Dictionary<byte, byte[]> responseData = new Dictionary<byte, byte[]>();
         private HashSet<byte> dpidsReceived = new HashSet<byte>();
-        private int dpidsInProfile;
+        private int dpidCount;
+        
+        public bool IsComplete
+        {
+            get
+            {
+                foreach(var group in this.dpidConfiguration.ParameterGroups)
+                {
+                    if (!this.dpidsReceived.Contains(group.Dpid))
+                    {
+                        return false;
+                    }
+                }
 
-        public bool IsComplete { get { return this.dpidsInProfile == this.dpidsReceived.Count; } }
+                return true;
+            }
+        }
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        public LogRowParser(LogProfile profile)
+        public LogRowParser(DpidConfiguration profile)
         {
-            this.profile = profile;
+            this.dpidConfiguration = profile;
 
             // Create a place to put response data.
-            foreach (ParameterGroup group in this.profile.ParameterGroups)
+            foreach (ParameterGroup group in this.dpidConfiguration.ParameterGroups)
             {
                 responseData[(byte)group.Dpid] = new byte[6];
             }
 
-            this.dpidsInProfile = this.profile.ParameterGroups.Count;
+            this.dpidCount = this.dpidConfiguration.ParameterGroups.Count;
         }
 
         /// <summary>
@@ -42,11 +73,6 @@ namespace PcmHacking
         /// <param name="rawData"></param>
         public void ParseData(RawLogData rawData)
         {
-            if (this.IsComplete)
-            {
-                throw new InvalidOperationException("This log row is already complete.");
-            }
-
             this.responseData[rawData.Dpid] = rawData.Payload;
             this.dpidsReceived.Add(rawData.Dpid);
         }
@@ -55,77 +81,154 @@ namespace PcmHacking
         /// Evalutes all of the dpid payloads.
         /// </summary>
         /// <returns></returns>
-        public string[] Evaluate()
+        public PcmParameterValues Evaluate()
         {
-            List<string> result = new List<string>();
-            foreach (ParameterGroup group in this.profile.ParameterGroups)
+            PcmParameterValues results = new PcmParameterValues();
+            foreach (ParameterGroup group in this.dpidConfiguration.ParameterGroups)
             {
                 byte[] payload;
                 if (!this.responseData.TryGetValue((byte)group.Dpid, out payload))
                 {
-                    foreach (Parameter parameter in group.Parameters)
+                    foreach (LogColumn column in group.LogColumns)
                     {
-                        result.Add(string.Empty);
+                        results.Add(column, new PcmParameterValue() { ValueAsString = string.Empty, ValueAsDouble = 0 });
                     }
 
                     continue;
                 }
 
-                this.EvaluateDpidMessage(group, payload, result);
+                this.EvaluateDpidMessage(group, payload, results);
             }
 
-            return result.ToArray();
+            return results;
         }
 
         /// <summary>
         /// Evaluates the payloads from a single dpid / group of parameters.
         /// </summary>
-        private void EvaluateDpidMessage(ParameterGroup group, byte[] payload, List<string> result)
+        private void EvaluateDpidMessage(ParameterGroup group, byte[] payload, PcmParameterValues results)
         {
             int startIndex = 0;
-            foreach (ProfileParameter parameter in group.Parameters)
+            foreach (LogColumn column in group.LogColumns)
             {
-                int value = 0;
-                switch (parameter.ByteCount)
+                double value;
+                PcmParameter pcmParameter = column.Parameter as PcmParameter;
+                if (pcmParameter == null)
+                {
+                    continue;
+                }
+
+                switch (pcmParameter.ByteCount)
                 {
                     case 1:
                         if (startIndex < payload.Length)
                         {
-                            value = payload[startIndex++];
+                            if (pcmParameter.IsSigned)
+                            {
+                                value = (sbyte)payload[startIndex++];
+                            }
+                            else
+                            {
+                                value = (byte)payload[startIndex++];
+                            }                            
                         }
+                        else
+                        {
+                            value = 0;
+                        }
+
                         break;
 
                     case 2:
-                        if (startIndex < payload.Length)
+                        if (startIndex + 1 < payload.Length)
                         {
-                            value = payload[startIndex++];
+                            if (pcmParameter.IsSigned)
+                            {
+                                Int16 temp = (Int16)(payload[startIndex] << 8);
+                                temp += (byte)payload[startIndex + 1];
+                                value = temp;
+                            }
+                            else
+                            {
+                                UInt16 temp = (UInt16)(payload[startIndex] << 8);
+                                temp += payload[startIndex + 1];
+                                value = temp;
+                            }
+
+                            startIndex += 2;
+                        }
+                        else
+                        {
+                            value = 0;
                         }
 
-                        value <<= 8;
-
-                        if (startIndex < payload.Length)
-                        {
-                            value |= payload[startIndex++];
-                        }
                         break;
 
                     default:
                         throw new InvalidOperationException("ByteCount must be 1 or 2");
                 }
 
-                Interpreter interpreter = new Interpreter();
-                interpreter.SetVariable("x", value);
-                double converted = interpreter.Eval<double>(parameter.Conversion.Expression);
-
-                string format = parameter.Conversion.Format;
-                if (string.IsNullOrWhiteSpace(format))
+                if (column.Conversion.Expression == "0x")
                 {
-                    format = "0.00";
+                    string format = pcmParameter.ByteCount == 1 ? "X2" : "X4";
+
+                    results.Add(
+                        column,
+                        new PcmParameterValue()
+                        {
+                            ValueAsDouble = value,
+                            ValueAsString = value.ToString(format)
+                        });
                 }
+                else
+                {
+                    double convertedValue = 0;
+                    string formattedValue;
 
-                string strung = converted.ToString(format);
+                    if (column.Conversion.IsBitMapped)
+                    {
+                        int bits = (int)value;
+                        bits = bits >> column.Conversion.BitIndex;
+                        bool flag = (bits & 1) != 0;
 
-                result.Add(strung);
+                        convertedValue = value;
+                        formattedValue = flag ? column.Conversion.TrueValue : column.Conversion.FalseValue;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            Interpreter interpreter = new Interpreter();
+                            interpreter.SetVariable("x", value);
+
+                            convertedValue = interpreter.Eval<double>(column.Conversion.Expression);
+                        }
+                        catch (Exception exception)
+                        {
+                            throw new InvalidOperationException(
+                                string.Format("Unable to evaluate expression \"{0}\" for parameter \"{1}\"",
+                                    column.Conversion.Expression,
+                                    column.Parameter.Name),
+                                exception);
+                        }
+
+                        string format = column.Conversion.Format;
+                        if (string.IsNullOrWhiteSpace(format))
+                        {
+                            format = "0.00";
+                        }
+
+                        formattedValue = convertedValue.ToString(format);
+                    }
+
+                    results.Add(
+                        column,
+                        new PcmParameterValue()
+                        {
+                            ValueAsDouble = convertedValue,
+                            ValueAsString = formattedValue
+                        });
+                }
             }
         }
     }

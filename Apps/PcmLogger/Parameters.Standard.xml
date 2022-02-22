@@ -1,0 +1,1619 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Parameters>
+    <Parameter
+        id="0003"
+        name="Fueling Mode"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="0004"
+        name="Engine Load"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x/2.55)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="0005"
+        name="ECT Sensor"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="°C" expression="(x-40)" format="0.00" />
+        <Conversion units="°F" expression="(x-40) * 1.8 + 32.0" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="0006"
+        name="Short Term FT Left Bank"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="0007"
+        name="Long Term FT Left Bank"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="0008"
+        name="Short Term FT Right Bank"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="0009"
+        name="Long Term FT Right Bank"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="000B"
+        name="MAP Sensor"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="kPa" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="000C"
+        name="Engine Speed"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="RPM" expression="x*0.25" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="000D"
+        name="Vehicle Speed Sensor"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="kph" expression="x" format="0.00" />
+        <Conversion units="mph" expression="(x*0.60934)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="000E"
+        name="Ignition Timing"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="°" expression="(x/2)-64" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="000F"
+        name="IAT Sensor"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="°C" expression="(x-40)" format="0.00" />
+        <Conversion units="°F" expression="((x-40) * 1.8 + 32.0)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="0010"
+        name="MAF Sensor"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="g/s" expression="(x/100)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="0011"
+        name="Throttle Position"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x*100)/255" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="0012"
+        name="Commanded Secondary Air"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="TBD" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="0013"
+        name="O2 Sensor Configuration"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Type #" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="0014"
+        name="O2 Left Upstream"
+        description=""	
+        storageType="int16"
+        bitMapped="False">
+        <Conversion units="Volts" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="0015"
+        name="O2 Left Downstream"
+        description=""	
+        storageType="int16"
+        bitMapped="False">
+        <Conversion units="Volts" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="0016"
+        name="Secondary Position"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Degrees" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="0017"
+        name="Secondary Velocity"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Deg/Sec" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="0018"
+        name="O2 Right Upstream"
+        description=""	
+        storageType="int16"
+        bitMapped="False">
+        <Conversion units="Volts" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="0019"
+        name="O2 Right Downstream"
+        description=""	
+        storageType="int16"
+        bitMapped="False">
+        <Conversion units="Volts" expression="x" format="0" />
+    </Parameter>
+
+    <Parameter
+        id="1100"
+        name="A/C Relay Command"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="3">
+        <Conversion units="Boolean" expression="On,Off" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1100"
+        name="A/C Request Signal"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="On,Off" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1100"
+        name="A/C Clutch Feedback Signal"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="On,Off" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1100"
+        name="PCM Reset"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="True,False" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1100"
+        name="GEN L-Terminal Signal Command"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="7">
+        <Conversion units="Boolean" expression="True,False" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1101"
+        name="EVAP Vent Solenoid Command"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="VTD Fuel Disable"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="Enable,Disable" format="0" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="TCC Enable Solenoid Command"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="Traction Control Status"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="Active,Inactive" format="0" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="Powertrain Induced Chassis Pitch Command"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="5">
+        <Conversion units="Boolean" expression="Active,Inactive" format="0" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="Extended Travel Brake Pedal Switch"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="6">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1102"
+        name="TCC/Cruise Brake Pedal Switch"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="3">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1103"
+        name="Reduced Engine Power"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="7">
+        <Conversion units="Boolean" expression="Reduced,Normal" format="0" />
+    </Parameter>
+    <Parameter
+        id="1103"
+        name="Engine Oil Level Switch"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="5">
+        <Conversion units="Boolean" expression="Low,Normal" format="0" />
+    </Parameter>
+    <Parameter
+        id="1103"
+        name="MIL Command"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1104"
+        name="Cruise Control Active"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="4">
+        <Conversion units="Boolean" expression="Active,Inactive" format="0" />
+    </Parameter>
+    <Parameter
+        id="1104"
+        name="DTC Set This Ignition"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="Set,Not Set" format="0" />
+    </Parameter>
+    <Parameter
+        id="1104"
+        name="AIR Solenoid Command "
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1104"
+        name="AIR Pump Relay Command "
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1105"
+        name="Loop Status"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="Open,Closed" format="0" />
+    </Parameter>
+    <Parameter
+        id="1105"
+        name="Decel"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="7">
+        <Conversion units="Boolean" expression="Active,Inactive" format="0" />
+    </Parameter>
+    <Parameter
+        id="1105"
+        name="Fuel Trim Learn"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="5">
+        <Conversion units="Boolean" expression="Active,Inactive" format="0" />
+    </Parameter>
+    <Parameter
+        id="1105"
+        name="Cold Startup"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="6">
+        <Conversion units="Boolean" expression="Yes,No" format="0" />
+    </Parameter>
+    <Parameter
+        id="1106"
+        name="FC Relay 1 Command"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1106"
+        name="FC Relay 2 and 3 Command"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1107"
+        name="Throttle Status"
+        description=""	
+        storageType="uint8"
+        bitMapped="False"
+        comment="This actually is bitmapped but the bits are unknown.">
+        <Conversion units="Bitmap" expression="x" format="0" />
+    </Parameter>    
+    <Parameter
+        id="1108"
+        name="Pending 1"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>       
+    <Parameter
+        id="1109"
+        name="Pending 2"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>       
+    <Parameter
+        id="110A"
+        name="Pending 3"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>       
+    <Parameter
+        id="110B"
+        name="TBD"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>       
+    <Parameter
+        id="110C"
+        name="QDASR 0"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>       
+    <Parameter
+        id="110D"
+        name="QDASR 1"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>       
+    <Parameter
+        id="110E"
+        name="QDASR 2"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>    
+    <Parameter
+        id="110F"
+        name="MWSPIN2"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>    
+    <Parameter
+        id="1110"
+        name="1110 Undefined"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1111"
+        name="TBD Sw"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1112"
+        name="TFP Sw"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1113"
+        name="TR Sw"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="0">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1115"
+        name="TAC/PCM Communication Signal"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="7">
+        <Conversion units="Boolean" expression="Good,Bad" format="0" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="Cruise Resume/Accel"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="6">
+        <Conversion units="Boolean" expression="Presed,Relased" format="0" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="Cruise Set/Coast Switch"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="5">
+        <Conversion units="Boolean" expression="Pressed,Released" format="0" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="Cruise On/Off Switch"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="4">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="APP Sensor 1 and 2"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="0"
+        comment="Good,Bad?">
+        <Conversion units="Boolean" expression="True,False" format="0" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="Stoplamp Pedal Switch"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="7">
+        <Conversion units="Boolean" expression="On,Off" format="0" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="TP Sensors 1 and 2"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="3"
+        comment="Good,Bad?">
+        <Conversion units="Boolean" expression="True,False" format="0" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="APP Sensor 1 and 3"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="1">
+        <Conversion units="Boolean" expression="True,False" format="0" />
+    </Parameter>
+    <Parameter
+        id="1116"
+        name="APP Sensor 2 and 3"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="True,False" format="0" />
+    </Parameter>
+    <Parameter
+        id="1140"
+        name="MAF (high precision)"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="g/sec" expression="x*(512/65536)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1141"
+        name="Ignition 1 Signal"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volts" expression="(x/10)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1142"
+        name="MAP Sensor"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1143"
+        name="TP Sensor"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1144"
+        name="A/C Wideband A/F Ratio"
+        description=""
+        storageType="uint8"
+        bitMapped="False">
+      <Conversion units=":1" expression="((x/51.00) /.5) +9.58" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1144"
+        name="A/C High Side Pressure Sensor"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
+        <Conversion units="Kpa" expression="((x*1.833)-14.95)*6.895" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1145"
+        name="O2 Left Front"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1146"
+        name="O2 Left Rear"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1148"
+        name="O2 Right Front"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1149"
+        name="O2 Right Rear"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="mV" expression="(x/0.2304)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="114B"
+        name="EGR Sensor"
+        description=""
+        type="PID"
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volts?" expression="x/51" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="114B"
+        name="EGR Wideband A/F Ratio"
+        description=""
+        type="PID"
+        storageType="uint8"
+        bitMapped="False">
+    <Conversion units=":1" expression="((x/51.00) /.5) +9.58" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="114D"
+        name="GEN F-Terminal Signal"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x/2.55)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="114E"
+        name="Fuel Tank Pressure Sensor"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1151"
+        name="Accelerator Pedal"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Percent" expression="(x * (100 / 256))" format="0" />
+    </Parameter>
+    <Parameter
+        id="1155"
+        name="Fuel Level Sensor Left Tank"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="115C"
+        name="Engine Oil Pressure"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
+        <Conversion units="kpa" expression="(x * 4.326) - 110.313" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="115C"
+        name="Engine Oil Pressure Sensor"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Kpa" expression="((x*4.34)-104.2)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="115E"
+        name="Cam Sensor"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="116F"
+        name="Start Up ECT"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="°C" expression="(x-40)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1170"
+        name="EVAP Purge Solenoid Command"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x/2.55)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1171"
+        name="EGR Duty Cycle"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x/2.55)" format="0.00" />
+    </Parameter>    
+    <Parameter
+        id="1176"
+        name="Learned IAC Position"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Steps" expression="x" format="0" />
+    </Parameter>    
+    <Parameter
+        id="1179"
+        name="Current IAC Position"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Steps" expression="x" format="0" />
+    </Parameter>    
+    <Parameter
+        id="1190"
+        name="Fuel Trim Cell"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1192"
+        name="Desired Idle Speed"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="RPM" expression="(x*12.5)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="119D"
+        name="Barometric Pressure (sampled)"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="kPa" expression="(x+28)/2.71" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="119E"
+        name="Target A/F Ratio"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units=":1" expression="(x/10)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="119F"
+        name="Engine Oil Life Remaining"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x/2.55+0.5)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="11A1"
+        name="Engine Run Time"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Minutes" expression="x/60" format="0" />
+    </Parameter>
+    <Parameter
+        id="11A3"
+        name="Calculated Cat Temp"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="C" expression="x * 2050/256" format="0" />
+    </Parameter>
+    <Parameter
+        id="11A6"
+        name="Knock Retard"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="°" expression="(x*0.0879)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="11BD"
+        name="EGR Test Count"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+
+    <Parameter
+        id="11EA"
+        name="Misfire Current Cyl 5"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="11EB"
+        name="Misfire Current Cyl 6"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="11EC"
+        name="Misfire Current Cyl 7"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="11ED"
+        name="Misfire Current Cyl 8"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="11F8"
+        name="Misfire History Cyl 5"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="11F9"
+        name="Misfire History Cyl 6"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="11FA"
+        name="Misfire History Cyl 7"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="11FB"
+        name="Misfire History Cyl 8"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1201"
+        name="Misfire Current Cyl 1"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1202"
+        name="Misfire Current Cyl 2"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1203"
+        name="Misfire Current Cyl 3"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1204"
+        name="Misfire Current Cyl 4"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1205"
+        name="Misfire History Cyl 1"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1206"
+        name="Misfire History Cyl 2"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1207"
+        name="Misfire History Cyl 3"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />    
+    </Parameter>
+    <Parameter
+        id="1208"
+        name="Misfire History Cyl 4"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="120A"
+        name="Short Term FT Avg"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="120B"
+        name="Long Term FT Avg"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="120C"
+        name="Short Term FT Avg"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1227"
+        name="Total Misfire Fail"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1228"
+        name="Total Misfire Pass"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="122A"
+        name="Cycles of Misfire Data"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1232"
+        name="Warm-ups w/o Emission Faults"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1233"
+        name="Warm-ups w/o Non-Emission Faults"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1234"
+        name="Mileage Since DTC Cleared"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="km" expression="(x*5)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="123A"
+        name="Long Term FT Avg"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="(x-128)/1.28" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1250"
+        name="MAF Sensor Frequency"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Hz" expression="(x/2.048)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="125A"
+        name="Injector PWM Left Bank Average"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="ms" expression="(x/65.535)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="125B"
+        name="Injector PWM Right Bank Average"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="ms" expression="(x/65.535)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="125D"
+        name="Knock Retard"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x-128" format="0" />
+    </Parameter>
+    <Parameter
+        id="125E"
+        name="Knock Count"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="125F"
+        name="Delta Bearing"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="125B"
+        name="Injector PWM Bank 2 Average"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="ms" expression="(x/65.535)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12B0"
+        name="Accelerator Pedal Position"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="x / 1.11" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12B1"
+        name="TP Indicated Angle"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="%" expression="(x*5/256)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12B4"
+        name="APP Sensor 1"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12B5"
+        name="APP Sensor 2"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12B6"
+        name="APP Sensor 3"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12B7"
+        name="TP Sensor 1"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12B8"
+        name="TP Sensor 2"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12B9"
+        name="TP Sensor 2"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volt" expression="(x/51)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12BA"
+        name="TP Sensor 1"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volt" expression="(x/51)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12BB"
+        name="APP Sensor 3"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volt" expression="(x/51)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12BC"
+        name="APP Sensor 2"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volt" expression="(x/51)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12BD"
+        name="APP Sensor 1"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volt" expression="(x/51)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12C5"
+        name="Fuel Level"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="x / 2.55" format="0" />
+    </Parameter>
+    <Parameter
+        id="12E3"
+        name="Fuel Tank Pressure Sensor"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="mmHg" expression="-((x/5.46)-13.995)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12EE"
+        name="VTD Fuel Disable Until Ign"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="True,False" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12EE"
+        name="VTD Auto"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="3">
+        <Conversion units="Boolean" expression="True,False" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12EE"
+        name="PCM/VCM in VTD Fail Enable"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="4">
+        <Conversion units="Boolean" expression="True,False" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="12F3"
+        name="Ethanol Content"
+        description=""
+        storageType="uint8"
+        bitMapped="False">
+      <Conversion units="%" expression="x/2.55" format="0" />
+    </Parameter>
+    <Parameter
+          id="12F7"
+          name="Desired IAC Position"
+          description=""
+          storageType="uint8"
+          bitMapped="False">
+      <Conversion units="Counts" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1315"
+        name="Cruise Disengage 1 History"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1316"
+        name="Cruise Disengage 2 History"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1317"
+        name="Cruise Disengage 3 History"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1318"
+        name="Cruise Disengage 4 History"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1319"
+        name="Cruise Disengage 5 History"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="131A"
+        name="Cruise Disengage 6 History"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="131B"
+        name="Cruise Disengage 7 History"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="131C"
+        name="Cruise Disengage 8 History"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="131D"
+        name="Fuel Tank Rated Capacity"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Liters" expression="(x/64)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="131E"
+        name="TP Desired Angle"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="%" expression="(x*5/256)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="131F"
+        name="APP Indicated Angle"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="%" expression="(x*5/256)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="132A"
+        name="Fuel Tank Level Remaining (Unsupported)"
+        description=""	
+        storageType="uint16"
+        comment="Should be uint64, but that is not supported yet"
+        bitMapped="False">
+        <Conversion units="%" expression="x/100" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="132A"
+        name="Fuel Tank Level Remaining"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Liters" expression="(x/64)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="132B"
+        name="CMP Sensor - High to Low"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="132C"
+        name="CMP Sensor - Low to High"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1336"
+        name="Torque Request Signal"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="N-m" expression="(x*0.02646484375)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1337"
+        name="Torque Delivered Signal"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="N-m" expression="(x*0.02646484375)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1338"
+        name="Fuel Level Sensor Right Tank"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Volts" expression="(x/51)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="139C"
+        name="Ethanol Content Sensor Frequency"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Hz" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1481"
+        name="HO2S Heater Bn 1 Sen"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="amps" expression="((/50)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1482"
+        name="HO2S Heater Bn 1 Sen"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="amps" expression="(x/50)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1484"
+        name="HO2S Heater Bn 2 Sen"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="amps" expression="(x/50)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1485"
+        name="HO2S Heater Bn 1 Sen"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="amps" expression="(x/50)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1617"
+        name="Desired IAC Airflow"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="g/s" expression="x/1024" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1922"
+        name="Power Enrichment"
+        description=""	
+        storageType="uint8"
+        bitMapped="True"
+        bitIndex="2">
+        <Conversion units="Boolean" expression="Active,Inactive" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="1926"
+        name="TCC Mode"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+
+    <Parameter
+        id="192B"
+        name="TCC Offrsns"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="192C"
+        name="Trans Range"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1940"
+        name="Transmissinon Fluid Temperature"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="C" expression="x - 40" format="0" />
+    </Parameter>
+    <Parameter
+        id="1941"
+        name="Input Shaft Speed"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1942"
+        name="Output Shaft Speed"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="1991"
+        name="AT TCC Slip"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="199D"
+        name="VBS Pressure"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>    
+    <Parameter
+        id="19A0"
+        name="AT Shift Delay"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="19AD"
+        name="Transmission Temperature (Raw)"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="19F3"
+        name="Transmission Oil Temperature"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="19F4"
+        name="Transmission Ratio"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+    <Parameter
+        id="19F5"
+        name="Transmission Gear"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="Raw" expression="x" format="0" />
+    </Parameter>
+
+    <Parameter
+        id="199A"
+        name="Current Gear"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="Boolean" expression="x" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="FC05"
+        name="EGR PWM Duty Cycle"
+        description=""	
+        storageType="uint8"
+        bitMapped="False">
+        <Conversion units="%" expression="x*(100/256)" format="0.00" />
+    </Parameter>
+    <Parameter
+        id="FC05"
+        name="Target Equivalence Ratio"
+        description=""	
+        storageType="uint16"
+        bitMapped="False">
+        <Conversion units="EQR" expression="x / 1024" format="0.00" />
+    </Parameter>
+</Parameters>

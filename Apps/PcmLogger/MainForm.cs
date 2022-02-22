@@ -17,13 +17,15 @@ namespace PcmHacking
 {
     public partial class MainForm : MainFormBase
     {
-        private LogProfile profile;
-        private bool logging;
+        private bool saving;
         private object loggingLock = new object();
         private bool logStopRequested;
-        private string profileName;
         private TaskScheduler uiThreadScheduler;
-        private static DateTime lastLogTime;
+        private uint osid;
+
+        private const string appName = "PCM Logger";
+        private const string defaultFileName = "New Profile";
+        private string fileName = defaultFileName;
 
         /// <summary>
         /// Constructor
@@ -33,12 +35,20 @@ namespace PcmHacking
             InitializeComponent();
         }
 
+        #region MainFormBase override methods
+
         /// <summary>
         /// Not used.
         /// </summary>
         /// <param name="message"></param>
         public override void AddUserMessage(string message)
         {
+            // The logger app doesn't have a good place for this kind of thing,
+            // so messages are only sent to the debug pane. Important messages
+            // should be displayed in the parameters pane, however that only
+            // works if the logger is stopped, so it is done from the background
+            // thread that handles logging.
+            this.AddDebugMessage(message);
         }
 
         /// <summary>
@@ -77,9 +87,12 @@ namespace PcmHacking
 
         protected override void DisableUserInput()
         {
+            this.EnableProfileButtons(false);
+            this.profileList.Enabled = false;
+            this.parameterGrid.Enabled = false;
+            this.parameterSearch.Enabled = false;
             this.selectButton.Enabled = false;
-            this.selectProfileButton.Enabled = false;
-            this.startStopLogging.Enabled = false;
+            this.startStopSaving.Enabled = false;
         }
 
         protected override void EnableInterfaceSelection()
@@ -89,107 +102,185 @@ namespace PcmHacking
 
         protected override void EnableUserInput()
         {
+            this.EnableProfileButtons(true);
+            this.profileList.Enabled = true;
+            this.parameterGrid.Enabled = true;
+            this.parameterSearch.Enabled = true;
             this.selectButton.Enabled = true;
-            this.selectProfileButton.Enabled = true;
-            this.startStopLogging.Enabled = true;
+            this.startStopSaving.Enabled = true;
+            this.startStopSaving.Focus();
         }
 
         protected override void NoDeviceSelected()
         {
             this.selectButton.Enabled = true;
             this.deviceDescription.Text = "No device selected";
+
+            // This or ValidDeviceSelected will be called after the form loads.
+            // Either way, we should let users manipulate profiles.
+            this.EnableProfileButtons(true);
         }
 
-        protected override void ValidDeviceSelected(string deviceName)
+        protected override void SetSelectedDeviceText(string message)
         {
-            this.deviceDescription.Text = deviceName;
+            this.deviceDescription.Text = message;
         }
 
         /// <summary>
-        /// Open the last device, if possible.
+        /// This is invoked from within the call to base.ResetDevice().
         /// </summary>
-        private async void MainForm_Load(object sender, EventArgs e)
+        protected override async Task ValidDeviceSelectedAsync(string deviceName)
         {
-            this.uiThreadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            await this.ResetDevice();
-            string profilePath = LoggerConfiguration.ProfilePath;
-            if (!string.IsNullOrEmpty(profilePath))
+            this.AddDebugMessage("ValidDeviceSelectedAsync started.");
+            Response<uint> response = await this.Vehicle.QueryOperatingSystemId(new CancellationToken());
+            if (response.Status != ResponseStatus.Success)
             {
-                await this.LoadProfile(profilePath);
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.deviceDescription.Text = deviceName + " is unable to connect to the PCM";
+                });
+
+                return;
             }
 
-            string logDirectory = LoggerConfiguration.LogDirectory;
+            // This must be assigned prior to calling FillParameterGrid(), 
+            // otherwise the RAM parameters will not appear in the grid.
+            this.osid = response.Value;
+            
+            this.Invoke((MethodInvoker)delegate ()
+            {
+                this.deviceDescription.Text = deviceName + " " + osid.ToString();
+                this.startStopSaving.Enabled = true;
+                this.parameterGrid.Enabled = true;
+                this.EnableProfileButtons(true);
+                this.FillParameterGrid();
+            });
+
+            string lastProfile = Configuration.Settings.LastProfile;
+            if (!string.IsNullOrEmpty(lastProfile) && File.Exists(lastProfile))
+            {
+                this.Invoke((MethodInvoker)delegate ()
+                {
+                    this.OpenProfile(lastProfile);
+                });
+            }
+
+            // Start pulling data from the PCM
+            ThreadPool.QueueUserWorkItem(new WaitCallback(LoggingThread), null);
+
+            this.AddDebugMessage("ValidDeviceSelectedAsync ended.");
+        }
+
+        #endregion
+
+        #region Open / Close
+
+        /// <summary>
+        /// Open the most-recently-used device, if possible.
+        /// </summary>
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            // Order matters - the scheduler must be set before adding messages.
+            this.uiThreadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            this.AddDebugMessage("MainForm_Load started.");
+                        
+            string logDirectory = Configuration.Settings.LogDirectory;
             if (string.IsNullOrWhiteSpace(logDirectory))
             {
                 logDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                LoggerConfiguration.LogDirectory = logDirectory;
+                Configuration.Settings.LogDirectory = logDirectory;
+                Configuration.Settings.Save();
             }
 
+            // This just saves the trouble of having to keep a const string in 
+            // sync with whatever window text is entered in the designer view.
+            this.Text = appName;
+
+            this.EnableProfileButtons(false);
+
+            this.LoadProfileHistory();
+
+            ThreadPool.QueueUserWorkItem(BackgroundInitialization);
+
             this.logFilePath.Text = logDirectory;
+
+            this.AddDebugMessage("MainForm_Load ended.");
         }
+        
+        private async void BackgroundInitialization(object unused)
+        {
+            try
+            {
+                this.AddDebugMessage("Device reset started.");
+
+                // This will cause the ValidDeviceSelectedAsync callback to be invoked.
+                await this.ResetDevice();
+
+                this.AddDebugMessage("Device reset completed.");
+            }
+            catch (Exception exception)
+            {
+                // Don't try to log messages during shutdown, that doesn't end well
+                // because the window handle is no longer valid.
+                //
+                // There is still a race condition around using logStopRequested for
+                // this, but the only deterministic solution involves cross-thread 
+                // access to the Form object, which isn't allowed.
+                if (!this.logStopRequested) 
+                {
+                    this.Invoke(
+                        (MethodInvoker)
+                        delegate ()
+                        {
+                            if (!this.logStopRequested)
+                            {
+                                this.AddDebugMessage("BackgroundInitialization: " + exception.ToString());
+                            }
+                        });
+                }
+            }
+        }
+
+        private void EnableProfileButtons(bool enable)
+        {
+            this.newButton.Enabled = enable;
+            this.openButton.Enabled = enable;
+            this.saveButton.Enabled = enable;
+            this.saveAsButton.Enabled = enable;
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (this.currentProfileIsDirty)
+            {
+                if (this.SaveIfNecessary() == DialogResult.Cancel)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+
+            this.logStopRequested = true;
+
+            this.SaveProfileHistory();
+
+            // It turns out that WaitAll is not supported on an STA thread.
+            // WaitHandle.WaitAll(new WaitHandle[] { loggerThreadEnded, writerThreadEnded });
+            loggerThreadEnded.WaitOne(1000);
+            writerThreadEnded.WaitOne(1000);
+        }
+
+        #endregion
+
+        #region Button clicks
 
         /// <summary>
         /// Select which interface device to use. This opens the Device-Picker dialog box.
         /// </summary>
         protected async void selectButton_Click(object sender, EventArgs e)
         {
-            await this.HandleSelectButtonClick();
-            this.UpdateStartStopButtonState();
-        }
-
-        /// <summary>
-        /// Select a logging profile.
-        /// </summary>
-        private async void selectProfile_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.AddExtension = true;
-            dialog.CheckFileExists = true;
-            dialog.AutoUpgradeEnabled = true;
-            dialog.CheckPathExists = true;
-            dialog.DefaultExt = ".profile";
-            dialog.Multiselect = false;
-            dialog.ValidateNames = true;
-            dialog.Filter = "Logging profiles (*.profile)|*.profile";
-
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                await this.LoadProfile(dialog.FileName);
-            }
-            else
-            {
-                this.profile = null;
-                this.profileName = null;
-            }
-
-            this.UpdateStartStopButtonState();
-        }
-
-        /// <summary>
-        /// Load the profile from the given path.
-        /// </summary>
-        private async Task LoadProfile(string path)
-        {
-            try
-            {
-                using (Stream stream = File.OpenRead(path))
-                {
-                    LogProfileReader reader = new LogProfileReader(stream);
-                    this.profile = await reader.ReadAsync();
-                }
-
-                this.profilePath.Text = path;
-                this.profileName = Path.GetFileNameWithoutExtension(this.profilePath.Text);
-                this.logValues.Text = this.profile.GetParameterNames(Environment.NewLine);
-                LoggerConfiguration.ProfilePath = path;
-            }
-            catch (Exception exception)
-            {
-                this.logValues.Text = exception.Message;
-                this.AddDebugMessage(exception.ToString());
-                this.profilePath.Text = "[no profile loaded]";
-                this.profileName = null;
-            }
+            this.logStopRequested = true;
+            await base.HandleSelectButtonClick();
         }
 
         /// <summary>
@@ -198,10 +289,11 @@ namespace PcmHacking
         private void setDirectory_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog dialog = new FolderBrowserDialog();
-            dialog.SelectedPath = LoggerConfiguration.LogDirectory;
+            dialog.SelectedPath = Configuration.Settings.LogDirectory;
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                LoggerConfiguration.LogDirectory = dialog.SelectedPath;
+                Configuration.Settings.LogDirectory = dialog.SelectedPath;
+                Configuration.Settings.Save();
                 this.logFilePath.Text = dialog.SelectedPath;
             }
         }
@@ -211,203 +303,32 @@ namespace PcmHacking
         /// </summary>
         private void openDirectory_Click(object sender, EventArgs e)
         {
-            Process.Start(LoggerConfiguration.LogDirectory);
-        }
-
-        /// <summary>
-        /// Enable or disble the start/stop button.
-        /// </summary>
-        private void UpdateStartStopButtonState()
-        {
-            this.startStopLogging.Enabled = this.Vehicle != null && this.profile != null;
+            Process.Start(Configuration.Settings.LogDirectory);
         }
 
         /// <summary>
         /// Start or stop logging.
         /// </summary>
-        private void startStopLogging_Click(object sender, EventArgs e)
+        private void startStopSaving_Click(object sender, EventArgs e)
         {
-            if (logging)
+            if (saving)
             {
-                this.logStopRequested = true;
-                this.startStopLogging.Enabled = false;
-                this.startStopLogging.Text = "Start &Logging";
+                this.saving = false;
+                this.startStopSaving.Text = "Start &Recording";
+                this.loggerProgress.MarqueeAnimationSpeed = 0;
+                this.loggerProgress.Visible = false;
+                this.logState = LogState.StopSaving;
             }
             else
             {
-                lock (loggingLock)
-                {
-                    if (this.profile == null)
-                    {
-                        this.logValues.Text = "Please select a log profile.";
-                        return;
-                    }
-
-                    if (!logging)
-                    {
-                        logging = true;
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(LoggingThread), null);
-                        this.startStopLogging.Text = "Stop &Logging";
-                    }
-                }
+                this.saving = true;
+                this.startStopSaving.Text = "Stop &Recording";
+                this.loggerProgress.MarqueeAnimationSpeed = 100;
+                this.loggerProgress.Visible = true;
+                this.logState = LogState.StartSaving;
             }
         }
 
-        /// <summary>
-        /// The loop that reads data from the PCM.
-        /// </summary>
-        private async void LoggingThread(object threadContext)
-        {
-            using (AwayMode lockScreenSuppressor = new AwayMode())
-            try
-            {
-                string logFilePath = GenerateLogFilePath();
-
-                this.loggerProgress.Invoke(
-                (MethodInvoker)
-                delegate ()
-                {
-                    this.loggerProgress.Value = 0;
-                    this.loggerProgress.Visible = true;
-                    this.logFilePath.Text = logFilePath;
-                    this.setDirectory.Enabled = false;
-                });
-
-                Logger logger = new Logger(this.Vehicle, this.profile);
-                if (!await logger.StartLogging())
-                {
-                    this.AddUserMessage("Unable to start logging.");
-                    return;
-                }
-
-#if Vpw4x
-                if (!await this.Vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
-                {
-                    this.AddUserMessage("Unable to switch to 4x.");
-                    return;
-                }
-#endif                
-                using (StreamWriter streamWriter = new StreamWriter(logFilePath))
-                {
-                    LogFileWriter writer = new LogFileWriter(streamWriter);
-                    await writer.WriteHeader(this.profile);
-
-                    lastLogTime = DateTime.Now;
-
-                    this.loggerProgress.Invoke(
-                        (MethodInvoker)
-                        delegate ()
-                        {
-                            this.loggerProgress.MarqueeAnimationSpeed = 150;
-                            this.selectButton.Enabled = false;
-                            this.selectProfileButton.Enabled = false;
-                        });
-                        
-                    while (!this.logStopRequested)
-                    {
-                        this.AddDebugMessage("Requesting row...");
-                        string[] rowValues = await logger.GetNextRow();
-                        if (rowValues == null)
-                        {
-                            continue;
-                        }
-
-                        // Write the data to disk on a background thread.
-                        Task background = Task.Factory.StartNew(
-                            delegate ()
-                            {
-                                writer.WriteLine(rowValues);
-                            });
-                        
-                        // Display the data using a foreground thread.
-                        Task foreground = Task.Factory.StartNew(
-                            delegate ()
-                            {
-                                string formattedValues = FormatValuesForTextBox(rowValues);
-                                this.logValues.Text = string.Join(Environment.NewLine, formattedValues);
-                            },
-                            CancellationToken.None,
-                            TaskCreationOptions.None,
-                            uiThreadScheduler);
-                    }
-                }
-            }
-            catch (Exception exception)
-            {
-                this.AddDebugMessage(exception.ToString());
-                this.AddUserMessage("Logging interrupted. " + exception.Message);
-                this.logValues.Invoke(
-                    (MethodInvoker)
-                    delegate ()
-                    {
-                        this.logValues.Text = "Logging interrupted. " + exception.Message;
-                    });
-            }
-            finally
-            {
-#if Vpw4x
-                if (!await this.Vehicle.VehicleSetVPW4x(VpwSpeed.Standard))
-                {
-                    // Try twice...
-                    await this.Vehicle.VehicleSetVPW4x(VpwSpeed.Standard);
-                }
-#endif
-                this.logStopRequested = false;
-                this.logging = false;
-                this.startStopLogging.Invoke(
-                    (MethodInvoker)
-                    delegate ()
-                    {
-                        this.loggerProgress.MarqueeAnimationSpeed = 0;
-                        this.loggerProgress.Visible = false;
-                        this.startStopLogging.Enabled = true;
-                        this.startStopLogging.Text = "Start &Logging";
-                        this.logFilePath.Text = LoggerConfiguration.LogDirectory;
-                        this.setDirectory.Enabled = true;
-
-                        this.selectButton.Enabled = true;
-                        this.selectProfileButton.Enabled = true;
-                    });
-            }
-        }
-
-        /// <summary>
-        /// Generate a file name for the current log file.
-        /// </summary>
-        private string GenerateLogFilePath()
-        {
-            string file = DateTime.Now.ToString("yyyyMMdd_HHmm") +
-                "_" +
-                this.profileName +
-                ".csv";
-            return Path.Combine(LoggerConfiguration.LogDirectory, file);
-        }
-
-        /// <summary>
-        /// Create a string that will look reasonable in the UI's main text box.
-        /// TODO: Use a grid instead.
-        /// </summary>
-        private string FormatValuesForTextBox(string[] rowValues)
-        {
-            StringBuilder builder = new StringBuilder();
-            int index = 0;
-            foreach(ParameterGroup group in this.profile.ParameterGroups)
-            {
-                foreach(ProfileParameter parameter in group.Parameters)
-                {
-                    builder.Append(rowValues[index++]);
-                    builder.Append('\t');
-                    builder.Append(parameter.Conversion.Name);
-                    builder.Append('\t');
-                    builder.AppendLine(parameter.Name);
-                }
-            }
-
-            DateTime now = DateTime.Now;
-            builder.AppendLine((now - lastLogTime).TotalMilliseconds.ToString("0.00") + "\tms\tQuery time");
-            lastLogTime = now;
-
-            return builder.ToString();
-        }
+        #endregion
     }
 }

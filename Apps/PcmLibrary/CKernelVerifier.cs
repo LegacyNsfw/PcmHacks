@@ -45,21 +45,29 @@ namespace PcmHacking
             BlockType blockTypes,
             CancellationToken cancellationToken)
         {
-            logger.AddUserMessage("Calculating CRCs from file...");
+            // This only takes a fraction of a second.
+            logger.AddUserMessage("Calculating CRCs from file.");
             this.GetCrcFromImage();
-
-            logger.AddUserMessage("Requesting CRCs from PCM...");
-            await this.vehicle.SendToolPresentNotification();
 
             // The kernel will remember (and return) the CRC value of the last block it 
             // was asked about, which leads to misleading results if you only rewrite 
             // a single block. So we send a a bogus query to reset the last-used CRC 
             // value in the kernel.
+            //
+            // The first time we do this, the PCM will initialize the lookup table
+            // required by the CRC algorithm, which takes about 20 seconds. Warn the
+            // user, because the app appears to be hung while it waits for the response
+            // to this message.
+            logger.AddUserMessage("Initializing CRC algorithm on PCM, this will take a minute...");
+
+            await this.vehicle.SendToolPresentNotification();
             Query<UInt32> crcReset = this.vehicle.CreateQuery<uint>(
                 () => this.protocol.CreateCrcQuery(0, 0),
                 (message) => this.protocol.ParseCrc(message, 0, 0),
                 cancellationToken);
             await crcReset.Execute();
+
+            logger.AddUserMessage("Requesting CRCs from PCM.");
 
             await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadCrc);
             bool successForAllRanges = true;
@@ -88,15 +96,14 @@ namespace PcmHacking
                 bool success = false;
                 UInt32 crc = 0;
                 
-                // You might think that a shorter retry delay would speed things up,
-                // but 1500ms delay gets CRC results in about 3.5 seconds.
-                // A 1000ms delay resulted in 4+ second CRC responses, and a 750ms
-                // delay resulted in 5 second CRC responses. The PCM needs to spend
-                // its time caculating CRCs rather than responding to messages.
-                int retryDelay = 1500;
+                // Each poll of the pcm causes it to CRC 16kb of segment data.
+                // When the segment sum is available it is returned.
+                int retryDelay = 50;
                 Message query = this.protocol.CreateCrcQuery(range.Address, range.Size);
-                for (int attempts = 0; attempts < 10; attempts++)
+                for (int segment = 0; segment < 20; segment++)
                 {
+                    logger.StatusUpdateActivity($"Processing CRC for range {range.Address:X6}-{range.Address + (range.Size - 1):X6}, segment {segment + 1}");
+
                     if (cancellationToken.IsCancellationRequested)
                     {
                         break;
@@ -105,10 +112,6 @@ namespace PcmHacking
                     await this.vehicle.SendToolPresentNotification();
                     if (!await this.vehicle.SendMessage(query))
                     {
-                        // This delay is fast because we're waiting for the bus to be available,
-                        // rather than waiting for the PCM's CPU to finish computing the CRC as 
-                        // with the other two delays below.
-                        await Task.Delay(100);
                         continue;
                     }
 
@@ -152,6 +155,8 @@ namespace PcmHacking
                         range.DesiredCrc == range.ActualCrc ? "Same" : "Different",
                         range.Type));
             }
+
+            logger.StatusUpdateActivity(string.Empty);
 
             await this.vehicle.SendToolPresentNotification();
 

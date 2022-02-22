@@ -66,7 +66,7 @@ namespace PcmHacking
             if (DeviceId >= 0x80 && DeviceId <= 0x8F) return "entertainment system";
             if (DeviceId >= 0x90 && DeviceId <= 0x97) return "personal communications";
             if (DeviceId >= 0x98 && DeviceId <= 0x9F) return "climate control (HVAC)";
-            if (DeviceId >= 0xA0 && DeviceId <= 0xBF) return "convinience (door/seats/window/etc)";
+            if (DeviceId >= 0xA0 && DeviceId <= 0xBF) return "convenience (door/seats/window/etc)";
             if (DeviceId >= 0xC0 && DeviceId <= 0xC7) return "security module";
             if (DeviceId >= 0xC8 && DeviceId <= 0xCB) return "EV energy transfer system";
             if (DeviceId == 0xC8)                     return "utility connection service";
@@ -139,9 +139,9 @@ namespace PcmHacking
         public const byte ClearDiagnosticInformation = 0x14;
         public const byte ExitKernel = 0x20;
         public const byte SendDynamicData = 0x2A;
-        public const byte ConfigureDynamicData = 0x2C;
         public const byte Seed = 0x27;
         public const byte SilenceBus = 0x28;
+        public const byte ConfigureDynamicData = 0x2C;
         public const byte ReadBlock = 0x3C;
         public const byte PCMUploadRequest = 0x34;
         public const byte PCMUpload = 0x36;
@@ -153,7 +153,7 @@ namespace PcmHacking
     /// <summary>
     /// Sub-mode values. Note that the sub-modes vary by mode.
     /// </summary>
-    public static class SubMode
+    public static class Submode
     {
         public const byte Null = 0x00;
 
@@ -164,6 +164,11 @@ namespace PcmHacking
         public const byte Execute = 0x80;
 
         public const byte UploadOK = 0x00;
+
+        // Logging
+        public const byte SingleRow = 0x01;
+        public const byte Stream1 = 0x14;
+        public const byte Stream2= 0x24;
     }
 
     /// <summary>
@@ -174,14 +179,15 @@ namespace PcmHacking
         /// <summary>
         /// Calculate the checksum for a given block of VPW data.
         /// </summary>
-        public static UInt16 CalcBlockChecksum(byte[] Block)
+        public static UInt16 CalcBlockChecksum(byte[] block)
         {
             UInt16 Sum = 0;
-            int PayloadLength = (Block[5] << 8) + Block[6];
 
-            for (int i = 4; i < PayloadLength + 10; i++) // start after prio, dest, src, mode, stop at end of payload
+            // dataLength should be verified by caller, block.Length will prevent an Array out of bounds if not.
+            int dataLength = (block[5] << 8) + block[6];
+            for (int i = 4; i < dataLength + 10 && i < block.Length - 2; i++) // start after prio, dest, src, mode, stop at end of payload
             {
-                Sum += Block[i];
+                Sum += block[i];
             }
 
             return Sum;
@@ -193,19 +199,19 @@ namespace PcmHacking
         /// <remarks>
         /// Overwrites the last 2 bytes at the end of the array with the sum
         /// </remarks>
-        public static byte[] AddBlockChecksum(byte[] Block)
+        public static byte[] AddBlockChecksum(byte[] block)
         {
             UInt16 Sum = 0;
 
-            for (int i = 4; i < Block.Length - 2; i++) // skip prio, dest, src, mode
+            for (int i = 4; i < block.Length - 2; i++) // skip prio, dest, src, mode
             {
-                Sum += Block[i];
+                Sum += block[i];
             }
 
-            Block[Block.Length - 2] = unchecked((byte)(Sum >> 8));
-            Block[Block.Length - 1] = unchecked((byte)(Sum & 0xFF));
+            block[block.Length - 2] = unchecked((byte)(Sum >> 8));
+            block[block.Length - 1] = unchecked((byte)(Sum & 0xFF));
 
-            return Block;
+            return block;
         }
     }
 }

@@ -27,16 +27,20 @@ namespace PcmHacking
         /// Constructor.
         /// </summary>
         public AllProDeviceImplementation(
-            Action<Message> enqueue, 
-            Func<int> getRecievedMessageCount, 
-            IPort port, 
-            ILogger logger) : 
+            Action<Message> enqueue,
+            Func<int> getRecievedMessageCount,
+            IPort port,
+            ILogger logger) :
             base(enqueue, getRecievedMessageCount, port, logger)
         {
             // Please keep the left side easy to read in hex. Then add 12 bytes for VPW overhead.
             this.MaxSendSize = 1024 + 12;
-            this.MaxReceiveSize = 1024 + 12;   
+            this.MaxReceiveSize = 1024 + 12;
             this.Supports4X = true;
+
+            // For this to work, the AllPro would need a firmware update that
+            // adds ATMA support so that we could monitor the bus and log data. 
+            this.SupportsStreamLogging = false;
         }
 
         /// <summary>
@@ -83,6 +87,136 @@ namespace PcmHacking
             return true;
         }
 
+        /// <summary>
+        /// Get the time required for the given scenario.
+        /// </summary>
+        public override int GetTimeoutMilliseconds(TimeoutScenario scenario, VpwSpeed speed)
+        {
+            int milliseconds;
+
+            if (speed == VpwSpeed.Standard)
+            {
+                switch (scenario)
+                {
+                    case TimeoutScenario.Minimum:
+                        milliseconds = 0;
+                        break;
+
+                    case TimeoutScenario.ReadProperty:
+                        milliseconds = 25;
+                        break;
+
+                    case TimeoutScenario.ReadCrc:
+                        milliseconds = 100;
+                        break;
+
+                    case TimeoutScenario.ReadMemoryBlock:
+                        milliseconds = 300;
+                        break;
+
+                    case TimeoutScenario.EraseMemoryBlock:
+                        milliseconds = 1000;
+                        break;
+
+                    case TimeoutScenario.WriteMemoryBlock:
+                        milliseconds = 250;
+                        break;
+
+                    case TimeoutScenario.SendKernel:
+                        milliseconds = 50;
+                        break;
+
+                    case TimeoutScenario.DataLogging1:
+                        milliseconds = 25;
+                        break;
+
+                    case TimeoutScenario.DataLogging2:
+                        milliseconds = 40;
+                        break;
+
+                    case TimeoutScenario.DataLogging3:
+                        milliseconds = 60;
+                        break;
+
+                    case TimeoutScenario.DataLogging4:
+                        milliseconds = 75;
+                        break;
+
+                    case TimeoutScenario.DataLoggingStreaming:
+                        milliseconds = 0;
+                        break;
+
+                    case TimeoutScenario.Maximum:
+                        return 1020;
+
+                    default:
+                        throw new NotImplementedException("Unknown timeout scenario " + scenario);
+                }
+            }
+            else
+            {
+                switch (scenario)
+                {
+                    case TimeoutScenario.Minimum:
+                        milliseconds = 0;
+                        break;
+
+                    // The app doesn't currently do this in 4X mode, so this is only a guess.
+                    case TimeoutScenario.ReadProperty:
+                        milliseconds = 12;
+                        break;
+
+                    case TimeoutScenario.ReadCrc:
+                        milliseconds = 100;
+                        break;
+
+                    case TimeoutScenario.ReadMemoryBlock:
+                        milliseconds = 50;
+                        break;
+
+                    case TimeoutScenario.EraseMemoryBlock:
+                        milliseconds = 1000;
+                        break;
+
+                    case TimeoutScenario.WriteMemoryBlock:
+                        milliseconds = 170;
+                        break;
+
+                    case TimeoutScenario.SendKernel:
+                        milliseconds = 10;
+                        break;
+
+                    case TimeoutScenario.DataLogging1:
+                        milliseconds = 7;
+                        break;
+
+                    case TimeoutScenario.DataLogging2:
+                        milliseconds = 10;
+                        break;
+
+                    case TimeoutScenario.DataLogging3:
+                        milliseconds = 15;
+                        break;
+
+                    case TimeoutScenario.DataLogging4:
+                        milliseconds = 25;
+                        break;
+
+                    case TimeoutScenario.DataLoggingStreaming:
+                        milliseconds = 15;
+                        break;
+
+                    case TimeoutScenario.Maximum:
+                        return 1020;
+
+                    default:
+                        throw new NotImplementedException("Unknown timeout scenario " + scenario);
+                }
+            }
+
+            return milliseconds;
+        }
+            
         /// <summary>
         /// Send a message, do not expect a response.
         /// </summary>

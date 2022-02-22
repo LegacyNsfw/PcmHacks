@@ -38,6 +38,11 @@ namespace PcmHacking
         public string SerialPortDeviceType { get; set; }
 
         /// <summary>
+        /// Enable Disable VPW 4x.
+        /// </summary>
+        public bool Enable4xReadWrite { get; set; }
+
+        /// <summary>
         /// Prompt to put into drop-down lists to let the user know that they need to make a selection.
         /// </summary>
         private const string prompt = "Select...";
@@ -82,19 +87,32 @@ namespace PcmHacking
                 this.status.Text = "You don't seem to have any serial ports or J2534 devices.";
             }
 
-            SetDefault(this.serialPortList, Configuration.SerialPort);
-            SetDefault(this.serialDeviceList, Configuration.SerialPortDeviceType);
-            SetDefault(this.j2534DeviceList, Configuration.J2534DeviceType);
+            SetDefault(
+                this.serialPortList, 
+                x => (x as SerialPortInfo)?.PortName,
+                DeviceConfiguration.Settings.SerialPort);
+
+            SetDefault(
+                this.serialDeviceList,
+                x => x.ToString(),
+                DeviceConfiguration.Settings.SerialPortDeviceType);
+
+            SetDefault(
+                this.j2534DeviceList, 
+                x => x.ToString(),
+                DeviceConfiguration.Settings.J2534DeviceType);
+
+            this.Enable4xReadWrite = this.enable4xReadWriteCheckBox.Checked = DeviceConfiguration.Settings.Enable4xReadWrite;
         }
 
         /// <summary>
         /// Set a ComboBox to the given item.
         /// </summary>
-        private static void SetDefault(ComboBox list, string value)
+        private static void SetDefault(ComboBox list, Func<object, string> getConfigurationValue, string value)
         {
             foreach(object item in list.Items)
             {
-                if (item.ToString() == value)
+                if (getConfigurationValue(item) == value)
                 {
                     list.SelectedItem = item;
                     return;
@@ -110,12 +128,14 @@ namespace PcmHacking
             this.serialPortList.Items.Add(prompt);
             this.serialPortList.SelectedIndex = 0;
 
-            this.serialPortList.Items.Add(MockPort.PortName);
-            
-            foreach (string name in System.IO.Ports.SerialPort.GetPortNames())
+            foreach (object portInfo in PortDiscovery.GetPorts(this.logger))
             {
-                this.serialPortList.Items.Add(name);
+                this.serialPortList.Items.Add(portInfo);
             }
+
+            // This is useful for testing without an actual PCM. 
+            // You'll need to uncomment a line in FillSerialDeviceList as well as this one.
+            // this.serialPortList.Items.Add(MockPort.PortName);
         }
 
         /// <summary>
@@ -128,7 +148,10 @@ namespace PcmHacking
             this.serialDeviceList.Items.Add(ElmDevice.DeviceType);
             this.serialDeviceList.Items.Add(AvtDevice.DeviceType);
             this.serialDeviceList.Items.Add(OBDXProDevice.DeviceType);
-            this.serialDeviceList.Items.Add(MockDevice.DeviceType);
+
+            // This is useful for testing without an actual PCM.
+            // You'll need to uncomment a line in FillPortList as well as this one.
+            // this.serialDeviceList.Items.Add(MockDevice.DeviceType);
         }
 
         /// <summary>
@@ -156,7 +179,6 @@ namespace PcmHacking
         private void okButton_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.OK;
-            this.Close();
         }
 
         /// <summary>
@@ -165,7 +187,6 @@ namespace PcmHacking
         private void cancelButton_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.Cancel;
-            this.Close();
         }
 
         /// <summary>
@@ -177,7 +198,7 @@ namespace PcmHacking
             {
                 serialOptionsGroupBox.Enabled = true;
                 j2534OptionsGroupBox.Enabled = false;
-                this.DeviceCategory = Configuration.Constants.DeviceCategorySerial;
+                this.DeviceCategory = DeviceConfiguration.Constants.DeviceCategorySerial;
             }
         }
 
@@ -190,7 +211,7 @@ namespace PcmHacking
             {
                 serialOptionsGroupBox.Enabled = false;
                 j2534OptionsGroupBox.Enabled = true;
-                this.DeviceCategory = Configuration.Constants.DeviceCategoryJ2534;
+                this.DeviceCategory = DeviceConfiguration.Constants.DeviceCategoryJ2534;
             }
         }
 
@@ -199,7 +220,7 @@ namespace PcmHacking
         /// </summary>
         private void serialPortList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            this.SerialPort = this.serialPortList.SelectedItem?.ToString();
+            this.SerialPort = (this.serialPortList.SelectedItem as SerialPortInfo)?.PortName;
         }
 
         /// <summary>
@@ -207,7 +228,13 @@ namespace PcmHacking
         /// </summary>
         private void serialDeviceList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            this.SerialPortDeviceType = this.serialDeviceList.SelectedItem?.ToString();
+            string item = this.serialDeviceList.SelectedItem?.ToString();
+            if (item == prompt)
+            {
+                item = null;
+            }
+
+            this.SerialPortDeviceType = item;
         }
 
         /// <summary>
@@ -219,16 +246,24 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Enable/disable VPW 4x
+        /// </summary>
+        private void enable4xReadWriteCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            this.Enable4xReadWrite = this.enable4xReadWriteCheckBox.Checked;
+        }
+
+        /// <summary>
         /// Test the user's selections.
         /// </summary>
         private async void testButton_Click(object sender, EventArgs e)
         {
             Device device;
-            if (this.DeviceCategory == Configuration.Constants.DeviceCategorySerial)
+            if (this.DeviceCategory == DeviceConfiguration.Constants.DeviceCategorySerial)
             {
                 device = DeviceFactory.CreateSerialDevice(this.SerialPort, this.SerialPortDeviceType, this.logger);
             }
-            else if (this.DeviceCategory == Configuration.Constants.DeviceCategoryJ2534)
+            else if (this.DeviceCategory == DeviceConfiguration.Constants.DeviceCategoryJ2534)
             {
                 device = DeviceFactory.CreateJ2534Device(this.J2534DeviceType, this.logger);
             }

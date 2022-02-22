@@ -29,6 +29,8 @@ namespace PcmHacking
         /// </summary>
         public ElmDevice(IPort port, ILogger logger) : base(port, logger)
         {
+            // So far, no ELM devices support this.
+            this.SupportsSingleDpidLogging = false;
         }
 
         /// <summary>
@@ -70,6 +72,7 @@ namespace PcmHacking
                     () => this.ReceivedMessageCount,
                     this.Port, 
                     this.Logger);
+
                 if (await allProDevice.Initialize())
                 {
                     this.implementation = allProDevice;
@@ -105,15 +108,15 @@ namespace PcmHacking
                 this.MaxSendSize = this.implementation.MaxSendSize;
                 this.MaxReceiveSize = this.implementation.MaxReceiveSize;
                 this.Supports4X = this.implementation.Supports4X;
+                this.SupportsStreamLogging = this.implementation.SupportsStreamLogging;
+                return true;
             }
             catch (Exception exception)
             {
-                this.Logger.AddDebugMessage("Unable to initalize " + this.ToString());
+                this.Logger.AddUserMessage("Unable to initalize " + this.ToString());
                 this.Logger.AddDebugMessage(exception.ToString());
                 return false;
             }
-
-            return true;
         }
 
         private async Task<bool> SharedInitialization()
@@ -133,7 +136,7 @@ namespace PcmHacking
                 return this.currentTimeoutScenario;
             }
 
-            int milliseconds = this.GetVpwTimeoutMilliseconds(scenario);
+            int milliseconds = this.implementation.GetTimeoutMilliseconds(scenario, this.Speed);
             
             this.Logger.AddDebugMessage("Setting timeout for " + scenario + ", " + milliseconds.ToString() + " ms.");
 
@@ -142,7 +145,7 @@ namespace PcmHacking
             // this when sending the tool-present messages, but that might be coincidence.)
             //
             // Consider increasing if STOPPED / NO DATA is still a problem. 
-            this.Port.SetTimeout(milliseconds + 250);
+            this.Port.SetTimeout(milliseconds + 1000);
 
             // This code is so problematic that I've left it here as a warning. The app is
             // unable to receive the response to the erase command if this code is enabled.
@@ -157,9 +160,7 @@ namespace PcmHacking
             // I briefly tried hard-coding timeout values for the AT ST command,
             // but that's a recipe for failure. If the port timeout is shorter
             // than the device timeout, reads will consistently fail.
-            int parameter = Math.Min(Math.Max(1, (milliseconds / 4)), 255);
-            string value = parameter.ToString("X2");
-            await this.implementation.SendAndVerify("AT ST " + value, "OK");
+            await this.implementation.SetTimeoutMilliseconds(milliseconds);
             
             TimeoutScenario result = this.currentTimeoutScenario;
             this.currentTimeoutScenario = scenario;
