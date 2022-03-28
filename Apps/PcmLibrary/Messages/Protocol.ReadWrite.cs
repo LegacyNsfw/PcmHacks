@@ -56,13 +56,17 @@ namespace PcmHacking
         /// Note that mode 0x34 is only a request. The actual payload is sent as a mode 0x36.
         /// </remarks>
         public Message CreateUploadRequest(int Address, int Size)
-        {
+        { 
+#if P12
+            byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest };
+#else
             byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, Submode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
             requestBytes[5] = unchecked((byte)(Size >> 8));
             requestBytes[6] = unchecked((byte)(Size & 0xFF));
             requestBytes[7] = unchecked((byte)(Address >> 16));
             requestBytes[8] = unchecked((byte)(Address >> 8));
             requestBytes[9] = unchecked((byte)(Address & 0xFF));
+#endif
 
             return new Message(requestBytes);
         }
@@ -88,7 +92,11 @@ namespace PcmHacking
         /// </summary>
         public Response<bool> ParseUploadResponse(Message message)
         {
+#if P12
+            return this.DoSimpleValidation(message, Priority.Physical0, Mode.PCMUpload);
+#else
             return this.DoSimpleValidation(message, Priority.Block, Mode.PCMUpload);
+#endif
         }
 
         /// <summary>

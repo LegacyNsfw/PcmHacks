@@ -100,7 +100,7 @@ namespace PcmHacking
                 // When the segment sum is available it is returned.
                 int retryDelay = 50;
                 Message query = this.protocol.CreateCrcQuery(range.Address, range.Size);
-                for (int segment = 0; segment < 20; segment++)
+                for (int segment = 0; segment < 40; segment++)
                 {
                     logger.StatusUpdateActivity($"Processing CRC for range {range.Address:X6}-{range.Address + (range.Size - 1):X6}, segment {segment + 1}");
 

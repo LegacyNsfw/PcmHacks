@@ -5,6 +5,10 @@
     <RootNamespace>PcmHacking</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;P12</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Logging\MathValueConfiguration.cs" />
     <Compile Remove="Module.cs" />

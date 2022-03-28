@@ -70,7 +70,9 @@ namespace PcmHacking
 
             bool success = true;
             success &= this.ValidateSignatures();
+#if !P12
             success &= this.ValidateChecksums();
+#endif
             return success;
         }
 
@@ -101,10 +103,17 @@ namespace PcmHacking
             int osid = 0;
             if (image.Length == 512 * 1024 || image.Length == 1024 * 1024) // bin valid sizes
             {
+#if P12
+                osid += image[0x8004] << 24;
+                osid += image[0x8005] << 16;
+                osid += image[0x8006] << 8;
+                osid += image[0x8007] << 0;
+#else
                 osid += image[0x504] << 24;
                 osid += image[0x505] << 16;
                 osid += image[0x506] << 8;
                 osid += image[0x507] << 0;
+#endif
             }
 
             return (uint)osid;
@@ -163,6 +172,13 @@ namespace PcmHacking
         /// </summary>
         private bool ValidateSignatures()
         {
+#if P12
+            if ((image.Length != 1024 * 1024) || (image[0xFFFF8] != 0xAA) || (image[0xFFFF9] != 0x55))
+            {
+                this.logger.AddUserMessage("This file does not contain the expected signature at 0xFFFF8.");
+                return false;
+            }
+#else
             if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
             {
                 this.logger.AddUserMessage("This file does not contain the expected signature at 0x1FFFE.");
@@ -190,7 +206,7 @@ namespace PcmHacking
                 this.logger.AddUserMessage("Files of size " + image.Length.ToString("X8") + " are not supported.");
                 return false;
             }
-
+#endif
             return true;
         }
 

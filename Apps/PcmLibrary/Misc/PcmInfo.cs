@@ -10,7 +10,8 @@ namespace PcmHacking
     {
         Undefined = 0,
         P01_P59,
-        P04
+        P04,
+        P12
     }
 
     /// <summary>
@@ -609,7 +610,10 @@ namespace PcmHacking
                 //LL8 - Atlas I6 (4200) P12
                 case 12604440:
                 case 12606400:
-                    this.IsSupported = false;
+                    this.KernelFileName = "kernel-p12.bin";
+                    this.KernelBaseAddress = 0xFF2000;
+                    this.ValidationMethod = ValidationMethod.P12;
+                    this.IsSupported = true;
                     this.KeyAlgorithm = 91;
                     this.Description = "LL8 Atlas P12";
                     this.ImageBaseAddress = 0x0;
@@ -619,9 +623,23 @@ namespace PcmHacking
                 //L52 - Atlas I5 (3500) P12
                 case 12606374:
                 case 12606375:
-                    this.IsSupported = false;
+                    this.KernelFileName = "kernel-p12.bin";
+                    this.KernelBaseAddress = 0xFF2000;
+                    this.ValidationMethod = ValidationMethod.P12;
+                    this.IsSupported = true;
                     this.KeyAlgorithm = 91;
                     this.Description = "L52 Atlas P12";
+                    this.ImageBaseAddress = 0x0;
+                    this.ImageSize = 1024 * 1024;
+                    break;
+                //LK5 - Atlas I4 (2800) P12
+                case 12627883:
+                    this.KernelFileName = "kernel-p12.bin";
+                    this.KernelBaseAddress = 0xFF2000;
+                    this.ValidationMethod = ValidationMethod.P12;
+                    this.IsSupported = true;
+                    this.KeyAlgorithm = 91;
+                    this.Description = "LK5 Atlas P12";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 1024 * 1024;
                     break;
