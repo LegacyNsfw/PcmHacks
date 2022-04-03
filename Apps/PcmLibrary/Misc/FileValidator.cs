@@ -108,26 +108,31 @@ namespace PcmHacking
         public uint GetOsidFromImage()
         {
             int osid = 0;
-            
+
             if (image.Length == 512 * 1024 || image.Length == 1024 * 1024) // bin valid sizes
             {
                 PcmType type = this.ValidateSignatures();
-                if (type == PcmType.P12) // P10/P12
-                { 
-                    osid += image[0x8004] << 24;
-                    osid += image[0x8005] << 16;
-                    osid += image[0x8006] << 8;
-                    osid += image[0x8007] << 0;
-                }
-                else
-                {
-                    osid += image[0x504] << 24;
-                    osid += image[0x505] << 16;
-                    osid += image[0x506] << 8;
-                    osid += image[0x507] << 0;
+                switch (type) {
+                    case PcmType.P10:
+                        osid += image[0x52E] << 24;
+                        osid += image[0x52F] << 16;
+                        osid += image[0x530] << 8;
+                        osid += image[0x531] << 0;
+                        break;
+                    case PcmType.P12:
+                        osid += image[0x8004] << 24;
+                        osid += image[0x8005] << 16;
+                        osid += image[0x8006] << 8;
+                        osid += image[0x8007] << 0;
+                        break;
+                    case PcmType.P01_P59:
+                        osid += image[0x504] << 24;
+                        osid += image[0x505] << 16;
+                        osid += image[0x506] << 8;
+                        osid += image[0x507] << 0;
+                        break;
                 }
             }
-
             return (uint)osid;
         }
 
