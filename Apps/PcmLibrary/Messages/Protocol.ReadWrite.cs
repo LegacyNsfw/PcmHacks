@@ -110,7 +110,7 @@ namespace PcmHacking
             }
 
             //P01, P59
-            response = this.DoSimpleValidation(message, Priority.Block, Mode.PCMUploadRequest);
+            response = this.DoSimpleValidation(message, Priority.Block, Mode.PCMUpload);
             return response;
         }
 
