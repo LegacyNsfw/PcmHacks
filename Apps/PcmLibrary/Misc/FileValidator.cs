@@ -192,11 +192,27 @@ namespace PcmHacking
             // P10 / P12 type
             if (image.Length == 1024 * 1024)
             {
-                this.logger.AddDebugMessage("Trying P10/P12 1Mb");
+                this.logger.AddDebugMessage("Trying P12 1Mb");
                 if ((image[0xFFFF8] == 0xAA) && (image[0xFFFF9] == 0x55))
                 {
-                    this.logger.AddDebugMessage("Signature found at 0xFFFF8");
-                    return PcmType.P12; // also used for P10, but we dont know which we have yet.
+                    this.logger.AddDebugMessage("P12 Signature found at 0xFFFF8");
+                    return PcmType.P12;
+                }
+
+                this.logger.AddDebugMessage("Trying P10 1Mb");
+                if ((image[0x17FFE] == 0x55) && (image[0x017FFF] == 0x55))
+                {
+                    this.logger.AddDebugMessage("P10 Signature found at 0x017FFF");
+                    if ((image[0x7FFFC] == 0xA5) && (image[0x07FFFD] == 0x5A) && (image[0x7FFFE] == 0xA5) && (image[0x07FFFF] == 0xA5))
+                    {
+                        this.logger.AddDebugMessage("P10 Signature found at 0x7FFFC");
+                        return PcmType.P10;
+                    }
+                    else
+                    {
+                        this.logger.AddDebugMessage("P10 Signature not found at 0x7FFFC");
+                        return PcmType.Undefined;
+                    }
                 }
             }
 
