@@ -69,10 +69,17 @@ namespace PcmHacking
             }
 
             bool success = true;
-            success &= this.ValidateSignatures();
-#if !P12
-            success &= this.ValidateChecksums();
-#endif
+            PcmType type = this.ValidateSignatures();
+            if (type == PcmType.Undefined) success = false;
+
+            if (type != PcmType.P12)
+            {
+                success &= this.ValidateChecksums();
+            }
+            else
+            {
+                this.logger.AddUserMessage("TODO: Add support for P10/P12 file checksum validation");
+            }
             return success;
         }
 
@@ -101,19 +108,24 @@ namespace PcmHacking
         public uint GetOsidFromImage()
         {
             int osid = 0;
+            
             if (image.Length == 512 * 1024 || image.Length == 1024 * 1024) // bin valid sizes
             {
-#if P12
-                osid += image[0x8004] << 24;
-                osid += image[0x8005] << 16;
-                osid += image[0x8006] << 8;
-                osid += image[0x8007] << 0;
-#else
-                osid += image[0x504] << 24;
-                osid += image[0x505] << 16;
-                osid += image[0x506] << 8;
-                osid += image[0x507] << 0;
-#endif
+                PcmType type = this.ValidateSignatures();
+                if (type == PcmType.P12) // P10/P12
+                { 
+                    osid += image[0x8004] << 24;
+                    osid += image[0x8005] << 16;
+                    osid += image[0x8006] << 8;
+                    osid += image[0x8007] << 0;
+                }
+                else
+                {
+                    osid += image[0x504] << 24;
+                    osid += image[0x505] << 16;
+                    osid += image[0x506] << 8;
+                    osid += image[0x507] << 0;
+                }
             }
 
             return (uint)osid;
@@ -166,23 +178,28 @@ namespace PcmHacking
         {
             return BitConverter.ToUInt32(image.Skip((int)offset).Take(4).Reverse().ToArray(), 0);
         }
-        
+
         /// <summary>
         /// Validate signatures
         /// </summary>
-        private bool ValidateSignatures()
+        private PcmType ValidateSignatures()
         {
-#if P12
-            if ((image.Length != 1024 * 1024) || (image[0xFFFF8] != 0xAA) || (image[0xFFFF9] != 0x55))
+            // P10 / P12 type
+            if (image.Length == 1024 * 1024)
             {
-                this.logger.AddUserMessage("This file does not contain the expected signature at 0xFFFF8.");
-                return false;
+                this.logger.AddDebugMessage("Trying P10/P12 1Mb");
+                if ((image[0xFFFF8] == 0xAA) && (image[0xFFFF9] == 0x55))
+                {
+                    this.logger.AddDebugMessage("Signature found at 0xFFFF8");
+                    return PcmType.P12; // also used for P10, but we dont know which we have yet.
+                }
             }
-#else
+
+            this.logger.AddDebugMessage("Trying P01/P59");
             if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
             {
                 this.logger.AddUserMessage("This file does not contain the expected signature at 0x1FFFE.");
-                return false;
+                return PcmType.Undefined;
             }
 
             if (image.Length == 512 * 1024)
@@ -190,7 +207,7 @@ namespace PcmHacking
                 if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
                 {
                     this.logger.AddUserMessage("This file does not contain the expected signature at 0x7FFFE.");
-                    return false;
+                    return PcmType.Undefined;
                 }
             }
             else if (image.Length == 1024 * 1024)
@@ -198,16 +215,16 @@ namespace PcmHacking
                 if ((image[0xFFFFE] != 0x4A) || (image[0x0FFFFF] != 0xFC))
                 {
                     this.logger.AddUserMessage("This file does not contain the expected signature at 0xFFFFE.");
-                    return false;
+                    return PcmType.Undefined;
                 }
             }
             else
             {
                 this.logger.AddUserMessage("Files of size " + image.Length.ToString("X8") + " are not supported.");
-                return false;
+                return PcmType.Undefined;
             }
-#endif
-            return true;
+
+            return PcmType.P01_P59;
         }
 
         /// <summary>

@@ -8,7 +8,7 @@ namespace PcmHacking
 {
     public enum PcmType
     {
-        Undefined = 0,
+        Undefined = 0, // required for failed osid test on binary file
         P01_P59,
         P04,
         P10,
