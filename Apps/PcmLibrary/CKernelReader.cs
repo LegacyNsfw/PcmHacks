@@ -84,7 +84,7 @@ namespace PcmHacking
 
                 // TODO: instead of this hard-coded 0xFF9150, get the base address from the PcmInfo object.
                 // TODO: choose kernel at run time? Because now it's FF8000...
-                if (!await this.vehicle.PCMExecute(response.Value, this.pcmInfo.KernelBaseAddress, cancellationToken))
+                if (!await this.vehicle.PCMExecute(this.pcmInfo, response.Value, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 

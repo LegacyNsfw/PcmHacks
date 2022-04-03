@@ -55,20 +55,23 @@ namespace PcmHacking
         /// <remarks>
         /// Note that mode 0x34 is only a request. The actual payload is sent as a mode 0x36.
         /// </remarks>
-        public Message CreateUploadRequest(int Address, int Size)
-        { 
-#if P12
-            byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest };
-#else
-            byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, Submode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
-            requestBytes[5] = unchecked((byte)(Size >> 8));
-            requestBytes[6] = unchecked((byte)(Size & 0xFF));
-            requestBytes[7] = unchecked((byte)(Address >> 16));
-            requestBytes[8] = unchecked((byte)(Address >> 8));
-            requestBytes[9] = unchecked((byte)(Address & 0xFF));
-#endif
-
-            return new Message(requestBytes);
+        public Message CreateUploadRequest(PcmInfo info, int Size)
+        {
+            switch (info.HardwareType)
+            {
+                case PcmType.P10:
+                case PcmType.P12:
+                    byte[] requestBytesP12 = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest };
+                    return new Message(requestBytesP12);
+                default:
+                    byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, Submode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
+                    requestBytes[5] = unchecked((byte)(Size >> 8));
+                    requestBytes[6] = unchecked((byte)(Size & 0xFF));
+                    requestBytes[7] = unchecked((byte)(info.KernelBaseAddress >> 16));
+                    requestBytes[8] = unchecked((byte)(info.KernelBaseAddress >> 8));
+                    requestBytes[9] = unchecked((byte)(info.KernelBaseAddress & 0xFF));
+                    return new Message(requestBytes);
+            }
         }
 
         /// <summary>
@@ -76,8 +79,15 @@ namespace PcmHacking
         /// </summary>
         public Response<bool> ParseUploadPermissionResponse(Message message)
         {
+            //P10, P12
             Response<bool> response = this.DoSimpleValidation(message, Priority.Physical0, Mode.PCMUploadRequest);
+            if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
+            {
+                return response;
+            }
 
+            //P01, P59
+            response = this.DoSimpleValidation(message, Priority.Block, Mode.PCMUploadRequest);
             if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
             {
                 return response;
@@ -87,16 +97,21 @@ namespace PcmHacking
             return this.DoSimpleValidation(message, Priority.Physical0High, Mode.PCMUploadRequest);
         }
 
-        /// <summary>
+         /// <summary>
         /// Parse the response to an upload-to-RAM request.
         /// </summary>
         public Response<bool> ParseUploadResponse(Message message)
         {
-#if P12
-            return this.DoSimpleValidation(message, Priority.Physical0, Mode.PCMUpload);
-#else
-            return this.DoSimpleValidation(message, Priority.Block, Mode.PCMUpload);
-#endif
+            //P10, P12
+            Response<bool> response = this.DoSimpleValidation(message, Priority.Physical0, Mode.PCMUpload);
+            if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
+            {
+                return response;
+            }
+
+            //P01, P59
+            response = this.DoSimpleValidation(message, Priority.Block, Mode.PCMUploadRequest);
+            return response;
         }
 
         /// <summary>
@@ -131,10 +146,10 @@ namespace PcmHacking
         /// </remarks>
         public Response<byte[]> ParsePayload(Message message, int length, int expectedAddress)
         {
-            ResponseStatus status;
+            //ResponseStatus status;
             byte[] actual = message.GetBytes();
             byte[] expected = new byte[] { 0x6D, 0xF0, 0x10, 0x36 };
-            if (!TryVerifyInitialBytes(actual, expected, out status))
+            if (!TryVerifyInitialBytes(actual, expected, out ResponseStatus status))
             {
                 return Response.Create(status, new byte[0]);
             }

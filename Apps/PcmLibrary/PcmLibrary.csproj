@@ -9,6 +9,10 @@
     <DefineConstants>TRACE;P12</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;P12</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="Logging\MathValueConfiguration.cs" />
     <Compile Remove="Module.cs" />

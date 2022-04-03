@@ -296,27 +296,27 @@ namespace PcmHacking
         /// <summary>
         /// Load the executable payload on the PCM at the supplied address, and execute it.
         /// </summary>
-        public async Task<bool> PCMExecute(byte[] payload, int address, CancellationToken cancellationToken)
+        public async Task<bool> PCMExecute(PcmInfo info, byte[] payload, CancellationToken cancellationToken)
         {
             // Note that we request an upload of 4k maximum, because the PCM will reject anything bigger.
             // But you can request a 4k upload and then send up to 16k if you want, and the PCM will not object.
             int claimedSize = Math.Min(4096, payload.Length);
 
             // Since we're going to lie about the size, we need to check for overflow ourselves.
-            if (address + payload.Length > 0xFFCDFF)
+            if (info.KernelBaseAddress + payload.Length > 0xFFCDFF)
             {
                 logger.AddUserMessage("Base address and size would exceed usable RAM.");
                 return false;
             }
 
-            logger.AddDebugMessage("Sending upload request for kernel size " + payload.Length + ", loadaddress " + address.ToString("X6"));
+            logger.AddDebugMessage("Sending upload request for kernel size " + payload.Length + ", loadaddress " + info.KernelBaseAddress.ToString("X6"));
 
             bool uploadAllowed = false;
             for (int attempt = 0; attempt < 5; attempt++)
             {
                 logger.AddUserMessage("Requesting permission to upload kernel.");
                 await this.SetDeviceTimeout(TimeoutScenario.ReadProperty);
-                Message request = protocol.CreateUploadRequest(address, claimedSize);
+                Message request = protocol.CreateUploadRequest(info, claimedSize);
                 if (!await TrySendMessage(request, "upload request"))
                 {
                     return false;
@@ -344,7 +344,7 @@ namespace PcmHacking
                 return false;
             }
 
-            logger.AddDebugMessage("Going to load a " + payload.Length + " byte kernel to 0x" + address.ToString("X6"));
+            logger.AddDebugMessage("Going to load a " + payload.Length + " byte kernel to 0x" + info.KernelBaseAddress.ToString("X6"));
 
             await this.device.SetTimeout(TimeoutScenario.SendKernel);
 
@@ -354,7 +354,7 @@ namespace PcmHacking
             int remainder = payload.Length % payloadSize;
 
             int offset = (chunkCount * payloadSize);
-            int startAddress = address + offset;
+            int startAddress = info.KernelBaseAddress + offset;
 
             // First we send the 'remainder' payload, containing any bytes that won't fill up an entire upload packet.
             logger.AddDebugMessage(
@@ -368,7 +368,7 @@ namespace PcmHacking
                 payload, 
                 offset, 
                 remainder, 
-                address + offset, 
+                info.KernelBaseAddress + offset, 
                 remainder == payload.Length ? BlockCopyType.Execute : BlockCopyType.Copy);
 
             await notifier.Notify();
@@ -397,7 +397,7 @@ namespace PcmHacking
                 }
 
                 offset = (chunkIndex - 1) * payloadSize;
-                startAddress = address + offset;
+                startAddress = info.KernelBaseAddress + offset;
                 Message payloadMessage = protocol.CreateBlockMessage(
                     payload,
                     offset,
@@ -591,7 +591,7 @@ namespace PcmHacking
                     continue;
                 }
 
-                if (await this.WaitForSuccess(this.protocol.ParseUploadResponse, cancellationToken))
+                if (await WaitForSuccess(this.protocol.ParseUploadResponse, cancellationToken))
                 {
                     return Response.Create(ResponseStatus.Success, true, retryCount);
                 }

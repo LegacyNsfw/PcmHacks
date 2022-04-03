@@ -89,7 +89,7 @@ namespace PcmHacking
                     }
 
                     // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await this.vehicle.PCMExecute(response.Value, this.pcmInfo.KernelBaseAddress, cancellationToken))
+                    if (!await this.vehicle.PCMExecute(this.pcmInfo, response.Value, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -110,8 +110,7 @@ namespace PcmHacking
                     return false;
                 }
 
-                bool shouldHalt;
-                Utility.ReportOperatingSystems(validator.GetOsidFromImage(), osidResponse.Value, this.writeType, this.logger, out shouldHalt);
+                Utility.ReportOperatingSystems(validator.GetOsidFromImage(), osidResponse.Value, this.writeType, this.logger, out bool shouldHalt);
                 if (needToCheckOperatingSystem && shouldHalt)
                 {
                     return false;

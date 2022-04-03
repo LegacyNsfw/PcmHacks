@@ -80,8 +80,8 @@ namespace PcmHacking
                 }
                 else
                 {
-                    PcmInfo info = new PcmInfo(osidResponse.Value);
-                    keyAlgorithm = info.KeyAlgorithm;
+                    PcmInfo pi = new PcmInfo(osidResponse.Value);
+                    keyAlgorithm = pi.KeyAlgorithm;
                 }
 
                 this.logger.AddUserMessage("Unlocking PCM...");
@@ -99,7 +99,8 @@ namespace PcmHacking
                     return false;
                 }
 
-                if (!await PCMExecute(response.Value, 0xFF8000, cancellationToken))
+                PcmInfo info = new PcmInfo(12202088); // todo, make selectable
+                if (!await PCMExecute(info, response.Value, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -107,7 +108,6 @@ namespace PcmHacking
                 }
 
                 logger.AddUserMessage("Kernel uploaded to PCM succesfully.");
-
 
                 //await this.InvestigateDataCorruption(cancellationToken);
                 //await this.InvestigateKernelVersionQueryTiming();
