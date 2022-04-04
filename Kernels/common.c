@@ -26,8 +26,7 @@ void ScratchWatchdog()
 {
 	WATCHDOG1 = 0x55;
 	WATCHDOG1 = 0xAA;
-	WATCHDOG2 &= 0x7F;
-	WATCHDOG2 |= 0x80;
+	WATCHDOG2 ^= 0x80;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -149,7 +148,10 @@ void WriteByte(unsigned char byte)
 		loopCount++;
 
 		// With max iterations at 25, we get some 2s and 3s in the loop counter.
-		for (int iterations = 0; iterations < 50; iterations++) WasteTime();
+		for (int iterations = 0; iterations < 50; iterations++)
+		{
+			WasteTime();
+		}
 
 		ScratchWatchdog();
 		status = DLC_STATUS & 0x03;
@@ -191,12 +193,15 @@ void WriteMessage(unsigned char *start, unsigned short length, Segment segment)
 	}
 
 	// transmit a a block sum?
-	if (segment & AddSum) {
+	if (segment & AddSum)
+	{
 		checksum += (unsigned char) start[index]; // complete the sum
 		WriteByte(start[index]);  // send the last payload byte
 		WriteByte(checksum >> 8);      // send the first block sum byte
 		lastbyte = checksum;  // load the second block sum byte as the last byte
-	} else {
+	}
+	else
+	{
 		lastbyte = start[index];    // No block sum, last byte as normal
 	}
 
@@ -265,47 +270,50 @@ int ReadMessage(unsigned char *completionCode, unsigned char *readState)
 		status = DLC_STATUS >> 5;
 		switch (status)
 		{
-		case 0: // No data to process.
-			break;
-		case 1: // Buffer contains 2-12 data bytes.
-		case 2: // Buffer contains data followed by a completion code.
-		case 4: // Buffer contains just one data byte.
-			do {
-				MessageBuffer[length++] = DLC_RECEIVE_FIFO;
-				status = (DLC_STATUS >> 5);
-			} while ( status == 1 || status == 2 || status == 4 );
-			iterations = 0; // reset the timer every byte received
-			break;
-		case 5: // Buffer contains a completion code, followed by more data bytes.
-		case 6: // Buffer contains a completion code, followed by a full frame.
-		case 7: // Buffer contains a completion code only.
-			*completionCode = DLC_RECEIVE_FIFO;
-
-			// Not sure if this is necessary - the code works without it, but it seems
-			// like a good idea according to 5.1.3.2. of the DLC data sheet.
-			DLC_TRANSMIT_COMMAND = 0x02;
-
-			// If we return here when the length is zero, we'll never return
-			// any message data at all. Not sure why.
-			if (length == 0)
-			{
+			case 0: // No data to process.
 				break;
-			}
+			case 1: // Buffer contains 2-12 data bytes.
+			case 2: // Buffer contains data followed by a completion code.
+			case 4: // Buffer contains just one data byte.
+				do {
+					MessageBuffer[length++] = DLC_RECEIVE_FIFO;
+					status = (DLC_STATUS >> 5);
+				} while ( status == 1 || status == 2 || status == 4 );
+				iterations = 0; // reset the timer every byte received
+				break;
+			case 5: // Buffer contains a completion code, followed by more data bytes.
+			case 6: // Buffer contains a completion code, followed by a full frame.
+			case 7: // Buffer contains a completion code only.
+				*completionCode = DLC_RECEIVE_FIFO;
 
-			if (*completionCode & 0x30)
-			{
-				*readState = 2;
+				// Not sure if this is necessary - the code works without it, but it seems
+				// like a good idea according to 5.1.3.2. of the DLC data sheet.
+				DLC_TRANSMIT_COMMAND = 0x02;
+
+				// If we return here when the length is zero, we'll never return
+				// any message data at all. Not sure why.
+				if (length == 0)
+				{
+					break;
+				}
+
+				if (*completionCode & 0x30)
+				{
+					*readState = 2;
+					return 0;
+				}
+
+				*readState = 1;
+				return length;
+
+			case 3:  // Buffer overflow. What to do here?
+				// Just throw the message away and hope the tool sends again?
+				while (DLC_STATUS & 0xE0 == 0x60)
+				{
+					MessageBuffer[length] = DLC_RECEIVE_FIFO;
+				}
+				*readState = 0x0B;
 				return 0;
-			}
-
-			*readState = 1;
-			return length;
-
-		case 3:  // Buffer overflow. What to do here?
-			// Just throw the message away and hope the tool sends again?
-			while (DLC_STATUS & 0xE0 == 0x60) MessageBuffer[length] = DLC_RECEIVE_FIFO;
-			*readState = 0x0B;
-			return 0;
 		}
 	}
 
@@ -337,7 +345,10 @@ void CopyToMessageBuffer(unsigned char* start, unsigned int length, unsigned int
 	for (int index = length - 1; index >= 0; index--)
 	{
 		MessageBuffer[index + offset] = start[index];
-		if (index % 512 == 0) ScratchWatchdog();
+		if (index % 512 == 0)
+		{
+			ScratchWatchdog();
+		}
 	}
 }
 
@@ -360,8 +371,12 @@ void Reboot(unsigned int value)
 
 	LongSleepWithWatchdog();
 
+#if defined P12
+	asm("reset");
+#else
 	// If you stop scratching the watchdog, it will kill you.
 	for (;;);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -453,7 +468,7 @@ void SetBlockChecksum(unsigned int length, unsigned short checksum)
 ///////////////////////////////////////////////////////////////////////////////
 // Get the version of the kernel. (Mode 3D, submode 00)
 ///////////////////////////////////////////////////////////////////////////////
-void HandleVersionQuery(uint8_t kernelType)
+void HandleVersionQuery()
 {
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
@@ -462,9 +477,14 @@ void HandleVersionQuery(uint8_t kernelType)
 	MessageBuffer[4] = 0x00;
 	MessageBuffer[5] = 0x01; // major
 	MessageBuffer[6] = 0x03; // minor
-	MessageBuffer[7] = 0x03; // patch
-	MessageBuffer[8] = kernelType; // AA = read, BB = write
-
+	MessageBuffer[7] = 0x04; // patch
+#if defined P12
+	MessageBuffer[8] = 0x0C;
+#elif defined P10
+	MessageBuffer[8] = 0x0A;
+#else
+	MessageBuffer[8] = 0x01;
+#endif
 	// The AllPro and ScanTool devices need a short delay to switch from
 	// sending to receiving. Otherwise they'll miss the response.
 	ElmSleep();

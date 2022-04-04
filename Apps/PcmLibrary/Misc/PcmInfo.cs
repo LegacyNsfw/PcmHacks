@@ -85,7 +85,7 @@ namespace PcmHacking
 
             // These defaults work for P01 and P59 hardware.
             // They will need to be overwriten for others.
-            this.KernelFileName = "kernel.bin";
+            this.KernelFileName = "Kernel-P01.bin";
             this.KernelBaseAddress = 0xFF8000;
             this.ValidationMethod = PcmType.P01_P59;
             this.HardwareType = PcmType.P01_P59;
@@ -622,7 +622,6 @@ namespace PcmHacking
                 case 12201461:
                 case 12201462:
                 case 12201463:
-                // P12s were here, are more of these IDs P12?
                 case 12201465:
                 case 12201466:
                 case 12201467:
@@ -747,14 +746,15 @@ namespace PcmHacking
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     this.KernelBaseAddress = 0xFFB800;
-                    this.KernelFileName = "kernel-p10.bin";
+                    this.KernelFileName = "Kernel-P10.bin";
                     this.ValidationMethod = PcmType.P10;
                     this.HardwareType = PcmType.P10;
                     break;
+
                 //LL8 - Atlas I6 (4200) P12
                 case 12604440:
                 case 12606400:
-                    this.KernelFileName = "kernel-p12.bin";
+                    this.KernelFileName = "Kernel-P12.bin";
                     this.KernelBaseAddress = 0xFF2000;
                     this.ValidationMethod = PcmType.P12;
                     this.IsSupported = true;
@@ -769,7 +769,7 @@ namespace PcmHacking
                 //L52 - Atlas I5 (3500) P12
                 case 12606374:
                 case 12606375:
-                    this.KernelFileName = "kernel-p12.bin";
+                    this.KernelFileName = "Kernel-P12.bin";
                     this.KernelBaseAddress = 0xFF2000;
                     this.IsSupported = true;
                     this.KeyAlgorithm = 91;
@@ -779,9 +779,10 @@ namespace PcmHacking
                     this.ValidationMethod = PcmType.P12;
                     this.HardwareType = PcmType.P12;
                     break;
+
                 //LK5 - Atlas I4 (2800) P12
                 case 12627883:
-                    this.KernelFileName = "kernel-p12.bin";
+                    this.KernelFileName = "Kernel-P12.bin";
                     this.KernelBaseAddress = 0xFF2000;
                     this.IsSupported = true;
                     this.KeyAlgorithm = 91;

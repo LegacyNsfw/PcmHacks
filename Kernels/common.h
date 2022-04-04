@@ -15,14 +15,33 @@ typedef unsigned       uint32_t;
 typedef int            int32_t;
 
 #ifndef DLC_CONFIGURATION
-	#define DLC_CONFIGURATION          (*(unsigned char *)0x00FFF600)
-	#define DLC_INTERRUPTCONFIGURATION (*(unsigned char *)0x00FFF606)
-	#define DLC_TRANSMIT_COMMAND       (*(unsigned char *)0x00FFF60C)
-	#define DLC_TRANSMIT_FIFO          (*(unsigned char *)0x00FFF60D)
-	#define DLC_STATUS                 (*(unsigned char *)0x00FFF60E)
-	#define DLC_RECEIVE_FIFO           (*(unsigned char *)0x00FFF60F)
-	#define WATCHDOG1                  (*(unsigned char *)0x00FFFA27)
-	#define WATCHDOG2                  (*(unsigned char *)0x00FFD006)
+	#if defined P01 || defined P10 || defined P12
+		#define DLC_CONFIGURATION			(*(unsigned char *)0x00FFF600)
+		#define DLC_INTERRUPTCONFIGURATION	(*(unsigned char *)0x00FFF606)
+		#define DLC_TRANSMIT_COMMAND		(*(unsigned char *)0x00FFF60C)
+		#define DLC_TRANSMIT_FIFO			(*(unsigned char *)0x00FFF60D)
+		#define DLC_STATUS					(*(unsigned char *)0x00FFF60E)
+		#define DLC_RECEIVE_FIFO			(*(unsigned char *)0x00FFF60F)
+		#if defined P10
+			#define WATCHDOG1				(*(unsigned char *)0x00FFFA27)
+			#define WATCHDOG2				(*(unsigned char *)0xFF800806)
+		#elif defined P12
+			#define WATCHDOG1				(*(unsigned char *)0x00FFFA55)
+			#define WATCHDOG2				(*(unsigned char *)0x00FFFA21)
+		#else // Default to P01
+			#define WATCHDOG1				(*(unsigned char *)0x00FFFA27)
+			#define WATCHDOG2				(*(unsigned char *)0x00FFD006)
+		#endif
+	#elif defined P04
+		#define DLC_CONFIGURATION			(*(unsigned char *)0x00FFE800)
+		#define DLC_INTERRUPTCONFIGURATION	(*(unsigned char *)0x00FFE800)
+		#define DLC_TRANSMIT_COMMAND		(*(unsigned char *)0x00FFE800)
+		#define DLC_TRANSMIT_FIFO			(*(unsigned char *)0x00FFE801)
+		#define DLC_STATUS					(*(unsigned char *)0x00FFE800)
+		#define DLC_RECEIVE_FIFO			(*(unsigned char *)0x00FFE801)
+		#define WATCHDOG1					(*(unsigned char *)0x00FFFA27)
+		#define WATCHDOG2					(*(unsigned char *)0x00FFC006)
+	#endif
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -177,11 +196,11 @@ void SetBlockChecksum(unsigned int length, unsigned short checksum);
 ///////////////////////////////////////////////////////////////////////////////
 // Get the version of the kernel. (Mode 3D, submode 00)
 // Kernel Types:
-// AA = read
-// BB = write
-// CC = test
+// 01 = P01/P59
+// 0A = P10
+// 0C = P12
 ///////////////////////////////////////////////////////////////////////////////
-void HandleVersionQuery(uint8_t kernelType);
+void HandleVersionQuery();
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility functions to compute CRC for memory ranges.

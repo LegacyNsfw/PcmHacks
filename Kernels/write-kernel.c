@@ -167,9 +167,13 @@ void HandleCrcQuery()
 void HandleOperatingSystemQuery()
 {
 	ElmSleep();
-
+#if defined P10
+	uint8_t *osid = (uint8_t*)0x52E;
+#elif defined P12
+	uint8_t *osid = (uint8_t*)0x8004;
+#else
 	uint8_t *osid = (uint8_t*)0x504;
-
+#endif
 	MessageBuffer[0] = 0x6C;
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
@@ -198,6 +202,7 @@ void HandleEraseBlock()
 			break;
 
 		case FLASH_ID_AMD_1024:
+		case FLASH_ID_AMD_AM29BL802C:
 			status = Amd_EraseBlock(address);
 			break;
 
@@ -267,6 +272,7 @@ unsigned char WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 		return Intel_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
 
 	case FLASH_ID_AMD_1024:
+	case FLASH_ID_AMD_AM29BL802C:
 		return Amd_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
 
 	default:
@@ -323,7 +329,7 @@ void ProcessMessage(int iterations)
 		switch(MessageBuffer[4])
 		{
 		case 0x00:
-			HandleVersionQuery(0xBB);
+			HandleVersionQuery();
 			break;
 
 		case 0x01:
