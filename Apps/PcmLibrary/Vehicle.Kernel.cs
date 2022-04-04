@@ -303,10 +303,13 @@ namespace PcmHacking
             int claimedSize = Math.Min(4096, payload.Length);
 
             // Since we're going to lie about the size, we need to check for overflow ourselves.
-            if (info.KernelBaseAddress + payload.Length > 0xFFCDFF)
+            if (info.HardwareType == PcmType.P01_P59)
             {
-                logger.AddUserMessage("Base address and size would exceed usable RAM.");
-                return false;
+                if (info.KernelBaseAddress + payload.Length > 0xFFCDFF)
+                {
+                    logger.AddUserMessage("Base address and size would exceed usable RAM.");
+                    return false;
+                }
             }
 
             logger.AddDebugMessage("Sending upload request for kernel size " + payload.Length + ", loadaddress " + info.KernelBaseAddress.ToString("X6"));
