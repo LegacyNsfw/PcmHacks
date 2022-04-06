@@ -57,15 +57,17 @@ void HandleWriteRequestMode34()
 	WriteMessage(MessageBuffer, 5, Complete);
 }
 
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // Handle a mode-36 write.
 ///////////////////////////////////////////////////////////////////////////////
 void SendWriteSuccess(unsigned char code)
 {
 	// Send response
+#if defined P12
+	MessageBuffer[0] = 0x6C;
+#else
 	MessageBuffer[0] = 0x6D;
+#endif
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x76;
@@ -76,7 +78,11 @@ void SendWriteSuccess(unsigned char code)
 
 void SendWriteFail(unsigned char callerError, unsigned char flashError)
 {
+#if defined P12
+	MessageBuffer[0] = 0x6C;
+#else
 	MessageBuffer[0] = 0x6D;
+#endif
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7F;
@@ -98,7 +104,10 @@ void HandleWriteMode36()
 	unsigned short checksum = 0;
 	for (unsigned int index = 4; index < length + 10 ; index++) // vpw header = 10 bytes offset from payload length
 	{
-		if (index % 1024 == 0) ScratchWatchdog();
+		if (index % 1024 == 0)
+		{
+			ScratchWatchdog();
+		}
 		checksum += MessageBuffer[index];
 	}
 
@@ -141,7 +150,10 @@ void HandleWriteMode36()
 		unsigned int address = 0;
 		for (int index = 0; index < length; index++)
 		{
-			if (index % 50 == 1) ScratchWatchdog();
+			if (index % 50 == 1)
+			{
+				ScratchWatchdog();
+			}
 			address = start + index;
 			*((unsigned char*)address) = MessageBuffer[10 + index];
 		}
@@ -160,7 +172,13 @@ void HandleWriteMode36()
 	{
 		char flashError = WriteToFlash(length, start, &MessageBuffer[10], command == 0x44);
 
-		if (flashError == 0) SendWriteSuccess(command);
-		else SendWriteFail(0, flashError);
+		if (flashError == 0)
+		{
+			SendWriteSuccess(command);
+		}
+		else
+		{
+			SendWriteFail(0, flashError);
+		}
 	}
 }

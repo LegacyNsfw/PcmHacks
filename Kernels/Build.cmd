@@ -10,6 +10,7 @@ goto beginning
 * Author       : Gampy <pcmhacking.net>
 * Authored Date: 11/16/2018
 * Revision Date: 05/19/2020 - Gampy <pcmhacking.net> Cleanup for publication.
+* Revision Date: 04/01/2022 - Gampy <pcmhacking.net> Added -t<PCM Type>, added -r dump kernel RAM map.
 *
 * Authors disclaimer
 *   It is what it is, you can do with it as you please. (with respect)
@@ -30,10 +31,10 @@ goto beginning
 **
 :Usage
   echo.
-  echo   %0 -a^<address^> -c -d -g^<path^> -p^<path^>
+  echo   %0 -a^<address^> -c -d -g^<path^> -m -p^<path^> -r -t^<pcm type^>
   echo.
   echo     -a^<address^>
-  echo       Set base address for the kernel. (no space, no 0x)
+  echo       Set base address for the kernel. (no space, in hex, no 0x)
   echo       Value: 0x%BASE_ADDRESS%
   echo.
   echo     -c
@@ -68,14 +69,27 @@ goto beginning
   echo       Set path\^<filename^> where to copy kernel.bin. (no space)
   echo       Value: %BIN_LOCATION%
   echo.
+  echo     -r
+  echo       Set flag to dump kernel Ram or not.
+  if defined DUMP_RAM (
+    echo       Value: True
+  ) else (
+    echo       Value: False
+  )
+  echo.
+  echo     -t^<pcm type^>
+  echo       Set the PCM type (P01 (P01 includes P59), P10, P12). (no space)
+  echo       Value: %PCMTYPE%
+  echo.
   echo     /h
   echo     -h
   echo     --help
-  echo       Help Menu
+  echo       Display the Help Menu
+  echo       TIP: Following your arguments with the help argument (as the last argument), it will show your values in help.
   echo.
   echo.
   echo     Example:
-  echo     %0 -a%BASE_ADDRESS% -g%GCC_LOCATION% -p%BIN_LOCATION%
+  echo     %0 -a%BASE_ADDRESS% -g%GCC_LOCATION% -p%BIN_LOCATION% -t%PCMTYPE%
   echo.
   goto :EOF
 *
@@ -99,23 +113,30 @@ goto beginning
 
 rem * Set option defaults here ...
 
-rem * Set default base address for the kernel.
+rem * -a Set default base address for the kernel.
 set BASE_ADDRESS=FF8000
 
-rem * Set default path to m68k bin dir.
-set GCC_LOCATION=C:\SysGCC\m68k-elf\bin\
-
-rem * Set default path\^<filename^> where to copy kernel.bin.
-set BIN_LOCATION=..\Apps\PcmHammer\bin\debug\
-
-rem * Set default to copy kernel.bin to PcmHammer's build directory.
+rem * -c Set default to copy kernel.bin to PcmHammer's build directory.
 set COPY_BIN=True
 
-rem * Set default to NOT dump kernel.elf ^> kernel.disassembly
+rem * -d Set default to NOT dump kernel.elf ^> kernel.disassembly
 set DUMP_ELF=
 
-rem * Set flag to dump kernel Map or not.
+rem * -g Set default path to m68k bin dir.
+set GCC_LOCATION=C:\SysGCC\m68k-elf\bin\
+
+rem * -m Set flag to dump kernel Map or not.
 set DUMP_MAP=
+
+rem * -p Set default path\^<filename^> where to copy kernel.bin.
+set BIN_LOCATION=..\Apps\PcmHammer\bin\debug\
+
+rem * -r Set flag to dump kernel Map or not.
+set DUMP_RAM=
+
+rem * -t Set default PCM type.
+set PCMTYPE=P01
+
 
 rem * Handle command line options.
 (
@@ -126,8 +147,10 @@ rem * Handle command line options.
     if /i "!VAR!" == "-c"      set COPY_BIN=
     if /i "!VAR!" == "-d"      set DUMP_ELF=True
     if /i "!VAR:~0,2!" == "-g" set "GCC_LOCATION=!VAR:~2!"
-    if /i "!VAR!" == "-m"      set "DUMP_MAP=-Map kernel.map"
+    if /i "!VAR!" == "-m"      set "DUMP_MAP=-Map Kernel-%PCMTYPE%.map"
     if /i "!VAR:~0,2!" == "-p" set "BIN_LOCATION=!VAR:~2!"
+    if /i "!VAR!" == "-r"      set DUMP_RAM=True
+    if /i "!VAR:~0,2!" == "-t" set "PCMTYPE=!VAR:~2!"
     if /i "!VAR!" == "/h"      goto Usage
     if /i "!VAR!" == "-h"      goto Usage
     if /i "!VAR!" == "--help"  goto Usage
@@ -140,22 +163,26 @@ call :Detrailslash "%GCC_LOCATION%" GCC_LOCATION
 call :Detrailslash "%BIN_LOCATION%" BIN_LOCATION
 
 rem *** All that for this ...
-"%GCC_LOCATION%\m68k-elf-gcc.exe" -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 -O0 main.c write-kernel.c crc.c common.c common-readwrite.c flash-intel.c flash-amd.c
+"%GCC_LOCATION%\m68k-elf-gcc.exe" -c -D=%PCMTYPE% -fomit-frame-pointer -std=gnu99 -mcpu=68332 -O0 main.c write-kernel.c crc.c common.c common-readwrite.c flash-intel.c flash-amd.c
 if %errorlevel% neq 0 goto :EOF
 
-"%GCC_LOCATION%\m68k-elf-ld.exe" --section-start .kernel_code=0x%BASE_ADDRESS% -T kernel.ld %DUMP_MAP% -o kernel.elf main.o write-kernel.o crc.o common.o common-readwrite.o flash-intel.o flash-amd.o
+"%GCC_LOCATION%\m68k-elf-ld.exe" --section-start .kernel_code=0x%BASE_ADDRESS% -T kernel.ld %DUMP_MAP% -o Kernel-%PCMTYPE%.elf main.o write-kernel.o crc.o common.o common-readwrite.o flash-intel.o flash-amd.o
 if %errorlevel% neq 0 goto :EOF
 
-"%GCC_LOCATION%\m68k-elf-objcopy.exe" -O binary --only-section=.kernel_code --only-section=.rodata kernel.elf kernel.bin
+"%GCC_LOCATION%\m68k-elf-objcopy.exe" -O binary --only-section=.kernel_code --only-section=.rodata Kernel-%PCMTYPE%.elf Kernel-%PCMTYPE%.bin
 if %errorlevel% neq 0 goto :EOF
 
 if defined DUMP_ELF (
-  "%GCC_LOCATION%\m68k-elf-objdump.exe" -d -S kernel.elf > kernel.disassembly
+  "%GCC_LOCATION%\m68k-elf-objdump.exe" -d -S Kernel-%PCMTYPE%.elf > Kernel-%PCMTYPE%.disassembly
+  if %errorlevel% neq 0 goto :EOF
+)
+
+if defined DUMP_RAM (
+  "%GCC_LOCATION%\m68k-elf-objdump.exe" -s -j .kernel_data Kernel-%PCMTYPE%.elf > Kernel-%PCMTYPE%.ram
   if %errorlevel% neq 0 goto :EOF
 )
 
 if defined COPY_BIN (
   echo %BIN_LOCATION%
-  copy kernel.bin "%BIN_LOCATION%"
+  copy Kernel-%PCMTYPE%.bin "%BIN_LOCATION%"
 )
-

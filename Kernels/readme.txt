@@ -1,9 +1,8 @@
-build.bat encapsulates the options needed to convert C code into kernel binaries on Windows machines.
+Build.cmd encapsulates the options needed to convert C code into kernel binaries on Windows machines.
+See Build.cmd -h for help
 
 gcc.bat is mostly just for experimenting with gcc options before
-moving those options into the build.bat script.
-
-disasm.bat can be run on .o files or a.out to inspect the contents.
+moving those options into the Build.cmd batch file.
 
 --
 

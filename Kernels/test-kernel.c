@@ -132,7 +132,7 @@ void ProcessMessage(int length)
 		switch (MessageBuffer[4])
 		{
 		case 0x00:
-			HandleVersionQuery(0xCC);
+			HandleVersionQuery();
 			break;
 
 		case 0x01:

@@ -1,14 +1,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Functions for erasing and writing flash
 ///////////////////////////////////////////////////////////////////////////////
-
-#define SIM_BASE        0x00FFFA00
+#if defined P12
+	#define SIM_BASE        0x00FFFA30
+	#define SIM_20          (*(unsigned short *)(SIM_BASE + 0x20)) // Lock functions
+#else
+	#define SIM_BASE        0x00FFFA00
+#endif
 #define SIM_CSBARBT     (*(unsigned short *)(SIM_BASE + 0x48)) // CSRBASEREG, boot chip select, chip select base addr boot ROM reg,
 															   // must be updated to $0006 on each update of flash CE/WE states
-#define SIM_CSORBT      (*(unsigned short *)(SIM_BASE + 0x4a)) // CSROPREG, Chip select option boot ROM reg., $6820 for normal op
-#define SIM_CSBAR0      (*(unsigned short *)(SIM_BASE + 0x4c)) // CSBASEREG, chip selects
-#define SIM_CSOR0       (*(unsigned short *)(SIM_BASE + 0x4e)) // CSOPREG, *Chip select option reg., $1060 for normal op, $7060 for accessing flash chip
-#define HARDWARE_IO     (*(unsigned short *)(0xFFFFE2FA))      // Hardware I/O reg
+#define SIM_CSORBT      (*(unsigned short *)(SIM_BASE + 0x4a)) // FFFA7A (not used) CSROPREG, Chip select option boot ROM reg., $6820 for normal op
+#define SIM_CSBAR0      (*(unsigned short *)(SIM_BASE + 0x4c)) // FFFA7C CSBASEREG, chip selects
+#define SIM_CSOR0       (*(unsigned short *)(SIM_BASE + 0x4e)) // FFFA7E *Chip select option reg., $1060 for normal op, $7060 for accessing flash chip
+#define HARDWARE_IO     (*(unsigned short *)(0xFFFFE2FA))      // ?????? Hardware I/O reg
 
 #define FLASH_BASE         (*(unsigned short *)(0x00000000))
 #define FLASH_IDENTIFIER   (*(uint32_t *)(0x00000000))
@@ -24,8 +28,9 @@ char volatile * const  SIM_RSR      =   SIM_BASE + 0x07; // Reset Status
 char volatile * const  SIM_SYPCR    =   SIM_BASE + 0x21; // System Protection
 char volatile * const  SIM_PICR     =   SIM_BASE + 0x22; // Periodic Timer
 char volatile * const  SIM_PITR     =   SIM_BASE + 0x24; //
+char volatile * const  SIM_????     =   SIM_BASE + 0x25; // NEW AND USED FOR P12
 char volatile * const  SIM_SWSR     =   SIM_BASE + 0x27; //
-char volatile * const  SIM_CSPAR0   =   SIM_BASE + 0x44; // chip sellect pin assignment
+char volatile * const  SIM_CSPAR0   =   SIM_BASE + 0x44; // chip select pin assignment
 char volatile * const  SIM_CSPAR1   =   SIM_BASE + 0x46; //
 
 char volatile * const  SIM_CSBAR1   =   SIM_BASE + 0x50;
@@ -55,6 +60,7 @@ uint8_t Intel_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 
 // Functions prefixed with Amd1024 work with this chip ID
 #define FLASH_ID_AMD_1024  0x00012258
+#define FLASH_ID_AMD_AM29BL802C 0x00012281
 
 uint32_t Amd_GetFlashId();
 uint8_t Amd_EraseBlock(uint32_t address);
