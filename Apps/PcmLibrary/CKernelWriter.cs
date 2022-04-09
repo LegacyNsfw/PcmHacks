@@ -88,7 +88,6 @@ namespace PcmHacking
                         return false;
                     }
 
-                    // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
                     if (!await this.vehicle.PCMExecute(this.pcmInfo, response.Value, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");

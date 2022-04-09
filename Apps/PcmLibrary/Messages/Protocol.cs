@@ -18,5 +18,20 @@ namespace PcmHacking
     /// </remarks>
     public partial class Protocol
     {
+        /// <summary>
+        /// Initialize a new instance of the Protocol class.
+        /// </summary>
+        public Protocol()
+        {
+            // It might be tempting to make PcmInfo a parameter of the
+            // constructor, so that it can be stored in a member variable
+            // and referenced when creating messages that are different for
+            // different PCMs. 
+            //
+            // But that creates a chicken-and-egg problem. You need the OSID
+            // in order to initialize the PcmInfo, and you need the protocol
+            // to query the OSID, so the Protocol needs to be created before
+            // the PcmInfo is created.
+        }
     }
 }

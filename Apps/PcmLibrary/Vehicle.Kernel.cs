@@ -314,31 +314,16 @@ namespace PcmHacking
 
             logger.AddDebugMessage("Sending upload request for kernel size " + payload.Length + ", loadaddress " + info.KernelBaseAddress.ToString("X6"));
 
-            bool uploadAllowed = false;
-            for (int attempt = 0; attempt < 5; attempt++)
-            {
-                logger.AddUserMessage("Requesting permission to upload kernel.");
-                await this.SetDeviceTimeout(TimeoutScenario.ReadProperty);
-                Message request = protocol.CreateUploadRequest(info, claimedSize);
-                if (!await TrySendMessage(request, "upload request"))
-                {
-                    return false;
-                }
+            Query<bool> uploadPermissionQuery = new Query<bool>(
+                this.device,
+                () => protocol.CreateUploadRequest(info, claimedSize),
+                (message) => protocol.ParseUploadPermissionResponse(info, message),
+                this.logger,
+                cancellationToken,
+                this.notifier);
 
-                if (await this.WaitForSuccess(this.protocol.ParseUploadPermissionResponse, cancellationToken))
-                {
-                    logger.AddUserMessage("Upload permission granted.");
-                    uploadAllowed = true;
-                    break;
-                }
-
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return false;
-                }
-
-                await Task.Delay(100);
-            }
+            Response<bool> permissionResponse = await uploadPermissionQuery.Execute();
+            bool uploadAllowed = permissionResponse.Status == ResponseStatus.Success && permissionResponse.Value;
 
             if (!uploadAllowed)
             {

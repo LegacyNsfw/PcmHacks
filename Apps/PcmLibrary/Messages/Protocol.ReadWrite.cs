@@ -77,20 +77,26 @@ namespace PcmHacking
         /// <summary>
         /// Parse the response to a request for permission to upload a RAM kernel (or part of a kernel).
         /// </summary>
-        public Response<bool> ParseUploadPermissionResponse(Message message)
+        public Response<bool> ParseUploadPermissionResponse(PcmInfo info, Message message)
         {
-            //P10, P12
-            Response<bool> response = this.DoSimpleValidation(message, Priority.Physical0, Mode.PCMUploadRequest);
-            if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
+            switch (info.HardwareType)
             {
-                return response;
-            }
+                case PcmType.P10:
+                case PcmType.P12:
+                    Response<bool> response = this.DoSimpleValidation(message, Priority.Physical0, Mode.PCMUploadRequest);
+                    if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
+                    {
+                        return response;
+                    }
+                    break;
 
-            //P01, P59
-            response = this.DoSimpleValidation(message, Priority.Block, Mode.PCMUploadRequest);
-            if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
-            {
-                return response;
+                default:
+                    response = this.DoSimpleValidation(message, Priority.Block, Mode.PCMUploadRequest);
+                    if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
+                    {
+                        return response;
+                    }
+                    break;
             }
 
             // In case the PCM sends back a 7F message with an 8C priority byte...
