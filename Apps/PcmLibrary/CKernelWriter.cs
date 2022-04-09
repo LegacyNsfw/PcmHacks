@@ -227,6 +227,7 @@ namespace PcmHacking
                 flashChip.MemoryRanges,
                 this.vehicle,
                 this.protocol,
+                this.pcmInfo,
                 this.logger);
 
             bool allRangesMatch = false;
@@ -411,6 +412,14 @@ namespace PcmHacking
                 return false;
             }
 
+            // The P10 has the same flash chip as the P59, but the high bit of the address bus
+            // isn't connected, so there will be hardware errors talking to the top 512kb.
+            // So, we skip ranges that are beyond the size of the usable image.
+            if (range.Address >= this.pcmInfo.ImageSize)
+            {
+                return false;
+            }
+
             // Skip irrelevant blocks.
             if ((range.Type & relevantBlocks) == 0)
             {
@@ -541,24 +550,6 @@ namespace PcmHacking
                 this.logger.AddUserMessage("copy the text. Press Ctrl+V to paste that content");
                 this.logger.AddUserMessage("content into your forum post.");
             }
-        }
-
-        /// <summary>
-        /// Not yet implemented.
-        /// </summary>
-        private async Task<bool> OsAndCalibrationWrite(CancellationToken cancellationToken, byte[] image)
-        {
-            await Task.Delay(0);
-            return true;
-        }
-
-        /// <summary>
-        /// Not yet implemented.
-        /// </summary>
-        private async Task<bool> FullWrite(CancellationToken cancellationToken, byte[] image)
-        {
-            await Task.Delay(0);
-            return true;
         }
     }
 }
