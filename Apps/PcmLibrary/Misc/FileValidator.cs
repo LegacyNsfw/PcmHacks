@@ -72,7 +72,7 @@ namespace PcmHacking
             PcmType type = this.ValidateSignatures();
             if (type == PcmType.Undefined) success = false;
 
-            if (type != PcmType.P12)
+            if ((type != PcmType.P12) && (type != PcmType.P10))
             {
                 success &= this.ValidateChecksums();
             }
