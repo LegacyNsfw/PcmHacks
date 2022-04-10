@@ -738,18 +738,9 @@ namespace PcmHacking
                     this.HardwareType = PcmType.P04;
                     break;
 
-                 // P10
+                // P10
+                case 12575262:
                 case 12584594:
-                    this.IsSupported = true;
-                    this.KeyAlgorithm = 66;
-                    this.Description = "P10";
-                    this.ImageBaseAddress = 0x0;
-                    this.ImageSize = 512 * 1024;
-                    this.KernelBaseAddress = 0xFFB800;
-                    this.KernelFileName = "Kernel-P10.bin";
-                    this.ValidationMethod = PcmType.P10;
-                    this.HardwareType = PcmType.P10;
-                    break;
                 case 12597031:
                     this.IsSupported = true;
                     this.KeyAlgorithm = 66;
