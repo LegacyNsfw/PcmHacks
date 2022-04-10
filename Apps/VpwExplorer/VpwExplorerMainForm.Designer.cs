@@ -39,6 +39,7 @@
             this.pid = new System.Windows.Forms.TextBox();
             this.message = new System.Windows.Forms.TextBox();
             this.sendMessage = new System.Windows.Forms.Button();
+            this.dumpRamButton = new System.Windows.Forms.Button();
             this.tabs.SuspendLayout();
             this.statusTab.SuspendLayout();
             this.debugTab.SuspendLayout();
@@ -51,21 +52,19 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabs.Controls.Add(this.statusTab);
             this.tabs.Controls.Add(this.debugTab);
-            this.tabs.Location = new System.Drawing.Point(16, 205);
-            this.tabs.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabs.Location = new System.Drawing.Point(12, 167);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(973, 334);
+            this.tabs.Size = new System.Drawing.Size(730, 271);
             this.tabs.TabIndex = 8;
             // 
             // statusTab
             // 
             this.statusTab.Controls.Add(this.userLog);
-            this.statusTab.Location = new System.Drawing.Point(4, 25);
-            this.statusTab.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.statusTab.Location = new System.Drawing.Point(4, 22);
             this.statusTab.Name = "statusTab";
-            this.statusTab.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.statusTab.Size = new System.Drawing.Size(965, 305);
+            this.statusTab.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.statusTab.Size = new System.Drawing.Size(722, 245);
             this.statusTab.TabIndex = 0;
             this.statusTab.Text = "Status";
             this.statusTab.UseVisualStyleBackColor = true;
@@ -73,22 +72,20 @@
             // userLog
             // 
             this.userLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.userLog.Location = new System.Drawing.Point(4, 4);
-            this.userLog.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.userLog.Location = new System.Drawing.Point(3, 3);
             this.userLog.Multiline = true;
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
-            this.userLog.Size = new System.Drawing.Size(957, 297);
+            this.userLog.Size = new System.Drawing.Size(716, 239);
             this.userLog.TabIndex = 0;
             // 
             // debugTab
             // 
             this.debugTab.Controls.Add(this.debugLog);
-            this.debugTab.Location = new System.Drawing.Point(4, 25);
-            this.debugTab.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.debugTab.Location = new System.Drawing.Point(4, 22);
             this.debugTab.Name = "debugTab";
-            this.debugTab.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.debugTab.Size = new System.Drawing.Size(965, 386);
+            this.debugTab.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.debugTab.Size = new System.Drawing.Size(722, 245);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -96,31 +93,28 @@
             // debugLog
             // 
             this.debugLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.debugLog.Location = new System.Drawing.Point(4, 4);
-            this.debugLog.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.debugLog.Location = new System.Drawing.Point(3, 3);
             this.debugLog.Multiline = true;
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.debugLog.Size = new System.Drawing.Size(957, 378);
+            this.debugLog.Size = new System.Drawing.Size(716, 239);
             this.debugLog.TabIndex = 0;
             // 
             // deviceDescription
             // 
             this.deviceDescription.AutoSize = true;
-            this.deviceDescription.Location = new System.Drawing.Point(312, 22);
-            this.deviceDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.deviceDescription.Location = new System.Drawing.Point(234, 18);
             this.deviceDescription.Name = "deviceDescription";
-            this.deviceDescription.Size = new System.Drawing.Size(114, 17);
+            this.deviceDescription.Size = new System.Drawing.Size(88, 13);
             this.deviceDescription.TabIndex = 7;
             this.deviceDescription.Text = "[selected device]";
             // 
             // selectButton
             // 
-            this.selectButton.Location = new System.Drawing.Point(16, 15);
-            this.selectButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.selectButton.Location = new System.Drawing.Point(12, 12);
             this.selectButton.Name = "selectButton";
-            this.selectButton.Size = new System.Drawing.Size(288, 31);
+            this.selectButton.Size = new System.Drawing.Size(216, 25);
             this.selectButton.TabIndex = 6;
             this.selectButton.Text = "&Select Device";
             this.selectButton.UseVisualStyleBackColor = true;
@@ -128,10 +122,9 @@
             // 
             // testPid
             // 
-            this.testPid.Location = new System.Drawing.Point(16, 53);
-            this.testPid.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.testPid.Location = new System.Drawing.Point(12, 43);
             this.testPid.Name = "testPid";
-            this.testPid.Size = new System.Drawing.Size(288, 31);
+            this.testPid.Size = new System.Drawing.Size(216, 25);
             this.testPid.TabIndex = 9;
             this.testPid.Text = "&Test Pid";
             this.testPid.UseVisualStyleBackColor = true;
@@ -139,37 +132,45 @@
             // 
             // pid
             // 
-            this.pid.Location = new System.Drawing.Point(312, 57);
-            this.pid.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.pid.Location = new System.Drawing.Point(234, 46);
             this.pid.Name = "pid";
-            this.pid.Size = new System.Drawing.Size(167, 22);
+            this.pid.Size = new System.Drawing.Size(126, 20);
             this.pid.TabIndex = 10;
             // 
             // message
             // 
-            this.message.Location = new System.Drawing.Point(312, 96);
-            this.message.Margin = new System.Windows.Forms.Padding(4);
+            this.message.Location = new System.Drawing.Point(234, 78);
             this.message.Multiline = true;
             this.message.Name = "message";
-            this.message.Size = new System.Drawing.Size(455, 126);
+            this.message.Size = new System.Drawing.Size(342, 103);
             this.message.TabIndex = 12;
             // 
             // sendMessage
             // 
-            this.sendMessage.Location = new System.Drawing.Point(16, 92);
-            this.sendMessage.Margin = new System.Windows.Forms.Padding(4);
+            this.sendMessage.Location = new System.Drawing.Point(12, 75);
             this.sendMessage.Name = "sendMessage";
-            this.sendMessage.Size = new System.Drawing.Size(288, 31);
+            this.sendMessage.Size = new System.Drawing.Size(216, 25);
             this.sendMessage.TabIndex = 11;
             this.sendMessage.Text = "&Send Message";
             this.sendMessage.UseVisualStyleBackColor = true;
             this.sendMessage.Click += new System.EventHandler(this.sendMessage_Click);
             // 
+            // dumpRamButton
+            // 
+            this.dumpRamButton.Location = new System.Drawing.Point(12, 106);
+            this.dumpRamButton.Name = "dumpRamButton";
+            this.dumpRamButton.Size = new System.Drawing.Size(216, 25);
+            this.dumpRamButton.TabIndex = 13;
+            this.dumpRamButton.Text = "&Dump RAM";
+            this.dumpRamButton.UseVisualStyleBackColor = true;
+            this.dumpRamButton.Click += new System.EventHandler(this.dumpRamButton_Click);
+            // 
             // PcmExplorerMainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1005, 554);
+            this.ClientSize = new System.Drawing.Size(754, 450);
+            this.Controls.Add(this.dumpRamButton);
             this.Controls.Add(this.message);
             this.Controls.Add(this.sendMessage);
             this.Controls.Add(this.pid);
@@ -177,7 +178,6 @@
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.deviceDescription);
             this.Controls.Add(this.selectButton);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "PcmExplorerMainForm";
             this.Text = "PCM Explorer";
             this.Load += new System.EventHandler(this.PcmExplorerMainForm_Load);
@@ -204,6 +204,7 @@
         private System.Windows.Forms.TextBox pid;
         private System.Windows.Forms.TextBox message;
         private System.Windows.Forms.Button sendMessage;
+        private System.Windows.Forms.Button dumpRamButton;
     }
 }
 

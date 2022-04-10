@@ -252,6 +252,18 @@ namespace PcmHacking
             return this.protocol.ParsePidResponse(responseMessage);
         }
 
+        public async Task<Response<uint>> GetRam(int address)
+        {
+            Query<uint> query = new Query<uint>(
+                this.device,
+                () => this.protocol.CreateRamRequest(address),
+                this.protocol.ParseRamResponse,
+                this.logger,
+                CancellationToken.None);
+
+            return await query.Execute();
+        }
+
         /// <summary>
         /// For historical reference only.
         /// </summary>

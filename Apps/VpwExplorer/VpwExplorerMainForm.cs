@@ -176,5 +176,45 @@ namespace PcmHacking
                 }
             }
         }
+
+        private async void dumpRamButton_Click(object sender, EventArgs e)
+        {
+            int startAddress = 0xFF8000;
+            int ramSize = 32768;
+            Protocol protocol = new Protocol();
+            DateTime lastStatus = DateTime.MinValue;
+            DateTime lastYield = DateTime.MinValue;
+
+            string time = DateTime.Now.ToString("s").Replace(':', '-');
+            string fileName = $"RAM-{time}.bin";
+
+            using (Stream file = File.OpenWrite(fileName))
+            {
+                for (int address = startAddress; address < startAddress + ramSize; address += 2)
+                {
+                    Response<uint> response = await this.Vehicle.GetRam(address);
+                    if (response.Status != ResponseStatus.Success)
+                    {
+                        address -= 2;
+                        continue;
+                    }
+
+                    file.Write(BitConverter.GetBytes(response.Value), 0, 2);
+
+                    if (DateTime.Now > lastYield.AddSeconds(1))
+                    {
+                        Application.DoEvents();
+                        lastYield = DateTime.Now;
+
+                        if (DateTime.Now > lastStatus.AddSeconds(5))
+                        {
+                            int percent = (100 * (address - startAddress)) / ramSize;
+                            this.AddUserMessage($"{address:X08} - {percent}%");
+                            lastStatus = DateTime.Now;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
