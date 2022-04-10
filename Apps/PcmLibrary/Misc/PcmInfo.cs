@@ -766,35 +766,24 @@ namespace PcmHacking
                     this.HardwareType = PcmType.P10;
                     break;
 
+                // P12
+                case 12593533:
+                case 12597778:
+                case 12597978:
+                case 12601774:
+                case 12605261:
+                case 12610624:
+                case 12613422:
+                case 12627882:
+                case 12627884:
+                case 12627885:
+                case 12631085:
                 //LL8 - Atlas I6 (4200) P12
                 case 12604440:
                 case 12606400:
-                    this.KernelFileName = "Kernel-P12.bin";
-                    this.KernelBaseAddress = 0xFF2000;
-                    this.ValidationMethod = PcmType.P12;
-                    this.IsSupported = true;
-                    this.KeyAlgorithm = 91;
-                    this.Description = "LL8 Atlas P12";
-                    this.ImageBaseAddress = 0x0;
-                    this.ImageSize = 1024 * 1024;
-                    this.ValidationMethod = PcmType.P12;
-                    this.HardwareType = PcmType.P12;
-                    break;
-
                 //L52 - Atlas I5 (3500) P12
                 case 12606374:
                 case 12606375:
-                    this.KernelFileName = "Kernel-P12.bin";
-                    this.KernelBaseAddress = 0xFF2000;
-                    this.IsSupported = true;
-                    this.KeyAlgorithm = 91;
-                    this.Description = "L52 Atlas P12";
-                    this.ImageBaseAddress = 0x0;
-                    this.ImageSize = 1024 * 1024;
-                    this.ValidationMethod = PcmType.P12;
-                    this.HardwareType = PcmType.P12;
-                    break;
-
                 //LK5 - Atlas I4 (2800) P12
                 case 12627883:
                     this.KernelFileName = "Kernel-P12.bin";
