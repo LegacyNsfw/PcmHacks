@@ -6,4 +6,5 @@ a.out
 *.disassembly
 *.elf
 *.exe
+*.map
 IDA
