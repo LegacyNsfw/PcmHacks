@@ -91,7 +91,7 @@ namespace PcmHacking
                     break;
 
                 default:
-                    response = this.DoSimpleValidation(message, Priority.Block, Mode.PCMUploadRequest);
+                    response = this.DoSimpleValidation(message, Priority.Physical0, Mode.PCMUploadRequest);
                     if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
                     {
                         return response;
