@@ -739,9 +739,22 @@ namespace PcmHacking
                     break;
 
                 // P10
+                case 12213305:
+                case 12571911:
                 case 12575262:
+                case 12577956:
+                case 12579238:
+                case 12579357:
+                case 12584138:
                 case 12584594:
+                case 12587430:
+                case 12587608:
+                case 12588012:
+                case 12589825:
+                case 12590965:
+                case 12595726:
                 case 12597031:
+                case 12623317:
                     this.IsSupported = true;
                     this.KeyAlgorithm = 66;
                     this.Description = "P10";
