@@ -106,12 +106,11 @@ namespace PcmHacking
                 byte[] image = new byte[flashChip.Size];
                 int retryCount = 0;
                 int startAddress = 0;
-                int endAddress = (int)flashChip.Size;
-                int bytesRemaining = (int)flashChip.Size;
+                int bytesRemaining = pcmInfo.ImageSize;
                 int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
 
                 DateTime startTime = DateTime.MaxValue;
-                while (startAddress < endAddress)
+                while (startAddress < pcmInfo.ImageSize)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -121,9 +120,9 @@ namespace PcmHacking
                     // The read kernel needs a short message here for reasons unknown. Without it, it will RX 2 messages then drop one.
                     await this.vehicle.ForceSendToolPresentNotification();
 
-                    if (startAddress + blockSize > endAddress)
+                    if (startAddress + blockSize > pcmInfo.ImageSize)
                     {
-                        blockSize = endAddress - startAddress;
+                        blockSize = pcmInfo.ImageSize - startAddress;
                     }
 
                     if (blockSize < 1)
@@ -171,6 +170,7 @@ namespace PcmHacking
                         flashChip.MemoryRanges,
                         this.vehicle,
                         this.protocol,
+                        this.pcmInfo,
                         this.logger);
 
                     logger.StatusUpdateReset();

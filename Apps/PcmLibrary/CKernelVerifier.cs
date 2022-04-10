@@ -14,14 +14,22 @@ namespace PcmHacking
         private readonly IEnumerable<MemoryRange> ranges;
         private readonly Vehicle vehicle;
         private readonly Protocol protocol;
+        private readonly PcmInfo pcmInfo;
         private readonly ILogger logger;
 
-        public CKernelVerifier(byte[] image, IEnumerable<MemoryRange> ranges, Vehicle vehicle, Protocol protocol, ILogger logger)
+        public CKernelVerifier(
+            byte[] image, 
+            IEnumerable<MemoryRange> ranges, 
+            Vehicle vehicle, 
+            Protocol protocol, 
+            PcmInfo pcmInfo,
+            ILogger logger)
         {
             this.image = image;
             this.ranges = ranges;
             this.vehicle = vehicle;
             this.protocol = protocol;
+            this.pcmInfo = pcmInfo;
             this.logger = logger;
         }
 
@@ -77,7 +85,8 @@ namespace PcmHacking
             {
                 string formatString = "{0:X6}-{1:X6}\t{2:X8}\t{3:X8}\t{4}\t{5}";
 
-                if ((range.Type & blockTypes) == 0)
+                if (((range.Type & blockTypes) == 0) ||
+                    (range.Address >= this.pcmInfo.ImageSize))
                 {
                     this.logger.AddUserMessage(
                     string.Format(
