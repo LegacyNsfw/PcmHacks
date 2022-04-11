@@ -790,7 +790,7 @@ namespace PcmHacking
                     this.KernelBaseAddress = 0xFF2000;
                     this.IsSupported = true;
                     this.KeyAlgorithm = 91;
-                    this.Description = "LK5 Atlas P12";
+                    this.Description = "P12 (Atlas I4/I5/I6)";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 1024 * 1024;
                     this.ValidationMethod = PcmType.P12;

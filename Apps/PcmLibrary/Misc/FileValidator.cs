@@ -13,7 +13,7 @@ namespace PcmHacking
         /// <summary>
         /// Names of segments in P01 and P59 operating systems.
         /// </summary>
-        private readonly string[] segmentNames =
+        private readonly string[] segmentNames_P01_P59 =
         {
             "Operating system",
             "Engine calibration",
@@ -21,6 +21,18 @@ namespace PcmHacking
             "Transmission calibration",
             "Transmission diagnostics",
             "Fuel system",
+            "System",
+            "Speedometer",
+        };
+
+        /// <summary>
+        /// Names of segments in P10 operating systems.
+        /// </summary>
+        private readonly string[] segmentNames_P10 =
+        {
+            "Operating system",
+            "Engine calibration",
+            "Transmission calibration",
             "System",
             "Speedometer",
         };
@@ -72,13 +84,13 @@ namespace PcmHacking
             PcmType type = this.ValidateSignatures();
             if (type == PcmType.Undefined) success = false;
 
-            if ((type != PcmType.P12) && (type != PcmType.P10))
+            if (type != PcmType.P12)
             {
-                success &= this.ValidateChecksums();
+                success &= this.ValidateChecksums(type);
             }
             else
             {
-                this.logger.AddUserMessage("TODO: Add support for P10/P12 file checksum validation");
+                this.logger.AddUserMessage("TODO: Add support for P12 file checksum validation");
             }
             return success;
         }
@@ -113,6 +125,12 @@ namespace PcmHacking
             {
                 PcmType type = this.ValidateSignatures();
                 switch (type) {
+                    case PcmType.P01_P59:
+                        osid += image[0x504] << 24;
+                        osid += image[0x505] << 16;
+                        osid += image[0x506] << 8;
+                        osid += image[0x507] << 0;
+                        break;
                     case PcmType.P10:
                         osid += image[0x52E] << 24;
                         osid += image[0x52F] << 16;
@@ -125,44 +143,78 @@ namespace PcmHacking
                         osid += image[0x8006] << 8;
                         osid += image[0x8007] << 0;
                         break;
-                    case PcmType.P01_P59:
-                        osid += image[0x504] << 24;
-                        osid += image[0x505] << 16;
-                        osid += image[0x506] << 8;
-                        osid += image[0x507] << 0;
-                        break;
                 }
             }
             return (uint)osid;
         }
 
         /// <summary>
-        /// Validate a 512k image.
+        /// Validate a binary image of a known type
         /// </summary>
-        private bool ValidateChecksums()
+        private bool ValidateChecksums(PcmType type)
         {
             bool success = true;
-            UInt32 tableAddress = 0x50C;
+            UInt32 tableAddress;
+            UInt32 segments = 0;
+
+            switch (type)
+            {
+                case PcmType.P01_P59:
+                    tableAddress = 0x50C;
+                    segments = 8;
+                    break;
+                case PcmType.P10:
+                    tableAddress = 0x546;
+                    segments = 5;
+                    break;
+                case PcmType.P12:
+                    this.logger.AddDebugMessage("TODO: Implement FileValidator::ValidateChecksums for P12");
+                    return false;
+                default:
+                    this.logger.AddDebugMessage("TODO: Implement FileValidator::ValidateChecksums for a " + type.ToString());
+                    return false;
+            }
 
             this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
 
-            for (UInt32 segment = 0; segment < 8; segment++)
+            for (UInt32 segment = 0; segment < segments; segment++)
             {
                 UInt32 startAddressLocation = tableAddress + (segment * 8);
                 UInt32 endAddressLocation = startAddressLocation + 4;
-                
+
                 UInt32 startAddress = ReadUnsigned(image, startAddressLocation);
                 UInt32 endAddress = ReadUnsigned(image, endAddressLocation);
 
                 // For most segments, the first two bytes are the checksum, so they're not counted in the computation.
-                // For the overall "segment" the checkum is in the middle.
-                UInt32 checksumAddress = startAddress == 0 ? 0x500 : startAddress;
+                // For the overall "segment" in a P01/P59 the checkum is in the middle.
+                UInt32 checksumAddress;
+                switch (type)
+                {
+                    case PcmType.P01_P59:
+                        checksumAddress = startAddress == 0 ? 0x500 : startAddress;
+                        break;
+                    case PcmType.P10:
+                        checksumAddress = startAddress == 0 ? 0x52A : startAddress;
+                        break;
+                    default:
+                        checksumAddress = startAddress;
+                        break;
+                }
+
                 if (startAddress != 0)
                 {
                     startAddress += 2;
                 }
 
-                string segmentName = segmentNames[segment];
+                string segmentName;
+                switch (type) {
+                    case PcmType.P10:
+                        segmentName = segmentNames_P10[segment];
+                        break;
+                    default:
+                        segmentName = segmentNames_P01_P59[segment];
+                        break;
+                }
 
                 if ((startAddress >= image.Length) || (endAddress >= image.Length) || (checksumAddress >= image.Length))
                 {
@@ -170,7 +222,7 @@ namespace PcmHacking
                     return false;
                 }
 
-                success &= this.ValidateRange(startAddress, endAddress, checksumAddress, segmentName);
+                success &= this.ValidateRange(type, startAddress, endAddress, checksumAddress, segmentName);
             }
 
             return success;
@@ -200,7 +252,7 @@ namespace PcmHacking
             if (image.Length == 512 * 1024)
             {
                 // P01 512Kb
-                this.logger.AddDebugMessage("Trying P01");
+                this.logger.AddDebugMessage("Trying P01 512Kb");
                 if ((image[0x1FFFE] == 0x4A) && (image[0x01FFFF] == 0xFC))
                 {
                     if ((image[0x7FFFE] == 0x4A) || (image[0x07FFFF] == 0xFC))
@@ -253,21 +305,41 @@ namespace PcmHacking
         /// <summary>
         /// Validate a range.
         /// </summary>
-        private bool ValidateRange(UInt32 start, UInt32 end, UInt32 storage, string description)
+        private bool ValidateRange(PcmType type, UInt32 start, UInt32 end, UInt32 storage, string description)
         {
             UInt16 storedChecksum = (UInt16)((this.image[storage] << 8) + this.image[storage + 1]);
             UInt16 computedChecksum = 0;
-            
-            for(UInt32 address = start; address <= end; address+=2)
-            {
-                if (address == 0x500)
-                {
-                    address = 0x502;
-                }
 
-                if (address == 0x4000)
-                {
-                    address = 0x20000;
+            for (UInt32 address = start; address <= end; address += 2)
+            {
+                switch (type) {
+                    case PcmType.P10:
+                        switch (address) {
+                            case 0x52A:
+                                address = 0x52C;
+                                break;
+                            case 0x4000:
+                                address = 0x20000;
+                                break;
+                            case 0x7FFFA:
+                                end=0x7FFFA; // a hacky way to short circuit the end
+                                break;
+                        }
+                        break;
+                    case PcmType.P12:
+                        this.logger.AddDebugMessage("TODO: Implement FileValidator::ValidateRange for P12");
+                        return false;
+                    case PcmType.P01_P59:
+                        if (address == 0x500)
+                        {
+                            address = 0x502;
+                        }
+
+                        if (address == 0x4000)
+                        {
+                            address = 0x20000;
+                        }
+                        break;
                 }
 
                 UInt16 value = (UInt16)(this.image[address] << 8);
