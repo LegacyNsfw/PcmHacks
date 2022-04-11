@@ -83,15 +83,8 @@ namespace PcmHacking
             bool success = true;
             PcmType type = this.ValidateSignatures();
             if (type == PcmType.Undefined) success = false;
+            success &= this.ValidateChecksums(type);
 
-            if (type != PcmType.P12)
-            {
-                success &= this.ValidateChecksums(type);
-            }
-            else
-            {
-                this.logger.AddUserMessage("TODO: Add support for P12 file checksum validation");
-            }
             return success;
         }
 
@@ -190,8 +183,9 @@ namespace PcmHacking
                     segments = 5;
                     break;
                 case PcmType.P12:
-                    this.logger.AddDebugMessage("TODO: Implement FileValidator::ValidateChecksums for P12");
-                    return false;
+                    tableAddress = 0x0;
+                    segments = 0;
+                    break;
                 default:
                     this.logger.AddDebugMessage("TODO: Implement FileValidator::ValidateChecksums for a " + type.ToString());
                     return false;
@@ -199,54 +193,69 @@ namespace PcmHacking
 
             this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
 
-            for (UInt32 segment = 0; segment < segments; segment++)
-            {
-                UInt32 startAddressLocation = tableAddress + (segment * 8);
-                UInt32 endAddressLocation = startAddressLocation + 4;
+            switch (type) {
+                // P12 is so wierd we hard code segments with a special function here
+                case PcmType.P12:
+                    success &= ValidateRangeP12(0x922, 0x900, 0x94A, 2, "Boot Block");
+                    success &= ValidateRangeP12(0x8022, 0, 0x804A, 2, "OS");
+                    success &= ValidateRangeP12(0x80C4, 0, 0x80E4, 2, "Engine Calibration");
+                    success &= ValidateRangeP12(0x80F7, 0, 0x8117, 2, "Engine Diagnostics");
+                    success &= ValidateRangeP12(0x812A, 0, 0x814A, 2, "Transmission Calibration");
+                    success &= ValidateRangeP12(0x815D, 0, 0x817D, 2, "Transmission Diagnostics");
+                    success &= ValidateRangeP12(0x805E, 0, 0x807E, 2, "Speedometer");
+                    success &= ValidateRangeP12(0x8091, 0, 0x80B1, 2, "System");
+                    break;
+                // The rest can use the generic code
+                default:
+                    for (UInt32 segment = 0; segment < segments; segment++)
+                    {
+                        UInt32 startAddressLocation = tableAddress + (segment * 8);
+                        UInt32 endAddressLocation = startAddressLocation + 4;
 
-                UInt32 startAddress = ReadUnsigned(image, startAddressLocation);
-                UInt32 endAddress = ReadUnsigned(image, endAddressLocation);
+                        UInt32 startAddress = ReadUnsigned(image, startAddressLocation);
+                        UInt32 endAddress = ReadUnsigned(image, endAddressLocation);
 
-                // For most segments, the first two bytes are the checksum, so they're not counted in the computation.
-                // For the overall "segment" in a P01/P59 the checkum is in the middle.
-                UInt32 checksumAddress;
-                switch (type)
-                {
-                    case PcmType.P01_P59:
-                        checksumAddress = startAddress == 0 ? 0x500 : startAddress;
-                        break;
-                    case PcmType.P10:
-                        checksumAddress = startAddress == 0 ? 0x52A : startAddress;
-                        break;
-                    default:
-                        checksumAddress = startAddress;
-                        break;
-                }
+                        // For most segments, the first two bytes are the checksum, so they're not counted in the computation.
+                        // For the overall "segment" in a P01/P59 the checkum is in the middle.
+                        UInt32 checksumAddress;
+                        switch (type)
+                        {
+                            case PcmType.P01_P59:
+                                checksumAddress = startAddress == 0 ? 0x500 : startAddress;
+                                break;
+                            case PcmType.P10:
+                                checksumAddress = startAddress == 0 ? 0x52A : startAddress;
+                                break;
+                            default:
+                                checksumAddress = startAddress;
+                                break;
+                        }
 
-                if (startAddress != 0)
-                {
-                    startAddress += 2;
-                }
+                        if (startAddress != 0)
+                        {
+                            startAddress += 2;
+                        }
 
-                string segmentName;
-                switch (type) {
-                    case PcmType.P10:
-                        segmentName = segmentNames_P10[segment];
-                        break;
-                    default:
-                        segmentName = segmentNames_P01_P59[segment];
-                        break;
-                }
+                        string segmentName;
+                        switch (type) {
+                            case PcmType.P10:
+                                segmentName = segmentNames_P10[segment];
+                                break;
+                            default:
+                                segmentName = segmentNames_P01_P59[segment];
+                                break;
+                        }
 
-                if ((startAddress >= image.Length) || (endAddress >= image.Length) || (checksumAddress >= image.Length))
-                {
-                    this.logger.AddUserMessage("Checksum table is corrupt.");
-                    return false;
-                }
+                        if ((startAddress >= image.Length) || (endAddress >= image.Length) || (checksumAddress >= image.Length))
+                        {
+                            this.logger.AddUserMessage("Checksum table is corrupt.");
+                            return false;
+                        }
 
-                success &= this.ValidateRange(type, startAddress, endAddress, checksumAddress, segmentName);
+                        success &= ValidateRange(type, startAddress, endAddress, checksumAddress, segmentName);
+                    }
+                    break;
             }
-
             return success;
         }
 
@@ -265,7 +274,7 @@ namespace PcmHacking
         {
             // All currently supported bins are 512Kb or 1Mb
             if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024))
-            { 
+            {
                 this.logger.AddUserMessage("Files of size " + image.Length.ToString("X8") + " are not supported.");
                 return PcmType.Undefined;
             }
@@ -344,13 +353,10 @@ namespace PcmHacking
                                 address = 0x20000;
                                 break;
                             case 0x7FFFA:
-                                end=0x7FFFA; // a hacky way to short circuit the end
+                                end = 0x7FFFA; // a hacky way to short circuit the end
                                 break;
                         }
                         break;
-                    case PcmType.P12:
-                        this.logger.AddDebugMessage("TODO: Implement FileValidator::ValidateRange for P12");
-                        return false;
                     case PcmType.P01_P59:
                         if (address == 0x500)
                         {
@@ -374,13 +380,72 @@ namespace PcmHacking
             bool verdict = storedChecksum == computedChecksum;
 
             string error = string.Format(
-                "\t{0:X5}\t{1:X5}\t{2:X4}\t{3:X4}\t{4:X4}\t{5}", 
-                start, 
+                "\t{0:X5}\t{1:X5}\t{2:X4}\t{3:X4}\t{4:X4}\t{5}",
+                start,
                 end,
-                storedChecksum, 
+                storedChecksum,
                 computedChecksum,
                 verdict ? "Good" : "BAD",
                 description);
+
+            this.logger.AddUserMessage(error);
+            return verdict;
+        }
+
+        /// <summary>
+        /// Validate a range for P12
+        /// Its so different it gets its own routine...
+        /// </summary>
+        private bool ValidateRangeP12(UInt32 segment, UInt32 offset, UInt32 index, UInt32 blocks, string description)
+        {
+            UInt16 storedChecksum = 0;
+            UInt16 computedChecksum = 0;
+            int first = 0;
+            int start = 0;
+            int end = 0;
+
+            int sumaddr;
+            sumaddr  = image[segment + 0] << 24;
+            sumaddr += image[segment + 1] << 16;
+            sumaddr += image[segment + 2] << 8;
+            sumaddr += image[segment + 3];
+
+            storedChecksum = (UInt16)((this.image[sumaddr + offset] << 8) + this.image[sumaddr + offset + 1]);
+
+            // lookup the start and end of each block, and add it to the sum
+            for (UInt32 block = 0; block < blocks; block++)
+            {
+                start  = image[index + (block * 8) + 0] << 24;
+                start += image[index + (block * 8) + 1] << 16;
+                start += image[index + (block * 8) + 2] << 8;
+                start += image[index + (block * 8) + 3];
+                end    = image[index + (block * 8) + 4] << 24;
+                end   += image[index + (block * 8) + 5] << 16;
+                end   += image[index + (block * 8) + 6] << 8;
+                end   += image[index + (block * 8) + 7];
+
+                for (UInt32 address = (UInt32) start; address <= end; address += 2)
+                {
+                    UInt16 value = (UInt16)(this.image[address] << 8);
+                    value |= this.image[address + 1];
+                    computedChecksum += value;
+                }
+
+                if (block == 0) first = start;
+            }
+
+            computedChecksum = (UInt16) ((0 - computedChecksum)); // 2s compliment
+
+            bool verdict = storedChecksum == computedChecksum;
+
+            string error = string.Format(
+             "\t{0:X5}\t{1:X5}\t{2:X4}\t{3:X4}\t{4:X4}\t{5}",
+             first, // the start of the first block
+             end, // the end of the last block
+             storedChecksum,
+             computedChecksum,
+             verdict ? "Good" : "BAD",
+             description);
 
             this.logger.AddUserMessage(error);
             return verdict;
