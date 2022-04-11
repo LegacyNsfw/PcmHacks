@@ -233,7 +233,7 @@ namespace PcmHacking
                 // Illegal address.
                 if (message[9] == 0x31)
                 {
-                    return Response.Create(ResponseStatus.Success, (uint)0xFFFFFF);
+                    return Response.Create(ResponseStatus.Success, (uint)0xEEEEEEEE);
                 }
 
                 return Response.Create(ResponseStatus.Error, (uint)0);
@@ -251,11 +251,13 @@ namespace PcmHacking
             switch (message.Length)
             {
                 case 10:
-                    value = message[6];
+                    value = message[9];
+                    value <<= 8;
+                    value |= message[8];
                     value <<= 8;
                     value |= message[7];
                     value <<= 8;
-                    value |= message[8];
+                    value |= message[6];
                     break;
 
                 default:

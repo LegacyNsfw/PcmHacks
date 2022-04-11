@@ -190,16 +190,16 @@ namespace PcmHacking
 
             using (Stream file = File.OpenWrite(fileName))
             {
-                for (int address = startAddress; address < startAddress + ramSize; address += 2)
+                for (int address = startAddress; address < startAddress + ramSize; address += 4)
                 {
                     Response<uint> response = await this.Vehicle.GetRam(address);
                     if (response.Status != ResponseStatus.Success)
                     {
-                        address -= 2;
+                        address -= 4;
                         continue;
                     }
 
-                    file.Write(BitConverter.GetBytes(response.Value), 0, 2);
+                    file.Write(BitConverter.GetBytes(response.Value), 0, 4);
 
                     if (DateTime.Now > lastYield.AddSeconds(1))
                     {
@@ -215,6 +215,8 @@ namespace PcmHacking
                     }
                 }
             }
+
+            this.AddUserMessage($"RAM saved to {fileName}");
         }
     }
 }
