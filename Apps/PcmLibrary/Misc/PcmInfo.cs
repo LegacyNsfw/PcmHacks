@@ -72,6 +72,11 @@ namespace PcmHacking
         public int ImageSize { get; private set; }
 
         /// <summary>
+        /// Size of the ROM.
+        /// </summary>
+        public int RAMSize { get; private set; }
+
+        /// <summary>
         /// Which key algorithm to use to unlock the PCM.
         /// </summary>
         public int KeyAlgorithm { get; private set; }
@@ -87,6 +92,7 @@ namespace PcmHacking
             // They will need to be overwriten for others.
             this.KernelFileName = "Kernel-P01.bin";
             this.KernelBaseAddress = 0xFF8000;
+            this.RAMSize = 0x4DFF;
             this.ValidationMethod = PcmType.P01_P59;
             this.HardwareType = PcmType.P01_P59;
 
@@ -378,7 +384,7 @@ namespace PcmHacking
                 case 04110002:
                 case 05120002:
                     this.KeyAlgorithm = 40;
-                    string type = osid.ToString(); // Originally: PCMOSID.Text.Substring(PCMOSID.Text.Length - 2, 2);
+                    string type = osid.ToString();
                     switch (Convert.ToInt32(type, 10))
                     {
                         case 1:
@@ -755,13 +761,14 @@ namespace PcmHacking
                 case 12595726:
                 case 12597031:
                 case 12623317:
+                    this.KernelFileName = "Kernel-P10.bin";
+                    this.KernelBaseAddress = 0xFFB800; // Or FFA000? https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=450#p115622
+                    this.RAMSize = 0x2800; // or 4000?
                     this.IsSupported = true;
                     this.KeyAlgorithm = 66;
                     this.Description = "P10";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
-                    this.KernelBaseAddress = 0xFFB800;
-                    this.KernelFileName = "Kernel-P10.bin";
                     this.ValidationMethod = PcmType.P10;
                     this.HardwareType = PcmType.P10;
                     break;
@@ -787,7 +794,8 @@ namespace PcmHacking
                 //LK5 - Atlas I4 (2800) P12
                 case 12627883:
                     this.KernelFileName = "Kernel-P12.bin";
-                    this.KernelBaseAddress = 0xFF2000;
+                    this.KernelBaseAddress = 0xFF2000; // or FF0000? https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=450#p115622
+                    this.RAMSize= 0x6000;
                     this.IsSupported = true;
                     this.KeyAlgorithm = 91;
                     this.Description = "P12 (Atlas I4/I5/I6)";
@@ -798,11 +806,11 @@ namespace PcmHacking
                     break;
 
                 default:
-                    // this.IsSupported = false; // Not sure what the default should be...
+                    this.IsSupported = false;
                     this.KeyAlgorithm = 40;
                     this.Description = "Unknown";
                     this.ImageBaseAddress = 0x0;
-                    this.ImageSize = 512 * 1024;
+                    this.ImageSize = 0;
                     break;
             }
         }
