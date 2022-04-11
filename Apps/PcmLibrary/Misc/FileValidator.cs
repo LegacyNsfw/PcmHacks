@@ -189,63 +189,57 @@ namespace PcmHacking
         /// </summary>
         private PcmType ValidateSignatures()
         {
-            // P10 / P12 type
-            if (image.Length == 1024 * 1024)
-            {
-                this.logger.AddDebugMessage("Trying P12 1Mb");
-                if ((image[0xFFFF8] == 0xAA) && (image[0xFFFF9] == 0x55))
-                {
-                    this.logger.AddDebugMessage("P12 Signature found at 0xFFFF8");
-                    return PcmType.P12;
-                }
-
-                this.logger.AddDebugMessage("Trying P10 1Mb");
-                if ((image[0x17FFE] == 0x55) && (image[0x017FFF] == 0x55))
-                {
-                    this.logger.AddDebugMessage("P10 Signature found at 0x017FFF");
-                    if ((image[0x7FFFC] == 0xA5) && (image[0x07FFFD] == 0x5A) && (image[0x7FFFE] == 0xA5) && (image[0x07FFFF] == 0xA5))
-                    {
-                        this.logger.AddDebugMessage("P10 Signature found at 0x7FFFC");
-                        return PcmType.P10;
-                    }
-                    else
-                    {
-                        this.logger.AddDebugMessage("P10 Signature not found at 0x7FFFC");
-                        return PcmType.Undefined;
-                    }
-                }
-            }
-
-            this.logger.AddDebugMessage("Trying P01/P59");
-            if ((image[0x1FFFE] != 0x4A) || (image[0x01FFFF] != 0xFC))
-            {
-                this.logger.AddUserMessage("This file does not contain the expected signature at 0x1FFFE.");
-                return PcmType.Undefined;
-            }
-
-            if (image.Length == 512 * 1024)
-            {
-                if ((image[0x7FFFE] != 0x4A) || (image[0x07FFFF] != 0xFC))
-                {
-                    this.logger.AddUserMessage("This file does not contain the expected signature at 0x7FFFE.");
-                    return PcmType.Undefined;
-                }
-            }
-            else if (image.Length == 1024 * 1024)
-            {
-                if ((image[0xFFFFE] != 0x4A) || (image[0x0FFFFF] != 0xFC))
-                {
-                    this.logger.AddUserMessage("This file does not contain the expected signature at 0xFFFFE.");
-                    return PcmType.Undefined;
-                }
-            }
-            else
-            {
+            // All currently supported bins are 512Kb or 1Mb
+            if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024))
+            { 
                 this.logger.AddUserMessage("Files of size " + image.Length.ToString("X8") + " are not supported.");
                 return PcmType.Undefined;
             }
 
-            return PcmType.P01_P59;
+            // 512Kb Types
+            if (image.Length == 512 * 1024)
+            {
+                // P01 512Kb
+                this.logger.AddDebugMessage("Trying P01");
+                if ((image[0x1FFFE] == 0x4A) && (image[0x01FFFF] == 0xFC))
+                {
+                    if ((image[0x7FFFE] == 0x4A) || (image[0x07FFFF] == 0xFC))
+                    {
+                        return PcmType.P01_P59;
+                    }
+                }
+
+                this.logger.AddDebugMessage("Trying P10 512Kb");
+                if ((image[0x17FFE] == 0x55) && (image[0x017FFF] == 0x55))
+                {
+                    if ((image[0x7FFFC] == 0xA5) && (image[0x07FFFD] == 0x5A) && (image[0x7FFFE] == 0xA5) && (image[0x07FFFF] == 0xA5))
+                    {
+                        return PcmType.P10;
+                    }
+                }
+            }
+
+            // 1Mb types
+            if (image.Length == 1024 * 1024)
+            {
+                this.logger.AddDebugMessage("Trying P59 1Mb");
+                if ((image[0x1FFFE] == 0x4A) && (image[0x01FFFF] == 0xFC))
+                {
+                    if ((image[0xFFFFE] == 0x4A) && (image[0x0FFFFF] == 0xFC))
+                    {
+                        return PcmType.P01_P59;
+                    }
+                }
+
+                this.logger.AddDebugMessage("Trying P12 1Mb");
+                if ((image[0xFFFF8] == 0xAA) && (image[0xFFFF9] == 0x55))
+                {
+                    return PcmType.P12;
+                }
+            }
+
+            this.logger.AddDebugMessage("Unable to identify or validate bin image content");
+            return PcmType.Undefined;
         }
 
         /// <summary>
