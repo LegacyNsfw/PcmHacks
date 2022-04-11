@@ -1353,6 +1353,11 @@ namespace PcmHacking
                         keyAlgorithm = pcmInfo.KeyAlgorithm;
                         needUnlock = true;
 
+                        if (!validator.IsSameHardware(osidResponse.Value))
+                        {
+                            return;
+                        }
+
                         if (!validator.IsSameOperatingSystem(osidResponse.Value))
                         {
                             Utility.ReportOperatingSystems(validator.GetOsidFromImage(), osidResponse.Value, writeType, this, out shouldHalt);

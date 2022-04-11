@@ -115,6 +115,28 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Compare the HW type from the PCM with the type determined from the file.
+        /// </summary>
+        public bool IsSameHardware(UInt32 pcmOsid)
+        {
+            UInt32 fileOsid = this.GetOsidFromImage();
+
+            PcmInfo pcmInfo = new PcmInfo(pcmOsid);
+            PcmInfo fileInfo = new PcmInfo(fileOsid);
+
+            if (pcmInfo.HardwareType == fileInfo.HardwareType)
+            {
+                this.logger.AddUserMessage("PCM and file are both for the same Hardware " + fileInfo.HardwareType.ToString());
+                return true;
+            }
+
+            this.logger.AddUserMessage("Hardware types do not match.");
+            this.logger.AddUserMessage("PCM Hardware is: " + pcmInfo.HardwareType.ToString());
+            this.logger.AddUserMessage("File requires: " + fileInfo.HardwareType.ToString());
+            return false;
+        }
+
+        /// <summary>
         /// Get the OSID from the file that the user wants to flash.
         /// </summary>
         public uint GetOsidFromImage()
