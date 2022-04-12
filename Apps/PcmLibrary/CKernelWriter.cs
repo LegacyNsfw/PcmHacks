@@ -216,9 +216,9 @@ namespace PcmHacking
             logger.AddUserMessage("Flash chip: " + flashChip.ToString());
 
             // This prevents flashing a P01 bin to a P59 PCM and vice-versa when they share the P01_P59 hardware type
-            if (flashChip.Size != image.Length)
+            if ((pcmInfo.HardwareType == PcmType.P01_P59) && (flashChip.Size != image.Length))
             {
-                this.logger.AddUserMessage(string.Format("File size {0:n0} does not match Flash Chip size {1:n0}!", image.Length, flashChip.Size));
+                this.logger.AddUserMessage(string.Format("File size {0:n0} does not match Flash Chip size {1:n0}. This image is not compatible with this PCM.", image.Length, flashChip.Size));
                 await this.vehicle.Cleanup();
                 return false;
             }
