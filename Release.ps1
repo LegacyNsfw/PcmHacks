@@ -76,6 +76,11 @@ copy Apps\PcmLogger\bin\Debug\*.pdb Release
 copy Apps\PcmLogger\*.LogProfile Release
 copy Apps\PcmLogger\Parameters.*.xml Release
 
+copy Apps\VpwExplorer\bin\Debug\VpwExplorer.* Release
+copy Apps\VpwExplorer\bin\Debug\*.dll Release
+copy Apps\VpwExplorer\bin\Debug\*.pdb Release
+
+
 # The order of these two operations matters - it ensures that the zip file contains a directory named PcmHammerNNN.
 Rename-Item Release "PcmHammer$ReleaseNumber"
 7z.exe a -r "PcmHammer$ReleaseNumber.zip" "PcmHammer$ReleaseNumber\*.*"

@@ -174,7 +174,7 @@ namespace PcmHacking
             */
 
             // Using OBD2 "Physical" addressing.
-            request = new Message(new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, 0x22, (byte)(pid >> 8), (byte)pid, 0x01 });
+            request = new Message(new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.GetPid, (byte)(pid >> 8), (byte)pid, 0x01 });
 
             return request;
         }
@@ -187,7 +187,7 @@ namespace PcmHacking
             ResponseStatus status;
             if (!this.TryVerifyInitialBytes(
                 message.GetBytes(), 
-                new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x62 }, out status))
+                new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, Mode.GetPid + 0x40 }, out status))
             {
                 return Response.Create(status, 0);    
             }
@@ -207,6 +207,61 @@ namespace PcmHacking
 
                 default:
                     throw new UnsupportedFormatException("Only 1 and 2 byte PIDs are supported for now.");
+            }
+
+            return Response.Create(ResponseStatus.Success, value);
+        }
+
+        /// <summary>
+        /// Create a request for a single PID.
+        /// </summary>
+        public Message CreateRamRequest(int address)
+        { 
+            Message request = new Message(new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, 0x23,
+                (byte)(address >> 16), (byte)(address >> 8), (byte)address, 0x01 });
+
+            return request;
+        }
+
+        /// <summary>
+        /// Parse the value of the requested PID.
+        /// </summary>
+        public Response<uint> ParseRamResponse(Message message)
+        {                        
+            if (message[3] == 0x7f && message[4] == Mode.GetRam)
+            {
+                // Illegal address.
+                if (message[9] == 0x31)
+                {
+                    return Response.Create(ResponseStatus.Success, (uint)0xEEEEEEEE);
+                }
+
+                return Response.Create(ResponseStatus.Error, (uint)0);
+            }
+
+            ResponseStatus status;
+            if (!this.TryVerifyInitialBytes(
+                message.GetBytes(),
+                new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, Mode.GetRam + 0x40 }, out status))
+            {
+                return Response.Create(status, (uint)0);
+            }
+
+            uint value;
+            switch (message.Length)
+            {
+                case 10:
+                    value = message[9];
+                    value <<= 8;
+                    value |= message[8];
+                    value <<= 8;
+                    value |= message[7];
+                    value <<= 8;
+                    value |= message[6];
+                    break;
+
+                default:
+                    throw new UnsupportedFormatException("Unexpected read-RAM response message length.");
             }
 
             return Response.Create(ResponseStatus.Success, value);
