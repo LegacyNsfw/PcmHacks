@@ -41,7 +41,10 @@ namespace PcmHacking
             Crc crc = new Crc();
             foreach (MemoryRange range in this.ranges)
             {
-                range.DesiredCrc = crc.GetCrc(this.image, range.Address, range.Size);
+                if (range.Address < pcmInfo.ImageSize) // P10 does not use the whole chip
+                {
+                    range.DesiredCrc = crc.GetCrc(this.image, range.Address, range.Size);
+                }
             }
         }
 
