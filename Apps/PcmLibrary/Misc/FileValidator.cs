@@ -123,7 +123,7 @@ namespace PcmHacking
                 return true;
             }
 
-            this.logger.AddUserMessage("Hardware types do not match.");
+            this.logger.AddUserMessage("Hardware types do not match. This file is not compatible with this PCM");
             this.logger.AddUserMessage("PCM Hardware is: " + pcmInfo.HardwareType.ToString());
             this.logger.AddUserMessage("File requires: " + fileInfo.HardwareType.ToString());
             return false;
