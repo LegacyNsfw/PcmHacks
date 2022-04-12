@@ -1,8 +1,6 @@
 ## Overview
 
-These tools are a work in progress. They currently support reading, writing, and data logging with General Motors P01 and P59 Powertrain Control Modules (PCMs). 
-
-Writing is working well enough to try it on your project car, but you probably shouldn't try that with your daily driver until it has proven itself a little more. 
+These tools are a work in progress. They currently support reading, writing, and data logging with General Motors P01, P10, P12 and P59 Powertrain Control Modules (PCMs). 
 
 ## Installation
 
@@ -24,11 +22,11 @@ Extract the contents of the zip file, and run PcmHammer.exe or PcmLogger.exe.
 
 [A shortcut to the project's GitHub page](http://pcmhammer.org/)
 
-## Some .bin files for flashing, and .xdf files for tuning:
+[Universal Patcher](https://universalpatcher.net/)
 
-[BoredTruckOwner's LS-based repository](https://github.com/BoredTruckOwner/LS_Based_Engine_Repository)
+## What do I need to edit bin files?
 
-[Snoman002's repository - only the P01 and P59 sections are useful for PCM Hammer](https://github.com/Snoman002/Engine-Tune-Repository-TunerPro-EFIlive-TunerCat/tree/master/General%20Motors)
+Most people use tunerpro. To do so you need to know the operating system id of your computer (OSID) and use that to find a matching XDF file which tells tunerpro what is in the XDF and how to edit it. XDFs can be found on pcmhacking.net and other places. Also check out the [Universal Patcher](https://universalpatcher.net/) which does a lot more than just patching!
 
 ## Where did the Arduino stuff go?
 
