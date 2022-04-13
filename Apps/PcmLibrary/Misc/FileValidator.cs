@@ -37,6 +37,8 @@ namespace PcmHacking
             "Speedometer",
         };
 
+        // Names of segments in P12 operating system are documented in the ValidateChecksums() function
+
         /// <summary>
         /// The contents of the firmware file that someone wants to flash.
         /// </summary>
@@ -80,12 +82,8 @@ namespace PcmHacking
                 return false;
             }
 
-            bool success = true;
-            PcmType type = this.ValidateSignatures();
-            if (type == PcmType.Undefined) success = false;
-            success &= this.ValidateChecksums(type);
 
-            return success;
+            return this.ValidateChecksums();
         }
 
         /// <summary>
@@ -166,11 +164,13 @@ namespace PcmHacking
         /// <summary>
         /// Validate a binary image of a known type
         /// </summary>
-        private bool ValidateChecksums(PcmType type)
+        private bool ValidateChecksums()
         {
             bool success = true;
             UInt32 tableAddress;
             UInt32 segments = 0;
+
+            PcmType type = this.ValidateSignatures();
 
             switch (type)
             {
@@ -178,14 +178,20 @@ namespace PcmHacking
                     tableAddress = 0x50C;
                     segments = 8;
                     break;
+
                 case PcmType.P10:
                     tableAddress = 0x546;
                     segments = 5;
                     break;
+
                 case PcmType.P12:
                     tableAddress = 0x0;
                     segments = 0;
                     break;
+
+                case PcmType.Undefined:
+                    return false;
+
                 default:
                     this.logger.AddDebugMessage("TODO: Implement FileValidator::ValidateChecksums for a " + type.ToString());
                     return false;

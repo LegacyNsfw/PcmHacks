@@ -26,7 +26,7 @@ Extract the contents of the zip file, and run PcmHammer.exe or PcmLogger.exe.
 
 ## What do I need to edit bin files?
 
-Most people use tunerpro. To do so you need to know the operating system id of your computer (OSID) and use that to find a matching XDF file which tells tunerpro what is in the XDF and how to edit it. XDFs can be found on pcmhacking.net and other places. Also check out the [Universal Patcher](https://universalpatcher.net/) which does a lot more than just patching!
+Most people use tunerpro. To do so you need to know the operating system id of your computer (OSID) and use that to find a matching XDF file which tells tunerpro what is in the XDF and how to edit it. XDFs can be found on pcmhacking.net and other places. Also check out [Universal Patcher](https://universalpatcher.net/) which does a lot more than just patching!
 
 ## Where did the Arduino stuff go?
 
