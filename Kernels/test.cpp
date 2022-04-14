@@ -2,6 +2,9 @@
 //#include "common.h"
 #include <iostream>
 #include <fstream>
+
+typedef unsigned       uint32_t;
+
 using namespace std;
 
 extern int crcTable[256];
@@ -42,3 +45,4 @@ void ScratchWatchdog()
 {
 
 }
+
