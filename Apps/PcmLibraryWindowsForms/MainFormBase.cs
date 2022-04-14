@@ -166,6 +166,7 @@ namespace PcmHacking
             });
 
             this.AddUserMessage(GetAppNameAndVersion());
+            this.AddUserMessage(DateTime.Now.ToString("dddd, MMMM dd yyyy @hh:mm:ss:ff"));
 
             try
             {
