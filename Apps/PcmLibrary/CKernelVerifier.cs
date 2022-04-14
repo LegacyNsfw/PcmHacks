@@ -14,14 +14,22 @@ namespace PcmHacking
         private readonly IEnumerable<MemoryRange> ranges;
         private readonly Vehicle vehicle;
         private readonly Protocol protocol;
+        private readonly PcmInfo pcmInfo;
         private readonly ILogger logger;
 
-        public CKernelVerifier(byte[] image, IEnumerable<MemoryRange> ranges, Vehicle vehicle, Protocol protocol, ILogger logger)
+        public CKernelVerifier(
+            byte[] image, 
+            IEnumerable<MemoryRange> ranges, 
+            Vehicle vehicle, 
+            Protocol protocol, 
+            PcmInfo pcmInfo,
+            ILogger logger)
         {
             this.image = image;
             this.ranges = ranges;
             this.vehicle = vehicle;
             this.protocol = protocol;
+            this.pcmInfo = pcmInfo;
             this.logger = logger;
         }
 
@@ -33,7 +41,10 @@ namespace PcmHacking
             Crc crc = new Crc();
             foreach (MemoryRange range in this.ranges)
             {
-                range.DesiredCrc = crc.GetCrc(this.image, range.Address, range.Size);
+                if (range.Address < pcmInfo.ImageSize) // P10 does not use the whole chip
+                {
+                    range.DesiredCrc = crc.GetCrc(this.image, range.Address, range.Size);
+                }
             }
         }
 
@@ -77,7 +88,8 @@ namespace PcmHacking
             {
                 string formatString = "{0:X6}-{1:X6}\t{2:X8}\t{3:X8}\t{4}\t{5}";
 
-                if ((range.Type & blockTypes) == 0)
+                if (((range.Type & blockTypes) == 0) ||
+                    (range.Address >= this.pcmInfo.ImageSize))
                 {
                     this.logger.AddUserMessage(
                     string.Format(
@@ -100,7 +112,7 @@ namespace PcmHacking
                 // When the segment sum is available it is returned.
                 int retryDelay = 50;
                 Message query = this.protocol.CreateCrcQuery(range.Address, range.Size);
-                for (int segment = 0; segment < 20; segment++)
+                for (int segment = 0; segment < 40; segment++)
                 {
                     logger.StatusUpdateActivity($"Processing CRC for range {range.Address:X6}-{range.Address + (range.Size - 1):X6}, segment {segment + 1}");
 

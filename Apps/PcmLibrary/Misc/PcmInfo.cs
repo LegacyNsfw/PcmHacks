@@ -6,11 +6,16 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
-    public enum ValidationMethod
+    public enum PcmType
     {
-        Undefined = 0,
+        Undefined = 0, // required for failed osid test on binary file
         P01_P59,
-        P04
+        P04,
+        P10,
+        P12,
+        LB7,
+        LLY,
+        BLACKBOX
     }
 
     /// <summary>
@@ -39,7 +44,12 @@ namespace PcmHacking
         /// <summary>
         /// Indicates how to validate files before writing.
         /// </summary>
-        public ValidationMethod ValidationMethod { get; private set; }
+        public PcmType ValidationMethod { get; private set; }
+
+        /// <summary>
+        /// What type of hardware it is
+        /// </summary>
+        public PcmType HardwareType { get; private set; }
 
         /// <summary>
         /// Name of the kernel file to use.
@@ -62,6 +72,11 @@ namespace PcmHacking
         public int ImageSize { get; private set; }
 
         /// <summary>
+        /// Size of the ROM.
+        /// </summary>
+        public int RAMSize { get; private set; }
+
+        /// <summary>
         /// Which key algorithm to use to unlock the PCM.
         /// </summary>
         public int KeyAlgorithm { get; private set; }
@@ -75,9 +90,11 @@ namespace PcmHacking
 
             // These defaults work for P01 and P59 hardware.
             // They will need to be overwriten for others.
-            this.KernelFileName = "kernel.bin";
+            this.KernelFileName = "Kernel-P01.bin";
             this.KernelBaseAddress = 0xFF8000;
-            this.ValidationMethod = ValidationMethod.P01_P59;
+            this.RAMSize = 0x4DFF;
+            this.ValidationMethod = PcmType.P01_P59;
+            this.HardwareType = PcmType.P01_P59;
 
             // This will be overwritten for known-to-be-unsupported operating systems.
             this.IsSupported = true;
@@ -103,6 +120,7 @@ namespace PcmHacking
                     this.Description = "LB7 EFILive COS";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
+                    this.HardwareType = PcmType.LB7;
                     break;
 
                 // LB7 Duramax service no 9388505
@@ -113,6 +131,7 @@ namespace PcmHacking
                     this.Description = "LB7 9388505";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
+                    this.HardwareType = PcmType.LB7;
                     break;
 
                 // LB7 Duramax service no 12210729
@@ -125,6 +144,7 @@ namespace PcmHacking
                     this.Description = "LB7 12210729";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
+                    this.HardwareType = PcmType.LB7;
                     break;
 
                 // LLY Duramax service no 12244189 - 1mbyte?
@@ -140,6 +160,7 @@ namespace PcmHacking
                     this.Description = "LLY 12244189";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 1024 * 1024;
+                    this.HardwareType = PcmType.LLY;
                     break;
 
                 // LL7 Duramax EFI Live Cos
@@ -156,6 +177,7 @@ namespace PcmHacking
                     this.Description = "LLY EFILive COS";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 1024 * 1024;
+                    this.HardwareType = PcmType.LLY;
                     break;
 
                 // VCM Suite COS
@@ -362,7 +384,7 @@ namespace PcmHacking
                 case 04110002:
                 case 05120002:
                     this.KeyAlgorithm = 40;
-                    string type = osid.ToString(); // Originally: PCMOSID.Text.Substring(PCMOSID.Text.Length - 2, 2);
+                    string type = osid.ToString();
                     switch (Convert.ToInt32(type, 10))
                     {
                         case 1:
@@ -457,6 +479,7 @@ namespace PcmHacking
                     this.Description = "'Black Box' 9366810";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
+                    this.HardwareType = PcmType.BLACKBOX;
                     break;
 
                 //Hardware 9380717 V6 P04
@@ -605,26 +628,6 @@ namespace PcmHacking
                 case 12201461:
                 case 12201462:
                 case 12201463:
-
-                //LL8 - Atlas I6 (4200) P12
-                case 12604440:
-                case 12606400:
-                    this.IsSupported = false;
-                    this.KeyAlgorithm = 91;
-                    this.Description = "LL8 Atlas P12";
-                    this.ImageBaseAddress = 0x0;
-                    this.ImageSize = 1024 * 1024;
-                    break;
-
-                //L52 - Atlas I5 (3500) P12
-                case 12606374:
-                case 12606375:
-                    this.IsSupported = false;
-                    this.KeyAlgorithm = 91;
-                    this.Description = "L52 Atlas P12";
-                    this.ImageBaseAddress = 0x0;
-                    this.ImageSize = 1024 * 1024;
-                    break;
                 case 12201465:
                 case 12201466:
                 case 12201467:
@@ -737,16 +740,77 @@ namespace PcmHacking
                     this.ImageSize = 512 * 1024;
                     this.IsSupported = false;
                     this.KernelBaseAddress = 0xFF9090;
-                    this.ValidationMethod = ValidationMethod.P04;
+                    this.ValidationMethod = PcmType.P04;
+                    this.HardwareType = PcmType.P04;
                     break;
 
+                // P10
+                case 12213305:
+                case 12571911:
+                case 12575262:
+                case 12577956:
+                case 12579238:
+                case 12579357:
+                case 12584138:
+                case 12584594:
+                case 12587430:
+                case 12587608:
+                case 12588012:
+                case 12589825:
+                case 12590965:
+                case 12595726:
+                case 12597031:
+                case 12623317:
+                    this.KernelFileName = "Kernel-P10.bin";
+                    this.KernelBaseAddress = 0xFFB800; // Or FFA000? https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=450#p115622
+                    this.RAMSize = 0x2800; // or 4000?
+                    this.IsSupported = true;
+                    this.KeyAlgorithm = 66;
+                    this.Description = "P10";
+                    this.ImageBaseAddress = 0x0;
+                    this.ImageSize = 512 * 1024;
+                    this.ValidationMethod = PcmType.P10;
+                    this.HardwareType = PcmType.P10;
+                    break;
+
+                // P12
+                case 12593533:
+                case 12597778:
+                case 12597978:
+                case 12601774:
+                case 12605261:
+                case 12610624:
+                case 12613422:
+                case 12627882:
+                case 12627884:
+                case 12627885:
+                case 12631085:
+                //LL8 - Atlas I6 (4200) P12
+                case 12604440:
+                case 12606400:
+                //L52 - Atlas I5 (3500) P12
+                case 12606374:
+                case 12606375:
+                //LK5 - Atlas I4 (2800) P12
+                case 12627883:
+                    this.KernelFileName = "Kernel-P12.bin";
+                    this.KernelBaseAddress = 0xFF2000; // or FF0000? https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=450#p115622
+                    this.RAMSize= 0x6000;
+                    this.IsSupported = true;
+                    this.KeyAlgorithm = 91;
+                    this.Description = "P12 (Atlas I4/I5/I6)";
+                    this.ImageBaseAddress = 0x0;
+                    this.ImageSize = 1024 * 1024;
+                    this.ValidationMethod = PcmType.P12;
+                    this.HardwareType = PcmType.P12;
+                    break;
 
                 default:
-                    // this.IsSupported = false; // Not sure what the default should be...
+                    this.IsSupported = false;
                     this.KeyAlgorithm = 40;
                     this.Description = "Unknown";
                     this.ImageBaseAddress = 0x0;
-                    this.ImageSize = 512 * 1024;
+                    this.ImageSize = 0;
                     break;
             }
         }

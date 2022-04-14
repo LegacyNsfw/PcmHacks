@@ -33,10 +33,10 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\nate\AppData\Local\Temp\vs8ABF.tmp\Debug\</IntermediateOutputPath>
+    <IntermediateOutputPath>C:\Users\a\AppData\Local\Temp\vs6362.tmp\Debug\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -46,7 +46,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\nate\AppData\Local\Temp\vs8ABF.tmp\Release\</IntermediateOutputPath>
+    <IntermediateOutputPath>C:\Users\a\AppData\Local\Temp\vs6362.tmp\Release\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>0411_256px.ico</ApplicationIcon>

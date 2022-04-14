@@ -88,8 +88,7 @@ namespace PcmHacking
                         return false;
                     }
 
-                    // TODO: instead of this hard-coded address, get the base address from the PcmInfo object.
-                    if (!await this.vehicle.PCMExecute(response.Value, this.pcmInfo.KernelBaseAddress, cancellationToken))
+                    if (!await this.vehicle.PCMExecute(this.pcmInfo, response.Value, cancellationToken))
                     {
                         logger.AddUserMessage("Failed to upload kernel to PCM");
 
@@ -110,8 +109,7 @@ namespace PcmHacking
                     return false;
                 }
 
-                bool shouldHalt;
-                Utility.ReportOperatingSystems(validator.GetOsidFromImage(), osidResponse.Value, this.writeType, this.logger, out shouldHalt);
+                Utility.ReportOperatingSystems(validator.GetOsidFromImage(), osidResponse.Value, this.writeType, this.logger, out bool shouldHalt);
                 if (needToCheckOperatingSystem && shouldHalt)
                 {
                     return false;
@@ -217,9 +215,10 @@ namespace PcmHacking
             FlashChip flashChip = FlashChip.Create(chipId, this.logger);
             logger.AddUserMessage("Flash chip: " + flashChip.ToString());
 
-            if (flashChip.Size != image.Length)
+            // This is the only thing preventing a P01 os write to a P59 or vice-versa because of the shared P01_P59 type
+            if (pcmInfo.ImageSize != image.Length)
             {
-                this.logger.AddUserMessage(string.Format("File size {0:n0} does not match Flash Chip size {1:n0}!", image.Length, flashChip.Size));
+                this.logger.AddUserMessage(string.Format("File size {0:n0} does not match PCM size {1:n0}. This image is not compatible with this PCM.", image.Length, pcmInfo.ImageSize));
                 await this.vehicle.Cleanup();
                 return false;
             }
@@ -229,6 +228,7 @@ namespace PcmHacking
                 flashChip.MemoryRanges,
                 this.vehicle,
                 this.protocol,
+                this.pcmInfo,
                 this.logger);
 
             bool allRangesMatch = false;
@@ -413,6 +413,14 @@ namespace PcmHacking
                 return false;
             }
 
+            // The P10 has the same flash chip as the P59, but the high bit of the address bus
+            // isn't connected, so there will be hardware errors talking to the top 512kb.
+            // So, we skip ranges that are beyond the size of the usable image.
+            if (range.Address >= this.pcmInfo.ImageSize)
+            {
+                return false;
+            }
+
             // Skip irrelevant blocks.
             if ((range.Type & relevantBlocks) == 0)
             {
@@ -543,24 +551,6 @@ namespace PcmHacking
                 this.logger.AddUserMessage("copy the text. Press Ctrl+V to paste that content");
                 this.logger.AddUserMessage("content into your forum post.");
             }
-        }
-
-        /// <summary>
-        /// Not yet implemented.
-        /// </summary>
-        private async Task<bool> OsAndCalibrationWrite(CancellationToken cancellationToken, byte[] image)
-        {
-            await Task.Delay(0);
-            return true;
-        }
-
-        /// <summary>
-        /// Not yet implemented.
-        /// </summary>
-        private async Task<bool> FullWrite(CancellationToken cancellationToken, byte[] image)
-        {
-            await Task.Delay(0);
-            return true;
         }
     }
 }

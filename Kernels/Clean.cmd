@@ -3,7 +3,7 @@ for %%A in (
   *.o
   *.disassembly
   *.out
-  *.S
+  *.ram
   *.bin
   *.elf
   *.log

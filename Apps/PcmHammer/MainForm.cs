@@ -791,6 +791,8 @@ namespace PcmHacking
                 if (osResponse.Status == ResponseStatus.Success)
                 {
                     this.AddUserMessage("OS ID: " + osResponse.Value.ToString());
+                    PcmInfo info = new PcmInfo(osResponse.Value);
+                    this.AddUserMessage("Hardware Type: " + info.HardwareType.ToString());
                 }
                 else
                 {
@@ -807,7 +809,7 @@ namespace PcmHacking
                     this.AddUserMessage("Calibration ID query failed: " + calResponse.Status.ToString());
                 }
 
-                var hardwareResponse = await this.Vehicle.QueryHardwareId();
+                /*var hardwareResponse = await this.Vehicle.QueryHardwareId();
                 if (hardwareResponse.Status == ResponseStatus.Success)
                 {
                     this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString());
@@ -815,7 +817,7 @@ namespace PcmHacking
                 else
                 {
                     this.AddUserMessage("Hardware ID query failed: " + hardwareResponse.Status.ToString());
-                }
+                }*/ //TODO: Fix This for P12
 
                 var serialResponse = await this.Vehicle.QuerySerial();
                 if (serialResponse.Status == ResponseStatus.Success)
@@ -1350,6 +1352,11 @@ namespace PcmHacking
                         pcmInfo = new PcmInfo(osidResponse.Value);
                         keyAlgorithm = pcmInfo.KeyAlgorithm;
                         needUnlock = true;
+
+                        if (!validator.IsSameHardware(osidResponse.Value))
+                        {
+                            return;
+                        }
 
                         if (!validator.IsSameOperatingSystem(osidResponse.Value))
                         {

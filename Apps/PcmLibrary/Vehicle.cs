@@ -351,8 +351,7 @@ namespace PcmHacking
                     continue;
                 }
 
-                string errorMessage;
-                Response<bool> result = this.protocol.ParseUnlockResponse(unlockResponse.GetBytes(), out errorMessage);
+                Response<bool> result = this.protocol.ParseUnlockResponse(unlockResponse.GetBytes(), out string errorMessage);
                 if (errorMessage == null)
                 {
                     return result.Value;

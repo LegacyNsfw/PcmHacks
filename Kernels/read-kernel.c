@@ -47,7 +47,7 @@ void ProcessMessage()
 	case 0x3D:
 		if (MessageBuffer[4] == 0x00)
 		{
-			HandleVersionQuery(0xAA);
+			HandleVersionQuery();
 		}
 		else
 		{
