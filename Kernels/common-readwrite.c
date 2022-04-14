@@ -63,11 +63,7 @@ void HandleWriteRequestMode34()
 void SendWriteSuccess(unsigned char code)
 {
 	// Send response
-#if defined P12
-	MessageBuffer[0] = 0x6C;
-#else
 	MessageBuffer[0] = 0x6D;
-#endif
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x76;
@@ -78,11 +74,7 @@ void SendWriteSuccess(unsigned char code)
 
 void SendWriteFail(unsigned char callerError, unsigned char flashError)
 {
-#if defined P12
-	MessageBuffer[0] = 0x6C;
-#else
 	MessageBuffer[0] = 0x6D;
-#endif
 	MessageBuffer[1] = 0xF0;
 	MessageBuffer[2] = 0x10;
 	MessageBuffer[3] = 0x7F;
