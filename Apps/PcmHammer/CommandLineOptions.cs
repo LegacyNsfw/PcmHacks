@@ -16,5 +16,7 @@ namespace PcmHacking
         public string BinFilePath { get; set; }
         [Option("version", Required = false, HelpText = "Display version information")]
         public bool ShowVersion { get; set; }
+        [Option('r', Required = false, HelpText = "Reset device configuration")]
+        public bool ResetDeviceConfiguration { get; set; }
     }
 }

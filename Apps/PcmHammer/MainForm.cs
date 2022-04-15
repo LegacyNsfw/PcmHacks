@@ -419,8 +419,6 @@ namespace PcmHacking
                 ThreadPool.QueueUserWorkItem(new WaitCallback(LoadHelp));
                 ThreadPool.QueueUserWorkItem(new WaitCallback(LoadCredits));
 
-                await this.ResetDevice();
-
                 this.MinimumSize = new Size(800, 600);
 
                 if (string.IsNullOrWhiteSpace(Configuration.Settings.LogDirectory) || !Directory.Exists(Configuration.Settings.LogDirectory))
@@ -444,7 +442,10 @@ namespace PcmHacking
                 }
 
                 this.StatusUpdateReset();
+
                 ProcessCommandLine();
+
+                await this.ResetDevice();
             }
             catch (Exception exception)
             {
@@ -452,7 +453,6 @@ namespace PcmHacking
                 this.AddDebugMessage(exception.ToString());
             }
         }
-
 
         /// <summary>
         /// Parse cmdline parameters
@@ -467,11 +467,32 @@ namespace PcmHacking
                     {
                         WriteCalibration(o.BinFilePath);
                     }
+
                     if (o.ShowVersion)
                     {
                         Console.WriteLine(GetAppNameAndVersion());
                     }
+
+                    if (o.ResetDeviceConfiguration)
+                    {
+                        ResetDeviceConfiguration();
+                    }
                 });
+        }
+
+        /// <summary>
+        /// Reset Device Configuration
+        /// </summary>
+        /// <remarks>
+        /// Used by command line argument --resetdeviceconfig to reset device configuration
+        /// </remarks>
+        private void ResetDeviceConfiguration()
+        {
+            DeviceConfiguration.Settings.DeviceCategory = string.Empty;
+            DeviceConfiguration.Settings.SerialPortDeviceType = string.Empty;
+            DeviceConfiguration.Settings.J2534DeviceType = string.Empty;
+            DeviceConfiguration.Settings.SerialPort = string.Empty;
+            DeviceConfiguration.Settings.Save();
         }
 
         /// <summary>

@@ -87,6 +87,27 @@ namespace PcmHacking
                 this.status.Text = "You don't seem to have any serial ports or J2534 devices.";
             }
 
+            switch(DeviceConfiguration.Settings.DeviceCategory)
+            {
+                case DeviceConfiguration.Constants.DeviceCategorySerial:
+                    {
+                        if (this.serialDeviceList.Items.Count > 0)
+                        {
+                            this.serialRadioButton.Checked = true;
+                        }
+                    }
+                    break;
+
+                case DeviceConfiguration.Constants.DeviceCategoryJ2534:
+                    {
+                        if (this.j2534DeviceList.Items.Count > 0)
+                        {
+                            this.j2534RadioButton.Checked = true;
+                        }
+                    }
+                    break;
+            }
+
             SetDefault(
                 this.serialPortList, 
                 x => (x as SerialPortInfo)?.PortName,
@@ -159,6 +180,9 @@ namespace PcmHacking
         /// </summary>
         private void FillJ2534DeviceList()
         {
+            this.j2534DeviceList.Items.Add(prompt);
+            this.j2534DeviceList.SelectedIndex = 0;
+
             foreach(J2534.J2534Device device in J2534DeviceFinder.FindInstalledJ2534DLLs(this.logger))
             {
                 this.j2534DeviceList.Items.Add(device);
@@ -196,8 +220,10 @@ namespace PcmHacking
         {
             if (this.serialRadioButton.Checked)
             {
-                serialOptionsGroupBox.Enabled = true;
                 j2534OptionsGroupBox.Enabled = false;
+                J2534DeviceType = string.Empty;
+                j2534DeviceList.SelectedIndex = 0;
+                serialOptionsGroupBox.Enabled = true;
                 this.DeviceCategory = DeviceConfiguration.Constants.DeviceCategorySerial;
             }
         }
@@ -205,11 +231,14 @@ namespace PcmHacking
         /// <summary>
         /// Enable/disable different groups of controls depending of which device type the user has chosen.
         /// </summary>
-        private void j2534DeviceButton_CheckedChanged(object sender, EventArgs e)
+        private void j2534RadioButton_CheckedChanged(object sender, EventArgs e)
         {
             if (this.j2534RadioButton.Checked)
             {
                 serialOptionsGroupBox.Enabled = false;
+                SerialPortDeviceType = string.Empty;
+                serialDeviceList.SelectedIndex = 0;
+                serialPortList.SelectedIndex = 0;
                 j2534OptionsGroupBox.Enabled = true;
                 this.DeviceCategory = DeviceConfiguration.Constants.DeviceCategoryJ2534;
             }
@@ -242,7 +271,13 @@ namespace PcmHacking
         /// </summary>
         private void j2534DeviceList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            this.J2534DeviceType = this.j2534DeviceList.SelectedItem?.ToString();
+            string item = this.j2534DeviceList.SelectedItem?.ToString();
+            if (item == prompt)
+            {
+                item = null;
+            }
+
+            this.J2534DeviceType = item;
         }
 
         /// <summary>
