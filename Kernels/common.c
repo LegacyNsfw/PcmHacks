@@ -477,7 +477,7 @@ void HandleVersionQuery()
 	MessageBuffer[4] = 0x00;
 	MessageBuffer[5] = 0x01; // major
 	MessageBuffer[6] = 0x03; // minor
-	MessageBuffer[7] = 0x04; // patch
+	MessageBuffer[7] = 0x05; // patch
 #if defined P12
 	MessageBuffer[8] = 0x0C;
 #elif defined P10

@@ -50,17 +50,18 @@ char volatile * const  SIM_CSOR6    =   SIM_BASE + 0x66;*/
 // true to unlock, false to lock.
 void FlashUnlock(bool unlock);
 
-// Functions prefixed with Intel512 work with this chip ID
-#define FLASH_ID_INTEL_512  0x00894471
-#define FLASH_ID_INTEL_1024 0x0089889D
+// Functions prefixed with Intel work with this chip ID
+#define FLASH_ID_INTEL_28F400B 0x00894471 // 512k
+#define FLASH_ID_INTEL_28F800B 0x0089889D // 1m
 
 uint32_t Intel_GetFlashId();
 uint8_t Intel_EraseBlock(uint32_t address);
 uint8_t Intel_WriteToFlash(unsigned int payloadLengthInBytes, unsigned int startAddress, unsigned char *payloadBytes, int testWrite);
 
-// Functions prefixed with Amd1024 work with this chip ID
-#define FLASH_ID_AMD_1024  0x00012258
-#define FLASH_ID_AMD_AM29BL802C 0x00012281
+// Functions prefixed with Amd work with this chip ID
+#define FLASH_ID_AMD_AM29F800BB 0x00012258 // 1m
+#define FLASH_ID_AMD_AM29BL162C 0x00012203 // 2m
+#define FLASH_ID_AMD_AM29BL802C 0x00012281 // 1m
 
 uint32_t Amd_GetFlashId();
 uint8_t Amd_EraseBlock(uint32_t address);

@@ -196,12 +196,13 @@ void HandleEraseBlock()
 
 	switch (flashIdentifier)
 	{
-		case FLASH_ID_INTEL_512:
-		case FLASH_ID_INTEL_1024:
+		case FLASH_ID_INTEL_28F400B:
+		case FLASH_ID_INTEL_28F800B:
 			status = Intel_EraseBlock(address);
 			break;
 
-		case FLASH_ID_AMD_1024:
+		case FLASH_ID_AMD_AM29F800BB:
+		case FLASH_ID_AMD_AM29BL162C:
 		case FLASH_ID_AMD_AM29BL802C:
 			status = Amd_EraseBlock(address);
 			break;
@@ -267,16 +268,17 @@ unsigned char WriteToFlash(unsigned int payloadLengthInBytes, unsigned int start
 {
 	switch (flashIdentifier)
 	{
-	case FLASH_ID_INTEL_512:
-	case FLASH_ID_INTEL_1024:
-		return Intel_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
+		case FLASH_ID_INTEL_28F400B:
+		case FLASH_ID_INTEL_28F800B:
+			return Intel_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
 
-	case FLASH_ID_AMD_1024:
-	case FLASH_ID_AMD_AM29BL802C:
-		return Amd_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
+		case FLASH_ID_AMD_AM29F800BB:
+		case FLASH_ID_AMD_AM29BL162C:
+		case FLASH_ID_AMD_AM29BL802C:
+			return Amd_WriteToFlash(payloadLengthInBytes, startAddress, payloadBytes, testWrite);
 
-	default:
-		return 0xEE;
+		default:
+			return 0xEE;
 	}
 }
 

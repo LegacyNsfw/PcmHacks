@@ -113,6 +113,26 @@ namespace PcmHacking
                     };
                     break;
 
+                // AM29BL162C
+                case 0x00012203:
+                    size = 2048 * 1024;
+                    description = "AMD AM29BL162C, 2mb";
+                    memoryRanges = new MemoryRange[]
+                    {           // Start address, Size in Bytes
+                        new MemoryRange(0x1C0000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange(0x180000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange(0x140000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange(0x100000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange( 0xC0000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange( 0x80000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange( 0x40000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange( 0x08000, 0x38000, BlockType.Calibration),     // 229kb Calibration block
+                        new MemoryRange( 0x06000, 0x02000, BlockType.Parameter),       //   8kb parameter block
+                        new MemoryRange( 0x04000, 0x02000, BlockType.Parameter),       //   8kb parameter block
+                        new MemoryRange( 0x00000, 0x04000, BlockType.Boot),            //  16kb boot block
+                    };
+                    break;
+
                 // AM29F800BB   
                 case 0x00012258:
                     size = 1024 * 1024;
@@ -147,18 +167,18 @@ namespace PcmHacking
                     description = "AMD AM29BL802C, 1mb";
                     memoryRanges = new MemoryRange[]
                     {          // Start address, Size in Bytes
-                        new MemoryRange(0xC0000, 0x40000, BlockType.OperatingSystem), // 256kb main block        (128Kwords) (128 * 1024 = 131072 * 2 = 262144 (0x40000))
-                        new MemoryRange(0x80000, 0x40000, BlockType.OperatingSystem), // 256kb main block        (128Kwords) (128 * 1024 = 131072 * 2 = 262144 (0x40000))
-                        new MemoryRange(0x60000, 0x20000, BlockType.OperatingSystem), // 128kb main block         (64Kwords)  (64 * 1024 =  65536 * 2 = 131072 (0x20000))
-                        new MemoryRange(0x40000, 0x20000, BlockType.OperatingSystem), // 128kb main block         (64Kwords)  (64 * 1024 =  65536 * 2 = 131072 (0x20000))
-                        new MemoryRange(0x20000, 0x20000, BlockType.Calibration),     // 128kb calibration block  (64Kwords)  (64 * 1024 =  65536 * 2 = 131072 (0x20000))
-                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration),     //  96kb calibration block  (48Kwords)  (48 * 1024 =  49152 * 2 =  98304 (0x18000))
-                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter),       //   8kb parameter block     (4Kwords)   (4 * 1024 =   4096 * 2 =   8192 (0x02000))
-                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter),       //   8kb parameter block     (4Kwords)   (4 * 1024 =   4096 * 2 =   8192 (0x02000))
-                        new MemoryRange(0x00000, 0x04000, BlockType.Boot),            //  16kb boot block          (8Kwords)   (8 * 1024 =   8192 * 2 =  16384 (0x04000))
+                        new MemoryRange(0xC0000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange(0x80000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange(0x60000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x40000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x20000, 0x20000, BlockType.Calibration),     // 128kb calibration block
+                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration),     //  96kb calibration block
+                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter),       //   8kb parameter block
+                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter),       //   8kb parameter block
+                        new MemoryRange(0x00000, 0x04000, BlockType.Boot),            //  16kb boot block
                     };
                     break;
-                    
+
                 // AM29F400BB   
                 case 0x000122AB:
                     size = 512 * 1024;
