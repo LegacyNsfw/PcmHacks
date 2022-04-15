@@ -11,6 +11,7 @@ goto beginning
 * Authored Date: 11/16/2018
 * Revision Date: 05/19/2020 - Gampy <pcmhacking.net> Cleanup for publication.
 * Revision Date: 04/01/2022 - Gampy <pcmhacking.net> Added -t<PCM Type>, added -r dump kernel RAM map.
+* Revision Date: 04/14/2022 - Gampy <pcmhacking.net> Fixed ld map dump.
 *
 * Authors disclaimer
 *   It is what it is, you can do with it as you please. (with respect)
@@ -147,7 +148,7 @@ rem * Handle command line options.
     if /i "!VAR!" == "-c"      set COPY_BIN=
     if /i "!VAR!" == "-d"      set DUMP_ELF=True
     if /i "!VAR:~0,2!" == "-g" set "GCC_LOCATION=!VAR:~2!"
-    if /i "!VAR!" == "-m"      set "DUMP_MAP=-Map Kernel-%PCMTYPE%.map"
+    if /i "!VAR!" == "-m"      set DUMP_MAP=True
     if /i "!VAR:~0,2!" == "-p" set "BIN_LOCATION=!VAR:~2!"
     if /i "!VAR!" == "-r"      set DUMP_RAM=True
     if /i "!VAR:~0,2!" == "-t" set "PCMTYPE=!VAR:~2!"
@@ -158,6 +159,9 @@ rem * Handle command line options.
   setlocal disabledelayedexpansion
 )
 
+rem * Setup linker map dump
+if defined DUMP_MAP (set "DUMPMAP=-Map Kernel-%PCMTYPE%.map")
+
 rem * Ensure we have no trailing slash.
 call :Detrailslash "%GCC_LOCATION%" GCC_LOCATION
 call :Detrailslash "%BIN_LOCATION%" BIN_LOCATION
@@ -166,7 +170,7 @@ rem *** All that for this ...
 "%GCC_LOCATION%\m68k-elf-gcc.exe" -c -D=%PCMTYPE% -fomit-frame-pointer -std=gnu99 -mcpu=68332 -O0 main.c write-kernel.c crc.c common.c common-readwrite.c flash-intel.c flash-amd.c
 if %errorlevel% neq 0 goto :EOF
 
-"%GCC_LOCATION%\m68k-elf-ld.exe" --section-start .kernel_code=0x%BASE_ADDRESS% -T kernel.ld %DUMP_MAP% -o Kernel-%PCMTYPE%.elf main.o write-kernel.o crc.o common.o common-readwrite.o flash-intel.o flash-amd.o
+"%GCC_LOCATION%\m68k-elf-ld.exe" --section-start .kernel_code=0x%BASE_ADDRESS% -T kernel.ld %DUMPMAP% -o Kernel-%PCMTYPE%.elf main.o write-kernel.o crc.o common.o common-readwrite.o flash-intel.o flash-amd.o
 if %errorlevel% neq 0 goto :EOF
 
 "%GCC_LOCATION%\m68k-elf-objcopy.exe" -O binary --only-section=.kernel_code --only-section=.rodata Kernel-%PCMTYPE%.elf Kernel-%PCMTYPE%.bin
@@ -183,6 +187,6 @@ if defined DUMP_RAM (
 )
 
 if defined COPY_BIN (
-  echo %BIN_LOCATION%
+  echo %BIN_LOCATION%\Kernel-%PCMTYPE%.bin
   copy Kernel-%PCMTYPE%.bin "%BIN_LOCATION%"
 )
