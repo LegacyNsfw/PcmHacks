@@ -157,7 +157,7 @@ namespace PcmHacking
                 }
 
                 logger.AddUserMessage("Read complete.");
-                Utility.ReportRetryCount("Read", retryCount, flashChip.Size, this.logger);
+                Utility.ReportRetryCount("Read", retryCount, pcmInfo.ImageSize, this.logger);
 
                 if (VerifyFile)
                 {
