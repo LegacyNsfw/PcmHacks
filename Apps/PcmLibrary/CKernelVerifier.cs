@@ -111,10 +111,12 @@ namespace PcmHacking
                 // Each poll of the pcm causes it to CRC 16kb of segment data.
                 // When the segment sum is available it is returned.
                 int retryDelay = 50;
+                int maxAttempts = 50; // Logged highs of 38 on 1m P12, the rest are a good deal lower.
                 Message query = this.protocol.CreateCrcQuery(range.Address, range.Size);
-                for (int segment = 0; segment < 40; segment++)
+                for (int segment = 0; segment < maxAttempts; segment++)
                 {
-                    logger.StatusUpdateActivity($"Processing CRC for range {range.Address:X6}-{range.Address + (range.Size - 1):X6}, segment {segment + 1}");
+                    logger.StatusUpdateActivity($"Processing CRC for range {range.Address:X6}-{range.Address + (range.Size - 1):X6}");
+                    logger.StatusUpdateProgressBar((double)segment / maxAttempts, true);
 
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -146,6 +148,7 @@ namespace PcmHacking
                     break;
                 }
 
+                logger.StatusUpdateProgressBar(0, false);
                 this.vehicle.ClearDeviceMessageQueue();
 
                 if (!success)
