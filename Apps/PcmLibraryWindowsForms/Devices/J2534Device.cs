@@ -98,10 +98,10 @@ namespace PcmHacking
             Response<bool> m2;
             Response<double> volts;
 
-            //Check J2534 API
+            // Check J2534 API
             //this.Logger.AddDebugMessage(J2534Port.Functions.ToString());
 
-            //Check not already loaded
+            // Check not already loaded
             if (IsLoaded == true)
             {
                 this.Logger.AddDebugMessage("DLL already loaded, unloading before proceeding");
@@ -114,7 +114,7 @@ namespace PcmHacking
                 this.Logger.AddDebugMessage("Existing DLL successfully unloaded.");
             }
 
-            //Connect to requested DLL
+            // Connect to requested DLL
             m2 = LoadLibrary(J2534Port.LoadedDevice);
             if (m2.Status != ResponseStatus.Success)
             {
@@ -123,7 +123,7 @@ namespace PcmHacking
             }
             this.Logger.AddUserMessage("Loaded DLL");
 
-            //connect to scantool
+            // Connect to scantool
             m = ConnectTool();
             if (m.Status != ResponseStatus.Success)
             {
@@ -133,9 +133,9 @@ namespace PcmHacking
 
             this.Logger.AddUserMessage("Connected to the device.");
             
-            //Optional.. read API,firmware version ect here
+            // Optional.. read API,firmware version ect here
             
-            //read voltage
+            // Read voltage
             volts = ReadVoltage();
             if (volts.Status != ResponseStatus.Success)
             {
@@ -146,7 +146,7 @@ namespace PcmHacking
                 this.Logger.AddUserMessage("Battery Voltage is: " + volts.Value.ToString());
             }
 
-            //Set Protocol
+            // Set Protocol
             m = ConnectToProtocol(ProtocolID.J1850VPW, BaudRate.J1850VPW_10400, ConnectFlag.NONE);
             if (m.Status != ResponseStatus.Success)
             {
@@ -155,7 +155,7 @@ namespace PcmHacking
             }
             this.Logger.AddDebugMessage("Protocol Set");
 
-            //Set filter
+            // Set filter
             m = SetFilter(0xFEFFFF, J2534Device.MessageFilter, 0, TxFlag.NONE, FilterType.PASS_FILTER);
             if (m.Status != ResponseStatus.Success)
             {
@@ -185,8 +185,10 @@ namespace PcmHacking
             for (int iterations = 0; iterations < 5; iterations++)
             {
                 Message response = await this.ReceiveMessage();
-                    if (Utility.CompareArraysPart(response.GetBytes(), expected.GetBytes()))
-                        return Response.Create(ResponseStatus.Success, response);
+                if (Utility.CompareArraysPart(response.GetBytes(), expected.GetBytes()))
+                {
+                    return Response.Create(ResponseStatus.Success, response);
+                }
                 await Task.Delay(100);
             }
 
@@ -201,26 +203,25 @@ namespace PcmHacking
             //this.Logger.AddDebugMessage("Trace: Read Network Packet");
 
             PassThruMsg PassMess = new PassThruMsg();
-            Message TempMessage = new Message(null);
             int NumMessages = 1;
             IntPtr rxMsgs = Marshal.AllocHGlobal((int)(Marshal.SizeOf(typeof(PassThruMsg)) * NumMessages));
 
-            OBDError = 0; //Clear any previous faults
+            OBDError = 0; // Clear any previous faults
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
-            while (OBDError == J2534Err.STATUS_NOERROR || sw.ElapsedMilliseconds > (long)ReadTimeout)
+            do
             {
                 NumMessages = 1;
                 OBDError = J2534Port.Functions.PassThruReadMsgs((int)ChannelID, rxMsgs, ref NumMessages, ReadTimeout);
                 if (OBDError != J2534Err.STATUS_NOERROR)
                 {
                     this.Logger.AddDebugMessage("ReadMsgs OBDError: " + OBDError);
+                    Marshal.FreeHGlobal(rxMsgs);
                     return Task.FromResult(0);
                 }
 
-                sw.Stop();
                 PassMess = rxMsgs.AsMsgList(1).Last();
                 if ((int)PassMess.RxStatus == (((int)RxStatus.TX_INDICATION_SUCCESS) + ((int)RxStatus.TX_MSG_TYPE)) || (PassMess.RxStatus == RxStatus.START_OF_MESSAGE))
                 {
@@ -229,10 +230,12 @@ namespace PcmHacking
                 else
                 {
                     byte[] TempBytes = PassMess.GetBytes();
-                    //Perform additional filter check if required here... or show to debug
-                    break;//leave while loop
+                    // Perform additional filter check if required here... or show to debug
+                    break; // Exit loop
                 }
-            }
+            } while (OBDError == J2534Err.STATUS_NOERROR || sw.ElapsedMilliseconds > (long)ReadTimeout);
+            sw.Stop();
+
             Marshal.FreeHGlobal(rxMsgs);
 
             if (OBDError != J2534Err.STATUS_NOERROR || sw.ElapsedMilliseconds > (long)ReadTimeout)
@@ -266,7 +269,7 @@ namespace PcmHacking
             Marshal.FreeHGlobal(MsgPtr);
             if (OBDError != J2534Err.STATUS_NOERROR)
             {
-                //Debug messages here...check why failed..
+                // Debug messages here...check why failed..
                 return Response.Create(ResponseStatus.Error, OBDError);
             }
             return Response.Create(ResponseStatus.Success, OBDError);
@@ -289,7 +292,7 @@ namespace PcmHacking
         }
         
         /// <summary>
-        /// load in dll
+        /// Load in dll
         /// </summary>
         private Response<bool> LoadLibrary(J2534.J2534Device TempDevice)
         {
@@ -306,7 +309,7 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// unload dll
+        /// Unload dll
         /// </summary>
         private Response<bool> CloseLibrary()
         {
@@ -350,14 +353,14 @@ namespace PcmHacking
             OBDError = J2534Port.Functions.PassThruClose(DeviceID);
             if (OBDError != J2534Err.STATUS_NOERROR)
             {
-                //big problems, do something here
+                // Big problems, do something here
             }
             IsJ2534Open = false;
             return Response.Create(ResponseStatus.Success, OBDError);
         }
 
         /// <summary>
-        /// keep record if DLL has been loaded in
+        /// Keep record if DLL has been loaded
         /// </summary>
         public bool IsLoaded
         {
@@ -366,13 +369,16 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// connect to selected protocol
+        /// Connect to selected protocol
         /// Must provide protocol, speed, connection flags, recommended optional is pins
         /// </summary>
         private Response<J2534Err> ConnectToProtocol(ProtocolID ReqProtocol, BaudRate Speed, ConnectFlag ConnectFlags)
         {
             OBDError = J2534Port.Functions.PassThruConnect(DeviceID, ReqProtocol,  ConnectFlags,  Speed, ref ChannelID);
-            if (OBDError != J2534Err.STATUS_NOERROR) return Response.Create(ResponseStatus.Error, OBDError);
+            if (OBDError != J2534Err.STATUS_NOERROR)
+            {
+                return Response.Create(ResponseStatus.Error, OBDError);
+            }
             Protocol = ReqProtocol;
             IsProtocolOpen = true;
             return Response.Create(ResponseStatus.Success, OBDError);
@@ -384,7 +390,10 @@ namespace PcmHacking
         private Response<J2534Err> DisconnectFromProtocol()
         {
             OBDError = J2534Port.Functions.PassThruDisconnect((int)ChannelID);
-            if (OBDError != J2534Err.STATUS_NOERROR) return Response.Create(ResponseStatus.Error, OBDError);
+            if (OBDError != J2534Err.STATUS_NOERROR)
+            {
+                return Response.Create(ResponseStatus.Error, OBDError);
+            }
             IsProtocolOpen = false;
             return Response.Create(ResponseStatus.Success, OBDError);
         }
@@ -432,7 +441,10 @@ namespace PcmHacking
             Marshal.FreeHGlobal(MaskPtr);
             Marshal.FreeHGlobal(PatternPtr);
             Marshal.FreeHGlobal(FlowPtr);
-            if (OBDError != J2534Err.STATUS_NOERROR) return Response.Create(ResponseStatus.Error, OBDError);
+            if (OBDError != J2534Err.STATUS_NOERROR)
+            {
+                return Response.Create(ResponseStatus.Error, OBDError);
+            }
             Filters.Add((ulong)tempfilter);
             return Response.Create(ResponseStatus.Success, OBDError);
         }
@@ -448,13 +460,13 @@ namespace PcmHacking
             if (newSpeed == VpwSpeed.Standard)
             {
                 this.Logger.AddDebugMessage("J2534 setting VPW 1X");
-                //Disconnect from current protocol
+                // Disconnect from current protocol
                 DisconnectFromProtocol();
 
-                //Connect at new speed
+                // Connect at new speed
                 ConnectToProtocol(ProtocolID.J1850VPW, BaudRate.J1850VPW_10400, ConnectFlag.NONE);
 
-                //Set Filter
+                // Set Filter
                 SetFilter(0xFEFFFF, J2534Device.MessageFilter, 0, TxFlag.NONE, FilterType.PASS_FILTER);
                 //if (m.Status != ResponseStatus.Success)
                 //{
@@ -467,13 +479,13 @@ namespace PcmHacking
             else
             {
                 this.Logger.AddDebugMessage("J2534 setting VPW 4X");
-                //Disconnect from current protocol
+                // Disconnect from current protocol
                 DisconnectFromProtocol();
 
-                //Connect at new speed
+                // Connect at new speed
                 ConnectToProtocol(ProtocolID.J1850VPW, BaudRate.J1850VPW_41600, ConnectFlag.NONE);
 
-                //Set Filter
+                // Set Filter
                 SetFilter(0xFEFFFF, J2534Device.MessageFilter, 0, TxFlag.NONE, FilterType.PASS_FILTER);
 
             }
