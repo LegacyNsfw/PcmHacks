@@ -809,7 +809,8 @@ namespace PcmHacking
                     this.AddUserMessage("Calibration ID query failed: " + calResponse.Status.ToString());
                 }
 
-                /*var hardwareResponse = await this.Vehicle.QueryHardwareId();
+                /* TODO: Fix This for P12
+                var hardwareResponse = await this.Vehicle.QueryHardwareId();
                 if (hardwareResponse.Status == ResponseStatus.Success)
                 {
                     this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString());
@@ -817,7 +818,8 @@ namespace PcmHacking
                 else
                 {
                     this.AddUserMessage("Hardware ID query failed: " + hardwareResponse.Status.ToString());
-                }*/ //TODO: Fix This for P12
+                }
+                */
 
                 var serialResponse = await this.Vehicle.QuerySerial();
                 if (serialResponse.Status == ResponseStatus.Success)

@@ -63,6 +63,7 @@ namespace PcmHacking
                 case PcmType.P12:
                     byte[] requestBytesP12 = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest };
                     return new Message(requestBytesP12);
+
                 default:
                     byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, Submode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
                     requestBytes[5] = unchecked((byte)(Size >> 8));
@@ -103,19 +104,19 @@ namespace PcmHacking
             return this.DoSimpleValidation(message, Priority.Physical0High, Mode.PCMUploadRequest);
         }
 
-         /// <summary>
+        /// <summary>
         /// Parse the response to an upload-to-RAM request.
         /// </summary>
         public Response<bool> ParseUploadResponse(Message message)
         {
-            //P10, P12
+            // P12
             Response<bool> response = this.DoSimpleValidation(message, Priority.Physical0, Mode.PCMUpload);
             if (response.Status == ResponseStatus.Success || response.Status == ResponseStatus.Refused)
             {
                 return response;
             }
 
-            //P01, P59
+            // P01, P10, P59
             response = this.DoSimpleValidation(message, Priority.Block, Mode.PCMUpload);
             return response;
         }
@@ -152,7 +153,6 @@ namespace PcmHacking
         /// </remarks>
         public Response<byte[]> ParsePayload(Message message, int length, int expectedAddress)
         {
-            //ResponseStatus status;
             byte[] actual = message.GetBytes();
             byte[] expected = new byte[] { 0x6D, 0xF0, 0x10, 0x36 };
             if (!TryVerifyInitialBytes(actual, expected, out ResponseStatus status))

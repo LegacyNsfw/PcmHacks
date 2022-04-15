@@ -82,7 +82,6 @@ namespace PcmHacking
                 return false;
             }
 
-
             return this.ValidateChecksums();
         }
 
@@ -137,19 +136,22 @@ namespace PcmHacking
             if (image.Length == 512 * 1024 || image.Length == 1024 * 1024) // bin valid sizes
             {
                 PcmType type = this.ValidateSignatures();
-                switch (type) {
+                switch (type)
+                {
                     case PcmType.P01_P59:
                         osid += image[0x504] << 24;
                         osid += image[0x505] << 16;
                         osid += image[0x506] << 8;
                         osid += image[0x507] << 0;
                         break;
+
                     case PcmType.P10:
                         osid += image[0x52E] << 24;
                         osid += image[0x52F] << 16;
                         osid += image[0x530] << 8;
                         osid += image[0x531] << 0;
                         break;
+
                     case PcmType.P12:
                         osid += image[0x8004] << 24;
                         osid += image[0x8005] << 16;
@@ -199,7 +201,8 @@ namespace PcmHacking
 
             this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
 
-            switch (type) {
+            switch (type)
+            {
                 // P12 is so wierd we hard code segments with a special function here
                 case PcmType.P12:
                     success &= ValidateRangeP12(0x922, 0x900, 0x94A, 2, "Boot Block");
@@ -211,6 +214,7 @@ namespace PcmHacking
                     success &= ValidateRangeP12(0x805E, 0, 0x807E, 2, "Speedometer");
                     success &= ValidateRangeP12(0x8091, 0, 0x80B1, 2, "System");
                     break;
+
                 // The rest can use the generic code
                 default:
                     for (UInt32 segment = 0; segment < segments; segment++)
@@ -229,9 +233,11 @@ namespace PcmHacking
                             case PcmType.P01_P59:
                                 checksumAddress = startAddress == 0 ? 0x500 : startAddress;
                                 break;
+
                             case PcmType.P10:
                                 checksumAddress = startAddress == 0 ? 0x52A : startAddress;
                                 break;
+
                             default:
                                 checksumAddress = startAddress;
                                 break;
@@ -243,10 +249,12 @@ namespace PcmHacking
                         }
 
                         string segmentName;
-                        switch (type) {
+                        switch (type)
+                        {
                             case PcmType.P10:
                                 segmentName = segmentNames_P10[segment];
                                 break;
+
                             default:
                                 segmentName = segmentNames_P01_P59[segment];
                                 break;
@@ -349,20 +357,25 @@ namespace PcmHacking
 
             for (UInt32 address = start; address <= end; address += 2)
             {
-                switch (type) {
+                switch (type)
+                {
                     case PcmType.P10:
-                        switch (address) {
+                        switch (address)
+                        {
                             case 0x52A:
                                 address = 0x52C;
                                 break;
+
                             case 0x4000:
                                 address = 0x20000;
                                 break;
+
                             case 0x7FFFA:
-                                end = 0x7FFFA; // a hacky way to short circuit the end
+                                end = 0x7FFFA; // A hacky way to short circuit the end
                                 break;
                         }
                         break;
+
                     case PcmType.P01_P59:
                         if (address == 0x500)
                         {
@@ -418,7 +431,7 @@ namespace PcmHacking
 
             storedChecksum = (UInt16)((this.image[sumaddr + offset] << 8) + this.image[sumaddr + offset + 1]);
 
-            // lookup the start and end of each block, and add it to the sum
+            // Lookup the start and end of each block, and add it to the sum
             for (UInt32 block = 0; block < blocks; block++)
             {
                 start  = image[index + (block * 8) + 0] << 24;
@@ -437,7 +450,10 @@ namespace PcmHacking
                     computedChecksum += value;
                 }
 
-                if (block == 0) first = start;
+                if (block == 0)
+                {
+                    first = start;
+                }
             }
 
             computedChecksum = (UInt16) ((0 - computedChecksum)); // 2s compliment
@@ -445,13 +461,13 @@ namespace PcmHacking
             bool verdict = storedChecksum == computedChecksum;
 
             string error = string.Format(
-             "\t{0:X5}\t{1:X5}\t{2:X4}\t{3:X4}\t{4:X4}\t{5}",
-             first, // the start of the first block
-             end, // the end of the last block
-             storedChecksum,
-             computedChecksum,
-             verdict ? "Good" : "BAD",
-             description);
+                "\t{0:X5}\t{1:X5}\t{2:X4}\t{3:X4}\t{4:X4}\t{5}",
+                first, // The start of the first block
+                end,   // The end of the last block
+                storedChecksum,
+                computedChecksum,
+                verdict ? "Good" : "BAD",
+                description);
 
             this.logger.AddUserMessage(error);
             return verdict;
