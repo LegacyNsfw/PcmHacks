@@ -187,42 +187,49 @@ namespace PcmHacking
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+
                 case 1261001:
                     this.KeyAlgorithm = 4;
                     this.Description = "VCM Suite 3 Bar";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+
                 case 1271001:
                     this.KeyAlgorithm = 5;
                     this.Description = "VCM Suite Mafless";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+
                 case 1281001:
                     this.KeyAlgorithm = 6;
                     this.Description = "VCM Suite MAF RTT";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+
                 case 1271002:
                     this.KeyAlgorithm = 7;
                     this.Description = "VCM Suite Mafless";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+
                 case 1251002:
                     this.KeyAlgorithm = 8;
                     this.Description = "VCM Suite 2 Bar";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+
                 case 1261002:
                     this.KeyAlgorithm = 9;
                     this.Description = "VCM Suite MAF RTT";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+
                 case 1281002:
                     this.KeyAlgorithm = 10;
                     this.Description = "VCM Suite 3 Bar";
@@ -235,24 +242,28 @@ namespace PcmHacking
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+
                 case 1251003:
                     this.KeyAlgorithm = 12;
                     this.Description = "VCM Suite 2 Bar";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+
                 case 1261003:
                     this.KeyAlgorithm = 13;
                     this.Description = "VCM Suite 3 Bar";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+
                 case 1281003:
                     this.KeyAlgorithm = 14;
                     this.Description = "VCM Suite MAF RTT";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     break;
+
                 //------- HPT COS -----------
                 case 1250013:
                 case 1250018:
@@ -390,15 +401,19 @@ namespace PcmHacking
                         case 1:
                             this.Description = "EFI Live COS1";
                             break;
+
                         case 2:
                             this.Description = "EFI Live COS2";
                             break;
+
                         case 3:
                             this.Description = "EFI Live COS3";
                             break;
+
                         case 5:
                             this.Description = "EFI Live COS5";
                             break;
+
                         default:
                             this.Description = "EFI Live COS";
                             break;
@@ -408,7 +423,7 @@ namespace PcmHacking
                     break;
 
                 // 1Mb pcms
-                //GMC Sierra service number 12589463 
+                // GMC Sierra service number 12589463 
                 case 12591725:
                 case 12592618:
                 case 12593555:
@@ -433,6 +448,7 @@ namespace PcmHacking
                     this.Description = "12586242";
                     this.ImageSize = 1024 * 1024;
                     break;
+
                 // usa 12586243
                 case 12587603:
                 case 12587604:
@@ -440,6 +456,7 @@ namespace PcmHacking
                     this.Description = "12586243";
                     this.ImageSize = 1024 * 1024;
                     break;
+
                 // not sure 12582605
                 case 12578128:
                 case 12579405:
@@ -449,6 +466,7 @@ namespace PcmHacking
                     this.Description = "12582605";
                     this.ImageSize = 1024 * 1024;
                     break;
+
                 // not sure 12582811
                 case 12587811:
                 case 12605114:
@@ -462,6 +480,7 @@ namespace PcmHacking
                     this.Description = "12582811";
                     this.ImageSize = 1024 * 1024;
                     break;
+
                 // not sure 12602802
                 case 12597120:
                 case 12613248:
@@ -482,7 +501,7 @@ namespace PcmHacking
                     this.HardwareType = PcmType.BLACKBOX;
                     break;
 
-                //Hardware 9380717 V6 P04
+                // Hardware 9380717 V6 P04
                 case 9354406:
                 case 9356245:
                 case 9356247:
@@ -785,13 +804,13 @@ namespace PcmHacking
                 case 12627884:
                 case 12627885:
                 case 12631085:
-                //LL8 - Atlas I6 (4200) P12
+                // LL8 - Atlas I6 (4200) P12
                 case 12604440:
                 case 12606400:
-                //L52 - Atlas I5 (3500) P12
+                // L52 - Atlas I5 (3500) P12
                 case 12606374:
                 case 12606375:
-                //LK5 - Atlas I4 (2800) P12
+                // LK5 - Atlas I4 (2800) P12
                 case 12627883:
                     this.KernelFileName = "Kernel-P12.bin";
                     this.KernelBaseAddress = 0xFF2000; // or FF0000? https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=450#p115622
