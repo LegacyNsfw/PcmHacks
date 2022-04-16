@@ -194,7 +194,7 @@ namespace PcmHacking
         /// <summary>
         /// Print out the number of retries, and beg the user to share.
         /// </summary>
-        public static void ReportRetryCount(string operation, int retryCount, UInt32 flashChipSize, ILogger logger)
+        public static void ReportRetryCount(string operation, int retryCount, int pcmSize, ILogger logger)
         {
             if (retryCount == 0)
             {
@@ -209,7 +209,7 @@ namespace PcmHacking
                 logger.AddUserMessage(operation + "-request messages had to be re-sent " + retryCount + " times.");
             }
 
-            logger.AddUserMessage("We're not sure how much retrying is normal for a " + operation.ToLower() + " operation on a " + (flashChipSize / 1024).ToString() + "kb PCM."); 
+            logger.AddUserMessage("We're not sure how much retrying is normal for a " + operation.ToLower() + " operation on a " + (pcmSize / 1024).ToString() + "kb PCM."); 
             logger.AddUserMessage("Please help by sharing your results in the PCM Hammer thread at pcmhacking.net.");
         }
 

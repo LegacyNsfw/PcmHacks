@@ -258,7 +258,7 @@ namespace PcmHacking
                         this.logger.AddUserMessage("All relevant ranges are identical.");
                         if (attempt > 1)
                         {
-                            Utility.ReportRetryCount("Write", messageRetryCount, flashChip.Size, this.logger);
+                            Utility.ReportRetryCount("Write", messageRetryCount, pcmInfo.ImageSize, this.logger);
                         }
                         break;
                     }
@@ -268,7 +268,7 @@ namespace PcmHacking
                 if ((this.writeType == WriteType.TestWrite) && (attempt > 1))
                 {
                     logger.AddUserMessage("Test write complete.");
-                    Utility.ReportRetryCount("Write", messageRetryCount, flashChip.Size, this.logger);
+                    Utility.ReportRetryCount("Write", messageRetryCount, pcmInfo.ImageSize, this.logger);
                     return true;
                 }
 
