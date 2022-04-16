@@ -73,7 +73,7 @@ namespace PcmHacking
             this.j2534RadioButton.TabStop = true;
             this.j2534RadioButton.Text = "&J2534 Device";
             this.j2534RadioButton.UseVisualStyleBackColor = true;
-            this.j2534RadioButton.CheckedChanged += new System.EventHandler(this.j2534DeviceButton_CheckedChanged);
+            this.j2534RadioButton.CheckedChanged += new System.EventHandler(this.j2534RadioButton_CheckedChanged);
             // 
             // serialRadioButton
             // 
