@@ -792,14 +792,13 @@ namespace PcmHacking
                     this.HardwareType = PcmType.P10;
                     break;
 
-                // P12
+                // P12 1m
                 case 12593533:
                 case 12597778:
                 case 12597978:
                 case 12601774:
                 case 12605261:
                 case 12610624:
-                case 12613422:
                 case 12627882:
                 case 12627884:
                 case 12627885:
@@ -817,9 +816,26 @@ namespace PcmHacking
                     this.RAMSize= 0x6000;
                     this.IsSupported = true;
                     this.KeyAlgorithm = 91;
-                    this.Description = "P12 (Atlas I4/I5/I6)";
+                    this.Description = "P12 1m (Atlas I4/I5/I6)";
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 1024 * 1024;
+                    this.ValidationMethod = PcmType.P12;
+                    this.HardwareType = PcmType.P12;
+                    break;
+
+                // P12 2m - See: https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=470#p115747
+                case 12609805:
+                case 12611642:
+                case 12613422:
+                case 12618164:
+                    this.KernelFileName = "Kernel-P12.bin";
+                    this.KernelBaseAddress = 0xFF2000; // or FF0000? https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=450#p115622
+                    this.RAMSize = 0x6000;
+                    this.IsSupported = true;
+                    this.KeyAlgorithm = 91;
+                    this.Description = "P12 2m (Atlas I4/I5/I6)";
+                    this.ImageBaseAddress = 0x0;
+                    this.ImageSize = 2048 * 1024;
                     this.ValidationMethod = PcmType.P12;
                     this.HardwareType = PcmType.P12;
                     break;
