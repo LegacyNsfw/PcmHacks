@@ -61,6 +61,12 @@
     <Compile Include="DialogBoxes\DevicePicker.Designer.cs">
       <DependentUpon>DevicePicker.cs</DependentUpon>
     </Compile>
+    <Compile Include="DialogBoxes\OperatingSystemID.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DialogBoxes\OperatingSystemID.designer.cs">
+      <DependentUpon>OperatingSystemID.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainFormBase.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -83,6 +89,9 @@
   <ItemGroup>
     <EmbeddedResource Include="DialogBoxes\DevicePicker.resx">
       <DependentUpon>DevicePicker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DialogBoxes\OperatingSystemID.resx">
+      <DependentUpon>OperatingSystemID.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

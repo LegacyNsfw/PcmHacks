@@ -1195,7 +1195,24 @@ namespace PcmHacking
                     else
                     {
                         this.AddUserMessage("Unable to get operating system ID. Will assume this can be unlocked with the default seed/key algorithm.");
-                        info = new PcmInfo(0);
+
+                        UInt32 OperatingSystemId = 0;
+
+                        await Vehicle.ForceSendToolPresentNotification();
+                        this.Invoke((MethodInvoker)delegate ()
+                        {
+                            OperatingSystemIDDialogBox osDialog = new OperatingSystemIDDialogBox();
+                            DialogResult dialogResult = osDialog.ShowDialog();
+                            if (dialogResult == DialogResult.OK)
+                            {
+                                OperatingSystemId = osDialog.OperatingSystemId;
+                            }
+                        });
+                        await Vehicle.ForceSendToolPresentNotification();
+
+                        info = new PcmInfo(OperatingSystemId); // osid
+
+                        AddUserMessage($"Using OsID: {info.OSID}");
                     }
 
                     await this.Vehicle.SuppressChatter();
@@ -1418,7 +1435,7 @@ namespace PcmHacking
                                 this.AddUserMessage("Unlock may not work, but we'll try...");
                                 needUnlock = true;
                             }
-                            pcmInfo = new PcmInfo(0); // Prevent Null Reference Exceptions from breaking Recovery Mode
+                            pcmInfo = new PcmInfo(validator.GetOsidFromImage()); // Prevent Null Reference Exceptions from breaking Recovery Mode
                         }
                         else
                         {
