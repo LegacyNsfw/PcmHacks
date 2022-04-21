@@ -1468,6 +1468,13 @@ namespace PcmHacking
                         }
                     }
 
+                    // Temporary hack to disable write access for the 2m P12 until further testing has been accomplished.
+                    if ((pcmInfo.HardwareType == PcmType.P12) && (pcmInfo.ImageSize == (2048 * 1024)) && (writeType != WriteType.TestWrite) && (writeType != WriteType.Compare))
+                    {
+                        this.AddUserMessage($"Write operations are disabled on this device.");
+                        return;
+                    }
+
                     await this.Vehicle.SuppressChatter();
 
                     if (needUnlock)

@@ -72,6 +72,10 @@ namespace PcmHacking
             {
                 this.logger.AddUserMessage("Validating 1024k file.");
             }
+            else if (this.image.Length == 2048 * 1024)
+            {
+                this.logger.AddUserMessage("Validating 2048k file.");
+            }
             else
             {
                 this.logger.AddUserMessage(
@@ -286,8 +290,8 @@ namespace PcmHacking
         /// </summary>
         private PcmType ValidateSignatures()
         {
-            // All currently supported bins are 512Kb or 1Mb
-            if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024))
+            // All currently supported bins are 512Kb, 1Mb or 2Mb
+            if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024) && (image.Length != 2048 * 1024))
             {
                 this.logger.AddUserMessage("Files of size " + image.Length.ToString("X8") + " are not supported.");
                 return PcmType.Undefined;
@@ -329,6 +333,15 @@ namespace PcmHacking
                 }
 
                 this.logger.AddDebugMessage("Trying P12 1Mb");
+                if ((image[0xFFFF8] == 0xAA) && (image[0xFFFF9] == 0x55))
+                {
+                    return PcmType.P12;
+                }
+            }
+
+            if (image.Length == 2048 * 1024)
+            {
+                this.logger.AddDebugMessage("Trying P12 2Mb");
                 if ((image[0xFFFF8] == 0xAA) && (image[0xFFFF9] == 0x55))
                 {
                     return PcmType.P12;
