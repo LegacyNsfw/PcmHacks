@@ -797,6 +797,8 @@ namespace PcmHacking
 
             try
             {
+                PcmInfo pcmInfo = null;
+
                 this.DisableUserInput();
 
                 var vinResponse = await this.Vehicle.QueryVin();
@@ -812,8 +814,8 @@ namespace PcmHacking
                 if (osResponse.Status == ResponseStatus.Success)
                 {
                     this.AddUserMessage("OS ID: " + osResponse.Value.ToString());
-                    PcmInfo info = new PcmInfo(osResponse.Value);
-                    this.AddUserMessage("Hardware Type: " + info.HardwareType.ToString());
+                    pcmInfo = new PcmInfo(osResponse.Value);
+                    this.AddUserMessage("Hardware Type: " + pcmInfo.HardwareType.ToString());
                 }
                 else
                 {
@@ -830,17 +832,19 @@ namespace PcmHacking
                     this.AddUserMessage("Calibration ID query failed: " + calResponse.Status.ToString());
                 }
 
-                /* TODO: Fix This for P12
-                var hardwareResponse = await this.Vehicle.QueryHardwareId();
-                if (hardwareResponse.Status == ResponseStatus.Success)
+                // Temporary hack to disable HardwareID lookup for the P12!
+                if (pcmInfo != null && pcmInfo.HardwareType != PcmType.P12)
                 {
-                    this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString());
+                    var hardwareResponse = await this.Vehicle.QueryHardwareId();
+                    if (hardwareResponse.Status == ResponseStatus.Success)
+                    {
+                        this.AddUserMessage("Hardware ID: " + hardwareResponse.Value.ToString());
+                    }
+                    else
+                    {
+                        this.AddUserMessage("Hardware ID query failed: " + hardwareResponse.Status.ToString());
+                    }
                 }
-                else
-                {
-                    this.AddUserMessage("Hardware ID query failed: " + hardwareResponse.Status.ToString());
-                }
-                */
 
                 var serialResponse = await this.Vehicle.QuerySerial();
                 if (serialResponse.Status == ResponseStatus.Success)
@@ -882,7 +886,7 @@ namespace PcmHacking
                 this.EnableUserInput();
             }
         }
-        
+
         /// <summary>
         /// Update the VIN.
         /// </summary>
@@ -1466,13 +1470,6 @@ namespace PcmHacking
 
                             needToCheckOperatingSystem = false;
                         }
-                    }
-
-                    // Temporary hack to disable write access for the 2m P12 until further testing has been accomplished.
-                    if ((pcmInfo.HardwareType == PcmType.P12) && (pcmInfo.ImageSize == (2048 * 1024)) && (writeType != WriteType.TestWrite) && (writeType != WriteType.Compare))
-                    {
-                        this.AddUserMessage($"Write operations are disabled on this device.");
-                        return;
                     }
 
                     await this.Vehicle.SuppressChatter();

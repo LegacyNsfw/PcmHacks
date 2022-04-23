@@ -80,7 +80,7 @@ namespace PcmHacking
             {
                 this.logger.AddUserMessage(
                     string.Format(
-                        "Files must be 512k or 1024k. This file is {0} / {1:X} bytes long.",
+                        "Files must be 512k, 1024k or 2048k. This file is {0} / {1:X} bytes long.",
                         this.image.Length,
                         this.image.Length));
                 return false;
@@ -137,7 +137,7 @@ namespace PcmHacking
         {
             int osid = 0;
 
-            if (image.Length == 512 * 1024 || image.Length == 1024 * 1024) // bin valid sizes
+            if (image.Length == 512 * 1024 || image.Length == 1024 * 1024 || image.Length == 2048 * 1024) // bin valid sizes
             {
                 PcmType type = this.ValidateSignatures();
                 switch (type)
@@ -339,10 +339,11 @@ namespace PcmHacking
                 }
             }
 
+            // 2Mb types
             if (image.Length == 2048 * 1024)
             {
                 this.logger.AddDebugMessage("Trying P12 2Mb");
-                if ((image[0xFFFF8] == 0xAA) && (image[0xFFFF9] == 0x55))
+                if ((image[0x17FFF8] == 0xAA) && (image[0x17FFF9] == 0x55))
                 {
                     return PcmType.P12;
                 }
