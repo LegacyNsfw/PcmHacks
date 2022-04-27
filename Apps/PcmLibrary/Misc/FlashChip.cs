@@ -125,8 +125,8 @@ namespace PcmHacking
                         new MemoryRange(0x100000, 0x40000, BlockType.OperatingSystem), // 256kb main block
                         new MemoryRange( 0xC0000, 0x40000, BlockType.OperatingSystem), // 256kb main block
                         new MemoryRange( 0x80000, 0x40000, BlockType.OperatingSystem), // 256kb main block
-                        new MemoryRange( 0x40000, 0x40000, BlockType.OperatingSystem), // 256kb main block
-                        new MemoryRange( 0x08000, 0x38000, BlockType.Calibration),     // 229kb Calibration block
+                        new MemoryRange( 0x40000, 0x40000, BlockType.Calibration),     // 256kb calibration block
+                        new MemoryRange( 0x08000, 0x38000, BlockType.Calibration),     // 229kb calibration block
                         new MemoryRange( 0x06000, 0x02000, BlockType.Parameter),       //   8kb parameter block
                         new MemoryRange( 0x04000, 0x02000, BlockType.Parameter),       //   8kb parameter block
                         new MemoryRange( 0x00000, 0x04000, BlockType.Boot),            //  16kb boot block
@@ -239,7 +239,7 @@ namespace PcmHacking
                 if (index == 0)
                 {
                     UInt32 top = memoryRanges[index].Address + memoryRanges[index].Size;
-                    if ((top != 512 * 1024) && (top != 1024 * 1024))
+                    if ((top != 512 * 1024) && (top != 1024 * 1024) && (top != 2048 * 1024))
                     {
                         throw new InvalidOperationException(chipIdString + " - Upper end of memory range must be 512k or 1024k, is " + top.ToString("X8"));
                     }

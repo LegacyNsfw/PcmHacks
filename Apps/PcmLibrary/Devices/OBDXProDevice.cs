@@ -922,7 +922,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.EraseMemoryBlock:
-                        result = 1000;
+                        result = 7000;
                         break;
 
                     case TimeoutScenario.WriteMemoryBlock:
@@ -982,7 +982,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.EraseMemoryBlock:
-                        result = 1000;
+                        result = 7000;
                         break;
 
                     case TimeoutScenario.WriteMemoryBlock:
