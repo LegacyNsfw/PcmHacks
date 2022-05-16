@@ -797,6 +797,7 @@ namespace PcmHacking
                 case 12597778:
                 case 12597978:
                 case 12601774:
+                case 12601904: // Saturn I4
                 case 12605261:
                 case 12610624:
                 case 12627882:
@@ -811,6 +812,7 @@ namespace PcmHacking
                 case 12606375:
                 // LK5 - Atlas I4 (2800) P12
                 case 12627883:
+                // Saturn 1mb P12
                     this.KernelFileName = "Kernel-P12.bin";
                     this.KernelBaseAddress = 0xFF2000; // or FF0000? https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=450#p115622
                     this.RAMSize= 0x6000;
