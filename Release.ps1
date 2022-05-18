@@ -63,12 +63,15 @@ write-host =====================================================================
 write-host = Copying files to release directory
 
 $unused = mkdir Release
+$unused = mkdir Release\Xml
 
 copy Kernels\*.bin Release
 
 copy Apps\PcmHammer\bin\Debug\PcmHammer.* Release
 copy Apps\PcmHammer\bin\Debug\*.dll Release
 copy Apps\PcmHammer\bin\Debug\*.pdb Release
+
+copy Apps\PcmLibrary\Xml\*.xml Release\Xml
 
 copy Apps\PcmLogger\bin\Debug\PcmLogger.* Release
 copy Apps\PcmLogger\bin\Debug\*.dll Release

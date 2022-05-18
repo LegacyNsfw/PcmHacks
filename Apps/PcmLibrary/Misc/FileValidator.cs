@@ -115,8 +115,8 @@ namespace PcmHacking
         {
             UInt32 fileOsid = this.GetOsidFromImage();
 
-            PcmInfo pcmInfo = new PcmInfo(pcmOsid);
-            PcmInfo fileInfo = new PcmInfo(fileOsid);
+            PcmInfo pcmInfo = new PcmInfo(pcmOsid, logger);
+            PcmInfo fileInfo = new PcmInfo(fileOsid, logger);
 
             if (pcmInfo.HardwareType == fileInfo.HardwareType)
             {

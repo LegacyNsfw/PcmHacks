@@ -80,7 +80,7 @@ namespace PcmHacking
                 }
                 else
                 {
-                    PcmInfo pi = new PcmInfo(osidResponse.Value);
+                    PcmInfo pi = new PcmInfo(osidResponse.Value, logger);
                     keyAlgorithm = pi.KeyAlgorithm;
                 }
 
@@ -99,7 +99,7 @@ namespace PcmHacking
                     return false;
                 }
 
-                PcmInfo info = new PcmInfo(12202088); // todo, make selectable
+                PcmInfo info = new PcmInfo(12202088, logger); // todo, make selectable
                 if (!await PCMExecute(info, response.Value, cancellationToken))
                 {
                     logger.AddUserMessage("Failed to upload kernel to PCM");
