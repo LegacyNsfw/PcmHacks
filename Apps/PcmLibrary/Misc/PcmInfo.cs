@@ -93,16 +93,16 @@ namespace PcmHacking
             this.OSID = osid;
             this.logger = logger;
 
-            ushort uniqueId = 0;
+            ushort pcmInfoID = 0;
             const string filename = @"Xml\OsIDs.xml";
 
             try
             {
                 XDocument doc = XDocument.Load(filename);
-                string result = doc.Descendants("UniqueID")
+                string result = doc.Descendants("PcmInfoID")
                     .Where(i => Convert.ToUInt32(i.Attribute("osid").Value, 10) == OSID)
                     .Select(i => i.Value).FirstOrDefault();
-                uniqueId = Convert.ToUInt16(result, 10);
+                pcmInfoID = Convert.ToUInt16(result, 10);
             }
             catch (Exception e)
             {
@@ -122,7 +122,7 @@ namespace PcmHacking
             // This will be overwritten for known-to-be-unsupported operating systems.
             this.IsSupported = true;
 
-            switch (uniqueId)
+            switch (pcmInfoID)
             {
                 // LB7 Duramax EFI Live COS
                 case 1:
