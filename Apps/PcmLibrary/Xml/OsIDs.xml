@@ -206,6 +206,7 @@
         <!-- Service number 12586243 USA -->
         <PcmInfoID osid="12587603" PcmInfoType="P59">24</PcmInfoID>
         <PcmInfoID osid="12587604" PcmInfoType="P59">24</PcmInfoID>
+        <PcmInfoID osid="76030003" PcmInfoType="P59">24</PcmInfoID> <!-- LS1 Boost OS -->
         <!-- Service number 12582605 -->
         <PcmInfoID osid="12578128" PcmInfoType="P59">25</PcmInfoID>
         <PcmInfoID osid="12579405" PcmInfoType="P59">25</PcmInfoID>
@@ -224,8 +225,6 @@
         <PcmInfoID osid="12597120" PcmInfoType="P59">27</PcmInfoID>
         <PcmInfoID osid="12613248" PcmInfoType="P59">27</PcmInfoID>
         <PcmInfoID osid="12619624" PcmInfoType="P59">27</PcmInfoID>
-        <!-- LS1 Boost OS -->
-        <PcmInfoID osid="76030003" PcmInfoType="P59">27</PcmInfoID>
         <!-- BLACKBOX -->
         <PcmInfoID osid="9355699" PcmInfoType="BLACKBOX">28</PcmInfoID>
         <PcmInfoID osid="9365095" PcmInfoType="BLACKBOX">28</PcmInfoID>
