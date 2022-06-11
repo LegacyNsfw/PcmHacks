@@ -833,7 +833,7 @@ namespace PcmHacking
                 }
 
                 // Temporary hack to disable HardwareID lookup for the P12!
-                if (pcmInfo != null && pcmInfo.HardwareType != PcmType.P12)
+                if (pcmInfo != null && pcmInfo.HardwareType != PcmType.P10 && pcmInfo.HardwareType != PcmType.P12)
                 {
                     var hardwareResponse = await this.Vehicle.QueryHardwareId();
                     if (hardwareResponse.Status == ResponseStatus.Success)
