@@ -452,6 +452,13 @@ namespace PcmHacking
                 // usa 12586243
                 case 12587603:
                 case 12587604:
+                case 76030003:
+                case 76030004:
+                case 76030005:
+                case 76030006:
+                case 76030007:
+                case 76030008:
+                case 76030009:
                     this.KeyAlgorithm = 40;
                     this.Description = "12586243";
                     this.ImageSize = 1024 * 1024;
@@ -750,6 +757,7 @@ namespace PcmHacking
                 case 12582152:
                 case 12582153:
                 case 12583164:
+                case 12594316:
                 case 16242202:
                 case 16243034:
                 case 16258875:
@@ -793,16 +801,22 @@ namespace PcmHacking
                     break;
 
                 // P12 1m
+                case 12587007:
+                case 12588651:
+                case 12589166:
+                case 12589312:
+                case 12589586:
                 case 12593533:
                 case 12597778:
                 case 12597978:
                 case 12601774:
                 case 12601904: // Saturn I4
+                case 12605256:
                 case 12605261:
                 case 12610624:
+                case 12623279:
                 case 12627882:
                 case 12627884:
-                case 12627885:
                 case 12631085:
                 // LL8 - Atlas I6 (4200) P12
                 case 12604440:
@@ -830,6 +844,7 @@ namespace PcmHacking
                 case 12611642:
                 case 12613422:
                 case 12618164:
+                case 12627885:
                     this.KernelFileName = "Kernel-P12.bin";
                     this.KernelBaseAddress = 0xFF2000; // or FF0000? https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=450#p115622
                     this.RAMSize = 0x6000;
