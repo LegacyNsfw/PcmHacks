@@ -3,7 +3,7 @@ name: .NET
 on: [ pull_request, push ]
 
 jobs:
-  build:
+  build-pcmhammer:
 
     runs-on: windows-2019
 
@@ -32,3 +32,42 @@ jobs:
           Apps\PcmHammer\bin\Debug\
           Apps\PcmLogger\bin\Debug\
           Apps\VpwExplorer\bin\Debug\
+
+  build-kernel-P01:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout Code
+
+    - run: sudo apt-get install -y gcc-m68k-linux-gnu make
+      name: Install m68k Compiler and Make tool
+
+    - run: cd Kernels && make PREFIX=/usr/bin/m68k-linux-gnu- pcm=P01
+      name: Build Kernel Source Code for P01 PCM
+
+  build-kernel-P10:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout Code
+
+    - run: sudo apt-get install -y gcc-m68k-linux-gnu make
+      name: Install m68k Compiler and Make tool
+
+    - run: cd Kernels && make PREFIX=/usr/bin/m68k-linux-gnu- pcm=P10
+      name: Build Kernel Source Code for P10 PCM
+
+  build-kernel-P12:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+      name: Checkout Code
+
+    - run: sudo apt-get install -y gcc-m68k-linux-gnu make
+      name: Install m68k Compiler and Make tool
+
+    - run: cd Kernels && make PREFIX=/usr/bin/m68k-linux-gnu- pcm=P12
+      name: Build Kernel Source Code for P12 PCM

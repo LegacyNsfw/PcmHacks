@@ -13,7 +13,11 @@ LDFLAGS =
 DUMPFLAGS = -d -S
 COPYFLAGS = -O binary
 
-all: micro-kernel.bin read-kernel.bin
+pcm?=P01
+
+CCFLAGS += -D$(pcm)
+
+all: kernel.bin
 
 %.o: %.c
 	$(CC) $(CCFLAGS) $< -o $@
@@ -21,21 +25,13 @@ all: micro-kernel.bin read-kernel.bin
 %.asm: %.bin
 	$(OBJDUMP) $(DUMPFLAGS) -S $< -o $@
 
-micro-kernel.elf: micro-kernel.o main.o common.o
-	$(LD) $(LDFLAGS) -T micro-kernel.ld main.o micro-kernel.o -o $@
+kernel.elf: main.o write-kernel.o crc.o common.o common-readwrite.o flash-intel.o flash-amd.o
+	$(LD) $(LDFLAGS) -T kernel.ld main.o write-kernel.o crc.o common.o common-readwrite.o flash-intel.o flash-amd.o -o $@
 	-$(OBJDUMP) $(DUMPFLAGS) $@ > $@.disassembly
 
-micro-kernel.bin: micro-kernel.elf
-	$(OBJCOPY) $(COPYFLAGS) --only-section=.kernel_code --only-section=.rodata micro-kernel.elf micro-kernel.bin
-	cp micro-kernel.bin ../Apps/PcmHammer/bin/Debug/
-
-read-kernel.elf: read-kernel.o main.o common.o
-	$(LD) $(LDFLAGS) -T read-kernel.ld main.o read-kernel.o -o $@
-	-$(OBJDUMP) $(DUMPFLAGS) $@ > $@.disassembly
-
-read-kernel.bin: read-kernel.elf
-	$(OBJCOPY) $(COPYFLAGS) --only-section=.kernel_code --only-section=.rodata read-kernel.elf read-kernel.bin
-	cp read-kernel.bin ../Apps/PcmHammer/bin/Debug/
+kernel.bin: kernel.elf
+	$(OBJCOPY) $(COPYFLAGS) --only-section=.kernel_code --only-section=.rodata kernel.elf kernel.bin
+	mv kernel.bin kernel-$(pcm).bin
 
 clean:
 	rm -f *.bin *.o *.elf *.asm
