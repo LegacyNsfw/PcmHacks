@@ -112,7 +112,8 @@ namespace PcmHacking
             configuration.BaudRate = 115200;
             configuration.Timeout = 1000;
             await this.Port.OpenAsync(configuration);
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(200);
+          // await Task.Delay(200);
 
             ////Reset scantool - ensures starts at ELM protocol
             bool Status = await ResetDevice();
@@ -121,6 +122,8 @@ namespace PcmHacking
                 this.Logger.AddUserMessage("Unable to reset DVI device.");
                 return false;
             }
+
+             
 
             //Request Board information
             Response<string> BoardName = await GetBoardDetails();
@@ -568,17 +571,18 @@ namespace PcmHacking
             byte[] Msg = OBDXProDevice.DVI_RESET.GetBytes();
             Msg[Msg.Length - 1] = CalcChecksum(Msg);
             await this.Port.Send(Msg);
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(200);
+           // await Task.Delay(200);
             await this.Port.DiscardBuffers();
 
             //Send ELM reset
             byte[] MsgATZ = { (byte)'A', (byte)'T', (byte)'Z', 0xD };
             await this.Port.Send(MsgATZ);
-            System.Threading.Thread.Sleep(100);
-            await this.Port.DiscardBuffers();
+            System.Threading.Thread.Sleep(50);
             await this.Port.Send(MsgATZ);
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(400);
             await this.Port.DiscardBuffers();
+
 
             //AT@1 will return OBDX Pro VT - will then need to change its API to DVI bytes.
             byte[] MsgAT1 = { (byte)'A', (byte)'T', (byte)'@', (byte)'1', 0xD };
@@ -586,6 +590,9 @@ namespace PcmHacking
             Response<String> m = await ReadELMPacket("AT@1");
             if (m.Status == ResponseStatus.Success) this.Logger.AddUserMessage("Device Found: " + m.Value);
             else { this.Logger.AddUserMessage("OBDX Pro device not found or failed response"); return false; }
+
+            System.Threading.Thread.Sleep(150);
+            await this.Port.DiscardBuffers();
 
             //Change to DVI protocol DX 
             byte[] MsgDXDP = { (byte)'D', (byte)'X', (byte)'D', (byte)'P', (byte)'1', 0xD };
