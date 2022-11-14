@@ -133,6 +133,17 @@ namespace PcmHacking
                 return false;
             }
 
+
+            //Read voltage
+            Response<double> ReadVoltageVal = await ReadVoltage();
+            if (ReadVoltageVal.Status != ResponseStatus.Success)
+            {
+                this.Logger.AddUserMessage("Unable to read voltage.");
+                return false;
+            }
+            this.Logger.AddUserMessage("Voltage is: " + ReadVoltageVal.Value.ToString("F2") + "V");
+
+
             //Set protocol to VPW mode
             Status = await SetProtocol(OBDProtocols.VPW);
             if (Status == false)
@@ -352,7 +363,7 @@ namespace PcmHacking
                 this.Enqueue(new Message(StrippedFrame, timestampmicro, 0));
 
                 // This can be useful for debugging, but is generally too noisy.
-                // this.Logger.AddDebugMessage("RX: " + StrippedFrame.ToHex());
+                 this.Logger.AddDebugMessage("Network RX: " + StrippedFrame.ToHex());
                 return null;
             }
             else if (receive[0] == 0x7F)
@@ -540,6 +551,31 @@ namespace PcmHacking
             if (Status == false) return Response.Create(ResponseStatus.Error, false);
 
             return Response.Create(ResponseStatus.Success, true);
+        }
+
+        async private Task<Response<double>> ReadVoltage()
+        {
+            byte[] Msg = new byte[] { 0x3A, 2, 0x0, (byte)0, 0 };
+            Msg[Msg.Length - 1] = CalcChecksum(Msg);
+            await this.Port.Send(Msg);
+
+            byte[] RespBytes = new byte[Msg.Length];
+            Array.Copy(Msg, RespBytes, Msg.Length);
+            RespBytes[0] += (byte)0x10;
+            RespBytes[RespBytes.Length - 1] = CalcChecksum(RespBytes);
+            Response<Message> response = await ReadDVIPacket();
+            if (response.Status != ResponseStatus.Success)
+            {
+             //   this.Logger.AddDebugMessage("Network enabled");
+                return Response.Create(response.Status, (double)0);
+            }
+            else
+            {
+                int RawADC = (int)((response.Value[4] * Math.Pow(0x100, 1)) + response.Value[5]);
+                double COnvertedVoltage = ((((double)RawADC * 0.009047468) + 0.2)); //Should match for both VT and GT (Close enough).
+                //this.Logger.AddDebugMessage("Voltage is: " + COnvertedVoltage.ToString("F2") + "V"); //2 decimal places
+                return Response.Create(ResponseStatus.Success, COnvertedVoltage);
+            }
         }
 
         /// <summary>
