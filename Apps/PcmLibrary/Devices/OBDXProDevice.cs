@@ -112,7 +112,8 @@ namespace PcmHacking
             configuration.BaudRate = 115200;
             configuration.Timeout = 1000;
             await this.Port.OpenAsync(configuration);
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(200);
+          // await Task.Delay(200);
 
             ////Reset scantool - ensures starts at ELM protocol
             bool Status = await ResetDevice();
@@ -122,6 +123,8 @@ namespace PcmHacking
                 return false;
             }
 
+             
+
             //Request Board information
             Response<string> BoardName = await GetBoardDetails();
             if (BoardName.Status != ResponseStatus.Success)
@@ -129,6 +132,17 @@ namespace PcmHacking
                 this.Logger.AddUserMessage("Unable to get DVI device details.");
                 return false;
             }
+
+
+            //Read voltage
+            Response<double> ReadVoltageVal = await ReadVoltage();
+            if (ReadVoltageVal.Status != ResponseStatus.Success)
+            {
+                this.Logger.AddUserMessage("Unable to read voltage.");
+                return false;
+            }
+            this.Logger.AddUserMessage("Voltage is: " + ReadVoltageVal.Value.ToString("F2") + "V");
+
 
             //Set protocol to VPW mode
             Status = await SetProtocol(OBDProtocols.VPW);
@@ -349,7 +363,7 @@ namespace PcmHacking
                 this.Enqueue(new Message(StrippedFrame, timestampmicro, 0));
 
                 // This can be useful for debugging, but is generally too noisy.
-                // this.Logger.AddDebugMessage("RX: " + StrippedFrame.ToHex());
+                 this.Logger.AddDebugMessage("Network RX: " + StrippedFrame.ToHex());
                 return null;
             }
             else if (receive[0] == 0x7F)
@@ -539,6 +553,31 @@ namespace PcmHacking
             return Response.Create(ResponseStatus.Success, true);
         }
 
+        async private Task<Response<double>> ReadVoltage()
+        {
+            byte[] Msg = new byte[] { 0x3A, 2, 0x0, (byte)0, 0 };
+            Msg[Msg.Length - 1] = CalcChecksum(Msg);
+            await this.Port.Send(Msg);
+
+            byte[] RespBytes = new byte[Msg.Length];
+            Array.Copy(Msg, RespBytes, Msg.Length);
+            RespBytes[0] += (byte)0x10;
+            RespBytes[RespBytes.Length - 1] = CalcChecksum(RespBytes);
+            Response<Message> response = await ReadDVIPacket();
+            if (response.Status != ResponseStatus.Success)
+            {
+             //   this.Logger.AddDebugMessage("Network enabled");
+                return Response.Create(response.Status, (double)0);
+            }
+            else
+            {
+                int RawADC = (int)((response.Value[4] * Math.Pow(0x100, 1)) + response.Value[5]);
+                double COnvertedVoltage = ((((double)RawADC * 0.009047468) + 0.2)); //Should match for both VT and GT (Close enough).
+                //this.Logger.AddDebugMessage("Voltage is: " + COnvertedVoltage.ToString("F2") + "V"); //2 decimal places
+                return Response.Create(ResponseStatus.Success, COnvertedVoltage);
+            }
+        }
+
         /// <summary>
         /// Send a message, wait for a response, return the response.
         /// </summary>
@@ -568,17 +607,18 @@ namespace PcmHacking
             byte[] Msg = OBDXProDevice.DVI_RESET.GetBytes();
             Msg[Msg.Length - 1] = CalcChecksum(Msg);
             await this.Port.Send(Msg);
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(200);
+           // await Task.Delay(200);
             await this.Port.DiscardBuffers();
 
             //Send ELM reset
             byte[] MsgATZ = { (byte)'A', (byte)'T', (byte)'Z', 0xD };
             await this.Port.Send(MsgATZ);
-            System.Threading.Thread.Sleep(100);
-            await this.Port.DiscardBuffers();
+            System.Threading.Thread.Sleep(50);
             await this.Port.Send(MsgATZ);
-            System.Threading.Thread.Sleep(100);
+            System.Threading.Thread.Sleep(400);
             await this.Port.DiscardBuffers();
+
 
             //AT@1 will return OBDX Pro VT - will then need to change its API to DVI bytes.
             byte[] MsgAT1 = { (byte)'A', (byte)'T', (byte)'@', (byte)'1', 0xD };
@@ -586,6 +626,9 @@ namespace PcmHacking
             Response<String> m = await ReadELMPacket("AT@1");
             if (m.Status == ResponseStatus.Success) this.Logger.AddUserMessage("Device Found: " + m.Value);
             else { this.Logger.AddUserMessage("OBDX Pro device not found or failed response"); return false; }
+
+            System.Threading.Thread.Sleep(150);
+            await this.Port.DiscardBuffers();
 
             //Change to DVI protocol DX 
             byte[] MsgDXDP = { (byte)'D', (byte)'X', (byte)'D', (byte)'P', (byte)'1', 0xD };
