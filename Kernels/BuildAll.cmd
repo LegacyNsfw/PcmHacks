@@ -51,3 +51,8 @@ for %%A in (
   "-aFF2000 -tP12"
   ) do call Build.cmd %%~A %*
 
+rem * Experimental alpha quality P04 read kernel
+cd P04
+call kernel-p04.bat
+cd ..
+

@@ -816,6 +816,15 @@ namespace PcmHacking
                     this.AddUserMessage("OS ID: " + osResponse.Value.ToString());
                     pcmInfo = new PcmInfo(osResponse.Value);
                     this.AddUserMessage("Hardware Type: " + pcmInfo.HardwareType.ToString());
+                    if (pcmInfo.HardwareType == PcmType.P04)
+                    {
+                        this.AddUserMessage("**********************************************");
+                        this.AddUserMessage("WARNING: P04 Read is EXPERIMENTAL ONLY.");
+                        this.AddUserMessage("It may or may not read your P04 correctly. The read will be VERY SLOW.");
+                        this.AddUserMessage("If you have the skills please help us improve this code and send us a pull request on github.");
+                        this.AddUserMessage("P04 Write is not yet under development, please do not ask when it is ready. P04 read must work well first.");
+                        this.AddUserMessage("**********************************************");
+                    }
                 }
                 else
                 {
@@ -832,7 +841,7 @@ namespace PcmHacking
                     this.AddUserMessage("Calibration ID query failed: " + calResponse.Status.ToString());
                 }
 
-                // Temporary hack to disable HardwareID lookup for the P12!
+                // Disable HardwareID lookup for the P12
                 if (pcmInfo != null && pcmInfo.HardwareType != PcmType.P10 && pcmInfo.HardwareType != PcmType.P12)
                 {
                     var hardwareResponse = await this.Vehicle.QueryHardwareId();
@@ -856,14 +865,18 @@ namespace PcmHacking
                     this.AddUserMessage("Serial Number query failed: " + serialResponse.Status.ToString());
                 }
 
-                var bccResponse = await this.Vehicle.QueryBCC();
-                if (bccResponse.Status == ResponseStatus.Success)
+                // Disable BCC lookup for the P04
+                if (pcmInfo != null && pcmInfo.HardwareType != PcmType.P04)
                 {
-                    this.AddUserMessage("Broad Cast Code: " + bccResponse.Value.ToString());
-                }
-                else
-                {
-                    this.AddUserMessage("BCC query failed: " + bccResponse.Status.ToString());
+                    var bccResponse = await this.Vehicle.QueryBCC();
+                    if (bccResponse.Status == ResponseStatus.Success)
+                    {
+                        this.AddUserMessage("Broad Cast Code: " + bccResponse.Value.ToString());
+                    }
+                    else
+                    {
+                        this.AddUserMessage("BCC query failed: " + bccResponse.Status.ToString());
+                    }
                 }
 
                 var mecResponse = await this.Vehicle.QueryMEC();
@@ -1189,12 +1202,12 @@ namespace PcmHacking
                         }
                     }
 
-                    PcmInfo info;
+                    PcmInfo pcmInfo;
                     if (osidResponse.Status == ResponseStatus.Success)
                     {
                         // Look up the information about this PCM, based on the OSID;
                         this.AddUserMessage("OSID: " + osidResponse.Value);
-                        info = new PcmInfo(osidResponse.Value);
+                        pcmInfo = new PcmInfo(osidResponse.Value);
                     }
                     else
                     {
@@ -1214,14 +1227,26 @@ namespace PcmHacking
                         });
                         await Vehicle.ForceSendToolPresentNotification();
 
-                        info = new PcmInfo(OperatingSystemId); // osid
+                        pcmInfo = new PcmInfo(OperatingSystemId); // osid
 
-                        AddUserMessage($"Using OsID: {info.OSID}");
+                        AddUserMessage($"Using OsID: {pcmInfo.OSID}");
+                    }
+
+                    if (pcmInfo.HardwareType == PcmType.P04)
+                    {
+                        this.AddUserMessage("WARNING: P04 Read is EXPERIMENTAL ONLY.");
+                        this.AddUserMessage("It may or may not read your P04 correctly. The read will be VERY SLOW.");
+                        DialogResult dialogResult = MessageBox.Show("WARNING: P04 Read is EXPERIMENTAL ONLY.\nIt may or may not read your P04 correctly.\nThe read will be VERY SLOW.\n", "Continue?", MessageBoxButtons.YesNo);
+                        if (dialogResult == DialogResult.No)
+                        {
+                            this.AddUserMessage("User chose not to proceed");
+                            return;
+                        }
                     }
 
                     await this.Vehicle.SuppressChatter();
 
-                    bool unlocked = await this.Vehicle.UnlockEcu(info.KeyAlgorithm);
+                    bool unlocked = await this.Vehicle.UnlockEcu(pcmInfo.KeyAlgorithm);
                     if (!unlocked)
                     {
                         this.AddUserMessage("Unlock was not successful.");
@@ -1240,7 +1265,7 @@ namespace PcmHacking
 
                     CKernelReader reader = new CKernelReader(
                         this.Vehicle,
-                        info,
+                        pcmInfo,
                         this);
 
                     Response<Stream> readResponse = await reader.ReadContents(cancellationTokenSource.Token);
@@ -1470,6 +1495,13 @@ namespace PcmHacking
 
                             needToCheckOperatingSystem = false;
                         }
+                    }
+
+                    if (pcmInfo.HardwareType == PcmType.P04)
+                    {
+                        this.AddUserMessage("P04 Write is not supported by PCMHammer, aborted");
+                        MessageBox.Show("P04 Write is not supported by PCMHammer");
+                        return;
                     }
 
                     await this.Vehicle.SuppressChatter();

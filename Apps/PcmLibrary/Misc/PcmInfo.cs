@@ -798,7 +798,7 @@ namespace PcmHacking
                     this.ChecksumSupport = false;
                     this.KernelVersionSupport = true;
                     this.FlashIDSupport = false;
-                    this.KernelMaxBlockSize = 1024; // TODO: Testing only
+                    this.KernelMaxBlockSize = 8; // TODO: Testing only
                     break;
 
                 // P10
