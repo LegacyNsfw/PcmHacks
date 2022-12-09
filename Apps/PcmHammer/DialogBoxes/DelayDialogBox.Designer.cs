@@ -1,4 +1,5 @@
-﻿namespace PcmHacking
+﻿
+namespace PcmHacking
 {
     partial class DelayDialogBox
     {
@@ -30,9 +31,9 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DelayDialogBox));
             this.explanation = new System.Windows.Forms.Label();
-            this.continueButton = new System.Windows.Forms.Button();
-            this.cancelButton = new System.Windows.Forms.Button();
             this.countdown = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
+            this.cancelButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // explanation
@@ -40,53 +41,59 @@
             this.explanation.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.explanation.Location = new System.Drawing.Point(12, 9);
+            this.explanation.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.142858F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.explanation.Location = new System.Drawing.Point(16, 14);
+            this.explanation.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.explanation.Name = "explanation";
-            this.explanation.Size = new System.Drawing.Size(407, 117);
+            this.explanation.Size = new System.Drawing.Size(560, 176);
             this.explanation.TabIndex = 0;
             this.explanation.Text = resources.GetString("explanation.Text");
-            // 
-            // continueButton
-            // 
-            this.continueButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.continueButton.Location = new System.Drawing.Point(163, 167);
-            this.continueButton.Name = "continueButton";
-            this.continueButton.Size = new System.Drawing.Size(125, 25);
-            this.continueButton.TabIndex = 1;
-            this.continueButton.Text = "&Continue";
-            this.continueButton.UseVisualStyleBackColor = true;
-            this.continueButton.Click += new System.EventHandler(this.continueButton_Click);
-            // 
-            // cancelButton
-            // 
-            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.cancelButton.Location = new System.Drawing.Point(294, 167);
-            this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(125, 25);
-            this.cancelButton.TabIndex = 2;
-            this.cancelButton.Text = "&Abort";
-            this.cancelButton.UseVisualStyleBackColor = true;
-            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
             // 
             // countdown
             // 
             this.countdown.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.countdown.Location = new System.Drawing.Point(12, 126);
+            this.countdown.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.142858F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.countdown.Location = new System.Drawing.Point(16, 189);
+            this.countdown.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.countdown.Name = "countdown";
-            this.countdown.Size = new System.Drawing.Size(407, 31);
+            this.countdown.Size = new System.Drawing.Size(560, 46);
             this.countdown.TabIndex = 3;
             this.countdown.Text = "X seconds remaining...";
             this.countdown.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // button1
+            // 
+            this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.button1.Location = new System.Drawing.Point(224, 250);
+            this.button1.Margin = new System.Windows.Forms.Padding(4);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(172, 38);
+            this.button1.TabIndex = 1;
+            this.button1.Text = "&Continue";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.continueButton_Click);
+            // 
+            // cancelButton
+            // 
+            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.cancelButton.Location = new System.Drawing.Point(404, 250);
+            this.cancelButton.Margin = new System.Windows.Forms.Padding(4);
+            this.cancelButton.Name = "cancelButton";
+            this.cancelButton.Size = new System.Drawing.Size(172, 38);
+            this.cancelButton.TabIndex = 4;
+            this.cancelButton.Text = "&Abort";
+            this.cancelButton.UseVisualStyleBackColor = true;
+            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
+            // 
             // DelayDialogBox
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 30F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(431, 204);
-            this.Controls.Add(this.countdown);
+            this.ClientSize = new System.Drawing.Size(593, 306);
             this.Controls.Add(this.cancelButton);
-            this.Controls.Add(this.continueButton);
+            this.Controls.Add(this.button1);
+            this.Controls.Add(this.countdown);
             this.Controls.Add(this.explanation);
             this.Name = "DelayDialogBox";
             this.Text = "Sorry To Interrupt...";
@@ -98,8 +105,8 @@
         #endregion
 
         private System.Windows.Forms.Label explanation;
-        private System.Windows.Forms.Button continueButton;
-        private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Label countdown;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button cancelButton;
     }
 }

@@ -49,15 +49,31 @@
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
             this.menuStripMain = new System.Windows.Forms.MenuStrip();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveResultsLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveDebugLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitApplicationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemTools = new System.Windows.Forms.ToolStripMenuItem();
             this.readEntirePCMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.verifyEntirePCMToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modifyVINToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.writeParmetersCloneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.writeOSCalibrationBootToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.writeFullToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.testFileChecksumsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuItemOptions = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuItemEnable4xReadWrite = new System.Windows.Forms.ToolStripMenuItem();
+            this.userDefinedKeyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.statusStatusStrip = new System.Windows.Forms.StatusStrip();
+            this.activityToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.retryCountToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.kbpsToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.progressBarToolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
+            this.percentDoneToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.timeRemainingToolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.interfaceBox.SuspendLayout();
             this.operationsBox.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -66,6 +82,7 @@
             this.creditsTab.SuspendLayout();
             this.debugTab.SuspendLayout();
             this.menuStripMain.SuspendLayout();
+            this.statusStatusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // interfaceBox
@@ -73,21 +90,21 @@
             this.interfaceBox.Controls.Add(this.reinitializeButton);
             this.interfaceBox.Controls.Add(this.selectButton);
             this.interfaceBox.Controls.Add(this.deviceDescription);
-            this.interfaceBox.Location = new System.Drawing.Point(9, 26);
-            this.interfaceBox.Margin = new System.Windows.Forms.Padding(2);
+            this.interfaceBox.Location = new System.Drawing.Point(17, 48);
+            this.interfaceBox.Margin = new System.Windows.Forms.Padding(4);
             this.interfaceBox.Name = "interfaceBox";
-            this.interfaceBox.Padding = new System.Windows.Forms.Padding(2);
-            this.interfaceBox.Size = new System.Drawing.Size(224, 93);
+            this.interfaceBox.Padding = new System.Windows.Forms.Padding(4);
+            this.interfaceBox.Size = new System.Drawing.Size(411, 172);
             this.interfaceBox.TabIndex = 0;
             this.interfaceBox.TabStop = false;
             this.interfaceBox.Text = "Device";
             // 
             // reinitializeButton
             // 
-            this.reinitializeButton.Location = new System.Drawing.Point(4, 62);
-            this.reinitializeButton.Margin = new System.Windows.Forms.Padding(2);
+            this.reinitializeButton.Location = new System.Drawing.Point(7, 114);
+            this.reinitializeButton.Margin = new System.Windows.Forms.Padding(4);
             this.reinitializeButton.Name = "reinitializeButton";
-            this.reinitializeButton.Size = new System.Drawing.Size(216, 25);
+            this.reinitializeButton.Size = new System.Drawing.Size(396, 46);
             this.reinitializeButton.TabIndex = 2;
             this.reinitializeButton.Text = "Re-&Initialize Device";
             this.reinitializeButton.UseVisualStyleBackColor = true;
@@ -95,9 +112,10 @@
             // 
             // selectButton
             // 
-            this.selectButton.Location = new System.Drawing.Point(4, 32);
+            this.selectButton.Location = new System.Drawing.Point(7, 59);
+            this.selectButton.Margin = new System.Windows.Forms.Padding(6);
             this.selectButton.Name = "selectButton";
-            this.selectButton.Size = new System.Drawing.Size(216, 25);
+            this.selectButton.Size = new System.Drawing.Size(396, 46);
             this.selectButton.TabIndex = 1;
             this.selectButton.Text = "&Select Device";
             this.selectButton.UseVisualStyleBackColor = true;
@@ -105,37 +123,37 @@
             // 
             // deviceDescription
             // 
-            this.deviceDescription.Location = new System.Drawing.Point(4, 16);
-            this.deviceDescription.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.deviceDescription.Location = new System.Drawing.Point(7, 30);
+            this.deviceDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.deviceDescription.Name = "deviceDescription";
-            this.deviceDescription.Size = new System.Drawing.Size(214, 13);
+            this.deviceDescription.Size = new System.Drawing.Size(392, 24);
             this.deviceDescription.TabIndex = 0;
             this.deviceDescription.Text = "Device name will be displayed here";
             // 
             // operationsBox
             // 
-            this.operationsBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.operationsBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
             | System.Windows.Forms.AnchorStyles.Left)));
             this.operationsBox.Controls.Add(this.testWriteButton);
             this.operationsBox.Controls.Add(this.exitKernelButton);
             this.operationsBox.Controls.Add(this.cancelButton);
             this.operationsBox.Controls.Add(this.writeCalibrationButton);
             this.operationsBox.Controls.Add(this.readPropertiesButton);
-            this.operationsBox.Location = new System.Drawing.Point(9, 155);
-            this.operationsBox.Margin = new System.Windows.Forms.Padding(2);
+            this.operationsBox.Location = new System.Drawing.Point(17, 286);
+            this.operationsBox.Margin = new System.Windows.Forms.Padding(4);
             this.operationsBox.Name = "operationsBox";
-            this.operationsBox.Padding = new System.Windows.Forms.Padding(2);
-            this.operationsBox.Size = new System.Drawing.Size(224, 347);
+            this.operationsBox.Padding = new System.Windows.Forms.Padding(4);
+            this.operationsBox.Size = new System.Drawing.Size(411, 602);
             this.operationsBox.TabIndex = 1;
             this.operationsBox.TabStop = false;
             this.operationsBox.Text = "Operations";
             // 
             // testWriteButton
             // 
-            this.testWriteButton.Location = new System.Drawing.Point(4, 47);
-            this.testWriteButton.Margin = new System.Windows.Forms.Padding(2);
+            this.testWriteButton.Location = new System.Drawing.Point(7, 87);
+            this.testWriteButton.Margin = new System.Windows.Forms.Padding(4);
             this.testWriteButton.Name = "testWriteButton";
-            this.testWriteButton.Size = new System.Drawing.Size(216, 25);
+            this.testWriteButton.Size = new System.Drawing.Size(396, 46);
             this.testWriteButton.TabIndex = 4;
             this.testWriteButton.Text = "T&est Write";
             this.testWriteButton.UseVisualStyleBackColor = true;
@@ -144,10 +162,10 @@
             // exitKernelButton
             // 
             this.exitKernelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.exitKernelButton.Location = new System.Drawing.Point(4, 280);
-            this.exitKernelButton.Margin = new System.Windows.Forms.Padding(2);
+            this.exitKernelButton.Location = new System.Drawing.Point(7, 478);
+            this.exitKernelButton.Margin = new System.Windows.Forms.Padding(4);
             this.exitKernelButton.Name = "exitKernelButton";
-            this.exitKernelButton.Size = new System.Drawing.Size(216, 25);
+            this.exitKernelButton.Size = new System.Drawing.Size(396, 46);
             this.exitKernelButton.TabIndex = 9;
             this.exitKernelButton.Text = "&Halt Kernel";
             this.exitKernelButton.UseVisualStyleBackColor = true;
@@ -156,10 +174,10 @@
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelButton.Location = new System.Drawing.Point(4, 314);
-            this.cancelButton.Margin = new System.Windows.Forms.Padding(2);
+            this.cancelButton.Location = new System.Drawing.Point(7, 541);
+            this.cancelButton.Margin = new System.Windows.Forms.Padding(4);
             this.cancelButton.Name = "cancelButton";
-            this.cancelButton.Size = new System.Drawing.Size(216, 25);
+            this.cancelButton.Size = new System.Drawing.Size(396, 46);
             this.cancelButton.TabIndex = 10;
             this.cancelButton.Text = "&Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
@@ -167,10 +185,10 @@
             // 
             // writeCalibrationButton
             // 
-            this.writeCalibrationButton.Location = new System.Drawing.Point(4, 76);
-            this.writeCalibrationButton.Margin = new System.Windows.Forms.Padding(2);
+            this.writeCalibrationButton.Location = new System.Drawing.Point(7, 140);
+            this.writeCalibrationButton.Margin = new System.Windows.Forms.Padding(4);
             this.writeCalibrationButton.Name = "writeCalibrationButton";
-            this.writeCalibrationButton.Size = new System.Drawing.Size(216, 25);
+            this.writeCalibrationButton.Size = new System.Drawing.Size(396, 46);
             this.writeCalibrationButton.TabIndex = 5;
             this.writeCalibrationButton.Text = "&Write Calibration";
             this.writeCalibrationButton.UseVisualStyleBackColor = true;
@@ -178,10 +196,10 @@
             // 
             // readPropertiesButton
             // 
-            this.readPropertiesButton.Location = new System.Drawing.Point(4, 18);
-            this.readPropertiesButton.Margin = new System.Windows.Forms.Padding(2);
+            this.readPropertiesButton.Location = new System.Drawing.Point(7, 33);
+            this.readPropertiesButton.Margin = new System.Windows.Forms.Padding(4);
             this.readPropertiesButton.Name = "readPropertiesButton";
-            this.readPropertiesButton.Size = new System.Drawing.Size(216, 25);
+            this.readPropertiesButton.Size = new System.Drawing.Size(396, 46);
             this.readPropertiesButton.TabIndex = 0;
             this.readPropertiesButton.Text = "Read &Properties";
             this.readPropertiesButton.UseVisualStyleBackColor = true;
@@ -189,53 +207,53 @@
             // 
             // tabs
             // 
-            this.tabs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.tabs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabs.Controls.Add(this.resultsTab);
             this.tabs.Controls.Add(this.helpTab);
             this.tabs.Controls.Add(this.creditsTab);
             this.tabs.Controls.Add(this.debugTab);
-            this.tabs.Location = new System.Drawing.Point(238, 26);
-            this.tabs.Margin = new System.Windows.Forms.Padding(2);
+            this.tabs.Location = new System.Drawing.Point(436, 48);
+            this.tabs.Margin = new System.Windows.Forms.Padding(4);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(608, 476);
+            this.tabs.Size = new System.Drawing.Size(1115, 840);
             this.tabs.TabIndex = 2;
             // 
             // resultsTab
             // 
             this.resultsTab.Controls.Add(this.userLog);
-            this.resultsTab.Location = new System.Drawing.Point(4, 22);
-            this.resultsTab.Margin = new System.Windows.Forms.Padding(2);
+            this.resultsTab.Location = new System.Drawing.Point(4, 33);
+            this.resultsTab.Margin = new System.Windows.Forms.Padding(4);
             this.resultsTab.Name = "resultsTab";
-            this.resultsTab.Padding = new System.Windows.Forms.Padding(2);
-            this.resultsTab.Size = new System.Drawing.Size(600, 450);
+            this.resultsTab.Padding = new System.Windows.Forms.Padding(4);
+            this.resultsTab.Size = new System.Drawing.Size(1107, 803);
             this.resultsTab.TabIndex = 0;
             this.resultsTab.Text = "Results";
             this.resultsTab.UseVisualStyleBackColor = true;
             // 
             // userLog
             // 
-            this.userLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.userLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.userLog.Location = new System.Drawing.Point(4, 5);
-            this.userLog.Margin = new System.Windows.Forms.Padding(2);
+            this.userLog.Location = new System.Drawing.Point(7, 9);
+            this.userLog.Margin = new System.Windows.Forms.Padding(4);
             this.userLog.Multiline = true;
             this.userLog.Name = "userLog";
             this.userLog.ReadOnly = true;
             this.userLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.userLog.Size = new System.Drawing.Size(594, 441);
+            this.userLog.Size = new System.Drawing.Size(1086, 772);
             this.userLog.TabIndex = 0;
             // 
             // helpTab
             // 
             this.helpTab.Controls.Add(this.helpWebBrowser);
-            this.helpTab.Location = new System.Drawing.Point(4, 22);
-            this.helpTab.Margin = new System.Windows.Forms.Padding(2);
+            this.helpTab.Location = new System.Drawing.Point(4, 33);
+            this.helpTab.Margin = new System.Windows.Forms.Padding(4);
             this.helpTab.Name = "helpTab";
-            this.helpTab.Size = new System.Drawing.Size(600, 450);
+            this.helpTab.Size = new System.Drawing.Size(1107, 803);
             this.helpTab.TabIndex = 2;
             this.helpTab.Text = "Help";
             this.helpTab.UseVisualStyleBackColor = true;
@@ -244,19 +262,20 @@
             // 
             this.helpWebBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
             this.helpWebBrowser.Location = new System.Drawing.Point(0, 0);
-            this.helpWebBrowser.Margin = new System.Windows.Forms.Padding(2);
-            this.helpWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
+            this.helpWebBrowser.Margin = new System.Windows.Forms.Padding(4);
+            this.helpWebBrowser.MinimumSize = new System.Drawing.Size(28, 30);
             this.helpWebBrowser.Name = "helpWebBrowser";
-            this.helpWebBrowser.Size = new System.Drawing.Size(600, 450);
+            this.helpWebBrowser.Size = new System.Drawing.Size(1107, 803);
             this.helpWebBrowser.TabIndex = 0;
             // 
             // creditsTab
             // 
             this.creditsTab.Controls.Add(this.creditsWebBrowser);
-            this.creditsTab.Location = new System.Drawing.Point(4, 22);
+            this.creditsTab.Location = new System.Drawing.Point(4, 33);
+            this.creditsTab.Margin = new System.Windows.Forms.Padding(6);
             this.creditsTab.Name = "creditsTab";
-            this.creditsTab.Padding = new System.Windows.Forms.Padding(3);
-            this.creditsTab.Size = new System.Drawing.Size(600, 450);
+            this.creditsTab.Padding = new System.Windows.Forms.Padding(6);
+            this.creditsTab.Size = new System.Drawing.Size(1107, 803);
             this.creditsTab.TabIndex = 3;
             this.creditsTab.Text = "Credits";
             this.creditsTab.UseVisualStyleBackColor = true;
@@ -264,21 +283,21 @@
             // creditsWebBrowser
             // 
             this.creditsWebBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.creditsWebBrowser.Location = new System.Drawing.Point(3, 3);
-            this.creditsWebBrowser.Margin = new System.Windows.Forms.Padding(2);
-            this.creditsWebBrowser.MinimumSize = new System.Drawing.Size(15, 16);
+            this.creditsWebBrowser.Location = new System.Drawing.Point(6, 6);
+            this.creditsWebBrowser.Margin = new System.Windows.Forms.Padding(4);
+            this.creditsWebBrowser.MinimumSize = new System.Drawing.Size(28, 30);
             this.creditsWebBrowser.Name = "creditsWebBrowser";
-            this.creditsWebBrowser.Size = new System.Drawing.Size(594, 444);
+            this.creditsWebBrowser.Size = new System.Drawing.Size(1095, 791);
             this.creditsWebBrowser.TabIndex = 1;
             // 
             // debugTab
             // 
             this.debugTab.Controls.Add(this.debugLog);
-            this.debugTab.Location = new System.Drawing.Point(4, 22);
-            this.debugTab.Margin = new System.Windows.Forms.Padding(2);
+            this.debugTab.Location = new System.Drawing.Point(4, 33);
+            this.debugTab.Margin = new System.Windows.Forms.Padding(4);
             this.debugTab.Name = "debugTab";
-            this.debugTab.Padding = new System.Windows.Forms.Padding(2);
-            this.debugTab.Size = new System.Drawing.Size(600, 450);
+            this.debugTab.Padding = new System.Windows.Forms.Padding(4);
+            this.debugTab.Size = new System.Drawing.Size(1107, 803);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug Log";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -286,25 +305,68 @@
             // debugLog
             // 
             this.debugLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.debugLog.Location = new System.Drawing.Point(2, 2);
-            this.debugLog.Margin = new System.Windows.Forms.Padding(2);
+            this.debugLog.Location = new System.Drawing.Point(4, 4);
+            this.debugLog.Margin = new System.Windows.Forms.Padding(4);
             this.debugLog.Multiline = true;
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.debugLog.Size = new System.Drawing.Size(596, 446);
+            this.debugLog.Size = new System.Drawing.Size(1099, 795);
             this.debugLog.TabIndex = 0;
             // 
             // menuStripMain
             // 
+            this.menuStripMain.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
+            this.menuStripMain.ImageScalingSize = new System.Drawing.Size(28, 28);
             this.menuStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuItem,
             this.menuItemTools,
             this.menuItemOptions});
             this.menuStripMain.Location = new System.Drawing.Point(0, 0);
             this.menuStripMain.Name = "menuStripMain";
-            this.menuStripMain.Size = new System.Drawing.Size(854, 24);
+            this.menuStripMain.Padding = new System.Windows.Forms.Padding(11, 4, 0, 4);
+            this.menuStripMain.Size = new System.Drawing.Size(1566, 42);
             this.menuStripMain.TabIndex = 3;
             this.menuStripMain.Text = "Main Menu";
+            // 
+            // fileToolStripMenuItem
+            // 
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveToolStripMenuItem,
+            this.exitApplicationToolStripMenuItem});
+            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(62, 34);
+            this.fileToolStripMenuItem.Text = "&File";
+            // 
+            // saveToolStripMenuItem
+            // 
+            this.saveToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.saveResultsLogToolStripMenuItem,
+            this.saveDebugLogToolStripMenuItem});
+            this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+            this.saveToolStripMenuItem.Size = new System.Drawing.Size(174, 40);
+            this.saveToolStripMenuItem.Text = "&Save";
+            // 
+            // saveResultsLogToolStripMenuItem
+            // 
+            this.saveResultsLogToolStripMenuItem.Name = "saveResultsLogToolStripMenuItem";
+            this.saveResultsLogToolStripMenuItem.Size = new System.Drawing.Size(236, 40);
+            this.saveResultsLogToolStripMenuItem.Text = "&Results Log";
+            this.saveResultsLogToolStripMenuItem.Click += new System.EventHandler(this.saveResultsLogToolStripMenuItem_Click);
+            // 
+            // saveDebugLogToolStripMenuItem
+            // 
+            this.saveDebugLogToolStripMenuItem.Name = "saveDebugLogToolStripMenuItem";
+            this.saveDebugLogToolStripMenuItem.Size = new System.Drawing.Size(236, 40);
+            this.saveDebugLogToolStripMenuItem.Text = "&Debug Log";
+           // this.saveDebugLogToolStripMenuItem.Click += new System.EventHandler(this.saveDebugLogToolStripMenuItem_Click);
+            // 
+            // exitApplicationToolStripMenuItem
+            // 
+            this.exitApplicationToolStripMenuItem.Name = "exitApplicationToolStripMenuItem";
+            this.exitApplicationToolStripMenuItem.Size = new System.Drawing.Size(174, 40);
+            this.exitApplicationToolStripMenuItem.Text = "E&xit";
+            this.exitApplicationToolStripMenuItem.Click += new System.EventHandler(this.exitApplicationToolStripMenuItem_Click);
             // 
             // menuItemTools
             // 
@@ -312,83 +374,180 @@
             this.readEntirePCMToolStripMenuItem,
             this.verifyEntirePCMToolStripMenuItem,
             this.modifyVINToolStripMenuItem,
+            this.toolStripSeparator1,
             this.writeParmetersCloneToolStripMenuItem,
             this.writeOSCalibrationBootToolStripMenuItem,
-            this.writeFullToolStripMenuItem});
+            this.writeFullToolStripMenuItem,
+            this.toolStripSeparator2,
+            this.testFileChecksumsToolStripMenuItem});
             this.menuItemTools.Name = "menuItemTools";
-            this.menuItemTools.Size = new System.Drawing.Size(44, 20);
+            this.menuItemTools.Size = new System.Drawing.Size(78, 34);
             this.menuItemTools.Text = "&Tools";
             // 
             // readEntirePCMToolStripMenuItem
             // 
             this.readEntirePCMToolStripMenuItem.Name = "readEntirePCMToolStripMenuItem";
-            this.readEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.readEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(397, 40);
             this.readEntirePCMToolStripMenuItem.Text = "&Read Entire PCM";
             this.readEntirePCMToolStripMenuItem.Click += new System.EventHandler(this.readFullContentsButton_Click);
             // 
             // verifyEntirePCMToolStripMenuItem
             // 
             this.verifyEntirePCMToolStripMenuItem.Name = "verifyEntirePCMToolStripMenuItem";
-            this.verifyEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.verifyEntirePCMToolStripMenuItem.Size = new System.Drawing.Size(397, 40);
             this.verifyEntirePCMToolStripMenuItem.Text = "&Verify Entire PCM";
             this.verifyEntirePCMToolStripMenuItem.Click += new System.EventHandler(this.quickComparisonButton_Click);
             // 
             // modifyVINToolStripMenuItem
             // 
             this.modifyVINToolStripMenuItem.Name = "modifyVINToolStripMenuItem";
-            this.modifyVINToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.modifyVINToolStripMenuItem.Size = new System.Drawing.Size(397, 40);
             this.modifyVINToolStripMenuItem.Text = "&Change VIN";
             this.modifyVINToolStripMenuItem.Click += new System.EventHandler(this.modifyVinButton_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(394, 6);
             // 
             // writeParmetersCloneToolStripMenuItem
             // 
             this.writeParmetersCloneToolStripMenuItem.Name = "writeParmetersCloneToolStripMenuItem";
-            this.writeParmetersCloneToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.writeParmetersCloneToolStripMenuItem.Size = new System.Drawing.Size(397, 40);
             this.writeParmetersCloneToolStripMenuItem.Text = "Write &Parameters";
             this.writeParmetersCloneToolStripMenuItem.Click += new System.EventHandler(this.writeParametersButton_Click);
             // 
             // writeOSCalibrationBootToolStripMenuItem
             // 
             this.writeOSCalibrationBootToolStripMenuItem.Name = "writeOSCalibrationBootToolStripMenuItem";
-            this.writeOSCalibrationBootToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.writeOSCalibrationBootToolStripMenuItem.Size = new System.Drawing.Size(397, 40);
             this.writeOSCalibrationBootToolStripMenuItem.Text = "Write &OS, Calibration && Boot";
             this.writeOSCalibrationBootToolStripMenuItem.Click += new System.EventHandler(this.writeOSCalibrationBootToolStripMenuItem_Click);
             // 
             // writeFullToolStripMenuItem
             // 
             this.writeFullToolStripMenuItem.Name = "writeFullToolStripMenuItem";
-            this.writeFullToolStripMenuItem.Size = new System.Drawing.Size(210, 22);
+            this.writeFullToolStripMenuItem.Size = new System.Drawing.Size(397, 40);
             this.writeFullToolStripMenuItem.Text = "Write &Full Flash (Clone)";
             this.writeFullToolStripMenuItem.Click += new System.EventHandler(this.writeFullToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(394, 6);
+            // 
+            // testFileChecksumsToolStripMenuItem
+            // 
+            this.testFileChecksumsToolStripMenuItem.Name = "testFileChecksumsToolStripMenuItem";
+            this.testFileChecksumsToolStripMenuItem.Size = new System.Drawing.Size(397, 40);
+            this.testFileChecksumsToolStripMenuItem.Text = "&Test File Checksums...";
+            this.testFileChecksumsToolStripMenuItem.Click += new System.EventHandler(this.testFileChecksumsToolStripMenuItem_Click);
             // 
             // menuItemOptions
             // 
             this.menuItemOptions.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menuItemEnable4xReadWrite});
+            this.userDefinedKeyToolStripMenuItem,
+            this.settingsToolStripMenuItem});
             this.menuItemOptions.Name = "menuItemOptions";
-            this.menuItemOptions.Size = new System.Drawing.Size(56, 20);
+            this.menuItemOptions.Size = new System.Drawing.Size(104, 34);
             this.menuItemOptions.Text = "&Options";
             // 
-            // menuItemEnable4xReadWrite
+            // userDefinedKeyToolStripMenuItem
             // 
-            this.menuItemEnable4xReadWrite.Name = "menuItemEnable4xReadWrite";
-            this.menuItemEnable4xReadWrite.Size = new System.Drawing.Size(196, 22);
-            this.menuItemEnable4xReadWrite.Text = "Enable &4x Communication";
-            this.menuItemEnable4xReadWrite.Click += new System.EventHandler(this.enable4xReadWrite_Click);
+            this.userDefinedKeyToolStripMenuItem.CheckOnClick = true;
+            this.userDefinedKeyToolStripMenuItem.Name = "userDefinedKeyToolStripMenuItem";
+            this.userDefinedKeyToolStripMenuItem.Size = new System.Drawing.Size(290, 40);
+            this.userDefinedKeyToolStripMenuItem.Text = "&User Defined Key";
+            this.userDefinedKeyToolStripMenuItem.ToolTipText = "Valid for current device selection, Application instance or Toggle Action.";
+            this.userDefinedKeyToolStripMenuItem.Click += new System.EventHandler(this.userDefinedKeyToolStripMenuItem_Click);
+            // 
+            // settingsToolStripMenuItem
+            // 
+            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(290, 40);
+            this.settingsToolStripMenuItem.Text = "&Settings";
+            this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
+            // 
+            // statusStatusStrip
+            // 
+            this.statusStatusStrip.ImageScalingSize = new System.Drawing.Size(28, 28);
+            this.statusStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.activityToolStripStatusLabel,
+            this.retryCountToolStripStatusLabel,
+            this.kbpsToolStripStatusLabel,
+            this.progressBarToolStripProgressBar,
+            this.percentDoneToolStripStatusLabel,
+            this.timeRemainingToolStripStatusLabel});
+            this.statusStatusStrip.Location = new System.Drawing.Point(0, 914);
+            this.statusStatusStrip.Name = "statusStatusStrip";
+            this.statusStatusStrip.Padding = new System.Windows.Forms.Padding(2, 0, 26, 0);
+            this.statusStatusStrip.ShowItemToolTips = true;
+            this.statusStatusStrip.Size = new System.Drawing.Size(1566, 33);
+            this.statusStatusStrip.TabIndex = 4;
+            this.statusStatusStrip.Text = "Status Strip";
+            // 
+            // activityToolStripStatusLabel
+            // 
+            this.activityToolStripStatusLabel.AutoSize = false;
+            this.activityToolStripStatusLabel.Name = "activityToolStripStatusLabel";
+            this.activityToolStripStatusLabel.Size = new System.Drawing.Size(821, 24);
+            this.activityToolStripStatusLabel.Spring = true;
+            this.activityToolStripStatusLabel.Text = "Activity";
+            this.activityToolStripStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.activityToolStripStatusLabel.ToolTipText = "Current Activity";
+            // 
+            // retryCountToolStripStatusLabel
+            // 
+            this.retryCountToolStripStatusLabel.AutoSize = false;
+            this.retryCountToolStripStatusLabel.Name = "retryCountToolStripStatusLabel";
+            this.retryCountToolStripStatusLabel.Size = new System.Drawing.Size(65, 24);
+            this.retryCountToolStripStatusLabel.Text = "Retry";
+            this.retryCountToolStripStatusLabel.ToolTipText = "Retry Count";
+            // 
+            // kbpsToolStripStatusLabel
+            // 
+            this.kbpsToolStripStatusLabel.AutoSize = false;
+            this.kbpsToolStripStatusLabel.Name = "kbpsToolStripStatusLabel";
+            this.kbpsToolStripStatusLabel.Size = new System.Drawing.Size(65, 24);
+            this.kbpsToolStripStatusLabel.Text = "Kbps";
+            this.kbpsToolStripStatusLabel.ToolTipText = "Kilobits Per Second";
+            // 
+            // progressBarToolStripProgressBar
+            // 
+            this.progressBarToolStripProgressBar.AutoSize = false;
+            this.progressBarToolStripProgressBar.Name = "progressBarToolStripProgressBar";
+            this.progressBarToolStripProgressBar.Size = new System.Drawing.Size(458, 23);
+            // 
+            // percentDoneToolStripStatusLabel
+            // 
+            this.percentDoneToolStripStatusLabel.AutoSize = false;
+            this.percentDoneToolStripStatusLabel.Name = "percentDoneToolStripStatusLabel";
+            this.percentDoneToolStripStatusLabel.Size = new System.Drawing.Size(50, 24);
+            this.percentDoneToolStripStatusLabel.Text = "Percent";
+            this.percentDoneToolStripStatusLabel.ToolTipText = "Percent Completed";
+            // 
+            // timeRemainingToolStripStatusLabel
+            // 
+            this.timeRemainingToolStripStatusLabel.AutoSize = false;
+            this.timeRemainingToolStripStatusLabel.Name = "timeRemainingToolStripStatusLabel";
+            this.timeRemainingToolStripStatusLabel.Size = new System.Drawing.Size(75, 24);
+            this.timeRemainingToolStripStatusLabel.Text = "Time Remaining";
+            this.timeRemainingToolStripStatusLabel.ToolTipText = "Time Remaining (T minus)";
             // 
             // MainForm
             // 
             this.AcceptButton = this.readPropertiesButton;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(11F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(854, 513);
+            this.ClientSize = new System.Drawing.Size(1566, 947);
+            this.Controls.Add(this.statusStatusStrip);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.operationsBox);
             this.Controls.Add(this.interfaceBox);
             this.Controls.Add(this.menuStripMain);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStripMain;
-            this.Margin = new System.Windows.Forms.Padding(2);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "MainForm";
             this.Text = "PCM Hammer";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
@@ -404,6 +563,8 @@
             this.debugTab.PerformLayout();
             this.menuStripMain.ResumeLayout(false);
             this.menuStripMain.PerformLayout();
+            this.statusStatusStrip.ResumeLayout(false);
+            this.statusStatusStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -432,7 +593,6 @@
         private System.Windows.Forms.WebBrowser creditsWebBrowser;
         private System.Windows.Forms.MenuStrip menuStripMain;
         private System.Windows.Forms.ToolStripMenuItem menuItemOptions;
-        private System.Windows.Forms.ToolStripMenuItem menuItemEnable4xReadWrite;
         private System.Windows.Forms.ToolStripMenuItem menuItemTools;
         private System.Windows.Forms.ToolStripMenuItem readEntirePCMToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem verifyEntirePCMToolStripMenuItem;
@@ -440,6 +600,23 @@
         private System.Windows.Forms.ToolStripMenuItem writeParmetersCloneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem writeOSCalibrationBootToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem writeFullToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveResultsLogToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveDebugLogToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exitApplicationToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem userDefinedKeyToolStripMenuItem;
+        private System.Windows.Forms.StatusStrip statusStatusStrip;
+        private System.Windows.Forms.ToolStripStatusLabel activityToolStripStatusLabel;
+        private System.Windows.Forms.ToolStripStatusLabel timeRemainingToolStripStatusLabel;
+        private System.Windows.Forms.ToolStripStatusLabel percentDoneToolStripStatusLabel;
+        private System.Windows.Forms.ToolStripStatusLabel retryCountToolStripStatusLabel;
+        private System.Windows.Forms.ToolStripProgressBar progressBarToolStripProgressBar;
+        private System.Windows.Forms.ToolStripStatusLabel kbpsToolStripStatusLabel;
+        private System.Windows.Forms.ToolStripMenuItem testFileChecksumsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
     }
 }
 

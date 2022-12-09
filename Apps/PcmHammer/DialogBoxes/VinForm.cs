@@ -106,9 +106,9 @@ namespace PcmHacking.DialogBoxes
         /// </summary>
         private static bool IsAlphaNumeric(string vin)
         {
-            foreach(char c in vin)
+            foreach (char c in vin)
             {
-                if(!char.IsLetterOrDigit(c))
+                if (!char.IsLetterOrDigit(c))
                 {
                     return false;
                 }
@@ -120,10 +120,10 @@ namespace PcmHacking.DialogBoxes
 
         private bool IsVinChecksumOK(string vin)
         {
-        // Array of VIN character position weight factors:
-        ushort[] CharWeight = new ushort[] { 8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2 };
-        ushort checksum = 0;
-            for(int i = 0; i < 17; i++)
+            // Array of VIN character position weight factors:
+            ushort[] CharWeight = new ushort[] { 8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2 };
+            ushort checksum = 0;
+            for (int i = 0; i < 17; i++)
             {
                 ushort digitVal = CharWeight[i];
                 if (char.IsDigit(vin[i]))
@@ -176,7 +176,7 @@ namespace PcmHacking.DialogBoxes
                             digitVal *= 9;
                             break;
                         default:
-                            this.prompt.Text = $"The VIN contains invalid character '{vin[i]}' on position {i+1}.";
+                            this.prompt.Text = $"The VIN contains invalid character '{vin[i]}' on position {i + 1}.";
                             return false;
                     }
                 }
@@ -187,7 +187,7 @@ namespace PcmHacking.DialogBoxes
 
             char CheckDigit = 'X';
 
-            if(checksum < 10)
+            if (checksum < 10)
             {
                 CheckDigit = checksum.ToString()[0];
             }
