@@ -74,6 +74,25 @@ namespace PcmHacking
                         new MemoryRange(0x00000, 0x02000, BlockType.Boot), //  16kb boot block
                     };
                     throw new InvalidOperationException("This flash chip ID was not supposed to exist in the wild.");
+                    break;
+
+                case 0x12345678:
+                    // P04 is too small to have chip ID code (at this stage). So, we use this hard coded ID to satisfy PCMHammer's need for a chip structure.
+                    // 12345678 should not exist in the wild and is less likely to trigger accidentally than using 00000000 or FFFFFFFF.
+                    size = 512 * 1024;
+                    description = "Hardcoded Intel Specification 512kb";
+                    memoryRanges = new MemoryRange[]
+                    {
+                        // These addresses are for a bottom fill chip (B) in byte mode (not word)
+                        new MemoryRange(0x60000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x40000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x20000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block 
+                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
+                    };
+                    break;
 
                 // Intel 28F800B
                 case 0x0089889D:

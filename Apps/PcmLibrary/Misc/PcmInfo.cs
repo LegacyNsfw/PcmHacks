@@ -82,6 +82,26 @@ namespace PcmHacking
         public int KeyAlgorithm { get; private set; }
 
         /// <summary>
+        /// Does PCM's kernel support flash segment checksum?
+        /// </summary>
+        public bool ChecksumSupport { get; private set; }
+
+        /// <summary>
+        /// Does PCM's kernel support flash chip identification?
+        /// </summary>
+        public bool FlashIDSupport { get; private set; }
+
+        /// <summary>
+        /// Does PCM's kernel support version number identification?
+        /// </summary>
+        public bool KernelVersionSupport { get; private set; }
+
+        /// <summary>
+        /// PCM kernel max block size.
+        /// </summary>
+        public int KernelMaxBlockSize { get; private set; }
+
+        /// <summary>
         /// Populate this object based on the given OSID.
         /// </summary>
         public PcmInfo(uint osid)
@@ -89,12 +109,16 @@ namespace PcmHacking
             this.OSID = osid;
 
             // These defaults work for P01 and P59 hardware.
-            // They will need to be overwriten for others.
+            // Differences are overwriten for other hardware and kernels.
             this.KernelFileName = "Kernel-P01.bin";
             this.KernelBaseAddress = 0xFF8000;
             this.RAMSize = 0x4DFF;
             this.ValidationMethod = PcmType.P01_P59;
             this.HardwareType = PcmType.P01_P59;
+            this.ChecksumSupport = true;
+            this.FlashIDSupport = true;
+            this.KernelVersionSupport = true;
+            this.KernelMaxBlockSize = 4096;
 
             // This will be overwritten for known-to-be-unsupported operating systems.
             this.IsSupported = true;
@@ -509,6 +533,7 @@ namespace PcmHacking
                     break;
 
                 // Hardware 9380717 V6 P04
+                case 9352797:
                 case 9354406:
                 case 9356245:
                 case 9356247:
@@ -769,6 +794,11 @@ namespace PcmHacking
                     this.KernelBaseAddress = 0xFF9090;
                     this.ValidationMethod = PcmType.P04;
                     this.HardwareType = PcmType.P04;
+                    this.KernelFileName = "Kernel-P04.bin";
+                    this.ChecksumSupport = false;
+                    this.KernelVersionSupport = true;
+                    this.FlashIDSupport = false;
+                    this.KernelMaxBlockSize = 8; // TODO: Testing only
                     break;
 
                 // P10

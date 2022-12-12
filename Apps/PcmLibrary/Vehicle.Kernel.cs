@@ -410,7 +410,7 @@ namespace PcmHacking
 
             this.logger.AddUserMessage("Kernel upload 100% complete.");
 
-            if (ReportKernelID)
+            if (ReportKernelID && info.KernelVersionSupport)
             {
                 // Consider: Allowing caller to call GetKernelVersion(...)?
                 // Consider: return kernel version rather than boolean?

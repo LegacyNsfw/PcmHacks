@@ -18,11 +18,6 @@ namespace PcmHacking
         private readonly Protocol protocol;
         private readonly ILogger logger;
 
-        public bool VerifyFile
-        {
-            get; set;
-        } = true;
-
         public CKernelReader(Vehicle vehicle, PcmInfo pcmInfo, ILogger logger)
         {
             this.vehicle = vehicle;
@@ -95,9 +90,14 @@ namespace PcmHacking
 
                 // Which flash chip?
                 await this.vehicle.SendToolPresentNotification();
-                UInt32 chipId = await this.vehicle.QueryFlashChipId(cancellationToken);
-                FlashChip flashChip = FlashChip.Create(chipId, this.logger);
-                logger.AddUserMessage("Flash chip: " + flashChip.ToString());
+
+                FlashChip flashChip = FlashChip.Create(0x12345678, this.logger);
+                if (this.pcmInfo.FlashIDSupport)
+                {
+                    UInt32 chipId = await this.vehicle.QueryFlashChipId(cancellationToken);
+                    flashChip = FlashChip.Create(chipId, this.logger);
+                    logger.AddUserMessage("Flash chip: " + flashChip.ToString());
+                }
 
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadMemoryBlock);
 
@@ -106,6 +106,7 @@ namespace PcmHacking
                 int startAddress = 0;
                 int bytesRemaining = pcmInfo.ImageSize;
                 int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
+                if (blockSize > this.pcmInfo.KernelMaxBlockSize) { blockSize = this.pcmInfo.KernelMaxBlockSize; }
 
                 DateTime startTime = DateTime.MaxValue;
                 while (startAddress < pcmInfo.ImageSize)
@@ -159,7 +160,7 @@ namespace PcmHacking
                 logger.AddUserMessage("Read complete.");
                 Utility.ReportRetryCount("Read", retryCount, pcmInfo.ImageSize, this.logger);
 
-                if (VerifyFile)
+                if (this.pcmInfo.ChecksumSupport && this.pcmInfo.FlashIDSupport)
                 {
                     logger.AddUserMessage("Starting verification...");
 
