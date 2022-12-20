@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -77,29 +77,28 @@ namespace PcmHacking.DialogBoxes
         /// </summary>
         private bool IsLegal()
         {
-            bool isLegal = true;
 
-            if (this.vinBox.Text.Length == 17)
+            if (this.vinBox.Text.Length != 17)
             {
-                this.prompt.Text = "The VIN is 17 characters long. Good!";
-            }
-            else
-            {
-                this.prompt.Text = $"The VIN must be 17 characters long. This is {this.vinBox.Text.Length}.";
-                isLegal = false;
+                this.prompt.Text = $"The VIN must be 17 characters long! This is {this.vinBox.Text.Length}.";
+                return false;
             }
 
-            if (VinForm.IsAlphaNumeric(this.vinBox.Text))
+            if (!VinForm.IsAlphaNumeric(this.vinBox.Text))
             {
-                this.prompt2.Text = "The VIN contains only letters and numbers. Good!";
-            }
-            else
-            {
-                this.prompt2.Text = "The VIN must contain only letters and numbers.";
-                isLegal = false;
+                this.prompt.Text = "The VIN must contain only letters and numbers.";
+                return false;
             }
 
-            return isLegal;
+            this.vinBox.Text = this.vinBox.Text.ToUpper();
+
+            if (IsVinChecksumOK(this.vinBox.Text))
+            {
+                this.prompt.Text = "The VIN is valid. Good!";
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -117,5 +116,92 @@ namespace PcmHacking.DialogBoxes
 
             return true;
         }
+
+
+        private bool IsVinChecksumOK(string vin)
+        {
+        // Array of VIN character position weight factors:
+        ushort[] CharWeight = new ushort[] { 8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2 };
+        ushort checksum = 0;
+            for(int i = 0; i < 17; i++)
+            {
+                ushort digitVal = CharWeight[i];
+                if (char.IsDigit(vin[i]))
+                {
+                    digitVal *= ((ushort)char.GetNumericValue(vin[i]));
+                }
+                else
+                {
+                    switch (char.ToUpper(vin[i]))
+                    {
+                        case 'A':
+                        case 'J':
+                            digitVal *= 1;
+                            break;
+                        case 'B':
+                        case 'K':
+                        case 'S':
+                            digitVal *= 2;
+                            break;
+                        case 'C':
+                        case 'L':
+                        case 'T':
+                            digitVal *= 3;
+                            break;
+                        case 'D':
+                        case 'M':
+                        case 'U':
+                            digitVal *= 4;
+                            break;
+                        case 'E':
+                        case 'N':
+                        case 'V':
+                            digitVal *= 5;
+                            break;
+                        case 'F':
+                        case 'W':
+                            digitVal *= 6;
+                            break;
+                        case 'G':
+                        case 'P':
+                        case 'X':
+                            digitVal *= 7;
+                            break;
+                        case 'H':
+                        case 'Y':
+                            digitVal *= 8;
+                            break;
+                        case 'R':
+                        case 'Z':
+                            digitVal *= 9;
+                            break;
+                        default:
+                            this.prompt.Text = $"The VIN contains invalid character '{vin[i]}' on position {i+1}.";
+                            return false;
+                    }
+                }
+                checksum += digitVal;
+            }
+
+            checksum %= 11;
+
+            char CheckDigit = 'X';
+
+            if(checksum < 10)
+            {
+                CheckDigit = checksum.ToString()[0];
+            }
+
+            if (vin[8] == CheckDigit)
+            {
+                return true;
+            }
+            else
+            {
+                this.prompt.Text = $"The VIN check digit on position 9 is incorrect!\nCorrect check digit is: {CheckDigit}";
+                return false;
+            }
+        }
+
     }
 }

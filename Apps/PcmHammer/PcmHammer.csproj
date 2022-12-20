@@ -6,9 +6,9 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A6B28831-A16F-48F3-8C48-9B02CF0B6678}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>PcmHacking</RootNamespace>
+    <RootNamespace>PcmHammer</RootNamespace>
     <AssemblyName>PcmHammer</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -26,17 +26,18 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\nate\AppData\Local\Temp\vsB530.tmp\Debug\</IntermediateOutputPath>
+    <IntermediateOutputPath>C:\Users\Modz2014\AppData\Local\Temp\vs4DEF.tmp\Debug\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -46,21 +47,43 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\nate\AppData\Local\Temp\vsB530.tmp\Release\</IntermediateOutputPath>
+    <IntermediateOutputPath>C:\Users\Modz2014\AppData\Local\Temp\vs4DEF.tmp\Release\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>0411_256px.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <Target Name="Date" BeforeTargets="CoreCompile">
-    <WriteLinesToFile File="$(IntermediateOutputPath).generated.cs" Lines="static partial class Generated { public static System.DateTime BuildTime = System.DateTime.UtcNow %3B }" Overwrite="true" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)generated.cs" Lines="static partial class Generated { public static long BuildTime = $([System.DateTime]::UtcNow.Ticks)%3B }" Overwrite="true" />
     <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath).generated.cs" />
+      <Compile Include="$(IntermediateOutputPath)generated.cs" />
     </ItemGroup>
   </Target>
   <ItemGroup>
+    <Reference Include="AutoUpdater.NET, Version=1.7.6.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\AutoUpdater.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="CommandLine, Version=2.8.0.0, Culture=neutral, PublicKeyToken=5a870481e358d379, processorArchitecture=MSIL">
+      <HintPath>..\packages\CommandLineParser.2.8.0\lib\net461\CommandLine.dll</HintPath>
+    </Reference>
     <Reference Include="J2534, Version=1.0.1.37629, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\PcmLibraryWindowsForms\Devices\J2534.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.Core">
+      <HintPath>..\..\..\New folder\Microsoft.Web.WebView2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.WinForms">
+      <HintPath>..\..\..\New folder\Microsoft.Web.WebView2.WinForms.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.Wpf">
+      <HintPath>..\..\..\New folder\Microsoft.Web.WebView2.Wpf.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -74,13 +97,27 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="netstandard" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandLineOptions.cs" />
     <Compile Include="DialogBoxes\DelayDialogBox.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="DialogBoxes\DelayDialogBox.Designer.cs">
       <DependentUpon>DelayDialogBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DialogBoxes\SettingsDialogBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DialogBoxes\SettingsDialogBox.Designer.cs">
+      <DependentUpon>SettingsDialogBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DialogBoxes\UserDefinedKeyDialogBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DialogBoxes\UserDefinedKeyDialogBox.Designer.cs">
+      <DependentUpon>UserDefinedKeyDialogBox.cs</DependentUpon>
     </Compile>
     <Compile Include="DialogBoxes\VinForm.cs">
       <SubType>Form</SubType>
@@ -88,6 +125,7 @@
     <Compile Include="DialogBoxes\VinForm.Designer.cs">
       <DependentUpon>VinForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Configuration.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -98,6 +136,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="DialogBoxes\DelayDialogBox.resx">
       <DependentUpon>DelayDialogBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DialogBoxes\SettingsDialogBox.resx">
+      <DependentUpon>SettingsDialogBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DialogBoxes\UserDefinedKeyDialogBox.resx">
+      <DependentUpon>UserDefinedKeyDialogBox.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="DialogBoxes\VinForm.resx">
       <DependentUpon>VinForm.cs</DependentUpon>
@@ -113,9 +157,12 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="app.manifest" />
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
+      <Generator>PublicSettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <Compile Include="Properties\Settings.Designer.cs">
@@ -139,6 +186,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
     <Content Include="0411_256px.ico" />
+    <EmbeddedResource Include="start.txt" />
     <EmbeddedResource Include="credits.html" />
     <EmbeddedResource Include="help.html" />
   </ItemGroup>
