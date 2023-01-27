@@ -104,14 +104,32 @@ namespace PcmHacking
             // Check not already loaded
             if (IsLoaded == true)
             {
-                this.Logger.AddDebugMessage("DLL already loaded, unloading before proceeding");
+                // Disconnect protocol before disconnecting tool.
+                m = DisconnectFromProtocol();
+                if (m.Status != ResponseStatus.Success)
+                {
+                    this.Logger.AddUserMessage("Error disconnecting from protocol.");
+                    return false;
+                }
+                this.Logger.AddDebugMessage("Successfully disconnected from protocol.");
+
+                // Disconnect tool before unloading DLL.
+                m = DisconnectTool();
+                if (m.Status != ResponseStatus.Success)
+                {
+                    this.Logger.AddUserMessage("Error disconnecting from tool.");
+                    return false;
+                }
+                this.Logger.AddDebugMessage("Successfully disconnected from tool.");
+
+                // Unload DLL.
                 m2 = CloseLibrary();
                 if (m2.Status != ResponseStatus.Success)
                 {
-                    this.Logger.AddUserMessage("Error closing loaded DLL");
+                    this.Logger.AddUserMessage("Error unloading DLL");
                     return false;
                 }
-                this.Logger.AddDebugMessage("Existing DLL successfully unloaded.");
+                this.Logger.AddDebugMessage("Successfully unloaded DLL.");
             }
 
             // Connect to requested DLL
