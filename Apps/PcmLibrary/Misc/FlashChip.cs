@@ -74,7 +74,6 @@ namespace PcmHacking
                         new MemoryRange(0x00000, 0x02000, BlockType.Boot), //  16kb boot block
                     };
                     throw new InvalidOperationException("This flash chip ID was not supposed to exist in the wild.");
-                    break;
 
                 case 0x12345678:
                     // P04 is too small to have chip ID code (at this stage). So, we use this hard coded ID to satisfy PCMHammer's need for a chip structure.
