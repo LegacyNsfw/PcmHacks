@@ -1,6 +1,10 @@
 # Use toolchain from: https://github.com/haarer/toolchain68k
 # Configure for m68k-elf target and install to default location
 # Tested on EL6 and Fedora 28
+#
+pcm ?= P01
+address ?= FF8000
+
 PREFIX = /opt/crosschain/bin/m68k-elf-
 
 CC = $(PREFIX)gcc
@@ -8,16 +12,22 @@ LD = $(PREFIX)ld
 OBJCOPY = $(PREFIX)objcopy
 OBJDUMP = $(PREFIX)objdump
 
-CCFLAGS = -c -fomit-frame-pointer -std=gnu99 -mcpu=68332
+CCFLAGS = -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 -D$(pcm)
 LDFLAGS =
 DUMPFLAGS = -d -S
 COPYFLAGS = -O binary
 
-pcm?=P01
+# PCM specific C files list
+FILE_LIST = CFiles-$(pcm).list
+_CFILES = $(shell col -b < ${FILE_LIST})
 
-CCFLAGS += -D$(pcm)
+# PCM specific object file list from CFiles-$(pcm).list
+OFILES = $(_CFILES:.c=.o)
 
-all: kernel.bin
+# PCM specific Linker Script (.ld).
+PCM_LDSCRIPT = SECTIONS { .text \(0x12340000\) : { main.o } .kernel_code :	{ Kernel-$(pcm).o \(.kernelstart\) \* \(.text\) } .kernel_data : { \* \(.kerneldata\) }}
+
+all: Kernel-$(pcm).bin
 
 %.o: %.c
 	$(CC) $(CCFLAGS) $< -o $@
@@ -25,13 +35,15 @@ all: kernel.bin
 %.asm: %.bin
 	$(OBJDUMP) $(DUMPFLAGS) -S $< -o $@
 
-kernel.elf: main.o write-kernel.o crc.o common.o common-readwrite.o flash-intel.o flash-amd.o
-	$(LD) $(LDFLAGS) -T kernel.ld main.o write-kernel.o crc.o common.o common-readwrite.o flash-intel.o flash-amd.o -o $@
+Kernel-$(pcm).elf: Kernel-$(pcm).o $(OFILES)
+	@echo $(PCM_LDSCRIPT) > LinkerScript.tmp
+	$(LD) $(LDFLAGS) --section-start .kernel_code=0x$(address) -T LinkerScript.tmp -o $@ Kernel-$(pcm).o $(OFILES)
+	-@rm -f LinkerScript.tmp
 	-$(OBJDUMP) $(DUMPFLAGS) $@ > $@.disassembly
 
-kernel.bin: kernel.elf
-	$(OBJCOPY) $(COPYFLAGS) --only-section=.kernel_code --only-section=.rodata kernel.elf kernel.bin
-	mv kernel.bin kernel-$(pcm).bin
+Kernel-$(pcm).bin: Kernel-$(pcm).elf
+	$(OBJCOPY) $(COPYFLAGS) --only-section=.kernel_code --only-section=.rodata Kernel-$(pcm).elf Kernel-$(pcm).bin
 
 clean:
-	rm -f *.bin *.o *.elf *.asm
+	@rm -f *.bin *.o *.elf *.asm *.disassembly *.tmp
+

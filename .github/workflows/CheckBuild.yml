@@ -1,0 +1,108 @@
+#
+# Original works by ddub07 <github.com>
+# 03/01/2023 - GampyG28 <github.com> major overhaul, renamed and updated.
+#
+name: CheckBuild
+
+on: [ pull_request, push ]
+
+jobs:
+
+  Kernels:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3.3.0
+
+    - name: Install GNU m68k Compiler and Make tool
+      run: sudo apt-get install -y gcc-m68k-linux-gnu make
+
+    - name: Create temporary artifact storage
+      run: mkdir TemporaryArtifactStorage
+
+    - name: Build all Kernels
+      run: |
+        cd Kernels
+        #
+        # The following loop is the one location that needs to be updated when adding a new kernel!
+        #
+        for p in "P01 FF8000" "P04 FF9090" "P10 FFB800" "P12 FF2000"; do
+          pcm=${p%% *}
+          address=${p##* }
+          echo Building Kernel ":    ${pcm}"
+          make PREFIX=/usr/bin/m68k-linux-gnu- pcm=${pcm} address=${address}
+          echo     Copy-Item Kernel-${pcm}.bin to TemporaryArtifactStorage
+          cp Kernel-${pcm}.bin ../TemporaryArtifactStorage/
+          echo     Cleanup after ${pcm}
+          echo
+          make clean
+        done
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: Kernels_${{github.sha}}
+        path: TemporaryArtifactStorage
+
+  PCMHammer:
+    needs: Kernels
+
+    runs-on: windows-2019
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3.3.0
+
+    - name: Setup MSBuild Path
+      uses: microsoft/setup-msbuild@v1.3.1
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.1.1
+
+    - name: Restore NuGet Packages
+      run: nuget restore Apps/PcmApps.sln
+
+    - name: Download Kernels artifact
+      uses: actions/download-artifact@v3.0.2
+      with:
+        name: Kernels_${{github.sha}}
+        path: TemporaryArtifactStorage
+
+    - name: Remove Stale Kernels artifact
+      uses: geekyeggo/delete-artifact@v2
+      with:
+        name: Kernels_${{github.sha}}
+
+    - name: Build Applications
+      run: msbuild Apps/PcmApps.sln
+
+    - name: Add PCM Hammer to temporary artifact storage
+      run: |
+        Copy-Item -Path "Apps/PcmHammer/bin/Debug/PcmHammer.*" -Destination TemporaryArtifactStorage
+        Copy-Item -Path "Apps/PcmHammer/bin/Debug/*.dll" -Destination TemporaryArtifactStorage
+        Copy-Item -Path "Apps/PcmHammer/bin/Debug/*.pdb" -Destination TemporaryArtifactStorage
+
+    - name: Add PCM Logger to temporary artifact storage
+      run: |
+        Copy-Item -Path "Apps/PcmLogger/bin/Debug/PcmLogger.*" -Destination TemporaryArtifactStorage
+        Copy-Item -Path "Apps/PcmLogger/bin/Debug/*.dll" -Destination TemporaryArtifactStorage
+        Copy-Item -Path "Apps/PcmLogger/bin/Debug/*.pdb" -Destination TemporaryArtifactStorage
+        Copy-Item -Path "Apps/PcmLogger/*.LogProfile" -Destination TemporaryArtifactStorage
+        Copy-Item -Path "Apps/PcmLogger/Parameters.*.xml" -Destination TemporaryArtifactStorage
+
+    - name: Add VPW Explorer to temporary artifact storage
+      run: |
+        Copy-Item -Path "Apps/VpwExplorer/bin/Debug/VpwExplorer.*" -Destination TemporaryArtifactStorage
+        Copy-Item -Path "Apps/VpwExplorer/bin/Debug/*.dll" -Destination TemporaryArtifactStorage
+        Copy-Item -Path "Apps/VpwExplorer/bin/Debug/*.pdb" -Destination TemporaryArtifactStorage
+
+    - name: Is it all there ??
+      run: ls -l TemporaryArtifactStorage/
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: PCMHacks_${{github.sha}}
+        path: TemporaryArtifactStorage
+

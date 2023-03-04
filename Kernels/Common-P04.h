@@ -14,7 +14,6 @@ typedef unsigned short uint16_t;
 typedef unsigned       uint32_t;
 typedef int            int32_t;
 
-#define P04
 #ifndef DLC_CONFIGURATION
 	#if defined P01 || defined P10 || defined P12
 		#define DLC_CONFIGURATION			(*(unsigned char *)0x00FFF600)
