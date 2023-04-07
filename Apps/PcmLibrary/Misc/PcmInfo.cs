@@ -840,6 +840,7 @@ namespace PcmHacking
                 case 12597778:
                 case 12597978:
                 case 12601774:
+                case 12601321: // 2006 LX9
                 case 12601904: // Saturn I4
                 case 12605256:
                 case 12605261:
