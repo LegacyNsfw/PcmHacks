@@ -15,7 +15,7 @@
 // Code to handle read and write messages.
 ///////////////////////////////////////////////////////////////////////////////
 #define EXTERN
-#include "common.h"
+#include "Common-P04.h"
 
 unsigned char __attribute((section(".kerneldata"))) MessageBuffer[MessageBufferSize];
 

@@ -9,5 +9,6 @@ for %%A in (
   *.log
   *.exe
   *.map
+  *.tmp
   ) do if exist %%A echo   Deleting %%A & del "%%A"
 

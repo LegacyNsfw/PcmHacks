@@ -9,6 +9,7 @@ goto beginning
 * Description  : Build All of PcmHammer's kernels.
 * Author       : Gampy <pcmhacking.net>
 * Authored Date: 04/11/2022
+* Revision Date: 03/01/2023 - Merged P04
 *
 * Authors disclaimer
 *   It is what it is, you can do with it as you please. (with respect)
@@ -32,27 +33,26 @@ goto beginning
 :beginning
 
 rem * Handle command line options
-rem * Block invalid command line arguments -a and -t, they cannot be used in this context.
+rem * Block invalid command line arguments -a and -p, they cannot be used in this context.
 rem * They would need to be changed below.
 (
   setlocal enabledelayedexpansion
   for %%A in (%*) do (
     set VAR=%%A
     if /i "!VAR:~0,2!" == "-a" echo Invalid argument & goto :EOF
-    if /i "!VAR:~0,2!" == "-t" echo Invalid argument & goto :EOF
+    if /i "!VAR:~0,2!" == "-p" echo Invalid argument & goto :EOF
+    if /i "!VAR!" == "/h"      Build.cmd %*
+    if /i "!VAR!" == "-h"      Build.cmd %*
+    if /i "!VAR!" == "--help"  Build.cmd %*
   )
   setlocal disabledelayedexpansion
 )
 
 
 for %%A in (
-  "-aFF8000 -tP01",
-  "-aFFB800 -tP10",
-  "-aFF2000 -tP12"
+  "-pP01 -aFF8000",
+  "-pP04 -aFF9090"
+  "-pP10 -aFFB800",
+  "-pP12 -aFF2000"
   ) do call Build.cmd %%~A %*
-
-rem * Experimental alpha quality P04 read kernel
-cd P04
-call kernel-p04.bat
-cd ..
 

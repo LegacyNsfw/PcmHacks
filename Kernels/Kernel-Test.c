@@ -2,8 +2,9 @@
 // This kernel can read PCM memory and supports uploading a replacement kernel.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "common.h"
+#define P01
 
+#include "common.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Echo the received message
@@ -42,7 +43,7 @@ void Handle_512kb_FlashChipQuery()
 
 	ScratchWatchdog();
 
-	SIM_CSBAR0 = 0x0006;
+	SIM_CSBAR0 = 0x0007;
 	SIM_CSORBT = 0x6820;
 	SIM_CSOR0 = 0x7060; // flash chip 12v A9 enable
 
@@ -74,7 +75,7 @@ void Handle_1mb_FlashChipQuery()
 	ScratchWatchdog();
 	uint32_t id = 0;
 
-	SIM_CSBAR0 = 0x0006;
+	SIM_CSBAR0 = 0x0007;
 	SIM_CSORBT = 0x6820;
 	SIM_CSOR0 = 0x7060; // flash chip 12v A9 enable
 

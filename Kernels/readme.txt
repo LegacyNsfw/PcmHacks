@@ -1,38 +1,53 @@
-Build.cmd encapsulates the options needed to convert C code into kernel binaries on Windows machines.
-See Build.cmd -h for help
+To build the Kernels you'll need the gcc-m68k toolchain for Windows available here: http://gnutoolchains.com/m68k-elf/
 
-gcc.bat is mostly just for experimenting with gcc options before
-moving those options into the Build.cmd batch file.
+The gcc-m68k toolchain needs to be installed to the installation default location of C:\SysGCC\m68k-elf or you need to
+point to the location of m68k-elf-gcc.exe with the -g command line parameter (See: Build.cmd -h), allowing it to add itself to
+the PATH is your choice, Build.cmd does not require it.
+
+Build.cmd encapsulates the options used to build the binaries on Windows.
+
+See Build.cmd -h or BuildAll.cmd -h for help.
+Typical single Kernel usage: Build.cmd -aFF8000 -pP01
+
+Build.cmd <- .cmd is important!
+
+BuildAll.cmd wraps Build.cmd in a loop building all supported Kernels, all options in Build.cmd are available in BuildAll.cmd.
+
+To build all supported Kernels simple run: BuildAll.cmd
 
 --
 
-The GCC-m68k toolchain for Windows is available here:
-http://gnutoolchains.com/m68k-elf/
+build.bat has been superseded by Build.cmd, use of build.bat is not recommended!
+
+fixpath.bat is a system dependent batch file and part of build.bat and is not recommended for use.
+
+gcc.bat was used for testing command line options.
+
+test.cpp was used for crc testing and development, it is not part of the Kernels and unnecessary to build.
 
 --
 
-The gcc toolchain for linux can be built on most linux distros with https://github.com/haarer/toolchain68k
+The Kernels can also be built on Unix/Linux using the gcc-m68k toolchain that can be built on most Unix/Linux
+systems using: https://github.com/haarer/toolchain68k.
 
-You will need to comment out avr in the build scripts then uncomment m68k-elf
+There are pre-built binaries for some distros available as gcc-m68k-linux-gnu.
 
-If you do not use the default install location update the makefile prefix to point to the new location
+If you do not use the default install location, PREFIX can be used to point to the location used.
+
+You will need to move Kernels-*.bin to the PcmHammer directory.
 
 $ cd Kernels
 $ make clean
-rm -f *.bin *.o *.elf *.asm
-$ make
-/opt/crosschain/bin/m68k-elf-gcc -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 micro-kernel.c -o micro-kernel.o
-/opt/crosschain/bin/m68k-elf-gcc -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 main.c -o main.o
-/opt/crosschain/bin/m68k-elf-gcc -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 common.c -o common.o
-/opt/crosschain/bin/m68k-elf-ld  -T micro-kernel.ld main.o micro-kernel.o -o micro-kernel.elf
-/opt/crosschain/bin/m68k-elf-objcopy -O binary --only-section=.kernel_code --only-section=.rodata micro-kernel.elf micro-kernel.bin
-/opt/crosschain/bin/m68k-elf-gcc -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 read-kernel.c -o read-kernel.o
-/opt/crosschain/bin/m68k-elf-ld  -T read-kernel.ld main.o read-kernel.o -o read-kernel.elf
-/opt/crosschain/bin/m68k-elf-objcopy -O binary --only-section=.kernel_ram read-kernel.elf read-kernel.bin
 
-$ ls -l *.bin *.elf
--rwxr-xr-x. 1 antus antus   810 Dec  8 15:34 micro-kernel.bin
--rwxr-xr-x. 1 antus antus 17508 Dec  8 15:34 micro-kernel.elf
--rwxr-xr-x. 1 antus antus   889 Dec  8 15:34 read-kernel.bin
--rwxr-xr-x. 1 antus antus  9576 Dec  8 15:34 read-kernel.elf
+$ make pcm=P01 address=FF8000
+$ make clean
+
+$ make pcm=P04 address=FF9090
+$ make clean
+
+$ make pcm=P10 address=FFB800
+$ make clean
+
+$ make pcm=P12 address=FF2000
+$ make clean
 

@@ -41,6 +41,15 @@ typedef int            int32_t;
 		#define DLC_RECEIVE_FIFO			(*(unsigned char *)0x00FFE801)
 		#define WATCHDOG1					(*(unsigned char *)0x00FFFA27)
 		#define WATCHDOG2					(*(unsigned char *)0x00FFC006)
+	#else
+		#define DLC_CONFIGURATION          (*(unsigned char *)0x00FFF600)
+		#define DLC_INTERRUPTCONFIGURATION (*(unsigned char *)0x00FFF606)
+		#define DLC_TRANSMIT_COMMAND       (*(unsigned char *)0x00FFF60C)
+		#define DLC_TRANSMIT_FIFO          (*(unsigned char *)0x00FFF60D)
+		#define DLC_STATUS                 (*(unsigned char *)0x00FFF60E)
+		#define DLC_RECEIVE_FIFO           (*(unsigned char *)0x00FFF60F)
+		#define WATCHDOG1                  (*(unsigned char *)0x00FFFA27)
+		#define WATCHDOG2                  (*(unsigned char *)0x00FFD006)
 	#endif
 #endif
 
