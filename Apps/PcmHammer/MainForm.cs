@@ -819,10 +819,9 @@ namespace PcmHacking
                     if (pcmInfo.HardwareType == PcmType.P04)
                     {
                         this.AddUserMessage("**********************************************");
-                        this.AddUserMessage("WARNING: P04 Read is EXPERIMENTAL ONLY.");
-                        this.AddUserMessage("It may or may not read your P04 correctly. The read will be VERY SLOW.");
-                        this.AddUserMessage("If you have the skills please help us improve this code and send us a pull request on github.");
-                        this.AddUserMessage("P04 Write is not yet under development, please do not ask when it is ready. P04 read must work well first.");
+                        this.AddUserMessage("WARNING: P04 Support is still in development.");
+                        this.AddUserMessage("It may or may not read your P04 correctly.");
+                        this.AddUserMessage("There is currently no ETA for P04 Write.");
                         this.AddUserMessage("**********************************************");
                     }
                 }
@@ -1234,9 +1233,9 @@ namespace PcmHacking
 
                     if (pcmInfo.HardwareType == PcmType.P04)
                     {
-                        this.AddUserMessage("WARNING: P04 Read is EXPERIMENTAL ONLY.");
-                        this.AddUserMessage("It may or may not read your P04 correctly. The read will be VERY SLOW.");
-                        DialogResult dialogResult = MessageBox.Show("WARNING: P04 Read is EXPERIMENTAL ONLY.\nIt may or may not read your P04 correctly.\nThe read will be VERY SLOW.\n", "Continue?", MessageBoxButtons.YesNo);
+                        this.AddUserMessage("WARNING: P04 Support i still in development.");
+                        this.AddUserMessage("It may or may not read your P04 correctly.");
+                        DialogResult dialogResult = MessageBox.Show("WARNING: P04 Read is still in development.\nIt may or may not read your P04 correctly.\n", "Continue?", MessageBoxButtons.YesNo);
                         if (dialogResult == DialogResult.No)
                         {
                             this.AddUserMessage("User chose not to proceed");
