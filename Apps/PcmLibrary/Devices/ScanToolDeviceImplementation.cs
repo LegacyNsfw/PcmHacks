@@ -109,11 +109,9 @@ namespace PcmHacking
                 }
                 else
                 {
-                    this.Logger.AddUserMessage("This ScanTool device is not supported.");
-                    this.Logger.AddUserMessage("Please check pcmhammer.org to ensure that you have the latest release.");
-                    this.Logger.AddUserMessage("We're going to default to very small packet sizes, which will make everything slow, but at least it'll probably work.");
-                    this.MaxSendSize = 128 + 12;
-                    this.MaxReceiveSize = 128 + 12;
+                    this.Logger.AddUserMessage("This ScanTool device is not confirmed to work with 1K packets.");
+                    this.MaxSendSize = 1024 + 12;
+                    this.MaxReceiveSize = 1024 + 12;
                 }
 
                 // Setting timeout to a large value. Since we use STPX commands,
