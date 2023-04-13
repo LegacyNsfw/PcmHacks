@@ -20,7 +20,7 @@ namespace PcmHacking
         /// <summary>
         /// Configuration settings
         /// </summary>
-        public int ReadTimeout = 2000;
+        public int ReadTimeout = 3000;
         public int WriteTimeout = 2000;
 
         /// <summary>

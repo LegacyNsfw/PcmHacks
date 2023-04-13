@@ -42,6 +42,15 @@ namespace PcmHacking
         public bool IsSupported { get; private set; }
 
         /// <summary>
+        /// PCM requires a kernel loader
+        /// </summary>
+        /// <remarks>
+        /// We make dual use of this, once it has outlived it's usefulness,
+        /// we use it as a state switch between Loader and Kernel.
+        /// </remarks>
+        public bool LoaderRequired { get; set; }
+
+        /// <summary>
         /// Indicates how to validate files before writing.
         /// </summary>
         public PcmType ValidationMethod { get; private set; }
@@ -60,6 +69,16 @@ namespace PcmHacking
         /// Base address to begin writing the kernel to.
         /// </summary>
         public int KernelBaseAddress { get; private set; }
+
+        /// <summary>
+        /// Name of the kernel loader file to use.
+        /// </summary>
+        public string LoaderFileName { get; private set; }
+
+        /// <summary>
+        /// Base address to begin writing the kernel loader to.
+        /// </summary>
+        public int LoaderBaseAddress { get; private set; }
 
         /// <summary>
         /// Base address to begin reading or writing the ROM contents.
@@ -82,9 +101,14 @@ namespace PcmHacking
         public int KeyAlgorithm { get; private set; }
 
         /// <summary>
-        /// Does PCM's kernel support flash segment checksum?
+        /// Supports file validation checksums?
         /// </summary>
         public bool ChecksumSupport { get; private set; }
+
+        /// <summary>
+        /// Supports flash sector CRC?
+        /// </summary>
+        public bool FlashCRCSupport { get; private set; }
 
         /// <summary>
         /// Does PCM's kernel support flash chip identification?
@@ -102,6 +126,16 @@ namespace PcmHacking
         public int KernelMaxBlockSize { get; private set; }
 
         /// <summary>
+        /// Assembly Kernel detected.
+        /// </summary>
+        /// <remarks>
+        /// Bit of a hack to support both the C Kernels and the Assembly Kernels EASILY with minimal changes.
+        /// After the C Kernels are gone this is no longer necessary.
+        /// Also see notes in CKernelVerifier CompareRanges().
+        /// </remarks>
+        public bool AssemblyKernel { get; set; } = false;
+
+        /// <summary>
         /// Populate this object based on the given OSID.
         /// </summary>
         public PcmInfo(uint osid)
@@ -110,18 +144,28 @@ namespace PcmHacking
 
             // These defaults work for P01 and P59 hardware.
             // Differences are overwriten for other hardware and kernels.
-            this.KernelFileName = "Kernel-P01.bin";
-            this.KernelBaseAddress = 0xFF8000;
-            this.RAMSize = 0x4DFF;
+            //
+            // This is a complete list of PCM related properties and in the same order as the declarations above.
+            // It's a good template to use for each PCM ... Nice neat and ordely.
+            //
+            //this.Description = "";
+            this.IsSupported = true;
+            this.LoaderRequired = false;
             this.ValidationMethod = PcmType.P01_P59;
             this.HardwareType = PcmType.P01_P59;
+            this.KernelFileName = "Kernel-P01.bin";
+            this.KernelBaseAddress = 0xFF8000;
+            //this.LoaderFileName = string.Empty;
+            //this.LoaderBaseAddress = 0x0;
+            //this.ImageBaseAddress = 0x0;
+            //this.ImageSize = 0x0;
+            this.RAMSize = 0x4DFF;
+            //this.KeyAlgorithm = 0;
             this.ChecksumSupport = true;
+            this.FlashCRCSupport = true;
             this.FlashIDSupport = true;
             this.KernelVersionSupport = true;
             this.KernelMaxBlockSize = 4096;
-
-            // This will be overwritten for known-to-be-unsupported operating systems.
-            this.IsSupported = true;
 
             switch (osid)
             {
@@ -2003,19 +2047,24 @@ namespace PcmHacking
                 case 9392796:
                 case 9393822:
                 case 12221096:
-                    this.KeyAlgorithm = 14;
                     this.Description = "P04 V6";
-                    this.ImageBaseAddress = 0x0;
-                    this.ImageSize = 512 * 1024;
                     this.IsSupported = false;
-                    this.KernelBaseAddress = 0xFF9090;
+                    this.LoaderRequired = true;
                     this.ValidationMethod = PcmType.P04;
                     this.HardwareType = PcmType.P04;
                     this.KernelFileName = "Kernel-P04.bin";
+                    this.KernelBaseAddress = 0xFF9090;
+                    this.LoaderFileName = "Loader-P04.bin";
+                    this.LoaderBaseAddress = 0xFF9890;
+                    //this.ImageBaseAddress = 0x0;
+                    this.ImageSize = 512 * 1024;
+                    //this.RAMSize = 0x0;
+                    this.KeyAlgorithm = 14;
                     this.ChecksumSupport = false;
+                    this.FlashCRCSupport = true;
+                    this.FlashIDSupport = true;
                     this.KernelVersionSupport = true;
-                    this.FlashIDSupport = false;
-                    this.KernelMaxBlockSize = 2048;
+                    //this.KernelMaxBlockSize = 4096;
                     break;
 
                 // P10

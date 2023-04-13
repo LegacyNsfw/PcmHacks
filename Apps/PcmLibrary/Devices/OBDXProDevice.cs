@@ -957,7 +957,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        result = 250;
+                        result = 3000;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
@@ -1017,7 +1017,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        result = 250;
+                        result = 3000;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:

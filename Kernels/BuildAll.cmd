@@ -10,6 +10,7 @@ goto beginning
 * Author       : Gampy <pcmhacking.net>
 * Authored Date: 04/11/2022
 * Revision Date: 03/01/2023 - Merged P04
+* Revision Date: 03/25/2023 - Gampy <pcmhacking.net> Updated for new Assembly Kernels and Loaders.
 *
 * Authors disclaimer
 *   It is what it is, you can do with it as you please. (with respect)
@@ -33,13 +34,14 @@ goto beginning
 :beginning
 
 rem * Handle command line options
-rem * Block invalid command line arguments -a and -p, they cannot be used in this context.
+rem * Block invalid command line arguments -a, -l and -p, they cannot be used in this context.
 rem * They would need to be changed below.
 (
   setlocal enabledelayedexpansion
   for %%A in (%*) do (
     set VAR=%%A
     if /i "!VAR:~0,2!" == "-a" echo Invalid argument & goto :EOF
+    if /i "!VAR:~0,2!" == "-l" echo Invalid argument & goto :EOF
     if /i "!VAR:~0,2!" == "-p" echo Invalid argument & goto :EOF
     if /i "!VAR!" == "/h"      Build.cmd %*
     if /i "!VAR!" == "-h"      Build.cmd %*
@@ -51,7 +53,7 @@ rem * They would need to be changed below.
 
 for %%A in (
   "-pP01 -aFF8000",
-  "-pP04 -aFF9090"
+  "-pP04 -aFF9090 -lFF9890 -x"
   "-pP10 -aFFB800",
   "-pP12 -aFF2000"
   ) do call Build.cmd %%~A %*
