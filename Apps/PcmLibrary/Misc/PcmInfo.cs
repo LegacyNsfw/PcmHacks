@@ -13,7 +13,7 @@ namespace PcmHacking
         P04,
         P10,
         P12,
-        LB7,
+        E54,
         LLY,
         BLACKBOX
     }
@@ -184,22 +184,38 @@ namespace PcmHacking
                 case 02600605:
                 case 02685305:
                 case 03904405:
-                    this.KeyAlgorithm = 2;
-                    this.Description = "LB7 EFILive COS";
+                    this.Description = "E54 LB7 EFILive COS";
+                    this.IsSupported = false;
+                    this.ValidationMethod = PcmType.E54;
+                    this.HardwareType = PcmType.E54;
+                    this.KernelFileName = "Kernel-E54.bin";
+                    this.KernelBaseAddress = 0xFF8F50;
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
-                    this.HardwareType = PcmType.LB7;
+                    this.KeyAlgorithm = 2;
+                    this.ChecksumSupport = false;
+                    this.FlashCRCSupport = true;
+                    this.FlashIDSupport = true;
+                    this.KernelVersionSupport = true;
                     break;
 
                 // LB7 Duramax service no 9388505
                 case 15063376:
                 case 15188873:
                 case 15097100:
-                    this.KeyAlgorithm = 2;
-                    this.Description = "LB7 9388505";
+                    this.Description = "E54 LB7 9388505";
+                    this.IsSupported = false;
+                    this.ValidationMethod = PcmType.E54;
+                    this.HardwareType = PcmType.E54;
+                    this.KernelFileName = "Kernel-E54.bin";
+                    this.KernelBaseAddress = 0xFF8F50;
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
-                    this.HardwareType = PcmType.LB7;
+                    this.KeyAlgorithm = 2;
+                    this.ChecksumSupport = false;
+                    this.FlashCRCSupport = true;
+                    this.FlashIDSupport = true;
+                    this.KernelVersionSupport = true;
                     break;
 
                 // LB7 Duramax service no 12210729
@@ -208,11 +224,19 @@ namespace PcmHacking
                 case 15166853:
                 case 15186006:
                 case 15189044:
-                    this.KeyAlgorithm = 2;
-                    this.Description = "LB7 12210729";
+                    this.Description = "E54 LB7 12210729";
+                    this.IsSupported = false;
+                    this.ValidationMethod = PcmType.E54;
+                    this.HardwareType = PcmType.E54;
+                    this.KernelFileName = "Kernel-E54.bin";
+                    this.KernelBaseAddress = 0xFF8F50;
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
-                    this.HardwareType = PcmType.LB7;
+                    this.KeyAlgorithm = 2;
+                    this.ChecksumSupport = false;
+                    this.FlashCRCSupport = true;
+                    this.FlashIDSupport = true;
+                    this.KernelVersionSupport = true;
                     break;
 
                 // LLY Duramax service no 12244189 - 1mbyte?

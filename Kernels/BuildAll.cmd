@@ -55,6 +55,7 @@ for %%A in (
   "-pP01 -aFF8000",
   "-pP04 -aFF9090 -lFF9890 -x"
   "-pP10 -aFFB800",
-  "-pP12 -aFF2000"
+  "-pP12 -aFF2000",
+  "-pE54 -aFF8F50 -x"
   ) do call Build.cmd %%~A %*
 

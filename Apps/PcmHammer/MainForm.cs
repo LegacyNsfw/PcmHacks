@@ -840,8 +840,8 @@ namespace PcmHacking
                     this.AddUserMessage("Calibration ID query failed: " + calResponse.Status.ToString());
                 }
 
-                // Disable HardwareID lookup for the P12
-                if (pcmInfo != null && pcmInfo.HardwareType != PcmType.P10 && pcmInfo.HardwareType != PcmType.P12)
+                // Disable HardwareID lookup for the P10, P12 and E54.
+                if (pcmInfo != null && pcmInfo.HardwareType != PcmType.P10 && pcmInfo.HardwareType != PcmType.P12 && pcmInfo.HardwareType != PcmType.E54)
                 {
                     var hardwareResponse = await this.Vehicle.QueryHardwareId();
                     if (hardwareResponse.Status == ResponseStatus.Success)
