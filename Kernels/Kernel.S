@@ -84,8 +84,6 @@ MainLoop:
     beq.w   ProcessMode35              | Process it
     cmpi.b  #Mode_36, 3(%a0)           | Is it mode 0x36 (Tool sending data to write, either to RAM or Flash)
     beq.w   ProcessMode36              | Process it
-    cmpi.w  #0x3DFE, 3(%a0) | Temp alternate Halt ... 0x20 crashes the PCM requireing battery disconnect! It only seems to happen from VPWExplorer++, makes no sense, it uses PCMHammer code!
-    beq.w   Reboot                     | Reboot PCM
     cmpi.b  #Halt_20, 3(%a0)           | Is it mode 0x20 (return to normal comms)
     bne.w   MainLoop                   | No more options, next packet or reboot
 
