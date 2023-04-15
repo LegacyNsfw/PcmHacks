@@ -312,7 +312,19 @@ namespace PcmHacking
                 }
             }
 
-            logger.AddDebugMessage("Sending upload request for kernel size " + payload.Length + ", loadaddress " + info.KernelBaseAddress.ToString("X6"));
+            int loadAddress;
+
+            if (info.LoaderRequired)
+            {
+                loadAddress = info.LoaderBaseAddress;
+                logger.AddUserMessage("PCM uses a kernel loader.");
+            }
+            else
+            {
+                loadAddress = info.KernelBaseAddress;
+            }
+
+            logger.AddDebugMessage($"Sending upload request for {(info.LoaderRequired ? "loader" : "kernel")} size {payload.Length}, loadaddress {loadAddress.ToString("X6")}");
 
             Query<bool> uploadPermissionQuery = new Query<bool>(
                 this.device,
@@ -327,43 +339,45 @@ namespace PcmHacking
 
             if (!uploadAllowed)
             {
-                logger.AddUserMessage("Permission to upload kernel was denied.");
-                logger.AddUserMessage("If this persists, try cutting power to the PCM, restoring power, waiting ten seconds, and trying again.");
+                logger.AddUserMessage(
+                    $"Permission to upload {(info.LoaderRequired ? "Loader" : "Kernel")} was denied." +
+                    Environment.NewLine +
+                    "If this persists, try cutting power to the PCM, restoring power, waiting ten seconds, and trying again."
+                    );
                 return false;
             }
 
-            logger.AddDebugMessage("Going to load a " + payload.Length + " byte kernel to 0x" + info.KernelBaseAddress.ToString("X6"));
+            logger.AddDebugMessage($"Going to load a {payload.Length} byte {(info.LoaderRequired ? "loader" : "kernel")} to 0x{loadAddress.ToString("X6")}");
 
             await this.device.SetTimeout(TimeoutScenario.SendKernel);
 
             // Loop through the payload building and sending packets, highest first, execute on last
             int payloadSize = device.MaxKernelSendSize - 12; // Headers use 10 bytes, sum uses 2 bytes.
+            if (info.LoaderBaseAddress > 0 && loadAddress == info.KernelBaseAddress)
+            {
+                payloadSize = 512;  // If we are using a loader kernel use a small packet size due to limited resources.
+            }
             int chunkCount = payload.Length / payloadSize;
             int remainder = payload.Length % payloadSize;
 
             int offset = (chunkCount * payloadSize);
-            int startAddress = info.KernelBaseAddress + offset;
+            int startAddress = loadAddress + offset;
 
             // First we send the 'remainder' payload, containing any bytes that won't fill up an entire upload packet.
-            logger.AddDebugMessage(
-                string.Format(
-                    "Sending end block payload with offset 0x{0:X}, start address 0x{1:X}, length 0x{2:X}.",
-                    offset,
-                    startAddress,
-                    remainder));
+            logger.AddDebugMessage($"Sending end block payload with offset 0x{offset:X}, start address 0x{startAddress:X}, length 0x{remainder:X}.");
 
             Message remainderMessage = protocol.CreateBlockMessage(
                 payload, 
                 offset, 
-                remainder, 
-                info.KernelBaseAddress + offset, 
+                remainder,
+                loadAddress + offset, 
                 remainder == payload.Length ? BlockCopyType.Execute : BlockCopyType.Copy);
 
             await notifier.Notify();
             Response<bool> uploadResponse = await WritePayload(remainderMessage, cancellationToken);
             if (uploadResponse.Status != ResponseStatus.Success)
             {
-                logger.AddDebugMessage("Could not upload kernel to PCM, remainder payload not accepted.");
+                logger.AddDebugMessage($"Could not upload {(info.LoaderRequired ? "loader" : "kernel")} to PCM, remainder payload not accepted.");
                 return false;
             }
 
@@ -374,10 +388,7 @@ namespace PcmHacking
                 int bytesSent = payload.Length - offset;
                 int percentDone = bytesSent * 100 / payload.Length;
 
-                this.logger.AddUserMessage(
-                    string.Format(
-                        "Kernel upload {0}% complete.",
-                        percentDone));
+                this.logger.AddUserMessage($"{(info.LoaderRequired ? "Loader" : "Kernel")} upload {percentDone}% complete.");
 
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -385,7 +396,8 @@ namespace PcmHacking
                 }
 
                 offset = (chunkIndex - 1) * payloadSize;
-                startAddress = info.KernelBaseAddress + offset;
+                startAddress = loadAddress + offset;
+
                 Message payloadMessage = protocol.CreateBlockMessage(
                     payload,
                     offset,
@@ -393,29 +405,37 @@ namespace PcmHacking
                     startAddress,
                     offset == 0 ? BlockCopyType.Execute : BlockCopyType.Copy);
 
-                logger.AddDebugMessage(
-                    string.Format(
-                        "Sending block with offset 0x{0:X6}, start address 0x{1:X6}, length 0x{2:X4}.",
-                        offset,
-                        startAddress,
-                        payloadSize));
+                logger.AddDebugMessage($"Sending block with offset 0x{offset:X6}, start address 0x{startAddress:X6}, length 0x{payloadSize:X4}.");
 
                 uploadResponse = await WritePayload(payloadMessage, cancellationToken);
                 if (uploadResponse.Status != ResponseStatus.Success)
                 {
-                    logger.AddDebugMessage("Could not upload kernel to PCM, payload not accepted.");
+                    logger.AddDebugMessage($"Could not upload {(info.LoaderRequired ? "loader" : "kernel")} to PCM, payload not accepted.");
                     return false;
                 }
             }
 
-            this.logger.AddUserMessage("Kernel upload 100% complete.");
+            this.logger.AddUserMessage($"{(info.LoaderRequired ? "Loader" : "Kernel")} upload 100% complete.");
 
             if (ReportKernelID && info.KernelVersionSupport)
             {
                 // Consider: Allowing caller to call GetKernelVersion(...)?
                 // Consider: return kernel version rather than boolean?
                 UInt32 kernelVersion = await this.GetKernelVersion();
-                this.logger.AddUserMessage("Kernel Version: " + kernelVersion.ToString("X8"));
+                this.logger.AddUserMessage($"{(info.LoaderRequired ? "Loader" : "Kernel")} Version: {kernelVersion.ToString("X8")}");
+
+                // Detect an Assemply Kernel, // Remove with the C Kernels
+                if (kernelVersion > 0x82400000)
+                {
+                    info.AssemblyKernel = true;
+                }
+            }
+
+            if (info.LoaderRequired)
+            {
+                // Switch modes to Kernel, Loader is already on PCM.
+                // It has outlived it's usefulness, so use it for Loader vs Kernel state switch.
+                info.LoaderRequired = false;
             }
 
             return true;

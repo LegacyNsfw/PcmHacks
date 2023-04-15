@@ -107,7 +107,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        milliseconds = 100;
+                        milliseconds = 3000;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:
@@ -167,7 +167,7 @@ namespace PcmHacking
                         break;
 
                     case TimeoutScenario.ReadCrc:
-                        milliseconds = 100;
+                        milliseconds = 3000;
                         break;
 
                     case TimeoutScenario.ReadMemoryBlock:

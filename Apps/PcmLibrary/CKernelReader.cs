@@ -62,8 +62,39 @@ namespace PcmHacking
 
                 await this.vehicle.SendToolPresentNotification();
 
+                Response<byte[]> response;
+
+                // Execute kernel loader, if required
+                if (this.pcmInfo.LoaderRequired)
+                {
+                    response = await vehicle.LoadKernelFromFile(this.pcmInfo.LoaderFileName);
+                    if (response.Status != ResponseStatus.Success)
+                    {
+                        logger.AddUserMessage("Failed to load loader from file.");
+                        return new Response<Stream>(response.Status, null);
+                    }
+
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return Response.Create(ResponseStatus.Cancelled, (Stream)null);
+                    }
+
+                    await this.vehicle.SendToolPresentNotification();
+
+                    if (!await this.vehicle.PCMExecute(this.pcmInfo, response.Value, cancellationToken))
+                    {
+                        logger.AddUserMessage("Failed to upload loader to PCM");
+
+                        return new Response<Stream>(
+                            cancellationToken.IsCancellationRequested ? ResponseStatus.Cancelled : ResponseStatus.Error,
+                            null);
+                    }
+
+                    logger.AddUserMessage("Loader uploaded to PCM succesfully.");
+                }
+
                 // execute read kernel
-                Response<byte[]> response = await vehicle.LoadKernelFromFile(this.pcmInfo.KernelFileName);
+                response = await vehicle.LoadKernelFromFile(this.pcmInfo.KernelFileName);
                 if (response.Status != ResponseStatus.Success)
                 {
                     logger.AddUserMessage("Failed to load kernel from file.");
@@ -82,11 +113,11 @@ namespace PcmHacking
                     logger.AddUserMessage("Failed to upload kernel to PCM");
 
                     return new Response<Stream>(
-                        cancellationToken.IsCancellationRequested ? ResponseStatus.Cancelled : ResponseStatus.Error, 
+                        cancellationToken.IsCancellationRequested ? ResponseStatus.Cancelled : ResponseStatus.Error,
                         null);
                 }
 
-                logger.AddUserMessage("kernel uploaded to PCM succesfully. Requesting data...");
+                logger.AddUserMessage("Kernel uploaded to PCM succesfully. Requesting data...");
 
                 // Which flash chip?
                 await this.vehicle.SendToolPresentNotification();
@@ -106,7 +137,10 @@ namespace PcmHacking
                 int startAddress = 0;
                 int bytesRemaining = pcmInfo.ImageSize;
                 int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
-                if (blockSize > this.pcmInfo.KernelMaxBlockSize) { blockSize = this.pcmInfo.KernelMaxBlockSize; }
+                if (blockSize > this.pcmInfo.KernelMaxBlockSize)
+                {
+                    blockSize = this.pcmInfo.KernelMaxBlockSize;
+                }
 
                 DateTime startTime = DateTime.MaxValue;
                 while (startAddress < pcmInfo.ImageSize)
@@ -160,7 +194,7 @@ namespace PcmHacking
                 logger.AddUserMessage("Read complete.");
                 Utility.ReportRetryCount("Read", retryCount, pcmInfo.ImageSize, this.logger);
 
-                if (this.pcmInfo.ChecksumSupport && this.pcmInfo.FlashIDSupport)
+                if (this.pcmInfo.FlashCRCSupport && this.pcmInfo.FlashIDSupport)
                 {
                     logger.AddUserMessage("Starting verification...");
 
