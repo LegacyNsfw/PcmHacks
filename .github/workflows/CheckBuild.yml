@@ -1,6 +1,7 @@
 #
 # Original works by ddub07 <github.com>
 # 03/01/2023 - GampyG28 <github.com> major overhaul, renamed and updated.
+# 04/16/2023 - GampyG28 <github.com> Added Assembly Kernels and Loaders
 #
 name: CheckBuild
 
@@ -21,22 +22,60 @@ jobs:
     - name: Create temporary artifact storage
       run: mkdir TemporaryArtifactStorage
 
-    - name: Build all Kernels
+    - name: Build C Kernels
       run: |
         cd Kernels
         #
-        # The following loop is the one location that needs to be updated when adding a new kernel!
+        # The following loop is the one location that needs to be updated when adding a new C kernel.
         #
-        for p in "P01 FF8000" "P04 FF9090" "P10 FFB800" "P12 FF2000"; do
+        for p in "P01 FF8000" "P10 FFB800" "P12 FF2000"; do
           pcm=${p%% *}
           address=${p##* }
+
           echo Building Kernel ":    ${pcm}"
-          make PREFIX=/usr/bin/m68k-linux-gnu- pcm=${pcm} address=${address}
-          echo     Copy-Item Kernel-${pcm}.bin to TemporaryArtifactStorage
+          make -f makefile PREFIX=/usr/bin/m68k-linux-gnu- pcm=${pcm} address=${address}
+          echo "    Copy-Item Kernel-${pcm}.bin to TemporaryArtifactStorage"
           cp Kernel-${pcm}.bin ../TemporaryArtifactStorage/
-          echo     Cleanup after ${pcm}
+          echo "    Cleanup after Kernel-${pcm}"
           echo
           make clean
+        done
+
+    - name: Build Assembly Kernels and Loaders
+      run: |
+        cd Kernels
+        #
+        # Each group is required to have 3 elements in the following order
+        # 1: PCM Moniker (P01 (includes P59), P04, P08, etc...)
+        # 2: Kernel Base Address
+        # 3: Loader Base Address or NOLOADER if a loader is not used.
+        #
+        for p in "P04 FF9090 FF9890" "E54 FF8F50 NOLOADER"; do
+          pcm="${p%% *}";
+          p="${p#* }"
+          address="${p%% *}"
+          p="${p#* }"
+          loader="${p%% *}"
+
+          echo "Building Kernel :    ${pcm}"
+          make -f makefile-assembly PREFIX=/usr/bin/m68k-linux-gnu- pcm=${pcm} address=${address}
+          echo "    Copy-Item Kernel-${pcm}.bin to TemporaryArtifactStorage"
+          cp Kernel-${pcm}.bin ../TemporaryArtifactStorage/
+          echo "    Cleanup after Kernel-${pcm}"
+          echo
+          make clean
+          #
+          # Build the Loader if requested
+          #
+          if [ ${loader} != NOLOADER ]; then
+            echo "Building Loader :    ${pcm}"
+            make -f makefile-assembly PREFIX=/usr/bin/m68k-linux-gnu- pcm=${pcm} address=${loader} name=Loader
+            echo "    Copy-Item Loader-${pcm}.bin to TemporaryArtifactStorage"
+            cp Loader-${pcm}.bin ../TemporaryArtifactStorage/
+            echo "    Cleanup after Loader-${pcm}"
+            echo
+            make clean
+          fi
         done
 
     - name: Upload artifacts
