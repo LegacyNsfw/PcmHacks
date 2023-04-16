@@ -64,7 +64,11 @@ namespace PcmHacking
         /// <returns></returns>
         public bool IsValid()
         {
-            if (this.image.Length == 512 * 1024)
+            if (this.image.Length == 256 * 1024)
+            {
+                this.logger.AddUserMessage("Validating 256k file.");
+            }
+            else if (this.image.Length == 512 * 1024)
             {
                 this.logger.AddUserMessage("Validating 512k file.");
             }
@@ -80,7 +84,7 @@ namespace PcmHacking
             {
                 this.logger.AddUserMessage(
                     string.Format(
-                        "Files must be 512k, 1024k or 2048k. This file is {0} / {1:X} bytes long.",
+                        "Files must be 256k, 512k, 1024k or 2048k. This file is {0} / {1:X} bytes long.",
                         this.image.Length,
                         this.image.Length));
                 return false;
@@ -149,6 +153,37 @@ namespace PcmHacking
                         osid += image[0x507] << 0;
                         break;
 
+                    case PcmType.P04:
+                        switch (image.Length)
+                        {
+                            case 256 * 1024:
+                                osid += image[0x3FFFA] << 24;
+                                osid += image[0x3FFFB] << 16;
+                                osid += image[0x3FFFC] << 8;
+                                osid += image[0x3FFFD] << 0;
+                                break;
+
+                            case 512 * 1024:
+                                int offset = 0;
+                                if (image[0x7FFFE] == 0xFF && image[0x7FFFF] == 0xFF)
+                                {
+                                    offset = 2; // some 1998 P04 
+                                }
+                                osid += image[0x7FFFA - offset] << 24;
+                                osid += image[0x7FFFB - offset] << 16;
+                                osid += image[0x7FFFC - offset] << 8;
+                                osid += image[0x7FFFD - offset] << 0;
+                                break;
+
+                            case 1024 * 1024:
+                                osid += image[0xFFFFA] << 24;
+                                osid += image[0xFFFFB] << 16;
+                                osid += image[0xFFFFC] << 8;
+                                osid += image[0xFFFFD] << 0;
+                                break;
+                        }
+                        break;
+
                     case PcmType.P10:
                         osid += image[0x52E] << 24;
                         osid += image[0x52F] << 16;
@@ -185,6 +220,11 @@ namespace PcmHacking
                     segments = 8;
                     break;
 
+                case PcmType.P04:
+                    tableAddress = 0x0;
+                    segments = 0;
+                    break;
+
                 case PcmType.P10:
                     tableAddress = 0x546;
                     segments = 5;
@@ -203,12 +243,14 @@ namespace PcmHacking
                     return false;
             }
 
-            this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
-
             switch (type)
             {
-                // P12 is so wierd we hard code segments with a special function here
+                case PcmType.P04:
+                    this.logger.AddUserMessage("\tStart\tEnd\tStored\t\tNeeded\t\tVerdict\tSegment Name");
+                    success &= ValidateRangeP04(true);
+                    break;
                 case PcmType.P12:
+                    this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
                     success &= ValidateRangeP12(0x922, 0x900, 0x94A, 2, "Boot Block");
                     success &= ValidateRangeP12(0x8022, 0, 0x804A, 2, "OS");
                     success &= ValidateRangeP12(0x80C4, 0, 0x80E4, 2, "Engine Calibration");
@@ -221,6 +263,7 @@ namespace PcmHacking
 
                 // The rest can use the generic code
                 default:
+                    this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
                     for (UInt32 segment = 0; segment < segments; segment++)
                     {
                         UInt32 startAddressLocation = tableAddress + (segment * 8);
@@ -290,11 +333,22 @@ namespace PcmHacking
         /// </summary>
         private PcmType ValidateSignatures()
         {
-            // All currently supported bins are 512Kb, 1Mb or 2Mb
-            if ((image.Length != 512 * 1024) && (image.Length != 1024 * 1024) && (image.Length != 2048 * 1024))
+            // All currently supported bins are 256Kb, 512Kb, 1Mb or 2Mb
+            if ((image.Length != 256 * 1024) && (image.Length != 512 * 1024) && (image.Length != 1024 * 1024) && (image.Length != 2048 * 1024))
             {
                 this.logger.AddUserMessage("Files of size " + image.Length.ToString("X8") + " are not supported.");
                 return PcmType.Undefined;
+            }
+
+            // 256Kb Type
+            // P04 512Kb
+            if (image.Length == 256 * 1024)
+            {
+                this.logger.AddDebugMessage("Trying P04 256Kb");
+                if ((image[0x3FFFE] == 0xA5) && (image[0x3FFFF] == 0x5A))
+                {
+                    return PcmType.P04;
+                }
             }
 
             // 512Kb Types
@@ -302,18 +356,26 @@ namespace PcmHacking
             {
                 // P01 512Kb
                 this.logger.AddDebugMessage("Trying P01 512Kb");
-                if ((image[0x1FFFE] == 0x4A) && (image[0x01FFFF] == 0xFC))
+                if ((image[0x1FFFE] == 0x4A) && (image[0x1FFFF] == 0xFC))
                 {
-                    if ((image[0x7FFFE] == 0x4A) || (image[0x07FFFF] == 0xFC))
+                    if ((image[0x7FFFE] == 0x4A) || (image[0x7FFFF] == 0xFC))
                     {
                         return PcmType.P01_P59;
                     }
                 }
 
-                this.logger.AddDebugMessage("Trying P10 512Kb");
-                if ((image[0x17FFE] == 0x55) && (image[0x017FFF] == 0x55))
+                // P04 512Kb
+                this.logger.AddDebugMessage("Trying P04 512Kb");
+                if (((image[0x7FFFE] == 0xA5) && (image[0x7FFFF] == 0x5A)) || // most
+                    ((image[0x7FFFC] == 0xA5) && (image[0x7FFFD] == 0x5A)))   // some 1998 eg Malibu L82 09369193
                 {
-                    if ((image[0x7FFFC] == 0xA5) && (image[0x07FFFD] == 0x5A) && (image[0x7FFFE] == 0xA5) && (image[0x07FFFF] == 0xA5))
+                        return PcmType.P04;
+                }
+
+                this.logger.AddDebugMessage("Trying P10 512Kb");
+                if ((image[0x17FFE] == 0x55) && (image[0x17FFF] == 0x55))
+                {
+                    if ((image[0x7FFFC] == 0xA5) && (image[0x7FFFD] == 0x5A) && (image[0x7FFFE] == 0xA5) && (image[0x7FFFF] == 0xA5))
                     {
                         return PcmType.P10;
                     }
@@ -324,12 +386,19 @@ namespace PcmHacking
             if (image.Length == 1024 * 1024)
             {
                 this.logger.AddDebugMessage("Trying P59 1Mb");
-                if ((image[0x1FFFE] == 0x4A) && (image[0x01FFFF] == 0xFC))
+                if ((image[0x1FFFE] == 0x4A) && (image[0x1FFFF] == 0xFC))
                 {
-                    if ((image[0xFFFFE] == 0x4A) && (image[0x0FFFFF] == 0xFC))
+                    if ((image[0xFFFFE] == 0x4A) && (image[0xFFFFF] == 0xFC))
                     {
                         return PcmType.P01_P59;
                     }
+                }
+
+                // P04 512Kb
+                this.logger.AddDebugMessage("Trying P04 1Mb");
+                if ((image[0xFFFFE] == 0xA5) && (image[0xFFFFF] == 0x5A))
+                {
+                    return PcmType.P04;
                 }
 
                 this.logger.AddDebugMessage("Trying P12 1Mb");
@@ -482,6 +551,147 @@ namespace PcmHacking
                 computedChecksum,
                 verdict ? "Good" : "BAD",
                 description);
+
+            this.logger.AddUserMessage(error);
+            return verdict;
+        }
+
+        /// <summary>
+        /// Validate a range for P04. Support 256, 512, 1024K images
+        /// Early 512KB bins dont have a param block. This code is called with skipparamblock=true
+        /// If the first attempt fails it is re-entrant with skipparamblock=false to try again
+        /// </summary>
+        private bool ValidateRangeP04(bool skipparamblock)
+        {
+            UInt32 storedChecksum = 0;
+            UInt32 computedChecksum = 0;
+            UInt32 start = 0;
+            UInt32 end = (UInt32)(image.Length);
+            UInt32 sumaddr = 0;
+
+            // Thanks Joukoy for Universal Patcher and the idea to use a pattern search for the P04 sum address.
+            // Working for all tested 1024K
+            if (image.Length == 1024 * 1024)
+            {
+                for (UInt32 i = start; i < end; i++)
+                {
+                    if (image[i] == 0xE0 &&
+                    image[i + 1] == 0x8A &&
+                    image[i + 2] == 0xE0 &&
+                    image[i + 3] == 0x8A &&
+                    image[i + 4] == 0x28 &&
+                    image[i + 5] == 0x38 &&
+                    //image[i + 6] == 0xCB && // seen CB, CE
+                    //image[i + 7] == 0x48 && // seen 48, 57, 98
+                    image[i + 8] == 0x98 &&
+                    image[i + 9] == 0x82 &&
+                    image[i + 10] == 0xC6 &&
+                    image[i + 11] == 0x87) // (next is 98 83 26 39, but we have enough)
+                    {
+                        sumaddr = (UInt32)image[i + 16] << 24;
+                        sumaddr |= (UInt32)image[i + 17] << 16;
+                        sumaddr |= (UInt32)image[i + 18] << 8;
+                        sumaddr |= (UInt32)image[i + 19];
+                        logger.AddDebugMessage(string.Format("Pattern found at {0:X8}, sum address {1:X8}", i, sumaddr));
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // Working for all tested 256K and 512K
+                for (UInt32 i = start; i < end; i++)
+                {
+                    if ( image[i    ] == 0x3C &&
+                         image[i + 1] == 0x00 &&
+                         image[i + 2] == 0x00 &&
+                         image[i + 3] == 0xFF &&
+                         image[i + 4] == 0xFF &&
+                        (image[i + 5] == 0xC0 || image[i + 5] == 0xC6) &&
+                        (image[i + 6] == 0x82 || image[i + 6] == 0x86) &&
+                        (image[i + 7] == 0x94 || image[i + 7] == 0x96 || image[i + 7] == 0x98) &&
+                        (image[i + 8] == 0x80 || image[i + 8] == 0x83) &&
+                        (image[i + 9] == 0x20 || image[i + 9] == 0x26) &&
+                         image[i + 10] == 0x39 &&
+                         //11 CS1
+                         //12 CS2
+                         //13 CS3
+                         //14 CS4
+                        (image[i + 15] == 0x2C || image[i + 15] == 0x2E) &&
+                        (image[i + 16] == 0x00 || image[i + 16] == 0x03) &&
+                         image[i + 17] == 0xE0 &&
+                        (image[i + 18] == 0x8E || image[i + 18] == 0x8F) &&
+                         image[i + 19] == 0xE0)
+                    {
+                        sumaddr  = (UInt32)image[i + 11] << 24;
+                        sumaddr |= (UInt32)image[i + 12] << 16;
+                        sumaddr |= (UInt32)image[i + 13] << 8;
+                        sumaddr |= (UInt32)image[i + 14];
+                        logger.AddDebugMessage(string.Format("Pattern found at {0:X8}, sum address {1:X8}", i, sumaddr));
+                        break;
+                    }
+                }
+            }
+
+            storedChecksum  = (UInt32)image[sumaddr] << 24;
+            storedChecksum |= (UInt32)image[sumaddr + 1] << 16;
+            storedChecksum |= (UInt32)image[sumaddr + 2] << 8;
+            storedChecksum |= (UInt32)image[sumaddr + 3];
+
+            for (UInt32 address = (UInt32)start; address < end; address += 2)
+            {
+                if (address == sumaddr)
+                {
+                    address += 4; // skip the sum
+                }
+
+                if (address == this.image.Length - 6)
+                {
+                    address += 4; // skip the OSID
+                }
+
+                switch (this.image.Length)
+                {
+                    // Note: P04 256Kb has no param block to skip
+                    case 512 * 1024:
+                        if (address == 0x4000 && skipparamblock == true)
+                        {
+                            address += 0x4000; // The param block started being used in about the 2nd year of 512KB bins
+                        }
+                        if (address == 0x7FFF8 && image[0x7FFFE] == 0xFF && image[0x7FFFF] == 0xFF)
+                        {
+                            address += 0x4; // Some 98 have a different sig and dont include the osid
+                        }
+                        break;
+                    case 1024 * 1024:
+                        if (address == 0x4000)
+                        {
+                            address += 0xC000;
+                        }
+                        break;
+                }
+
+                UInt32 value = (UInt32)(this.image[address] << 8);
+                value |= this.image[address + 1];
+                computedChecksum += value;
+            }
+
+            bool verdict = storedChecksum == computedChecksum;
+
+            // try the other type of 512KB if needed
+            if (image.Length == 512 * 1024 && verdict == false && skipparamblock == true)
+            {
+                return ValidateRangeP04(false);
+            }
+
+            string error = string.Format(
+                "\t{0:X5}\t{1:X5}\t{2:X8}\t{3:X8}\t{4:X4}\t{5}",
+                0,              // The start of the first block
+                image.Length-1, // The end of the last block
+                storedChecksum,
+                computedChecksum,
+                verdict ? "Good" : "BAD",
+                "Whole File");
 
             this.logger.AddUserMessage(error);
             return verdict;
