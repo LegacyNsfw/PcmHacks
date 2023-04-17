@@ -370,7 +370,7 @@ namespace PcmHacking
                 // A5 5A FF FF = P04
                 // XX XX XX XX A5 5A = P04 (XX is the OSID)
                 if (((image[0x7FFFE] == 0xA5) && (image[0x7FFFF] == 0x5A)) || // most P04 OR
-                    ((image[0x7FFFC] == 0xA5) && (image[0x7FFFD] == 0x5A) && (image[0x7FFFE] == 0xFF) && (image[0x7FFFF] == 0xFF)))   // Most 1998 512Kb eg Malibu 09369193, Olds 09352676‬, LeSabre 09379801...
+                    ((image[0x7FFFC] == 0xA5) && (image[0x7FFFD] == 0x5A) && (image[0x7FFFE] == 0xFF) && (image[0x7FFFF] == 0xFF)))   // Most 1998 512Kb eg Malibu 09369193, Olds 09352676, LeSabre 09379801...
                 {
                         return PcmType.P04;
                 }
