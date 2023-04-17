@@ -11,6 +11,7 @@ namespace PcmHacking
         Undefined = 0, // required for failed osid test on binary file
         P01_P59,
         P04,
+        P08,
         P10,
         P12,
         E54,
@@ -356,6 +357,12 @@ namespace PcmHacking
                     this.ImageSize = 512 * 1024;
                     break;
 
+                case 1273057:
+                    this.KeyAlgorithm = 40;
+                    this.Description = "VCM Suite COS 1M";
+                    this.ImageBaseAddress = 0x0;
+                    this.ImageSize = 1024 * 1024;
+                    break;
                 //------- HPT COS -----------
                 case 1250013:
                 case 1250018:
@@ -2126,31 +2133,37 @@ namespace PcmHacking
                 case 12589166:
                 case 12589312:
                 case 12589586:
+                case 12592070: //2004 Saturn Ion Redline 2.0L
                 case 12593533:
+                case 12596925: //2005 Saturn Ion Redline 2.0L
                 case 12597778:
-                case 12597978:
-                case 12601774:
-                case 12601321: // 2006 LX9
-                case 12601904: // Saturn I4
-                case 12605256:
-                case 12605261:
-                case 12610624:
+                case 12597978: //2004 Saturn Ion Redline 2.0L
+                case 12598275: //2006 Chevy Cobalt SS 2.0L (Need to verify)
+                case 12598284: //2006 Saturn Ion Redline 2.0L
+                case 12601321: //2006 LX9
+                case 12601774: //2005 Chevy Cobalt SS 2.0L
+                case 12601904: //2005 Saturn Ion Redline 2.0L
+                case 12605256: //2006 Chevy Cobalt SS 2.0L
+                case 12605261: //2006 Chevy Cobalt SS 2.0L
+                case 12610624: //2007 Chevy Cobalt SS 2.0L & 2007 Saturn Ion Redline 2.0L
+                case 12610641: //GMS3 OS (04 Ion Redline GMS3)
+                case 12610642: //GMS3 OS (05 Ion Redline GMS3)
+                case 12610643: //GMS3 OS (06-07 Ion Redline GMS3)
+                case 12610644: //GMS3 OS (05 Cobalt SS GMS3)
+                case 12610645: //GMS3 OS (06-07 Cobalt SS GMS3)
                 case 12623279:
                 case 12627882:
                 case 12627884:
                 case 12631085:
-                // LL8 - Atlas I6 (4200) P12
-                case 12604440:
-                case 12606400:
-                // L52 - Atlas I5 (3500) P12
-                case 12606374:
-                case 12606375:
-                // LK5 - Atlas I4 (2800) P12
+                case 12604440: //LL8 - Atlas I6 (4200) P12
+                case 12606400: //2006 Chevy Trailblazer 4.2L (Atlas I6)
+                case 12606374: //L52 - Atlas I5 (3500) P12
+                case 12606375: //L52 - Atlas I5 (3500) P12
                 case 12627883:
-                // Saturn 1mb P12
+                    // Saturn 1mb P12
                     this.KernelFileName = "Kernel-P12.bin";
                     this.KernelBaseAddress = 0xFF2000; // or FF0000? https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=450#p115622
-                    this.RAMSize= 0x6000;
+                    this.RAMSize = 0x6000;
                     this.IsSupported = true;
                     this.KeyAlgorithm = 91;
                     this.Description = "P12 1m (Atlas I4/I5/I6)";
@@ -2163,7 +2176,7 @@ namespace PcmHacking
                 // P12 2m - See: https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=470#p115747
                 case 12609805:
                 case 12611642:
-                case 12613422:
+                case 12613422: //2007 Chevy Trailblazer 4.2L
                 case 12618164:
                 case 12627885:
                     this.KernelFileName = "Kernel-P12.bin";
