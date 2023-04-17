@@ -12,13 +12,13 @@ E54
 
 How to build the Assembly Kernels
 
-To build a Kernel.
+To build an Assembly Kernel.
 Build.cmd -x -aFF8000 -pP01
 Will build the P01 Kernel for loading at address FF8000 and not copy it anywhere, Clean.cmd will remove it ...
 The dash x tells the build system to build the assembly version.
 
-To build a Loader kernel
-Build.cmd -x -aFF9090 -lFF9890 -pP01
+To build a Loader and Kernel
+Build.cmd -x -aFF9090 -lFF9890 -pP04
 Will build the P04 Loader and Kernel.
 
 If you want Build.cmd to copy the Kernel someplace
@@ -34,9 +34,9 @@ Load addresses
     -aFF8F50 -pE54
 
 Assembly kernel filelist
-Loader.ld             Specific to the Assembly Loader
 Kernel.S              The Kernel
+Kernel.ld             Linker Script specific to the Assembly Kernel
 Loader.S              The Loader
+Loader.ld             Linker Script specific to the Assembly Loader
+Common-Assembly.h     Common elements, could not use Common.h due to conflict with the C Kernel
 Readme-Assembly.txt   Readme
-Common-Assembly.h     Common element, could not use Common.h due to conflict with the C Kernel
-Kernel.ld             Specific to the Assembly Kernel
