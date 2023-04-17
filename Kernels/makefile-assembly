@@ -1,0 +1,33 @@
+# Use toolchain from: https://github.com/haarer/toolchain68k
+# Configure for m68k-elf target and install to default location
+# 04/16/2023 - GampyG28 <github.com> Authored
+#
+pcm ?= P01
+address ?= FF8000
+name ?= Kernel
+
+PREFIX = /opt/crosschain/bin/m68k-elf-
+
+CC = $(PREFIX)gcc
+LD = $(PREFIX)ld
+OBJCOPY = $(PREFIX)objcopy
+RM = rm -f
+
+CCFLAGS = -c -fomit-frame-pointer -std=gnu99 -mcpu=68332 -D$(pcm)
+LDFLAGS = --section-start .text=0x${address} -T ${name}.ld 
+COPYFLAGS = -O binary --only-section=.text --only-section=.data
+
+all: ${name}.bin
+
+${name}.o: ${name}.S
+	$(CC) $(CCFLAGS) $< -o $@
+
+${name}.elf: ${name}.o
+	$(LD) $(LDFLAGS) $< -o $@
+
+${name}.bin: ${name}.elf
+	$(OBJCOPY) $(COPYFLAGS) ${name}.elf ${name}-${pcm}.bin
+
+clean:
+	${RM} *.bin *.o *.elf *.asm *.disassembly *.tmp
+
