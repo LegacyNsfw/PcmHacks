@@ -2160,7 +2160,6 @@ namespace PcmHacking
                 case 12606374: //L52 - Atlas I5 (3500) P12
                 case 12606375: //L52 - Atlas I5 (3500) P12
                 case 12627883:
-                    // Saturn 1mb P12
                     this.KernelFileName = "Kernel-P12.bin";
                     this.KernelBaseAddress = 0xFF2000; // or FF0000? https://pcmhacking.net/forums/viewtopic.php?f=42&t=7742&start=450#p115622
                     this.RAMSize = 0x6000;
