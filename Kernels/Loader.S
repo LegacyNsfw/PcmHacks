@@ -20,6 +20,8 @@
 |.equ Mode_36                          | Moved to Common-Assembly.s
 
 start:
+    ori     #0x700, %sr                | Disable Interrupts
+
 #if defined P12
     movea.l #Mode36Reply, %a0          | Reply Success to mode 3680, only P12 needs this.
     move.l  #6, %d0                    | It's 6 bytes long
@@ -105,7 +107,7 @@ ProcessKernelID:
 #endif
     move.l  #9, %d0                    | It's 9 bytes long
     bsr.w   VPWSend                    | Send it
-    bra.w   MainLoop                   | Return to MainLoop
+    jmp     MainLoop                   | Return to MainLoop
 
 | =============== S U B R O U T I N E =======================================
 ProcessMode34:
@@ -113,7 +115,7 @@ ProcessMode34:
     movea.l #Mode34Reply, %a0          | Move address of Mode34Reply to a0
     move.l  #6, %d0                    | It's 6 bytes long
     bsr.w   VPWSend                    | Send it
-    bra.w   MainLoop
+    jmp     MainLoop
 
 | =============== S U B R O U T I N E =======================================
 | The packet is in the buffer when this function is called
@@ -154,18 +156,14 @@ ProcessMode36NextSum:
     cmp.l   %d3, %d4                   | Is the sum OK?
     beq.s   ProcessMode36MemCopy       | Do it
 
-
 | Process Mode36 Response Fail
-|
-| TODO: Merge with Mode36Reply
-|Mode36Fail:     .byte  0x6C, toolid, pcmid, 0x7F, 0x36, 0x00
-|
-    movea.l #Mode36Fail, %a0           | Mode 36 reply
-    move.b  MessageBuffer + 4, %d4     | Submode to d4
-    move.b  %d4, Mode36Fail + 5        | Copy submode byte to the response, and keep it in d4 for the execute test
+    movea.l #Mode36Reply, %a0          | Mode 36 reply
+    move.b  #0x7F, 3(%a0)              | 7F Failure
+    move.b  MessageBuffer + 3, 4(%a0)  | Mode
+    move.b  MessageBuffer + 4, 5(%a0)  | Submode
     move.l  #6, %d0                    | Message is 6 bytes long
     bsr.w   VPWSend                    | Send it
-    bra.w   MainLoop                   | Return to main loop
+    jmp     MainLoop                   | Return to main loop
 
 ProcessMode36MemCopy:
     move.b  (%a0)+, (%a1)+             | Move a byte from A0 to A1, increment pointers
@@ -279,7 +277,6 @@ Mode34Reply:    .byte  0x6C, toolid, pcmid, 0x74, 0x00, 0x00
 
 | Mode36 Reply, 6 bytes - 6C F0 10 76 00 00
 Mode36Reply:    .byte  0x6C, toolid, pcmid, 0x76, 0x00, 0x00
-Mode36Fail:     .byte  0x6C, toolid, pcmid, 0x7F, 0x36, 0x00
 
 | Halt Kernel Reply, 4 bytes
 Mode60Reply:   .byte  0x6C, toolid, pcmid, 0x60

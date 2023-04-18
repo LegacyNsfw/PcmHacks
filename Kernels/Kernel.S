@@ -38,6 +38,8 @@
 |.equ Mode_36                          | Moved to Common-Assembly.s
 
 start:
+    ori     #0x700, %sr                | Disable Interrupts
+
     move.b  #0x03, (J1850_Command).l   | Flush frame except for completion code
     move.b  #0x00, (J1850_TX_FIFO).l   | Initiate transfer
 
@@ -150,7 +152,7 @@ ProcessKernelID:
 #endif
     move.l  #9, %d0                    | It's 9 bytes long
     bsr.w   VPWSend                    | Send it
-    bra.w   MainLoop                   | Return to MainLoop
+    jmp     MainLoop                   | Return to MainLoop
 
 | =============== S U B R O U T I N E =======================================
 |
@@ -172,7 +174,7 @@ ProcessOsID:
     move.l  (%a1), 5(%a0)              | Move OsID into buffer
     move.l  #9, %d0                    | It's 9 bytes long
     bsr.w   VPWSend                    | Send it
-    bra.w   MainLoop                   | Return to MainLoop
+    jmp     MainLoop                   | Return to MainLoop
 
 | =============== S U B R O U T I N E =======================================
 ProcessFlashID:
@@ -224,7 +226,7 @@ ProcessFlashIDFound:
     movea.l #FlashIDReply, %a0         | Move address of FlashIDReply to a0
     move.l  #9, %d0                    | It's 9 bytes long
     bsr.w   VPWSend                    | Send it
-    bra.w   MainLoop
+    jmp     MainLoop
 
 | =============== S U B R O U T I N E =======================================
 ProcessCRC:
@@ -275,7 +277,7 @@ ProcessCRCMainLoopCheck:
     move.l  %d0, 0xB(%a0)              | Move long CRC value to reply buffer
     move.l  #0x0F, %d0                 | It's 15 bytes long (6C F0 10 7D 02 01 00 00 01 00 00 67 86 6E C2)
     bsr.w   VPWSend                    | Send it
-    bra.w   MainLoop                   | Return to MainLoop
+    jmp     MainLoop                   | Return to MainLoop
 
 ProcessCRCPolynomial:
     eori.l  #POLYNOMIAL, %d0           | ^ POLYNOMIAL;
@@ -289,7 +291,7 @@ ProcessMode34:
     movea.l #Mode34Reply, %a0          | Move address of Mode34Reply to a0
     move.l  #6, %d0                    | It's 6 bytes long
     bsr.w   VPWSend                    | Send it
-    bra.w   MainLoop
+    jmp     MainLoop
 
 | =============== S U B R O U T I N E =======================================
 ProcessMode35:
@@ -305,7 +307,7 @@ ProcessMode35:
     lsl.l   #8, %d0                    | Logical Shift Left
     or.b    MessageBuffer + 6, %d0     | Second length byte
     bsr.w   VPWSendBlock               | Send the actual data
-    bra.w   MainLoop                   | Back to main
+    jmp     MainLoop                   | Back to main
 
 | =============== S U B R O U T I N E =======================================
 ProcessMode36:
