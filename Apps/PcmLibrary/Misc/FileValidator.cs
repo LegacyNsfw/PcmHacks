@@ -184,6 +184,13 @@ namespace PcmHacking
                         }
                         break;
 
+                    case PcmType.P08:
+                        osid += image[0x8000] << 24;
+                        osid += image[0x8001] << 16;
+                        osid += image[0x8002] << 8;
+                        osid += image[0x8003] << 0;
+                        break;
+
                     case PcmType.P10:
                         osid += image[0x52E] << 24;
                         osid += image[0x52F] << 16;
@@ -362,6 +369,14 @@ namespace PcmHacking
                     {
                         return PcmType.P01_P59;
                     }
+                }
+
+                // P08 512Kb
+                // Must be before P04, P08 can pass as a P04, P04 cannot pass as a P08
+                this.logger.AddDebugMessage("Trying P08 512Kb");
+                if ((image[0x7FFFC] == 0xA5) && (image[0x7FFFD] == 0x5A) && (image[0x7FFFE] == 0xA5) && (image[0x7FFFF] == 0xA5))
+                {
+                    return PcmType.P08;
                 }
 
                 // P04 512Kb

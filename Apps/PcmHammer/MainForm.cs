@@ -865,7 +865,7 @@ namespace PcmHacking
                 }
 
                 // Disable BCC lookup for the P04
-                if (pcmInfo != null && pcmInfo.HardwareType != PcmType.P04)
+                if (pcmInfo != null && pcmInfo.HardwareType != PcmType.P04 && pcmInfo.HardwareType != PcmType.P08)
                 {
                     var bccResponse = await this.Vehicle.QueryBCC();
                     if (bccResponse.Status == ResponseStatus.Success)
