@@ -1399,7 +1399,7 @@ namespace PcmHacking
                     FileValidator validator = new FileValidator(image, this);
                     if (!validator.IsValid())
                     {
-                        this.AddUserMessage("This file is corrupt. It would render your PCM unusable.");
+                        this.AddUserMessage("This file is corrupt or its format is unknown to PCMHammer. It would render your PCM unusable.");
                         return;
                     }
 
@@ -1638,7 +1638,7 @@ namespace PcmHacking
             }
             else
             {
-                this.AddUserMessage("This file is corrupt. It would render your PCM unusable.");
+                this.AddUserMessage("This file is corrupt or its format is unknown to PCMHammer. It would render your PCM unusable.");
             }
         }
     }

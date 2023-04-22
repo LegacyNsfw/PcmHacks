@@ -366,10 +366,20 @@ namespace PcmHacking
 
                 // P04 512Kb
                 this.logger.AddDebugMessage("Trying P04 512Kb");
-                if (((image[0x7FFFE] == 0xA5) && (image[0x7FFFF] == 0x5A)) || // most
-                    ((image[0x7FFFC] == 0xA5) && (image[0x7FFFD] == 0x5A)))   // some 1998 eg Malibu L82 09369193
+                // Last 4 bytes:
+                // A5 5A FF FF = P04
+                // XX XX XX XX A5 5A = P04 (XX is the OSID)
+                if (((image[0x7FFFE] == 0xA5) && (image[0x7FFFF] == 0x5A)) || // most P04 OR
+                    ((image[0x7FFFC] == 0xA5) && (image[0x7FFFD] == 0x5A) && (image[0x7FFFE] == 0xFF) && (image[0x7FFFF] == 0xFF)))   // Most 1998 512Kb eg Malibu 09369193, Olds 09352676, LeSabre 09379801...
                 {
                         return PcmType.P04;
+                }
+
+                // P08 512Kb
+                this.logger.AddDebugMessage("Trying P08 512Kb");
+                if ((image[0x7FFFC] == 0xA5) && (image[0x7FFFD] == 0x5A) && (image[0x7FFFE] == 0xA5) && (image[0x7FFFF] == 0xA5))
+                {
+                    return PcmType.P08;
                 }
 
                 this.logger.AddDebugMessage("Trying P10 512Kb");
