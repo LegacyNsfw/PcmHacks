@@ -91,28 +91,8 @@ namespace PcmHacking
                 //
                 // * With character echo off (ATE 0), 1 Mbps with character echo on (ATE 1)
 
-                // Here 1024 bytes = 2048 ASCII hex bytes, without spaces
-                if (stID.Contains("STN1110") || // SparkFun OBD-II UART
-                    stID.Contains("STN1130") || // SX
-                    stID.Contains("STN1150") || // MX v1
-                    stID.Contains("STN1151") || // MX v2
-                    stID.Contains("STN1155") || // LX
-                    stID.Contains("STN1170") || //
-                    stID.Contains("STN2100") || //
-                    stID.Contains("STN2120") || //
-                    stID.Contains("STN2230") || // EX
-                    stID.Contains("STN2255"))   // MX+
-                {
-                    // Testing shows larger packet sizes do not equate to faster transfers
-                    this.MaxSendSize = 1024 + 12;
-                    this.MaxReceiveSize = 1024 + 12;
-                }
-                else
-                {
-                    this.Logger.AddUserMessage("This ScanTool device is not confirmed to work with 1K packets.");
-                    this.MaxSendSize = 1024 + 12;
-                    this.MaxReceiveSize = 1024 + 12;
-                }
+                this.MaxSendSize = 1024 + 12;
+                this.MaxReceiveSize = 1024 + 12;
 
                 // Setting timeout to a large value. Since we use STPX commands,
                 // the device will stop listening when it receives the expected
