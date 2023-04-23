@@ -204,6 +204,13 @@ namespace PcmHacking
                         osid += image[0x8006] << 8;
                         osid += image[0x8007] << 0;
                         break;
+
+                    case PcmType.E54:
+                        osid += image[0x20004] << 24;
+                        osid += image[0x20005] << 16;
+                        osid += image[0x20006] << 8;
+                        osid += image[0x20007] << 0;
+                        break;
                 }
             }
             return (uint)osid;
@@ -361,6 +368,17 @@ namespace PcmHacking
             // 512Kb Types
             if (image.Length == 512 * 1024)
             {
+                // E54 512Kb
+                // Must be before P01, P01 can pass for a E54, but an E54 cannot pass as a P01
+                this.logger.AddDebugMessage("Trying E54 512Kb");
+                if ((image[0x1FFFE] == 0x4A) && (image[0x1FFFF] == 0xFC))
+                {
+                    if ((image[0x7FFFC] == 0x4A) && (image[0x7FFFD] == 0xFC) && (image[0x7FFFE] == 0x4A) && (image[0x7FFFF] == 0xFC))
+                    {
+                        return PcmType.E54;
+                    }
+                }
+
                 // P01 512Kb
                 this.logger.AddDebugMessage("Trying P01 512Kb");
                 if ((image[0x1FFFE] == 0x4A) && (image[0x1FFFF] == 0xFC))
