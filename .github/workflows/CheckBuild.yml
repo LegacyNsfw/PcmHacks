@@ -50,7 +50,7 @@ jobs:
         # 2: Kernel Base Address
         # 3: Loader Base Address or NOLOADER if a loader is not used.
         #
-        for p in "P04 FF9090 FF9890" "E54 FF8F50 NOLOADER"; do
+        for p in "P04 FF9090 FF9890" "P08 FFA800 FFB000" "E54 FF8F50 NOLOADER"; do
           pcm="${p%% *}";
           p="${p#* }"
           address="${p%% *}"
