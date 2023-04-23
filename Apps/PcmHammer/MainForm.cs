@@ -484,7 +484,7 @@ namespace PcmHacking
         /// Reset Device Configuration
         /// </summary>
         /// <remarks>
-        /// Used by command line argument --resetdeviceconfig to reset device configuration
+        /// Used by command line argument '-r' to reset device configuration.
         /// </remarks>
         private void ResetDeviceConfiguration()
         {

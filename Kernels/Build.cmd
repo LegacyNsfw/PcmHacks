@@ -96,7 +96,7 @@ goto beginning
   echo       Value: %BIN_LOCATION%
   echo.
   echo     -x
-  echo       Set flag to build an assembly Kernel and or Kernel Loader.
+  echo       Set flag to build an Assembly Kernel (and or Loader) versus C Kernel.
   if defined ASSEMBLY_KERNEL (
     echo       Value: True
   ) else (
@@ -163,7 +163,7 @@ set PCM=P01
 rem * -t Set default target <path> where to copy Kernel-<PCM>.bin.
 set BIN_LOCATION=..\Apps\PcmHammer\bin\Debug\
 
-rem * -x Set default not to build an assembly Kernel and or Kernel Loader.
+rem * -x Set flag to build an Assembly Kernel (and or Loader) versus C Kernel.
 set ASSEMBLY_KERNEL=
 
 
