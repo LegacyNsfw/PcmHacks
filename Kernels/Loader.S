@@ -154,7 +154,8 @@ ProcessMode36NextSum:
     lsl.l   #8, %d3                    | Logical Shift Left
     or.b    (%a3)+, %d3                | Second byte
     cmp.l   %d3, %d4                   | Is the sum OK?
-    beq.s   ProcessMode36MemCopy       | Do it
+    |beq.s   ProcessMode36MemCopy       | Do it 
+    bra.s   ProcessMode36MemCopy | Temp hack to ignore Checksums, they work for P04, not P08
 
 | Process Mode36 Response Fail
     movea.l #Mode36Reply, %a0          | Mode 36 reply

@@ -2098,6 +2098,29 @@ namespace PcmHacking
                     //this.KernelMaxBlockSize = 4096;
                     break;
 
+                // P08
+                case 9364970:
+                case 12206029:
+                    this.Description = "P08";
+                    this.IsSupported = false;
+                    this.LoaderRequired = true;
+                    this.ValidationMethod = PcmType.P08;
+                    this.HardwareType = PcmType.P08;
+                    this.KernelFileName = "Kernel-P08.bin";
+                    this.KernelBaseAddress = 0xFFA800;
+                    this.LoaderFileName = "Loader-P08.bin";
+                    this.LoaderBaseAddress = 0xFFB000;
+                    this.ImageBaseAddress = 0x0;
+                    this.ImageSize = 512 * 1024;
+                    //this.RAMSize = 0x4DFF;
+                    this.KeyAlgorithm = 13;
+                    this.ChecksumSupport = false;
+                    this.FlashCRCSupport = true;
+                    this.FlashIDSupport = true;
+                    this.KernelVersionSupport = true;
+                    //this.KernelMaxBlockSize = 4096;
+                    break;
+
                 // P10
                 case 12213305:
                 case 12571911:

@@ -9,13 +9,16 @@
 |
 
 | J1850 registers
-#if defined P01 || defined P10 || defined P12 || defined E54
+#if defined P01 || defined P08 || defined P10 || defined P12 || defined E54
   .equ J1850_Config,     0xFFF600
   .equ J1850_Command,    0xFFF60C
   .equ J1850_TX_FIFO,    0xFFF60D
   .equ J1850_Status,     0xFFF60E
   .equ J1850_RX_FIFO,    0xFFF60F
-  #if defined P10
+  #if defined P08
+    .equ COP1,           0xFFFA27
+    .equ COP2,           0xFFC006
+  #elif defined P10
     .equ COP1,           0xFFFA27
     .equ COP2,           0x800806
   #elif defined P12
