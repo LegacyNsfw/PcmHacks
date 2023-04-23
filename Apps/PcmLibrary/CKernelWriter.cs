@@ -76,7 +76,38 @@ namespace PcmHacking
                         this.logger.AddUserMessage("4X communications disabled by configuration.");
                     }
 
-                    Response<byte[]> response = await this.vehicle.LoadKernelFromFile(this.pcmInfo.KernelFileName);
+                    await this.vehicle.SendToolPresentNotification();
+
+                    Response<byte[]> response;
+
+                    // Execute kernel loader, if required
+                    if (this.pcmInfo.LoaderRequired)
+                    {
+                        response = await vehicle.LoadKernelFromFile(this.pcmInfo.LoaderFileName);
+                        if (response.Status != ResponseStatus.Success)
+                        {
+                            logger.AddUserMessage("Failed to load loader from file.");
+                            return false;
+                        }
+
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            return false;
+                        }
+
+                        await this.vehicle.SendToolPresentNotification();
+
+                        if (!await this.vehicle.PCMExecute(this.pcmInfo, response.Value, cancellationToken))
+                        {
+                            logger.AddUserMessage("Failed to upload loader to PCM");
+
+                            return false;
+                        }
+
+                        logger.AddUserMessage("Loader uploaded to PCM succesfully.");
+                    }
+
+                    response = await this.vehicle.LoadKernelFromFile(this.pcmInfo.KernelFileName);
                     if (response.Status != ResponseStatus.Success)
                     {
                         logger.AddUserMessage("Failed to load kernel from file.");
