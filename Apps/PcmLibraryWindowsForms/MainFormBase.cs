@@ -114,7 +114,7 @@ namespace PcmHacking
                 this.vehicle.Dispose();
                 this.vehicle = null;
             }
-                        
+
             Device device = DeviceFactory.CreateDeviceFromConfigurationSettings(this);
             if (device == null)
             {

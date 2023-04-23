@@ -87,7 +87,8 @@ namespace PcmHacking
                 // STN2100                    4k              2 Mbps
                 // STN2120                    4k              2 Mbps
                 // STN2230 (OBDLink EX)       4k              N/A
-                // STN2255 (OBDLink MX+)      4k              N/A
+                // STN2255 (OBDLink MX+ v3?)  4k              N/A
+                // STB2256 (OBDLink MX+ v4?)  4k              N/A
                 //
                 // * With character echo off (ATE 0), 1 Mbps with character echo on (ATE 1)
 
