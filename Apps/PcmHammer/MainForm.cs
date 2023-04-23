@@ -1496,7 +1496,7 @@ namespace PcmHacking
                         }
                     }
 
-                    if (writeType != WriteType.Compare && pcmInfo.HardwareType == PcmType.P04 && pcmInfo.HardwareType == PcmType.E54)
+                    if (writeType != WriteType.Compare && pcmInfo.HardwareType == PcmType.P04 && pcmInfo.HardwareType == PcmType.P08 && pcmInfo.HardwareType == PcmType.E54)
                     {
                         string msg = $"PCMHammer currently does not support writing to the {pcmInfo.HardwareType.ToString()}";
                         this.AddUserMessage(msg);
