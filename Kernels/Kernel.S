@@ -161,6 +161,8 @@ ProcessKernelID:
 ProcessOsID:
 #if defined P04
     movea.l #0x7FFFA, %a1              | OsID location in Flash
+#elif defined P08
+    movea.l #0x8000, %a1               | OsID location in Flash
 #elif defined P10
     movea.l #0x52E, %a1                | OsID location in Flash
 #elif defined P12
