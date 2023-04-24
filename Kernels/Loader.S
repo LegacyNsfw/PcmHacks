@@ -273,7 +273,7 @@ VPWReceiveRTS:
 | E54     = 36
 KernelIDReply:  .byte  0x6C, toolid, pcmid, 0x7D, 0x00, 0x69, 0x00, 0x01, 0x00, 0xAA
 
-| Mode34 Reply, 6 bytes - 6C F0 10 74 00 44
+| Mode34 Reply, 6 bytes - 6C F0 10 74 00 44, Default Success
 Mode34Reply:    .byte  0x6C, toolid, pcmid, 0x74, 0x00, 0x00
 
 | Mode36 Reply, 6 bytes - 6C F0 10 76 00 00
