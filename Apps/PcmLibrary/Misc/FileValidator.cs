@@ -389,14 +389,6 @@ namespace PcmHacking
                     }
                 }
 
-                // P08 512Kb
-                // Must be before P04, P08 can pass as a P04, P04 cannot pass as a P08
-                this.logger.AddDebugMessage("Trying P08 512Kb");
-                if ((image[0x7FFFC] == 0xA5) && (image[0x7FFFD] == 0x5A) && (image[0x7FFFE] == 0xA5) && (image[0x7FFFF] == 0xA5))
-                {
-                    return PcmType.P08;
-                }
-
                 // P04 512Kb
                 this.logger.AddDebugMessage("Trying P04 512Kb");
                 // Last 4 bytes:
