@@ -68,9 +68,18 @@ namespace PcmHacking
                     byte[] requestBytes = { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUploadRequest, Submode.Null, 0x00, 0x00, 0x00, 0x00, 0x00 };
                     requestBytes[5] = unchecked((byte)(Size >> 8));
                     requestBytes[6] = unchecked((byte)(Size & 0xFF));
-                    requestBytes[7] = unchecked((byte)(info.KernelBaseAddress >> 16));
-                    requestBytes[8] = unchecked((byte)(info.KernelBaseAddress >> 8));
-                    requestBytes[9] = unchecked((byte)(info.KernelBaseAddress & 0xFF));
+                    if (info.LoaderRequired)
+                    {
+                        requestBytes[7] = unchecked((byte)(info.LoaderBaseAddress >> 16));
+                        requestBytes[8] = unchecked((byte)(info.LoaderBaseAddress >> 8));
+                        requestBytes[9] = unchecked((byte)(info.LoaderBaseAddress & 0xFF));
+                    }
+                    else
+                    {
+                        requestBytes[7] = unchecked((byte)(info.KernelBaseAddress >> 16));
+                        requestBytes[8] = unchecked((byte)(info.KernelBaseAddress >> 8));
+                        requestBytes[9] = unchecked((byte)(info.KernelBaseAddress & 0xFF));
+                    }
                     return new Message(requestBytes);
             }
         }
