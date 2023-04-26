@@ -422,6 +422,11 @@ namespace PcmHacking
                 // Consider: Allowing caller to call GetKernelVersion(...)?
                 // Consider: return kernel version rather than boolean?
                 UInt32 kernelVersion = await this.GetKernelVersion();
+                if (kernelVersion == 0)
+                {
+                    this.logger.AddUserMessage($"{(info.LoaderRequired ? "Loader" : "Kernel")} failed to start.");
+                    return false;
+                }
                 this.logger.AddUserMessage($"{(info.LoaderRequired ? "Loader" : "Kernel")} Version: {kernelVersion.ToString("X8")}");
 
                 // Detect an Assemply Kernel, // Remove with the C Kernels
