@@ -92,7 +92,7 @@ MainLoop:
 | =============== S U B R O U T I N E =======================================
 Reboot:
     movea.l #Mode60Reply, %a0          | Address Mode 20 reply (Sends a mode 60 (20+40) message)
-    move.l  #4, %d0                    | It's 6 bytes long
+    move.l  #4, %d0                    | It's 4 bytes long
     bsr.w   VPWSend                    | Send it
     bsr.w   WasteTime                  | Twiddle thumbs
     reset                              | Reset External Devices
@@ -105,25 +105,6 @@ ResetWatchdog:
     move.b  #0x55, (COP1).l            | Reset COP1
     move.b  #0xAA, (COP1).l            | Reset COP1
     eori.b  #0x80, (COP2).l            | Reset COP2 ... COP2 ^= 0x80
-    rts
-
-| =============== S U B R O U T I N E =======================================
-LongWaitWithWatchdog:
-    move.l  #0x2710, %d5               | 10,000 loops
-
-LongWaitLoop:
-    bsr.w   ResetWatchdog              | Scratch the dog
-    bsr.w   WasteTime                  | Twiddle thumbs
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    dbf     %d5, LongWaitLoop          | If False Decrement and Branch
     rts
 
 | =============== S U B R O U T I N E =======================================
