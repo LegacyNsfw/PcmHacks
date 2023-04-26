@@ -209,7 +209,10 @@ namespace PcmHacking
                 logger.AddUserMessage(operation + "-request messages had to be re-sent " + retryCount + " times.");
             }
 
-            logger.AddUserMessage("We're not sure how much retrying is normal for a " + operation.ToLower() + " operation on a " + (pcmSize / 1024).ToString() + "kb PCM."); 
+            if (retryCount > 10) // We only need to know if we get a lot of retries on a particular type of pcm. This message seems out of place with well tested pcms that are working reliably.
+            {
+                logger.AddUserMessage("We're not sure how much retrying is normal for a " + operation.ToLower() + " operation on a " + (pcmSize / 1024).ToString() + "kb PCM.");
+            }
             logger.AddUserMessage("Please help by sharing your results in the PCM Hammer thread at pcmhacking.net.");
         }
 
