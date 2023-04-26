@@ -47,7 +47,7 @@ MainLoop:
 | =============== S U B R O U T I N E =======================================
 Reboot:
     movea.l #Mode60Reply, %a0          | Address Mode 20 reply (Sends a mode 60 (20+40) message)
-    move.l  #4, %d0                    | It's 6 bytes long
+    move.l  #4, %d0                    | It's 4 bytes long
     bsr.w   VPWSend                    | Send it
     bsr.w   WasteTime                  | Twiddle thumbs
     reset                              | Reset External Devices
@@ -255,7 +255,7 @@ VPWReceiveRTS:
 KernelIDReply:  .byte  0x6C, toolid, pcmid, 0x7D, 0x00, 0x69, 0x00, 0x01, 0x00, 0xAA
 
 | Mode34 Reply, 6 bytes - 6C F0 10 74 00 44, Default Success
-Mode34Reply:    .byte  0x6C, toolid, pcmid, 0x74, 0x00, 0x00
+Mode34Reply:    .byte  0x6C, toolid, pcmid, 0x74, 0x00, 0x44
 
 | Mode36 Reply, 6 bytes - 6C F0 10 76 00 00
 Mode36Reply:    .byte  0x6C, toolid, pcmid, 0x76, 0x00, 0x00
