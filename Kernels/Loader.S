@@ -63,25 +63,6 @@ ResetWatchdog:
     rts
 
 | =============== S U B R O U T I N E =======================================
-LongWaitWithWatchdog:
-    move.l  #0x2710, %d5               | 10,000 loops
-
-LongWaitLoop:
-    bsr.w   ResetWatchdog              | Scratch the dog
-    bsr.w   WasteTime                  | Twiddle thumbs
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    dbf     %d5, LongWaitLoop          | If False Decrement and Branch
-    rts
-
-| =============== S U B R O U T I N E =======================================
 WasteTime:
     nop                                | No Operation
     nop
@@ -139,7 +120,8 @@ ProcessMode36:
     or.b    MessageBuffer + 6, %d0     | Second length byte
     subq.l  #1, %d0                    | 0 is a byte, so subtract one from length
 
-| Process Mode36 Validate Sum          | a3 = buffer address, d3 = counter, d4=sum
+| Process Mode36 Validate Sum          | a3 = buffer address, d2 = temp, d3 = counter, d4=sum
+    clr.l   %d2                        | Init temporary regiser
     lea     MessageBuffer + 4, %a3     | Calculate from MessageBuffer[4] 0=6C 1=10 2=F0 3=36 4=<start>
     clr.l   %d4                        | Init sum
     movel   %d0, %d3                   | Payload length
@@ -149,13 +131,12 @@ ProcessMode36NextSum:
     add.l   %d2, %d4                   | Add it to the sum
     dbf     %d3, ProcessMode36NextSum  | Loop until sum calculated
 
-    clr.l   %d3                        | Payload sum to d3
+    clr.l   %d3                        | Payload sum uses d3
     or.b    (%a3)+, %d3                | First byte
     lsl.l   #8, %d3                    | Logical Shift Left
     or.b    (%a3)+, %d3                | Second byte
     cmp.l   %d3, %d4                   | Is the sum OK?
-    |beq.s   ProcessMode36MemCopy       | Do it 
-    bra.s   ProcessMode36MemCopy | Temp hack to ignore Checksums, they work for P04, not P08
+    beq.s   ProcessMode36MemCopy       | Do it 
 
 | Process Mode36 Response Fail
     movea.l #Mode36Reply, %a0          | Mode 36 reply
