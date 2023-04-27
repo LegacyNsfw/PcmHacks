@@ -1233,11 +1233,12 @@ namespace PcmHacking
 
                     if (pcmInfo.HardwareType == PcmType.P04 || pcmInfo.HardwareType == PcmType.P08 || pcmInfo.HardwareType == PcmType.E54)
                     {
-                        this.AddUserMessage("WARNING: P04, P08 & E54 support is still in development.");
-                        DialogResult dialogResult = MessageBox.Show("WARNING: P04, P08 & E54 support is still in development.\n", "Continue?", MessageBoxButtons.YesNo);
+                        string msg = $"WARNING: {pcmInfo.HardwareType.ToString()} Support is still in development.";
+                        this.AddUserMessage(msg);
+                        DialogResult dialogResult = MessageBox.Show(msg, "Continue?", MessageBoxButtons.YesNo);
                         if (dialogResult == DialogResult.No)
                         {
-                            this.AddUserMessage("User chose not to proceed");
+                            this.AddUserMessage("User chose not to proceed.");
                             return;
                         }
                     }
