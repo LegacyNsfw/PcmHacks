@@ -174,14 +174,14 @@ namespace PcmHacking
                                 osid += image[0x7FFFC - offset] << 8;
                                 osid += image[0x7FFFD - offset] << 0;
                                 break;
-
-                            case 1024 * 1024:
-                                osid += image[0xFFFFA] << 24;
-                                osid += image[0xFFFFB] << 16;
-                                osid += image[0xFFFFC] << 8;
-                                osid += image[0xFFFFD] << 0;
-                                break;
                         }
+                        break;
+
+                    case PcmType.P05:
+                        osid += image[0xFFFFA] << 24;
+                        osid += image[0xFFFFB] << 16;
+                        osid += image[0xFFFFC] << 8;
+                        osid += image[0xFFFFD] << 0;
                         break;
 
                     case PcmType.P08:
@@ -239,6 +239,11 @@ namespace PcmHacking
                     segments = 0;
                     break;
 
+                case PcmType.P05:
+                    tableAddress = 0x0;
+                    segments = 0;
+                    break;
+
                 case PcmType.P10:
                     tableAddress = 0x546;
                     segments = 5;
@@ -260,6 +265,7 @@ namespace PcmHacking
             switch (type)
             {
                 case PcmType.P04:
+                case PcmType.P05:
                     this.logger.AddUserMessage("\tStart\tEnd\tStored\t\tNeeded\t\tVerdict\tSegment Name");
                     success &= ValidateRangeP04(true);
                     break;
@@ -429,11 +435,11 @@ namespace PcmHacking
                     }
                 }
 
-                // P04 512Kb
-                this.logger.AddDebugMessage("Trying P04 1Mb");
+                // P05 1Mb
+                this.logger.AddDebugMessage("Trying P05 1Mb");
                 if ((image[0xFFFFE] == 0xA5) && (image[0xFFFFF] == 0x5A))
                 {
-                    return PcmType.P04;
+                    return PcmType.P05;
                 }
 
                 this.logger.AddDebugMessage("Trying P12 1Mb");
@@ -592,7 +598,7 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Validate a range for P04. Support 256, 512, 1024K images
+        /// Validate a range for P04 and P05. Support 256, 512, 1024K images
         /// Early 512KB bins dont have a param block. This code is called with skipparamblock=true
         /// If the first attempt fails it is re-entrant with skipparamblock=false to try again
         /// </summary>
@@ -605,7 +611,7 @@ namespace PcmHacking
             UInt32 sumaddr = 0;
 
             // Thanks Joukoy for Universal Patcher and the idea to use a pattern search for the P04 sum address.
-            // Working for all tested 1024K
+            // Working for all tested 1024K (P05)
             if (image.Length == 1024 * 1024)
             {
                 for (UInt32 i = start; i < end; i++)
@@ -698,7 +704,7 @@ namespace PcmHacking
                             address += 0x4; // Some 98 have a different sig and dont include the osid
                         }
                         break;
-                    case 1024 * 1024:
+                    case 1024 * 1024: // P05
                         if (address == 0x4000)
                         {
                             address += 0xC000;

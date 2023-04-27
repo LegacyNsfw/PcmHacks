@@ -11,6 +11,7 @@ namespace PcmHacking
         Undefined = 0, // required for failed osid test on binary file
         P01_P59,
         P04,
+        P05,
         P08,
         P10,
         P12,
