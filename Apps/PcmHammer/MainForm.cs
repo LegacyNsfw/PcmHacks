@@ -1231,11 +1231,10 @@ namespace PcmHacking
                         AddUserMessage($"Using OsID: {pcmInfo.OSID}");
                     }
 
-                    if (pcmInfo.HardwareType == PcmType.P04)
+                    if (pcmInfo.HardwareType == PcmType.P04 || pcmInfo.HardwareType == PcmType.P08 || pcmInfo.HardwareType == PcmType.E54)
                     {
-                        this.AddUserMessage("WARNING: P04 Support i still in development.");
-                        this.AddUserMessage("It may or may not read your P04 correctly.");
-                        DialogResult dialogResult = MessageBox.Show("WARNING: P04 Read is still in development.\nIt may or may not read your P04 correctly.\n", "Continue?", MessageBoxButtons.YesNo);
+                        this.AddUserMessage("WARNING: P04, P08 & E54 support is still in development.");
+                        DialogResult dialogResult = MessageBox.Show("WARNING: P04, P08 & E54 support is still in development.\n", "Continue?", MessageBoxButtons.YesNo);
                         if (dialogResult == DialogResult.No)
                         {
                             this.AddUserMessage("User chose not to proceed");
