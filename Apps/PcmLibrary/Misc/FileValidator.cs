@@ -247,6 +247,7 @@ namespace PcmHacking
                 case PcmType.P04:
                 case PcmType.P05:
                 case PcmType.P08:
+                case PcmType.E54:
                     break;
 
                 case PcmType.Undefined:
@@ -271,13 +272,22 @@ namespace PcmHacking
                 case PcmType.P12:
                     this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
                     success &= ValidateRangeP12(0x922, 0x900, 0x94A, 2, "Boot Block");
-                    success &= ValidateRangeP12(0x8022, 0, 0x804A, 2, "OS");
+                    success &= ValidateRangeP12(0x8022, 0, 0x804A, 2, "Operating System");
                     success &= ValidateRangeP12(0x80C4, 0, 0x80E4, 2, "Engine Calibration");
                     success &= ValidateRangeP12(0x80F7, 0, 0x8117, 2, "Engine Diagnostics");
                     success &= ValidateRangeP12(0x812A, 0, 0x814A, 2, "Transmission Calibration");
                     success &= ValidateRangeP12(0x815D, 0, 0x817D, 2, "Transmission Diagnostics");
                     success &= ValidateRangeP12(0x805E, 0, 0x807E, 2, "Speedometer");
                     success &= ValidateRangeP12(0x8091, 0, 0x80B1, 2, "System");
+                    break;
+                case PcmType.E54:
+                    this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
+                    success &= ValidateRangeWordSum(type, 0x20002, 0x6FFFF, 0x20000, "Operating System");
+                    success &= ValidateRangeWordSum(type, 0x8002, 0x19FFF, 0x8000, "Engine Calibration");
+                    success &= ValidateRangeWordSum(type, 0x1A002, 0x1C7FF, 0x1A000, "Engine Diagnostics");
+                    success &= ValidateRangeWordSum(type, 0x1C002, 0x1DFFF, 0x1C000, "Fuel");
+                    success &= ValidateRangeWordSum(type, 0x1E002, 0x1EFFF, 0x1E000 , "System");
+                    success &= ValidateRangeWordSum(type, 0x1F002, 0x1FFEF, 0x1F000, "Speedometer");
                     break;
 
                 // The rest can use the generic code
