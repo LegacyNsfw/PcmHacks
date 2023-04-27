@@ -222,26 +222,17 @@ namespace PcmHacking
         private bool ValidateChecksums()
         {
             bool success = true;
-            UInt32 tableAddress;
+            UInt32 tableAddress = 0;
             UInt32 segments = 0;
 
             PcmType type = this.ValidateSignatures();
 
             switch (type)
             {
+                // have a segment table
                 case PcmType.P01_P59:
                     tableAddress = 0x50C;
                     segments = 8;
-                    break;
-
-                case PcmType.P04:
-                    tableAddress = 0x0;
-                    segments = 0;
-                    break;
-
-                case PcmType.P05:
-                    tableAddress = 0x0;
-                    segments = 0;
                     break;
 
                 case PcmType.P10:
@@ -249,9 +240,13 @@ namespace PcmHacking
                     segments = 5;
                     break;
 
+                // has a segment table, but handled in ValidateRangeP12()
                 case PcmType.P12:
-                    tableAddress = 0x0;
-                    segments = 0;
+
+                // no segment table
+                case PcmType.P04:
+                case PcmType.P05:
+                case PcmType.P08:
                     break;
 
                 case PcmType.Undefined:
@@ -268,6 +263,10 @@ namespace PcmHacking
                 case PcmType.P05:
                     this.logger.AddUserMessage("\tStart\tEnd\tStored\t\tNeeded\t\tVerdict\tSegment Name");
                     success &= ValidateRangeP04(true);
+                    break;
+                case PcmType.P08:
+                    this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
+                    success &= ValidateRangeByteSum(type, 0, 0x7FFFB, 0x8004, "Whole File");
                     break;
                 case PcmType.P12:
                     this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
@@ -333,7 +332,7 @@ namespace PcmHacking
                             return false;
                         }
 
-                        success &= ValidateRange(type, startAddress, endAddress, checksumAddress, segmentName);
+                        success &= ValidateRangeWordSum(type, startAddress, endAddress, checksumAddress, segmentName);
                     }
                     break;
             }
@@ -472,9 +471,48 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Validate a range.
+        /// Validate a range (8 bit bytes).
         /// </summary>
-        private bool ValidateRange(PcmType type, UInt32 start, UInt32 end, UInt32 storage, string description)
+        private bool ValidateRangeByteSum(PcmType type, UInt32 start, UInt32 end, UInt32 storage, string description)
+        {
+            UInt16 storedChecksum = (UInt16)((this.image[storage] << 8) + this.image[storage + 1]);
+            UInt16 computedChecksum = 0;
+
+            for (UInt32 address = start; address <= end; address ++)
+            {
+                switch (type)
+                {
+                    case PcmType.P08:
+                        if (address == 0x4000)
+                        {
+                            address = 0x8010;
+                        }
+
+                        break;
+                }
+
+                computedChecksum += this.image[address];
+            }
+
+            bool verdict = storedChecksum == computedChecksum;
+
+            string error = string.Format(
+                "\t{0:X5}\t{1:X5}\t{2:X4}\t{3:X4}\t{4:X4}\t{5}",
+                start,
+                end,
+                storedChecksum,
+                computedChecksum,
+                verdict ? "Good" : "BAD",
+                description);
+
+            this.logger.AddUserMessage(error);
+            return verdict;
+        }
+
+        /// <summary>
+        /// Validate a range (16 bit words, 2's compliment).
+        /// </summary>
+        private bool ValidateRangeWordSum(PcmType type, UInt32 start, UInt32 end, UInt32 storage, string description)
         {
             UInt16 storedChecksum = (UInt16)((this.image[storage] << 8) + this.image[storage + 1]);
             UInt16 computedChecksum = 0;
@@ -483,6 +521,26 @@ namespace PcmHacking
             {
                 switch (type)
                 {
+                    case PcmType.P01_P59:
+                        if (address == 0x500)
+                        {
+                            address = 0x502;
+                        }
+
+                        if (address == 0x4000)
+                        {
+                            address = 0x20000;
+                        }
+                        break;
+
+                    case PcmType.P08:
+                        if (address == 0x4000)
+                        {
+                            address = 0x8010;
+                        }
+
+                        break;
+
                     case PcmType.P10:
                         switch (address)
                         {
@@ -497,18 +555,6 @@ namespace PcmHacking
                             case 0x7FFFA:
                                 end = 0x7FFFA; // A hacky way to short circuit the end
                                 break;
-                        }
-                        break;
-
-                    case PcmType.P01_P59:
-                        if (address == 0x500)
-                        {
-                            address = 0x502;
-                        }
-
-                        if (address == 0x4000)
-                        {
-                            address = 0x20000;
                         }
                         break;
                 }
