@@ -174,14 +174,14 @@ namespace PcmHacking
                                 osid += image[0x7FFFC - offset] << 8;
                                 osid += image[0x7FFFD - offset] << 0;
                                 break;
-
-                            case 1024 * 1024:
-                                osid += image[0xFFFFA] << 24;
-                                osid += image[0xFFFFB] << 16;
-                                osid += image[0xFFFFC] << 8;
-                                osid += image[0xFFFFD] << 0;
-                                break;
                         }
+                        break;
+
+                    case PcmType.P05:
+                        osid += image[0xFFFFA] << 24;
+                        osid += image[0xFFFFB] << 16;
+                        osid += image[0xFFFFC] << 8;
+                        osid += image[0xFFFFD] << 0;
                         break;
 
                     case PcmType.P08:
@@ -222,21 +222,17 @@ namespace PcmHacking
         private bool ValidateChecksums()
         {
             bool success = true;
-            UInt32 tableAddress;
+            UInt32 tableAddress = 0;
             UInt32 segments = 0;
 
             PcmType type = this.ValidateSignatures();
 
             switch (type)
             {
+                // have a segment table
                 case PcmType.P01_P59:
                     tableAddress = 0x50C;
                     segments = 8;
-                    break;
-
-                case PcmType.P04:
-                    tableAddress = 0x0;
-                    segments = 0;
                     break;
 
                 case PcmType.P10:
@@ -244,9 +240,14 @@ namespace PcmHacking
                     segments = 5;
                     break;
 
+                // has a segment table, but handled in ValidateRangeP12()
                 case PcmType.P12:
-                    tableAddress = 0x0;
-                    segments = 0;
+
+                // no segment table
+                case PcmType.P04:
+                case PcmType.P05:
+                case PcmType.P08:
+                case PcmType.E54:
                     break;
 
                 case PcmType.Undefined:
@@ -260,19 +261,33 @@ namespace PcmHacking
             switch (type)
             {
                 case PcmType.P04:
+                case PcmType.P05:
                     this.logger.AddUserMessage("\tStart\tEnd\tStored\t\tNeeded\t\tVerdict\tSegment Name");
                     success &= ValidateRangeP04(true);
+                    break;
+                case PcmType.P08:
+                    this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
+                    success &= ValidateRangeByteSum(type, 0, 0x7FFFB, 0x8004, "Whole File");
                     break;
                 case PcmType.P12:
                     this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
                     success &= ValidateRangeP12(0x922, 0x900, 0x94A, 2, "Boot Block");
-                    success &= ValidateRangeP12(0x8022, 0, 0x804A, 2, "OS");
+                    success &= ValidateRangeP12(0x8022, 0, 0x804A, 2, "Operating System");
                     success &= ValidateRangeP12(0x80C4, 0, 0x80E4, 2, "Engine Calibration");
                     success &= ValidateRangeP12(0x80F7, 0, 0x8117, 2, "Engine Diagnostics");
                     success &= ValidateRangeP12(0x812A, 0, 0x814A, 2, "Transmission Calibration");
                     success &= ValidateRangeP12(0x815D, 0, 0x817D, 2, "Transmission Diagnostics");
                     success &= ValidateRangeP12(0x805E, 0, 0x807E, 2, "Speedometer");
                     success &= ValidateRangeP12(0x8091, 0, 0x80B1, 2, "System");
+                    break;
+                case PcmType.E54:
+                    this.logger.AddUserMessage("\tStart\tEnd\tStored\tNeeded\tVerdict\tSegment Name");
+                    success &= ValidateRangeWordSum(type, 0x20002, 0x6FFFF, 0x20000, "Operating System");
+                    success &= ValidateRangeWordSum(type, 0x8002, 0x19FFF, 0x8000, "Engine Calibration");
+                    success &= ValidateRangeWordSum(type, 0x1A002, 0x1C7FF, 0x1A000, "Engine Diagnostics");
+                    success &= ValidateRangeWordSum(type, 0x1C002, 0x1DFFF, 0x1C000, "Fuel");
+                    success &= ValidateRangeWordSum(type, 0x1E002, 0x1EFFF, 0x1E000 , "System");
+                    success &= ValidateRangeWordSum(type, 0x1F002, 0x1FFEF, 0x1F000, "Speedometer");
                     break;
 
                 // The rest can use the generic code
@@ -327,7 +342,7 @@ namespace PcmHacking
                             return false;
                         }
 
-                        success &= ValidateRange(type, startAddress, endAddress, checksumAddress, segmentName);
+                        success &= ValidateRangeWordSum(type, startAddress, endAddress, checksumAddress, segmentName);
                     }
                     break;
             }
@@ -429,11 +444,11 @@ namespace PcmHacking
                     }
                 }
 
-                // P04 512Kb
-                this.logger.AddDebugMessage("Trying P04 1Mb");
+                // P05 1Mb
+                this.logger.AddDebugMessage("Trying P05 1Mb");
                 if ((image[0xFFFFE] == 0xA5) && (image[0xFFFFF] == 0x5A))
                 {
-                    return PcmType.P04;
+                    return PcmType.P05;
                 }
 
                 this.logger.AddDebugMessage("Trying P12 1Mb");
@@ -466,9 +481,48 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Validate a range.
+        /// Validate a range (8 bit bytes).
         /// </summary>
-        private bool ValidateRange(PcmType type, UInt32 start, UInt32 end, UInt32 storage, string description)
+        private bool ValidateRangeByteSum(PcmType type, UInt32 start, UInt32 end, UInt32 storage, string description)
+        {
+            UInt16 storedChecksum = (UInt16)((this.image[storage] << 8) + this.image[storage + 1]);
+            UInt16 computedChecksum = 0;
+
+            for (UInt32 address = start; address <= end; address ++)
+            {
+                switch (type)
+                {
+                    case PcmType.P08:
+                        if (address == 0x4000)
+                        {
+                            address = 0x8010;
+                        }
+
+                        break;
+                }
+
+                computedChecksum += this.image[address];
+            }
+
+            bool verdict = storedChecksum == computedChecksum;
+
+            string error = string.Format(
+                "\t{0:X5}\t{1:X5}\t{2:X4}\t{3:X4}\t{4:X4}\t{5}",
+                start,
+                end,
+                storedChecksum,
+                computedChecksum,
+                verdict ? "Good" : "BAD",
+                description);
+
+            this.logger.AddUserMessage(error);
+            return verdict;
+        }
+
+        /// <summary>
+        /// Validate a range (16 bit words, 2's compliment).
+        /// </summary>
+        private bool ValidateRangeWordSum(PcmType type, UInt32 start, UInt32 end, UInt32 storage, string description)
         {
             UInt16 storedChecksum = (UInt16)((this.image[storage] << 8) + this.image[storage + 1]);
             UInt16 computedChecksum = 0;
@@ -477,6 +531,26 @@ namespace PcmHacking
             {
                 switch (type)
                 {
+                    case PcmType.P01_P59:
+                        if (address == 0x500)
+                        {
+                            address = 0x502;
+                        }
+
+                        if (address == 0x4000)
+                        {
+                            address = 0x20000;
+                        }
+                        break;
+
+                    case PcmType.P08:
+                        if (address == 0x4000)
+                        {
+                            address = 0x8010;
+                        }
+
+                        break;
+
                     case PcmType.P10:
                         switch (address)
                         {
@@ -491,18 +565,6 @@ namespace PcmHacking
                             case 0x7FFFA:
                                 end = 0x7FFFA; // A hacky way to short circuit the end
                                 break;
-                        }
-                        break;
-
-                    case PcmType.P01_P59:
-                        if (address == 0x500)
-                        {
-                            address = 0x502;
-                        }
-
-                        if (address == 0x4000)
-                        {
-                            address = 0x20000;
                         }
                         break;
                 }
@@ -592,7 +654,7 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Validate a range for P04. Support 256, 512, 1024K images
+        /// Validate a range for P04 and P05. Support 256, 512, 1024K images
         /// Early 512KB bins dont have a param block. This code is called with skipparamblock=true
         /// If the first attempt fails it is re-entrant with skipparamblock=false to try again
         /// </summary>
@@ -605,7 +667,7 @@ namespace PcmHacking
             UInt32 sumaddr = 0;
 
             // Thanks Joukoy for Universal Patcher and the idea to use a pattern search for the P04 sum address.
-            // Working for all tested 1024K
+            // Working for all tested 1024K (P05)
             if (image.Length == 1024 * 1024)
             {
                 for (UInt32 i = start; i < end; i++)
@@ -698,7 +760,7 @@ namespace PcmHacking
                             address += 0x4; // Some 98 have a different sig and dont include the osid
                         }
                         break;
-                    case 1024 * 1024:
+                    case 1024 * 1024: // P05
                         if (address == 0x4000)
                         {
                             address += 0xC000;
