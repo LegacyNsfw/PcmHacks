@@ -2102,6 +2102,7 @@ namespace PcmHacking
                 // P08
                 case 9364970:
                 case 12206029:
+                case 12208154:
                 case 12208773:
                     this.Description = "P08";
                     this.IsSupported = false;
