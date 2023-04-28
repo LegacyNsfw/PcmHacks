@@ -1600,15 +1600,6 @@ namespace PcmHacking
                 case 12589513:
                 case 12589514:
 
-                // P04 V6 Service number 12578554
-                case 12573298:
-                case 12573300:
-                case 12573409:
-                case 12573410:
-                case 12580148:
-                case 12583377:
-                case 12583378:
-
                 // P04 V6 Service number 12583826
                 case 12573213:
                 case 12573215:
