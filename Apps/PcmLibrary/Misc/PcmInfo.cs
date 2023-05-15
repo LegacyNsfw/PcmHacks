@@ -1692,6 +1692,26 @@ namespace PcmHacking
                 case 12598589:
 
                 // P04 V6 Service number 12583827
+                /*------------------------------
+                https://pcmhacking.net/forums/viewtopic.php?f=42&t=8201&start=100#p122330
+                2004 2004 Alero
+                2004 2005 Aztek
+                2004 2005 Bonneville
+                2004 2004 Century
+                2004 2005 Grand Am
+                2003 2003 Grand Prix
+                2004 2005 Impala
+                2004 2005 Lesabre
+                2004 2005 Lumina
+                2004 2005 Montana
+                2004 2005 Monte Carlo
+                2004 2005 Park Avenue
+                2004 2005 Regal
+                2003 2005 Rendezvous
+                2004 2004 Silhouette
+                2004 2005 Transport
+                2004 2005 Venture
+                ------------------------------*/
                 case 12207875:
                 case 12579927:
                 case 12579929:
