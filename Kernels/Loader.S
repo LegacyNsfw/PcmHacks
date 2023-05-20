@@ -53,7 +53,7 @@ Reboot:
     reset                              | Reset External Devices
 
 EndlessLoop:                           | Kills pcm, lets COPs expire
-    bra.s   EndlessLoop
+    bra.b   EndlessLoop
 
 | =============== S U B R O U T I N E =======================================
 ResetWatchdog:
@@ -136,7 +136,7 @@ ProcessMode36NextSum:
     lsl.l   #8, %d3                    | Logical Shift Left
     or.b    (%a3)+, %d3                | Second byte
     cmp.l   %d3, %d4                   | Is the sum OK?
-    beq.s   ProcessMode36MemCopy       | Do it 
+    beq.b   ProcessMode36MemCopy       | Do it 
 
 | Process Mode36 Response Fail
     movea.l #Mode36Reply, %a0          | Mode 36 reply
@@ -170,7 +170,7 @@ WaitForTXFIFO:
     move.b  (J1850_Status).l, %d2      | Copy the status to d2
     andi.b  #3, %d2                    | Mask the TMFS (Transmit FIFO Status) bits
     cmpi.b  #3, %d2                    | 3 = buffer full
-    beq.s   WaitForTXFIFO              | Wait for the TX buffer to be non-full
+    beq.b   WaitForTXFIFO              | Wait for the TX buffer to be non-full
     move.b  #4, (J1850_Command).l      | Load as transmit data to BTAD
     rts                                | Return from Subroutine
 
@@ -199,7 +199,7 @@ VPWSendWaitForFlush:
     move.b  (J1850_Status).l, %d0      | Get status byte
     andi.b  #0xE0, %d0                 | Check the RFS
     cmpi.b  #0xE0, %d0                 | Empty except for completion byte status
-    bne.s   VPWSendWaitForFlush        | Wait until it is true
+    bne.b   VPWSendWaitForFlush        | Wait until it is true
     move.b  (J1850_RX_FIFO).l, %d0     | Read FIFO
     rts
 
@@ -213,14 +213,14 @@ VPWReceiveReadFrame:
     andi.b  #0xE0, %d0                 | Mask The RFS register
 
     tst.b   %d0                        | 000x xxxx = no data (or invalid)
-    beq.B   VPWReceiveReadFrame        | Nothing, try again
+    beq.b   VPWReceiveReadFrame        | Nothing, try again
 
     cmpi.b  #0x80, %d0                 | 100x xxxx = All codes *greater* than this mean completion code at the buffer head
-    bgt.s   VPWReceiveReadComplete     | Done, cleanup
+    bgt.b   VPWReceiveReadComplete     | Done, cleanup
 
 | VPW Receive Read Byte                | Anything else, read a byte
     move.b  (J1850_RX_FIFO).l, (%a0)+  | Read from the RX FIFO to the input buffer, and move the pointer to the next byte
-    bra.s   VPWReceiveReadFrame        | Next try
+    bra.b   VPWReceiveReadFrame        | Next try
 
 VPWReceiveReadComplete:
     move.b  (J1850_RX_FIFO).l, (%a0)+  | This is the completion code, eat it.
@@ -228,11 +228,11 @@ VPWReceiveReadComplete:
     move.b  (%a0), %d0                 |
     andi.b  #0xFE, %d0                 | mask 1111 1110
     cmpi.b  #0x6C, %d0                 | Is it a priority 6C or 6D packet?
-    bne.s   VPWReceive                 | If it is not, abort and get the next packet
+    bne.b   VPWReceive                 | If it is not, abort and get the next packet
     cmpi.b  #pcmid, 1(%a0)             | Check for device 0x10
-    beq.w   VPWReceiveRTS              | If yes, then return for processing
+    beq.b   VPWReceiveRTS              | If yes, then return for processing
     cmpi.b  #0xFE, 1(%a0)              | Check for broadcast device id 0xFE
-    bne     VPWReceive                 | Not an FE, junk it and get the next packet
+    bne.b   VPWReceive                 | Not an FE, junk it and get the next packet
 
 VPWReceiveRTS:
     rts                                | Must have been an FE, return for processing
@@ -267,8 +267,8 @@ Mode60Reply:   .byte  0x6C, toolid, pcmid, 0x60
   .globl   MessageBuffer
   .section .kerneldata, "aw", @progbits | Kernel data section, how it's excluded from transportation.
   .type    MessageBuffer, @object
-  .size    MessageBuffer, 512 + 12      | 4128 bytes is the J2534 J1850 spec, however size doesn't matter.
+  .size    MessageBuffer, 4128          | 4128 bytes is the J2534 J1850 spec, however size doesn't matter.
+  .zero 4128                            | Except to zero (initalize) the area.
 MessageBuffer:
-  .zero 512 + 12                        | Except to zero (initalize) the area.
 .end
 
