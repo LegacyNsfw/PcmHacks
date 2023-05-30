@@ -16,6 +16,9 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3.3.0
 
+    - name: Update Package Repository
+      run: sudo apt-get update
+
     - name: Install GNU m68k Compiler and Make tool
       run: sudo apt-get install -y gcc-m68k-linux-gnu make
 
