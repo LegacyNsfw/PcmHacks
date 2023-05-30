@@ -518,7 +518,6 @@ Mode60Reply:    .byte  0x6C, toolid, pcmid, 0x60
   .section .kerneldata, "aw", @progbits | Kernel data section, how it's excluded from transportation.
   .type    MessageBuffer, @object
   .size    MessageBuffer, 4128          | 4128 bytes is the J2534 J1850 spec, however size doesn't matter.
-  .zero 4128                            | Except to zero (initalize) the area.
 MessageBuffer:
 .end
 
