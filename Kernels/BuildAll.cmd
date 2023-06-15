@@ -50,13 +50,14 @@ rem * They would need to be changed below.
   setlocal disabledelayedexpansion
 )
 
+REM   "-pP04 -aFF9090 -lFF9890 -x",
 
 for %%A in (
-  "-pP01 -aFF8000",
+  "-pP01 -aFF8000 -x",
   "-pP04 -aFF9090 -lFF9890 -x",
   "-pP08 -aFFA800 -lFFB000 -x",
-  "-pP10 -aFFB800",
-  "-pP12 -aFF2000",
+  "-pP10 -aFFB800 -x",
+  "-pP12 -aFF2000 -x",
   "-pE54 -aFF8F50 -x"
   ) do call Build.cmd %%~A %*
 
