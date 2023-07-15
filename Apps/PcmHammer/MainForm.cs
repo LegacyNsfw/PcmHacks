@@ -1161,6 +1161,16 @@ namespace PcmHacking
                     string path = "";
                     this.Invoke((MethodInvoker)delegate ()
                     {
+                        this.AddUserMessage($"WARNING: This version uses the new Assembly Kernels, USE AT YOUR OWN RISK!");
+                        string msg = $"WARNING!{Environment.NewLine}This version uses the new Assembly Kernels, USE AT YOUR OWN RISK!" +
+                                     $"{Environment.NewLine}{Environment.NewLine}Are you willing to accept the responsibility ?";
+                        DialogResult warnDialogResult = MessageBox.Show(msg, "Continue?", MessageBoxButtons.YesNo);
+                        if (warnDialogResult == DialogResult.No)
+                        {
+                            this.AddUserMessage("User chose not to proceed.");
+                            return;
+                        }
+
                         path = this.ShowSaveAsDialog();
 
                         if (path == null)
@@ -1353,6 +1363,16 @@ namespace PcmHacking
                         this.DisableUserInput();
                         this.cancelButton.Enabled = true;
 
+                        this.AddUserMessage($"WARNING: This version uses the new Assembly Kernels, USE AT YOUR OWN RISK!");
+                        string msg = $"WARNING!{Environment.NewLine}This version uses the new Assembly Kernels, USE AT YOUR OWN RISK!" +
+                                     $"{Environment.NewLine}{Environment.NewLine}Are you willing to accept the responsibility ?";
+                        DialogResult warnDialogResult = MessageBox.Show(msg, "Continue?", MessageBoxButtons.YesNo);
+                        if (warnDialogResult == DialogResult.No)
+                        {
+                            this.AddUserMessage("User chose not to proceed.");
+                            return;
+                        }
+
                         if (string.IsNullOrWhiteSpace(path))
                         {
                             path = this.ShowOpenDialog();
@@ -1496,12 +1516,24 @@ namespace PcmHacking
                         }
                     }
 
-                    if (writeType != WriteType.Compare && pcmInfo.HardwareType == PcmType.P04 && pcmInfo.HardwareType == PcmType.P08 && pcmInfo.HardwareType == PcmType.E54)
+                    if (writeType != WriteType.Compare && (pcmInfo.HardwareType == PcmType.P04 || pcmInfo.HardwareType == PcmType.P08))
                     {
                         string msg = $"PCMHammer currently does not support writing to the {pcmInfo.HardwareType.ToString()}";
                         this.AddUserMessage(msg);
                         MessageBox.Show(msg);
                         return;
+                    }
+
+                    if (pcmInfo.HardwareType == PcmType.P04 || pcmInfo.HardwareType == PcmType.P08 || pcmInfo.HardwareType == PcmType.E54)
+                    {
+                        string msg = $"WARNING: {pcmInfo.HardwareType.ToString()} Support is still in development.";
+                        this.AddUserMessage(msg);
+                        DialogResult dialogResult = MessageBox.Show(msg, "Continue?", MessageBoxButtons.YesNo);
+                        if (dialogResult == DialogResult.No)
+                        {
+                            this.AddUserMessage("User chose not to proceed.");
+                            return;
+                        }
                     }
 
                     await this.Vehicle.SuppressChatter();
