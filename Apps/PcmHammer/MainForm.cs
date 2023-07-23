@@ -864,7 +864,7 @@ namespace PcmHacking
                     this.AddUserMessage("Serial Number query failed: " + serialResponse.Status.ToString());
                 }
 
-                // Disable BCC lookup for the P04
+                // Disable BCC lookup for those that do not provide it
                 if (pcmInfo != null && pcmInfo.HardwareType != PcmType.P04 && pcmInfo.HardwareType != PcmType.P08)
                 {
                     var bccResponse = await this.Vehicle.QueryBCC();
@@ -1241,7 +1241,7 @@ namespace PcmHacking
                         AddUserMessage($"Using OsID: {pcmInfo.OSID}");
                     }
 
-                    if (pcmInfo.HardwareType == PcmType.P04 || pcmInfo.HardwareType == PcmType.P08 || pcmInfo.HardwareType == PcmType.E54)
+                    if (pcmInfo.HardwareType == PcmType.P04 || pcmInfo.HardwareType == PcmType.E54)
                     {
                         string msg = $"WARNING: {pcmInfo.HardwareType.ToString()} Support is still in development.";
                         this.AddUserMessage(msg);
@@ -1516,7 +1516,7 @@ namespace PcmHacking
                         }
                     }
 
-                    if (writeType != WriteType.Compare && (pcmInfo.HardwareType == PcmType.P04 || pcmInfo.HardwareType == PcmType.P08))
+                    if (writeType != WriteType.Compare && (pcmInfo.HardwareType == PcmType.P04))
                     {
                         string msg = $"PCMHammer currently does not support writing to the {pcmInfo.HardwareType.ToString()}";
                         this.AddUserMessage(msg);
@@ -1524,7 +1524,7 @@ namespace PcmHacking
                         return;
                     }
 
-                    if (pcmInfo.HardwareType == PcmType.P04 || pcmInfo.HardwareType == PcmType.P08 || pcmInfo.HardwareType == PcmType.E54)
+                    if (pcmInfo.HardwareType == PcmType.P04 || pcmInfo.HardwareType == PcmType.E54)
                     {
                         string msg = $"WARNING: {pcmInfo.HardwareType.ToString()} Support is still in development.";
                         this.AddUserMessage(msg);

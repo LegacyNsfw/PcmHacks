@@ -2116,19 +2116,17 @@ namespace PcmHacking
                 case 12208154:
                 case 12208773:
                     this.Description = "P08";
-                    this.IsSupported = false;
-                    this.LoaderRequired = true;
+                    this.IsSupported = true;
+                    this.LoaderRequired = false;
                     this.ValidationMethod = PcmType.P08;
                     this.HardwareType = PcmType.P08;
                     this.KernelFileName = "Kernel-P08.bin";
-                    this.KernelBaseAddress = 0xFFA800;
-                    this.LoaderFileName = "Loader-P08.bin";
-                    this.LoaderBaseAddress = 0xFFB000;
+                    this.KernelBaseAddress = 0xFFAC00;
                     this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     //this.RAMSize = 0x4DFF;
                     this.KeyAlgorithm = 13;
-                    this.ChecksumSupport = false;
+                    this.ChecksumSupport = true;
                     this.FlashCRCSupport = true;
                     this.FlashIDSupport = true;
                     this.KernelVersionSupport = true;

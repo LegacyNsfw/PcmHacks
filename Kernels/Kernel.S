@@ -11,10 +11,6 @@
 
 |
 | NOTICE!
-| The full Kernel is to big to fit on the P04 & P08, so I have "#if !defined P04" and "#if !defined P08" out Write capabilities to maintain read compatibility with PCMHammer.
-| There are 3 "#if !defined P04" and 3 "#if !defined P08" below, plus their matching #else and #endif.
-|
-| It's ugly, it's what I had to do to release this code ...
 |
 | Even with just the required elements for writing, it is tough to get a stable Kernel on the P04, especially Intel based units (SvN:9380717, HdW:9357440
 | It can be done, but PCMHammer also needs to be rewritten to work with 3 kernels, 1. Read Kernel, 2. AMD Write Kernel, 3. Intel Write Kernel.
@@ -29,14 +25,24 @@
 #if defined P12
   .equ SIM_BASE,             0xFA30
   .equ SIM_20,               (SIM_BASE + 0x20) | Lock functions
-#else
+  #else
   .equ SIM_BASE,             0xFA00
 #endif
 .equ SIM_CSBARBT,            (SIM_BASE + 0x48) | (SIM_BASE + 0x48) (FA48)
 .equ SIM_CSORBT,             (SIM_BASE + 0x4A) | (SIM_BASE + 0x4A) (FA4A)
 .equ SIM_CSBAR0,             (SIM_BASE + 0x4C) | (SIM_BASE + 0x4C) (FA4C)
 .equ SIM_CSOR0,              (SIM_BASE + 0x4E) | (SIM_BASE + 0x4E) (FA4E)
-|
+
+#if defined P08
+  .equ REG_FFF408,           0xF408
+  .equ REG_FFF4C8,           0xF4C8
+  .equ VPP_BIT,              2
+  .equ HARDWARE_IO,          0xFA11
+  #else
+  .equ VPP_BIT,              0
+  .equ HARDWARE_IO,          0xE2FA
+#endif
+
 .equ READ_ARRAY_CMD,         0xFFFF    | Intel
 .equ ERASE_RESUME_CONFIRM,   0xD0D0    | Intel
 .equ AMD_PROGRAM_CMD,        0xA0A0    | Amd
@@ -70,18 +76,23 @@
 .equ POLYNOMIAL,         0x4C11DB7
 
 | Modes supported shared in Common-Assembly.S
-|.equ KernelID_3D00       0x3D00        | Moved to Common-Assembly.s
+|.equ KernelID_3D00       0x3D00       | Moved to Common-Assembly.s
 .equ FlashID_3D01,       0x3D01        | Return Flash chip ID
 .equ CRC_3D02,           0x3D02        | Return CRC for range
 .equ OsID_3D03,          0x3D03        | Return OsID
 .equ EraseSector_3D05,   0x3D05        | ProcessEraseSector
-|.equ Halt_20             0x20          | Moved to Common-Assembly.s
-|.equ Mode_34             0x34          | Moved to Common-Assembly.s
+|.equ Halt_20             0x20         | Moved to Common-Assembly.s
+|.equ Mode_34             0x34         | Moved to Common-Assembly.s
 .equ Mode_35,            0x35          | Send data from PCM to Tool
-|.equ Mode_36             0x36          | Moved to Common-Assembly.s
+|.equ Mode_36             0x36         | Moved to Common-Assembly.s
 
 start:
     ori     #0x700, %sr                | Disable Interrupts
+
+#if defined P08
+    movea.w #0xB800, %sp               | P08: Relocate the stack
+#endif
+
     move.b  #0x03, (J1850_Command).l   | Flush frame except for completion code
     move.b  #0x00, (J1850_TX_FIFO).l   | Initiate transfer
 
@@ -333,8 +344,6 @@ ProcessFlashIDFound:
 |   d1 - Scratch
 |
 ProcessEraseSector:
-#if !defined P04       // Reduce size for P04 & P08 read only
-#if !defined P08       // Reduce size for P04 & P08 read only
     clr.l   %d1                        | Start Clean
     or.b    MessageBuffer + 5, %d1     | First address byte
     lsl.l   #8, %d1                    | Logical Shift Left
@@ -380,8 +389,6 @@ ProcessEraseSectorFinal:
     move.b  %d0, 5(%a0)                | Move error value to EraseSectorReply buffer
     move.l  #7, %d0                    | PCMHammer returns 7 bytes, 6C F0 10 7D 05 00 00, last two are Status and Error?, why two??
     bsr.w   VPWSend                    | Send it!
-#endif                                 // Reduce size for P04 & P08 read only
-#endif                                 // Reduce size for P04 & P08 read only
     jmp     MainLoop
 
 | =============== S U B R O U T I N E =======================================
@@ -403,8 +410,6 @@ ProcessEraseSectorFinal:
 |   a2 - Address FlashIDReply
 |   d1 - Scratch
 |
-#if !defined P04                       // Reduce size for P04 & P08 read only
-#if !defined P08                       // Reduce size for P04 & P08 read only
 ProcessWriteFlash:
     movea.l #FlashIDReply, %a2         | Pointer to FlashIDReply buffer
     move.w  7(%a2), %d1                | Move Flash Chip ID to d1
@@ -655,39 +660,28 @@ AMDWriteSectorFinal:
 |   d1 - Scratch
 |
 IntelFlashUnlock:
+#if defined P08
+    move.w #0x0F, (REG_FFF408).w       | P08 Hardware Setup
+    move.w #0x05, (REG_FFF4C8).w       | P08 Hardware Setup
+#endif
     move.w  #0x0007, (SIM_CSBARBT).w   | $FFFFFA48
     move.w  #0x6820, (SIM_CSORBT).w    | $FFFFFA4A
     move.w  #0x0007, (SIM_CSBAR0).w    | $FFFFFA4C
     | Unlock
     move.w  #0x7060, (SIM_CSOR0).w     | $FFFFFA4E
-
     | Enable +12v Vpp
-    move.w  (0xE2FA).w, %d1            | Move Vpp Latch Address value to d1
-    bset    #0, %d1                    | Set Vpp Latch Bit
-    move.w  %d1, (0xE2FA).w            | Move modified value back to Latch Address
-    |move.w  (HARDWARE_IO), %d1         | Move Vpp Latch Address value to d1
-    |bset    #VPP_BIT, %d1              | Set Vpp Latch Bit
-    |move.w  %d1, (HARDWARE_IO)         | Move modified value back to Latch Address
-    |bset    #VPP_BIT, (HARDWARE_IO)    |  Set Vpp Latch Bit
+    bset    #VPP_BIT, (HARDWARE_IO).w  | Set Vpp
+    bsr.w   LongWaitWithWatchdog
+    rts
 
-|LongWaitWithWatchdog:
-| Only place it's used, saves ~12 bytes, if needed elsewhere, sub it, change d1 to d5, uncomment movem.l lines
-  |  movem.l %d5, -(%sp)                | Save d5
-    move.w  #0x2710, %d1               | 10,000 loops
-IntelFlashUnlockLongWaitLoop:
+LongWaitWithWatchdog:
+    movem.l %d5, -(%sp)                | Save d5
+    move.w  #0x8000, %d1               | 32768 loops
+LongWaitLoop:
     bsr.w   ResetWatchdog              | Scratch the dog
     bsr.w   WasteTime                  | Twiddle thumbs
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    bsr.w   WasteTime
-    dbf     %d1, IntelFlashUnlockLongWaitLoop | If False Decrement and Branch
-  |  movem.l (%sp)+, %d5                | Restore d5
+    dbf     %d1, LongWaitLoop | If False Decrement and Branch
+    movem.l (%sp)+, %d5                | Restore d5
     rts
 
 | =============== S U B R O U T I N E =======================================
@@ -707,13 +701,9 @@ IntelFlashLock:
     | Lock
     move.w  #0x1060, (SIM_CSOR0).w     | $FFFFFA4E
     | Disable +12v Vpp
-    move.w  (0xE2FA).w, %d1              | Move Vpp Latch Address value to d1
-    bclr    #0, %d1                    | Set Vpp Latch Bit
-    move.w  %d1, (0xE2FA).w              | Move modified value back to Latch Address
-    |move.w  (HARDWARE_IO), %d1         | Move Vpp Latch Address value to d1
-    |bclr    #VPP_BIT, %d1              | Set Vpp Latch Bit
-    |move.w  %d1, (HARDWARE_IO)         | Move modified value back to Latch Address
-    |bclr    #VPP_BIT, (HARDWARE_IO)    | Clear Vpp Latch Bit - This technique is unsupported, leave as reminder!
+    bclr    #VPP_BIT, (HARDWARE_IO).w  | Clear Vpp
+    bsr.w   LongWaitWithWatchdog
+
     rts
 
 | =============== S U B R O U T I N E =======================================
@@ -739,28 +729,27 @@ IntelEraseSector:
     move.w  #CLEAR_STATUS_REGISTER, (%a0) | 0x5050 Clear Status register
     move.w  #INTEL_ERASE_CMD, (%a0)       | 0x2020 Command Erase
     move.w  #ERASE_RESUME_CONFIRM, (%a0)  | 0xD0D0 Confirm Command Erase
-    move.w  #READ_STATUS_REGISTER, (%a0)  | 0x7070 Read Status Register
-
-    move.l  #0x320000, %d2             | Erase Loop Timeout index
+    move.l  #0x320000, %d2                | Erase Loop Timeout index
 
 IntelEraseSectorNotReady:
-    bsr.w   ResetWatchdog              | Scratch the dog
-    move.w  (%a0), %d1                 | Move Status to d1
-    btst    #0x007, %d1                | Test Status
-    bne.s   IntelEraseSectorReady      | Status Success - Jump to IntelEraseSectorReady
-    subq.l  #1, %d2                    | Decrement index
-    bne.s   IntelEraseSectorNotReady   | Fail Status Check Test again
+    bsr.w   LongWaitWithWatchdog
+    move.w  #READ_STATUS_REGISTER, (%a0)  | 0x7070 Read Status Register
+    move.w  (%a0), %d1                    | Move Status to d1
+    btst    #0x007, %d1                   | Test Status
+    bne.s   IntelEraseSectorReady         | Status Success - Jump to IntelEraseSectorReady
+    subq.l  #1, %d2                       | Decrement index
+    bne.s   IntelEraseSectorNotReady      | Fail Status Check Test again
 
 IntelEraseSectorReady:
-    clr.l   %d0                        | Set Success (if Status passes)
-    andi.w  #0x0E8, %d1                | Mask 1110 1000
-    cmp.w   #0x080, %d1                | Check status
-    beq.s   IntelEraseSectorDone       | Pass ?
-    move.b  #1, %d0                    | Set Failure
+    clr.l   %d0                           | Set Success (if Status passes)
+    andi.w  #0x0E8, %d1                   | Mask 1110 1000
+    cmp.w   #0x080, %d1                   | Check status
+    beq.s   IntelEraseSectorDone          | Pass ?
+    move.b  #1, %d0                       | Set Failure
 
 IntelEraseSectorDone:
-    move.w    #READ_ARRAY_CMD, (%a0)     | 0xFFFF Return to Normal Read Array mode
-    move.w    #READ_ARRAY_CMD, (%a0)     | 0xFFFF Return to Normal Read Array mode
+    move.w    #READ_ARRAY_CMD, (%a0)      | 0xFFFF Return to Normal Read Array mode
+    move.w    #READ_ARRAY_CMD, (%a0)      | 0xFFFF Return to Normal Read Array mode
 
     bsr.w   IntelFlashLock
     rts
@@ -828,9 +817,6 @@ IntelWriteSectorFinal:
     bsr.w   IntelFlashLock
     rts
 
-#endif                                 // Reduce size for P04 & P08 read only
-#endif                                 // Reduce size for P04 & P08 read only
-
 | =============== S U B R O U T I N E =======================================
 ProcessMode34:
 | TODO: Add rejections
@@ -882,8 +868,6 @@ ProcessMode35:
 |   d4
 |
 ProcessMode36:
-#if !defined P04                       // Reduce size for P04 & P08 read only
-#if !defined P08                       // Reduce size for P04 & P08 read only
     clr.l   %d0                        | Clear for Target Address
     movea.l #MessageBuffer + 10, %a0   | Pointer to start of data
     or.b    MessageBuffer + 7, %d0     | First address byte
@@ -948,12 +932,6 @@ ProcessMode36ResponseOK:
     cmpi.b  #0x80, %d4                 | Test for Execute
     bne.w   MainLoop                   | If not executing return to MainLoop
     jmp     (%a2)                      | Execute the payload
-#else                                  // Reduce size for P04 & P08 read only
-    jmp     MainLoop                   |  Reduce size for P04 & P08 read only
-#endif                                 // Reduce size for P04 & P08 read only
-#else                                  // Reduce size for P04 & P08 read only
-    jmp     MainLoop                   |  Reduce size for P04 & P08 read only
-#endif                                 // Reduce size for P04 & P08 read only
 
 | =============== S U B R O U T I N E =======================================
 WaitForTXFIFO:
@@ -982,7 +960,7 @@ VPWSendNextByte:
     move.b  (%a0)+, (J1850_TX_FIFO).l  | Drop the last byte in TX FIFO
     bsr.w   WasteTime                  | Twiddle thumbs
     move.b  #0x03, (J1850_Command).l   | Flush buffer
-    move.b  #0x00, (J1850_TX_FIFO).l   | Needed for flush buffer?
+    move.b  #0x00, (J1850_TX_FIFO).l   | Completion byte
 
 VPWSendWaitForFlush:
     bsr.w   ResetWatchdog              | Scratch the dog
@@ -1119,19 +1097,18 @@ VPWSendBlockWaitForBuffer2:
 | I think it needs to get two bytes, make a word, then add it to MessageBuffer by Word, or shift the bytes left by one!
 | Every attempt I've made to accomplish this has failed ... Purely due to my lack of knowledge of the DLC!
 | Alignment is simple ... Remove this 0x0D and it is aligned, however VPWReceive will fail.
-.byte  0x0D
 
 .ascii "(c)2023 pcmhacking.net" | An Antus / Gampy collaboration
 | All AA bytes are padding for alignment
 
-| Mode 35 Reply Header 10 bytes
-Mode35Reply:    .byte  0x6D, toolid, pcmid, 0x36, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00
+| Mode 35 Reply Header 10 bytes + 1 alignment
+Mode35Reply:    .byte  0x6D, toolid, pcmid, 0x36, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAA
 
-| Flash ID 9 bytes + 1 alignment
+| Flash ID 9 bytes
 FlashIDReply:   .byte  0x6C, toolid, pcmid, 0x7D, 0x01, 0x00, 0x00, 0x00, 0x00, 0xAA
 
-| Os ID Reply, 9 bytes + 1 alignment
-OsIDReply:      .byte  0x6C, toolid, pcmid, 0x7D, 0x03, 0x00, 0x00, 0x00, 0x00, 0xAA
+| Os ID Reply, 9 bytes
+OsIDReply:      .byte  0x6C, toolid, pcmid, 0x7D, 0x03, 0x00, 0x00, 0x00, 0x00
 
 | Kernel ID Response, 9 bytes + 1 alignment
 | 4 bytes, the first 12 bits are a static ID, next 12 bits are version, 4th byte = PCM ID
@@ -1149,12 +1126,13 @@ Mode34Reply:    .byte  0x6C, toolid, pcmid, 0x74, 0x00, 0x44
 | Mode36 Reply, 6 bytes - 6C F0 10 76 00 00
 Mode36Reply:    .byte  0x6C, toolid, pcmid, 0x76, 0x00, 0x00
 
-| Halt Kernel Reply, 4 bytes
-Mode60Reply:    .byte  0x6C, toolid, pcmid, 0x60
+| Halt Kernel Reply, 4 bytes + 1 alignment
+Mode60Reply:    .byte  0x6C, toolid, pcmid, 0x60, 0xAA
 
-| Erase Sector Reply, 7 bytes + 1 alignment
-EraseSectorReply:   .byte  0x6C, toolid, pcmid, 0x7D, 0x05, 0x00, 0x00, 0xAA
+| Erase Sector Reply, 7 bytes
+EraseSectorReply:   .byte  0x6C, toolid, pcmid, 0x7D, 0x05, 0x00, 0x00
 
+.byte 0xAA
 | Global buffer, it's at the end and it's not transported, thus length is irrelevant!
   .globl   MessageBuffer
   .section .kerneldata, "aw", @progbits | Kernel data section, how it's excluded from transportation.
