@@ -2,6 +2,7 @@
 # Original works by ddub07 <github.com>
 # 03/01/2023 - GampyG28 <github.com> major overhaul, renamed and updated.
 # 04/16/2023 - GampyG28 <github.com> Added Assembly Kernels and Loaders
+# 07/16/2023 - GampyG28 <github.com> Removed C Kernel builds
 #
 name: CheckBuild
 
@@ -25,25 +26,6 @@ jobs:
     - name: Create temporary artifact storage
       run: mkdir TemporaryArtifactStorage
 
-    - name: Build C Kernels
-      run: |
-        cd Kernels
-        #
-        # The following loop is the one location that needs to be updated when adding a new C kernel.
-        #
-        for p in "P01 FF8000" "P10 FFB800" "P12 FF2000"; do
-          pcm=${p%% *}
-          address=${p##* }
-
-          echo Building Kernel ":    ${pcm}"
-          make -f makefile PREFIX=/usr/bin/m68k-linux-gnu- pcm=${pcm} address=${address}
-          echo "    Copy-Item Kernel-${pcm}.bin to TemporaryArtifactStorage"
-          cp Kernel-${pcm}.bin ../TemporaryArtifactStorage/
-          echo "    Cleanup after Kernel-${pcm}"
-          echo
-          make clean
-        done
-
     - name: Build Assembly Kernels and Loaders
       run: |
         cd Kernels
@@ -53,7 +35,7 @@ jobs:
         # 2: Kernel Base Address
         # 3: Loader Base Address or NOLOADER if a loader is not used.
         #
-        for p in "P04 FF9090 FF9890" "P08 FFA800 FFB000" "E54 FF8F50 NOLOADER"; do
+        for p in "P01 FF8000 NOLOADER" "P04 FF9090 FF9890" "P08 FFA800 FFB000" "P10 FFB800 NOLOADER" "P12 FF2000 NOLOADER" "E54 FF8F50 NOLOADER"; do
           pcm="${p%% *}";
           p="${p#* }"
           address="${p%% *}"

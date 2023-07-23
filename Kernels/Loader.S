@@ -14,10 +14,10 @@
 #include "Common-Assembly.h"
 
 | Modes supported shared in Common-Assembly.S
-|.equ KernelID_3D00                    | Moved to Common-Assembly.s
-|.equ Halt_20                          | Moved to Common-Assembly.s
-|.equ Mode_34                          | Moved to Common-Assembly.s
-|.equ Mode_36                          | Moved to Common-Assembly.s
+|.equ KernelID_3D00       0x3D00        | Moved to Common-Assembly.s
+|.equ Halt_20             0x20          | Moved to Common-Assembly.s
+|.equ Mode_34             0x34          | Moved to Common-Assembly.s
+|.equ Mode_36             0x36          | Moved to Common-Assembly.s
 
 start:
     ori     #0x700, %sr                | Disable Interrupts
@@ -30,7 +30,7 @@ start:
 #endif
 
 MainLoop:
-    movea.l #MessageBuffer, %a0        | Address the MessageBuffer
+    movea.l #MessageBuffer, %a0        | Pointer to MessageBuffer buffer
     clr.w   3(%a0)                     | Clear last command, prevent repeating it
     bsr.w   ResetWatchdog              | Scratch the dog
     bsr.w   VPWReceive                 | Wait for and read next packet
@@ -46,7 +46,7 @@ MainLoop:
 
 | =============== S U B R O U T I N E =======================================
 Reboot:
-    movea.l #Mode60Reply, %a0          | Address Mode 20 reply (Sends a mode 60 (20+40) message)
+    movea.l #Mode60Reply, %a0          | Pointer to Mode 20 reply buffer
     move.l  #4, %d0                    | It's 4 bytes long
     bsr.w   VPWSend                    | Send it
     bsr.w   WasteTime                  | Twiddle thumbs
@@ -64,7 +64,7 @@ ResetWatchdog:
 
 | =============== S U B R O U T I N E =======================================
 WasteTime:
-    nop                                | No Operation
+    nop                                | Non Operation
     nop
     nop
     nop
@@ -72,7 +72,7 @@ WasteTime:
 
 | =============== S U B R O U T I N E =======================================
 ProcessKernelID:
-    movea.l #KernelIDReply, %a0        | Address the KernelIDReply buffer
+    movea.l #KernelIDReply, %a0        | Pointer to KernelIDReply buffer
 #if defined P01
     move.b  #0x01, 8(%a0)              | P01, P59
 #elif defined P04
@@ -93,7 +93,7 @@ ProcessKernelID:
 | =============== S U B R O U T I N E =======================================
 ProcessMode34:
 | TODO: Add rejections
-    movea.l #Mode34Reply, %a0          | Move address of Mode34Reply to a0
+    movea.l #Mode34Reply, %a0          | Pointer to Mode34Reply buffer
     move.l  #6, %d0                    | It's 6 bytes long
     bsr.w   VPWSend                    | Send it
     jmp     MainLoop
@@ -103,43 +103,54 @@ ProcessMode34:
 | This function loads the target address, length, and checksum to registers
 | Then it calculates the checksum of the received data and validates the block
 | If OK it proceeds to copy the data, then it responds with success or failure
-| ===========================================================================
+|
+| Uses
+|   a0
+|   a1
+|   a2
+|   a3
+|   d0
+|   d2
+|   d3
+|   d4
+|
 ProcessMode36:
-    clr.l   %d0                        | d0 = target address
-    lea     MessageBuffer + 10, %a0    | Move payload source address to a0
+    clr.l   %d0                        | Clear for Target Address
+    lea     MessageBuffer + 10, %a0    | Pointer to start of data
     or.b    MessageBuffer + 7, %d0     | First address byte
     lsl.l   #8, %d0                    | Logical Shift Left
     or.b    MessageBuffer + 8, %d0     | Second address byte
     lsl.l   #8, %d0                    | Logical Shift Left
     or.b    MessageBuffer + 9, %d0     | Third address byte
-    movea.l %d0, %a1                   | Move target address to a1
-    movea.l %d0, %a2                   | Save a copy in a2 for the execute jump check
-    clr.l   %d0                        | Clear d0
+    movea.l %d0, %a1                   | Pointer to target address
+    movea.l %d0, %a2                   | Pointer to target address for execute jump
+
+    clr.l   %d0                        | Start Clean
     or.b    MessageBuffer + 5, %d0     | First length byte
     lsl.l   #8, %d0                    | Logical Shift Left
     or.b    MessageBuffer + 6, %d0     | Second length byte
-    subq.l  #1, %d0                    | 0 is a byte, so subtract one from length
 
 | Process Mode36 Validate Sum          | a3 = buffer address, d2 = temp, d3 = counter, d4=sum
-    clr.l   %d2                        | Init temporary regiser
-    lea     MessageBuffer + 4, %a3     | Calculate from MessageBuffer[4] 0=6C 1=10 2=F0 3=36 4=<start>
+    clr.l   %d2                        | Init temporary register
+    lea     MessageBuffer + 4, %a3     | Pointer to beginning of checksum range, Calculates from MessageBuffer[4] (0=6C 1=10 2=F0 3=36 4=<start>)
     clr.l   %d4                        | Init sum
-    movel   %d0, %d3                   | Payload length
-    addq.l  #6, %d3                    | Add submode (1), address (3), length(2) bytes to sum length
+    move.l  %d0, %d3                   | Payload length (Byte count)
+    addq.l  #5, %d3                    | Add submode (1), address (3), length(2) = 6 bytes to sum length minus 1 for Zero Index
+
 ProcessMode36NextSum:
-    move.b  (%a3)+, %d2                | Copy the byte to d2
-    add.l   %d2, %d4                   | Add it to the sum
+    move.b  (%a3)+, %d2                | Copy byte to d2
+    add.l   %d2, %d4                   | Add to sum
     dbf     %d3, ProcessMode36NextSum  | Loop until sum calculated
 
-    clr.l   %d3                        | Payload sum uses d3
+    clr.l   %d3                        | Clear for Payload sum
     or.b    (%a3)+, %d3                | First byte
     lsl.l   #8, %d3                    | Logical Shift Left
     or.b    (%a3)+, %d3                | Second byte
     cmp.l   %d3, %d4                   | Is the sum OK?
-    beq.b   ProcessMode36MemCopy       | Do it 
+    beq.s   ProcessMode36Data          | Yes, Do it 
 
 | Process Mode36 Response Fail
-    movea.l #Mode36Reply, %a0          | Mode 36 reply
+    movea.l #Mode36Reply, %a0          | Pointer to Mode36Reply buffer
     move.b  #0x7F, 3(%a0)              | 7F Failure
     move.b  MessageBuffer + 3, 4(%a0)  | Mode
     move.b  MessageBuffer + 4, 5(%a0)  | Submode
@@ -147,48 +158,51 @@ ProcessMode36NextSum:
     bsr.w   VPWSend                    | Send it
     jmp     MainLoop                   | Return to main loop
 
-ProcessMode36MemCopy:
+ProcessMode36Data:
+    | a0 - Source Address
+    | a1 - Destination Address
+    | d0 - Byte Count
     move.b  (%a0)+, (%a1)+             | Move a byte from A0 to A1, increment pointers
-    dbf     %d0, ProcessMode36MemCopy  | If False Decrement and Branch
+    dbf     %d0, ProcessMode36Data     | If False Decrement and Branch
 
 | Process Mode36 Response OK
-    movea.l #Mode36Reply, %a0          | Mode 36 reply
-    move.b  MessageBuffer + 4, %d4     | Submode to d4
-    move.b  %d4, Mode36Reply + 4       | Copy submode byte to the response, and keep it in d4 for the execute test
+    movea.l #Mode36Reply, %a0          | Pointer to Mode36Reply buffer
+    move.b  MessageBuffer + 4, %d4     | Copy submode to d4
+    move.b  %d4, Mode36Reply + 4       | Copy submode to response, and keep it for the execute test
     move.l  #6, %d0                    | Message is 6 bytes long
 
 | Send Mode36 Response
     bsr.w   VPWSend                    | Send it
     andi.b  #0x80, %d4                 | Execute flag is bit 7 of submode
-    cmpi.b  #0x80, %d4                 | Test it
-    bne.w   MainLoop                   | If not executing return to main loop
-    jmp  (%a2)                         | Execute the payload
+    cmpi.b  #0x80, %d4                 | Test for Execute
+    bne.w   MainLoop                   | If not executing return to MainLoop
+    jmp     (%a2)                      | Execute the payload
 
 | =============== S U B R O U T I N E =======================================
 WaitForTXFIFO:
     bsr.w   ResetWatchdog
-    move.b  (J1850_Status).l, %d2      | Copy the status to d2
+    move.b  (J1850_Status).l, %d2      | Copy status to d2
     andi.b  #3, %d2                    | Mask the TMFS (Transmit FIFO Status) bits
     cmpi.b  #3, %d2                    | 3 = buffer full
-    beq.b   WaitForTXFIFO              | Wait for the TX buffer to be non-full
+    beq.s   WaitForTXFIFO              | Wait for the TX buffer to be non-full
     move.b  #4, (J1850_Command).l      | Load as transmit data to BTAD
-    rts                                | Return from Subroutine
+    rts
 
 | =============== S U B R O U T I N E =======================================
 VPWSend:
     move.b  #0x14, (J1850_Command).l   | BTAD Byte type and destination field to 101 (000 101 00)
                                        | 101 = Load as first byte of transmit data
-    subq.l   #2, %d0                   | First and Last bytes are not counted
+    subq.l  #2, %d0                    | First and Last bytes are not counted
 
 VPWSendNextByte:
     bsr.w   ResetWatchdog              | Scratch the dog
-    move.b  (%a0)+, (J1850_TX_FIFO).l  | Write a byte to to the TX FIFO
+    move.b  (%a0)+, (J1850_TX_FIFO).l  | Write byte to TX FIFO
     bsr.w   WasteTime                  | Twiddle thumbs
-    bsr.w   WaitForTXFIFO              | Wait for space in the TX FIFO
+    bsr.w   WaitForTXFIFO              | Wait for space in TX FIFO
     dbf     %d0, VPWSendNextByte       | If False Decrement and Branch
 
-    move.b  #0x0C, (J1850_Command).l   | 011 to BTAD - Load as laste byte of transmit data
-    move.b  (%a0)+, (J1850_TX_FIFO).l  | Drop the last byte in the TX FIFO
+    move.b  #0x0C, (J1850_Command).l   | 011 to BTAD - Load as last byte of transmit data
+    move.b  (%a0)+, (J1850_TX_FIFO).l  | Drop the last byte in TX FIFO
     bsr.w   WasteTime                  | Twiddle thumbs
     move.b  #0x03, (J1850_Command).l   | Flush buffer
     move.b  #0x00, (J1850_TX_FIFO).l   | Needed for flush buffer?
@@ -197,42 +211,41 @@ VPWSendWaitForFlush:
     bsr.w   ResetWatchdog              | Scratch the dog
     bsr.w   WasteTime                  | Twiddle thumbs
     move.b  (J1850_Status).l, %d0      | Get status byte
-    andi.b  #0xE0, %d0                 | Check the RFS
+    andi.b  #0xE0, %d0                 | Mask RFS 1110 0000
     cmpi.b  #0xE0, %d0                 | Empty except for completion byte status
-    bne.b   VPWSendWaitForFlush        | Wait until it is true
+    bne.s   VPWSendWaitForFlush        | Loop until true
     move.b  (J1850_RX_FIFO).l, %d0     | Read FIFO
     rts
 
 | =============== S U B R O U T I N E =======================================
 VPWReceive:
-    movea.l #MessageBuffer, %a0        | Move the input buffer address to a0
+    movea.l #MessageBuffer, %a0        | Pointer to MessageBuffer buffer
 
 VPWReceiveReadFrame:
     bsr.w   ResetWatchdog              | Scratch the dog
     move.b  (J1850_Status).l, %d0      | Get status byte
-    andi.b  #0xE0, %d0                 | Mask The RFS register
-
+    andi.b  #0xE0, %d0                 | Mask RFS register 1110 0000
     tst.b   %d0                        | 000x xxxx = no data (or invalid)
-    beq.b   VPWReceiveReadFrame        | Nothing, try again
+    beq.s   VPWReceiveReadFrame        | Nothing, try again
 
-    cmpi.b  #0x80, %d0                 | 100x xxxx = All codes *greater* than this mean completion code at the buffer head
-    bgt.b   VPWReceiveReadComplete     | Done, cleanup
+    cmpi.b  #0x80, %d0                 | 100x xxxx = All codes *greater* than this mean completion code at buffer head
+    bgt.s   VPWReceiveReadComplete     | Done, cleanup
 
 | VPW Receive Read Byte                | Anything else, read a byte
-    move.b  (J1850_RX_FIFO).l, (%a0)+  | Read from the RX FIFO to the input buffer, and move the pointer to the next byte
-    bra.b   VPWReceiveReadFrame        | Next try
+    move.b  (J1850_RX_FIFO).l, (%a0)+  | Read from RX FIFO to input buffer, and move pointer to next byte
+    bra.s   VPWReceiveReadFrame        | Next try
 
 VPWReceiveReadComplete:
-    move.b  (J1850_RX_FIFO).l, (%a0)+  | This is the completion code, eat it.
-    movea.l #MessageBuffer, %a0        | Point a0 to the head of the input buffer
+    move.b  (J1850_RX_FIFO).l, (%a0)+  | The completion code, so eat it
+    movea.l #MessageBuffer, %a0        | Pointer to MessageBuffer buffer
     move.b  (%a0), %d0                 |
     andi.b  #0xFE, %d0                 | mask 1111 1110
-    cmpi.b  #0x6C, %d0                 | Is it a priority 6C or 6D packet?
-    bne.b   VPWReceive                 | If it is not, abort and get the next packet
+    cmpi.b  #0x6C, %d0                 | Priority 6C or 6D packet?
+    bne.s   VPWReceive                 | If not, abort and get next packet
     cmpi.b  #pcmid, 1(%a0)             | Check for device 0x10
-    beq.b   VPWReceiveRTS              | If yes, then return for processing
+    beq.s   VPWReceiveRTS              | If yes, return for processing
     cmpi.b  #0xFE, 1(%a0)              | Check for broadcast device id 0xFE
-    bne.b   VPWReceive                 | Not an FE, junk it and get the next packet
+    bne.s   VPWReceive                 | Not an FE, junk it, get next packet
 
 VPWReceiveRTS:
     rts                                | Must have been an FE, return for processing

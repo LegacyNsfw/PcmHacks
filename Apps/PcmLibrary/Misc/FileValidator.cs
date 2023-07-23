@@ -415,13 +415,6 @@ namespace PcmHacking
                         return PcmType.P04;
                 }
 
-                // P08 512Kb
-                this.logger.AddDebugMessage("Trying P08 512Kb");
-                if ((image[0x7FFFC] == 0xA5) && (image[0x7FFFD] == 0x5A) && (image[0x7FFFE] == 0xA5) && (image[0x7FFFF] == 0xA5))
-                {
-                    return PcmType.P08;
-                }
-
                 this.logger.AddDebugMessage("Trying P10 512Kb");
                 if ((image[0x17FFE] == 0x55) && (image[0x17FFF] == 0x55))
                 {
@@ -429,6 +422,13 @@ namespace PcmHacking
                     {
                         return PcmType.P10;
                     }
+                }
+
+                // P08 512Kb
+                this.logger.AddDebugMessage("Trying P08 512Kb");
+                if ((image[0x7FFFC] == 0xA5) && (image[0x7FFFD] == 0x5A) && (image[0x7FFFE] == 0xA5) && (image[0x7FFFF] == 0xA5))
+                {
+                    return PcmType.P08;
                 }
             }
 
