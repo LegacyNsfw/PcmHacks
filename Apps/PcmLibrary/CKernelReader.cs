@@ -132,10 +132,16 @@ namespace PcmHacking
 
                 await this.vehicle.SetDeviceTimeout(TimeoutScenario.ReadMemoryBlock);
 
-                byte[] image = new byte[pcmInfo.ImageSize];
+                
+                int imageSize = pcmInfo.ImageSize;
                 int retryCount = 0;
                 int startAddress = 0;
-                int bytesRemaining = pcmInfo.ImageSize;
+
+                //startAddress = 0x0000; //uncomment to read a portion only when testing
+                //imageSize = 0xFFFF;
+
+                byte[] image = new byte[imageSize];
+                int bytesRemaining = imageSize;
                 int blockSize = this.vehicle.DeviceMaxReceiveSize - 10 - 2; // allow space for the header and block checksum
                 if (blockSize > this.pcmInfo.KernelMaxBlockSize)
                 {
@@ -143,7 +149,7 @@ namespace PcmHacking
                 }
 
                 DateTime startTime = DateTime.MaxValue;
-                while (startAddress < pcmInfo.ImageSize)
+                while (startAddress < imageSize)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -153,9 +159,9 @@ namespace PcmHacking
                     // The read kernel needs a short message here for reasons unknown. Without it, it will RX 2 messages then drop one.
                     await this.vehicle.ForceSendToolPresentNotification();
 
-                    if (startAddress + blockSize > pcmInfo.ImageSize)
+                    if (startAddress + blockSize > imageSize)
                     {
-                        blockSize = pcmInfo.ImageSize - startAddress;
+                        blockSize = imageSize - startAddress;
                     }
 
                     if (blockSize < 1)
