@@ -670,7 +670,13 @@ IntelFlashUnlock:
     | Unlock
     move.w  #0x7060, (SIM_CSOR0).w     | $FFFFFA4E
     | Enable +12v Vpp
-    bset    #VPP_BIT, (HARDWARE_IO).w  | Set Vpp
+#if defined P08
+    bset    #VPP_BIT, (HARDWARE_IO).w  | Does not work on P01, needed for P08
+#else
+    move.w  (HARDWARE_IO).w, %d1       | Move Vpp Latch Address value to d1
+    bset    #VPP_BIT, %d1              | Set Vpp Latch Bit
+    move.w  %d1, (HARDWARE_IO).w       | Move modified value back to Latch Address
+#endif
     bsr.w   LongWaitWithWatchdog
     rts
 
@@ -701,9 +707,14 @@ IntelFlashLock:
     | Lock
     move.w  #0x1060, (SIM_CSOR0).w     | $FFFFFA4E
     | Disable +12v Vpp
-    bclr    #VPP_BIT, (HARDWARE_IO).w  | Clear Vpp
+#if defined P08
+    bclr    #VPP_BIT, (HARDWARE_IO).w  | Does not work on P01, needed for P08
+#else
+    move.w  (HARDWARE_IO).w, %d1       | Move Vpp Latch Address value to d1
+    bclr    #VPP_BIT, %d1              | Set Vpp Latch Bit
+    move.w  %d1, (HARDWARE_IO).w       | Move modified value back to Latch Address
+#endif
     bsr.w   LongWaitWithWatchdog
-
     rts
 
 | =============== S U B R O U T I N E =======================================
