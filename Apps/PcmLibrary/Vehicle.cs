@@ -296,7 +296,14 @@ namespace PcmHacking
                 if (this.protocol.IsUnlocked(seedResponse.GetBytes()))
                 {
                     this.logger.AddUserMessage("PCM is already unlocked");
-                    return true;
+                    if (UserDefinedKey >= 0)
+                    {
+                        this.logger.AddUserMessage("Continuing unlock process with user defined key");
+                    }
+                    else
+                    {
+                        return true;
+                    }
                 }
 
                 this.logger.AddDebugMessage("Parsing seed value.");
@@ -317,7 +324,9 @@ namespace PcmHacking
                 return false;
             }
 
-            if (seedValue == 0x0000)
+            // if we have a user defined key the user might be trying to recover from a corrupted param block
+            // so we still let it though
+            if ((seedValue == 0x0000) && (UserDefinedKey == -1)) 
             {
                 this.logger.AddUserMessage("PCM Unlock not required");
                 return true;
