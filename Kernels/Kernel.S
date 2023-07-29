@@ -735,6 +735,7 @@ IntelFlashLock:
 |   d2 - Loop Index
 |
 IntelEraseSector:
+    clr.l   %d1                           | clear scratch space
     bsr.w   IntelFlashUnlock
 
     move.w  #CLEAR_STATUS_REGISTER, (%a0) | 0x5050 Clear Status register
