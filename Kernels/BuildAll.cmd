@@ -54,7 +54,7 @@ REM   "-pP04 -aFF9090 -lFF9890 -x",
 
 for %%A in (
   "-pP01 -aFF8000 -x",
-  "-pP04 -aFF9090 -lFF9890 -x",
+  "-pP04 -aFF8000 -lFF9890 -x",
   "-pP08 -aFFAC00 -x",
   "-pP10 -aFFB800 -x",
   "-pP12 -aFF2000 -x",

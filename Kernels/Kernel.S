@@ -112,6 +112,14 @@ Wait01:
     bsr.w   WasteTime                  | Twiddle thumbs
 #endif
 
+    movea.l #Ping, %a0                 | Reply Success to mode 3680, only P12 needs this.
+    move.l  #6, %d0                    | It's 6 bytes long
+    bsr.w   VPWSend                    | Send message
+
+    movea.l #Ping, %a0                 | Reply Success to mode 3680, only P12 needs this.
+    move.l  #6, %d0                    | It's 6 bytes long
+    bsr.w   VPWSend                    | Send message
+
 MainLoop:
     movea.l #MessageBuffer, %a0        | Pointer to MessageBuffer buffer
     clr.w   3(%a0)                     | Clear last command, prevent repeating it
@@ -605,7 +613,7 @@ AMDWriteSector:
     lea     AMD_CMD_ADDRESS_B, %a3     | (0x0554) Pointer to the command address
 
 AMDWriteSectorLoop:
-    move.w  #2346, %d2                 | FlashNotReady Loop Timeout index
+    move.l  #2346, %d2                 | FlashNotReady Loop Timeout index
 
     | We cannot write by bytes, we must write by word, all data has been forced off word boundries, see NOTE in data section at EOF
     | So we make words out of bytes ...
@@ -625,7 +633,7 @@ AMDWriteSectorNotReady:
     move.w  (%a1), %d1                 | Read what was written
     cmp.w   %d3, %d1                   | Compare to what was written
     beq.s   AMDWriteSectorSuccess      | Jump for next byte if match
-    dbeq    %d2, AMDWriteSectorNotReady | Retry reading back written value
+    dbeq    %d2, AMDWriteSectorNotReady| Retry reading back written value
 
     move.w  (%a1), %d1                 | One last chance
     cmp.w   %d1, %d3                   | Compare to whats written
@@ -680,13 +688,17 @@ IntelFlashUnlock:
     bsr.w   LongWaitWithWatchdog
     rts
 
+ShortWaitWithWatchdog:
+    movem.l %d5, -(%sp)                | Save d5
+    move.l  #0x5, %d1                  | 5 loops
+    bra.s   LongWaitLoop               | Re-use the long wait loop
 LongWaitWithWatchdog:
     movem.l %d5, -(%sp)                | Save d5
-    move.w  #0x8000, %d1               | 32768 loops
+    move.l  #0x8000, %d1               | 32768 loops
 LongWaitLoop:
     bsr.w   ResetWatchdog              | Scratch the dog
     bsr.w   WasteTime                  | Twiddle thumbs
-    dbf     %d1, LongWaitLoop | If False Decrement and Branch
+    dbf     %d1, LongWaitLoop          | If False Decrement and Branch
     movem.l (%sp)+, %d5                | Restore d5
     rts
 
@@ -789,7 +801,7 @@ IntelWriteSector:
     bsr.w   IntelFlashUnlock
 
 IntelWriteSectorLoop:
-    move.w  #0x92A, %d2                | FlashNotReady Loop Timeout index (2346)
+    move.l  #0x92A, %d2                | FlashNotReady Loop Timeout index (2346)
 
     | We cannot write by bytes, we must write by word, all data has been forced off word boundries, see NOTE in data section at EOF
     | So we make words out of bytes ...
@@ -1097,6 +1109,10 @@ VPWSendBlockWaitForBuffer2:
     move.b  #0xC, (J1850_Command).l    | BTAD ...0 11.. "Load as last byte of transmit data"
     move.b  %d1, (J1850_TX_FIFO).l     | Move the Second checksum byte  to the TX FIFO
     rts
+    
+HaltNoReboot:
+    bsr.w   ResetWatchdog
+    bra.s   HaltNoReboot
 
 | ---------------------------------------------------------------------------
 .data
@@ -1143,6 +1159,9 @@ Mode60Reply:    .byte  0x6C, toolid, pcmid, 0x60, 0xAA
 
 | Erase Sector Reply, 7 bytes
 EraseSectorReply:   .byte  0x6C, toolid, pcmid, 0x7D, 0x05, 0x00, 0x00
+
+|used for debugging
+Ping:   .byte  0x6C, 0xFF, pcmid, 0x3F, 0x01, 0x02
 
 .byte 0xAA
 | Global buffer, it's at the end and it's not transported, thus length is irrelevant!

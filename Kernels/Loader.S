@@ -22,6 +22,10 @@
 start:
     ori     #0x700, %sr                | Disable Interrupts
 
+#if defined P04
+    movea.l #0xFFA000, %sp             | P04: Relocate the stack
+#endif
+
 #if defined P12
     movea.l #Mode36Reply, %a0          | Reply Success to mode 3680, only P12 needs this.
     move.l  #6, %d0                    | It's 6 bytes long
@@ -271,7 +275,7 @@ KernelIDReply:  .byte  0x6C, toolid, pcmid, 0x7D, 0x00, 0x69, 0x00, 0x01, 0x00, 
 Mode34Reply:    .byte  0x6C, toolid, pcmid, 0x74, 0x00, 0x44
 
 | Mode36 Reply, 6 bytes - 6C F0 10 76 00 00
-Mode36Reply:    .byte  0x6C, toolid, pcmid, 0x76, 0x00, 0x00
+Mode36Reply:    .byte  0x6C, toolid, pcmid, 0x76, 0x00, 0x01
 
 | Halt Kernel Reply, 4 bytes
 Mode60Reply:   .byte  0x6C, toolid, pcmid, 0x60
