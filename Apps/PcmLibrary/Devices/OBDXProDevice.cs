@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PcmHacking
@@ -210,13 +211,22 @@ namespace PcmHacking
             // Wait for bytes to arrive...
             while (sw.ElapsedMilliseconds < timeout)
             {
-                if (await this.Port.GetReceiveQueueSize() > TempCount)
+                var rqSize = await this.Port.GetReceiveQueueSize();
+
+                if (rqSize > TempCount)
                 {
-                    TempCount = await this.Port.GetReceiveQueueSize();
+                    TempCount = rqSize;
                     sw.Restart();
                 }
-                if (await this.Port.GetReceiveQueueSize() >= NumBytes) { return true; }
+
+                if (rqSize >= NumBytes) 
+                {
+                    return true;
+                }
+
+                Thread.Sleep(1);
             }
+
             return false;
         }
 
