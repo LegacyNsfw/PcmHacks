@@ -8,7 +8,7 @@ namespace PcmHacking
 {
     public partial class MainForm
     {
-        private Dictionary<string, DataGridViewRow> parameterIdsToRows;
+        //private Dictionary<string, DataGridViewRow> parameterIdsToRows;
         private ParameterDatabase database;
         private bool suspendSelectionEvents = true;
 
@@ -28,8 +28,6 @@ namespace PcmHacking
                 throw new InvalidDataException("Unable to load parameters from XML: " + errorMessage);
             }
 
-            this.parameterIdsToRows = new Dictionary<string, DataGridViewRow>();
-
             foreach (Parameter parameter in this.database.Parameters)
             {
                 if (!parameter.IsSupported(osid))
@@ -38,20 +36,24 @@ namespace PcmHacking
                 }
 
                 DataGridViewRow row = new DataGridViewRow();
+
                 row.CreateCells(this.parameterGrid);
+
                 row.Cells[0].Value = false; // enabled
                 row.Cells[1].Value = parameter;
 
                 DataGridViewComboBoxCell cell = (DataGridViewComboBoxCell)row.Cells[2];
+
                 cell.DisplayMember = "Units";
                 cell.ValueMember = "Units";
+
                 foreach (Conversion conversion in parameter.Conversions)
                 {
                     cell.Items.Add(conversion);
                 }
+
                 row.Cells[2].Value = parameter.Conversions.First();
 
-                this.parameterIdsToRows[parameter.Id] = row;
                 this.parameterGrid.Rows.Add(row);
             }
 
@@ -76,8 +78,9 @@ namespace PcmHacking
 
                 foreach (LogColumn column in this.currentProfile.Columns)
                 {
-                    DataGridViewRow row;
-                    if (this.parameterIdsToRows.TryGetValue(column.Parameter.Id, out row))
+                    DataGridViewRow row = this.parameterGrid.Rows.Cast<DataGridViewRow>().FirstOrDefault(r => r.Cells[1].Value == column.Parameter);
+
+                    if (row != null)
                     {
                         row.Cells[0].Value = true;
 

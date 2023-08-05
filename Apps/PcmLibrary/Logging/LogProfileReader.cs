@@ -55,8 +55,9 @@ namespace PcmHacking
                 foreach (XElement parameterElement in container.Elements("PidParameter"))
                 {
                     string id = parameterElement.Attribute("id").Value;
+                    string name = parameterElement.Attribute("name")?.Value;
                     string units = parameterElement.Attribute("units").Value;
-                    this.AddPidParameter(id, units);
+                    this.AddPidParameter(id, name, units);
                 }
             }
         }
@@ -69,8 +70,9 @@ namespace PcmHacking
                 foreach (XElement parameterElement in container.Elements("RamParameter"))
                 {
                     string id = parameterElement.Attribute("id").Value;
+                    string name = parameterElement.Attribute("name")?.Value;
                     string units = parameterElement.Attribute("units").Value;
-                    this.AddRamParameter(id, units);
+                    this.AddRamParameter(id, name, units);
                 }
             }
         }
@@ -83,16 +85,18 @@ namespace PcmHacking
                 foreach (XElement parameterElement in container.Elements("MathParameter"))
                 {
                     string id = parameterElement.Attribute("id").Value;
+                    string name = parameterElement.Attribute("name")?.Value;
                     string units = parameterElement.Attribute("units").Value;
-                    this.AddMathParameter(id, units);
+                    this.AddMathParameter(id, name, units);
                 }
             }
         }
 
-        private void AddPidParameter(string id, string units)
+        private void AddPidParameter(string id, string name, string units)
         {
             PidParameter parameter;
-            if (!this.database.PidParameters.TryGetParameter(id, out parameter))
+
+            if (!this.database.PidParameters.TryGetParameter(id, name, out parameter))
             {
                 return;
             }
@@ -112,10 +116,10 @@ namespace PcmHacking
             this.profile.AddColumn(column);
         }
 
-        private void AddRamParameter(string id, string units)
+        private void AddRamParameter(string id, string name, string units)
         {
             RamParameter parameter;
-            if (!this.database.RamParameters.TryGetParameter(id, out parameter))
+            if (!this.database.RamParameters.TryGetParameter(id, name, out parameter))
             {
                 return;
             }
@@ -135,10 +139,10 @@ namespace PcmHacking
             this.profile.AddColumn(column);
         }
 
-        private void AddMathParameter(string id, string units)
+        private void AddMathParameter(string id, string name, string units)
         {
             MathParameter parameter;
-            if (!this.database.MathParameters.TryGetParameter(id, out parameter))
+            if (!this.database.MathParameters.TryGetParameter(id, name, out parameter))
             {
                 return;
             }
