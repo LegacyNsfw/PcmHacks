@@ -1,4 +1,4 @@
-| GM '0411 Kernel for PCMHammer
+| GM VPW Kernel for PCMHammer
 | 2018-2023 Antus / PCMHacking.net
 | 2023-03-25 @21:00 Gampy <@pcmhacking.net>
 | ===========================================================================
@@ -76,15 +76,15 @@
 .equ POLYNOMIAL,         0x4C11DB7
 
 | Modes supported shared in Common-Assembly.S
-|.equ KernelID_3D00       0x3D00       | Moved to Common-Assembly.s
-.equ FlashID_3D01,       0x3D01        | Return Flash chip ID
-.equ CRC_3D02,           0x3D02        | Return CRC for range
-.equ OsID_3D03,          0x3D03        | Return OsID
-.equ EraseSector_3D05,   0x3D05        | ProcessEraseSector
-|.equ Halt_20             0x20         | Moved to Common-Assembly.s
-|.equ Mode_34             0x34         | Moved to Common-Assembly.s
-.equ Mode_35,            0x35          | Send data from PCM to Tool
-|.equ Mode_36             0x36         | Moved to Common-Assembly.s
+|.equ KernelID_3D00      0x00        | Moved to Common-Assembly.s
+.equ FlashID_3D01,       0x01        | Return Flash chip ID
+.equ CRC_3D02,           0x02        | Return CRC for range
+.equ OsID_3D03,          0x03        | Return OsID
+.equ EraseSector_3D05,   0x05        | ProcessEraseSector
+|.equ Halt_20            0x20        | Moved to Common-Assembly.s
+|.equ Mode_34            0x34        | Moved to Common-Assembly.s
+.equ Mode_35,            0x35        | Send data from PCM to Tool
+|.equ Mode_36            0x36        | Moved to Common-Assembly.s
 
 start:
     ori     #0x700, %sr                | Disable Interrupts
@@ -96,14 +96,14 @@ start:
     move.b  #0x03, (J1850_Command).l   | Flush frame except for completion code
     move.b  #0x00, (J1850_TX_FIFO).l   | Initiate transfer
 
-Wait01:
+DLCWait01:
     bsr.w   ResetWatchdog              | Scratch the dog
     bsr.w   WasteTime                  | Twiddle thumbs
     move.b  (J1850_Status).l, %d0      | Get the VPW status
     andi.b  #0xE0, %d0                 | Mask Receive FIFO Status Field (RFS) register 1110 0000
     cmpi.b  #0xE0, %d0                 | Check for "completion code only, at head of buffer" message 1110 0000
-    bne.b   Wait01                     | Not ready? wait and retry
-    move.b  (J1850_RX_FIFO).l, %d0     | Strip off the completion code
+    bne.b   DLCWait01                  | Not ready? wait and retry
+    move.b  (J1850_RX_FIFO).l, %d0     | Flush the completion code
 
 #if defined P12
     movea.l #Mode36Reply, %a0          | Reply Success to mode 3680, only P12 needs this.
@@ -112,30 +112,25 @@ Wait01:
     bsr.w   WasteTime                  | Twiddle thumbs
 #endif
 
-    movea.l #Ping, %a0                 | Reply Success to mode 3680, only P12 needs this.
-    move.l  #6, %d0                    | It's 6 bytes long
-    bsr.w   VPWSend                    | Send message
-
-    movea.l #Ping, %a0                 | Reply Success to mode 3680, only P12 needs this.
-    move.l  #6, %d0                    | It's 6 bytes long
-    bsr.w   VPWSend                    | Send message
-
 MainLoop:
     movea.l #MessageBuffer, %a0        | Pointer to MessageBuffer buffer
-    clr.w   3(%a0)                     | Clear last command, prevent repeating it
+    clr.b   3(%a0)                     | Clear last command, prevent repeating it
     bsr.w   ResetWatchdog              | Scratch the dog
     bsr.w   VPWReceive                 | Wait for and read next packet
     bsr.w   WasteTime                  | Twiddle thumbs
-    cmpi.w  #KernelID_3D00, 3(%a0)     | Is it mode 0x3D 00 Get Kernel ID (non-standard extension)
+    cmpi.b  #KernelMode, 3(%a0)        | Is it mode 0x3D? (Kernel extension)
+    bne.b   MainStd                    | Jump to standard functions
+    cmpi.b  #KernelID_3D00, 4(%a0)     | Is it mode 0x3D 00 Get Kernel ID (non-standard extension)
     beq.w   ProcessKernelID            | Process it
-    cmpi.w  #FlashID_3D01, 3(%a0)      | Is it mode 0x3D 01 Get Flash Chip ID (non-standard extension)
+    cmpi.b  #FlashID_3D01, 4(%a0)      | Is it mode 0x3D 01 Get Flash Chip ID (non-standard extension)
     beq.w   ProcessFlashID             | Process it
-    cmpi.w  #CRC_3D02, 3(%a0)          | Is it mode 0x3D 02 Get Flash Sector CRC (non-standard extension)
+    cmpi.b  #CRC_3D02, 4(%a0)          | Is it mode 0x3D 02 Get Flash Sector CRC (non-standard extension)
     beq.w   ProcessCRC                 | Process it
-    cmpi.w  #OsID_3D03, 3(%a0)         | Is it mode 0x3D 03 Get Os ID (non-standard extension)
+    cmpi.b  #OsID_3D03, 4(%a0)         | Is it mode 0x3D 03 Get Os ID (non-standard extension)
     beq.w   ProcessOsID                | Process it
-    cmpi.w  #EraseSector_3D05, 3(%a0)  | Is it mode 0x3D 05 Erase Flash Sector (non-standard extension)
+    cmpi.b  #EraseSector_3D05, 4(%a0)  | Is it mode 0x3D 05 Erase Flash Sector (non-standard extension)
     beq.w   ProcessEraseSector         | Process it
+MainStd:
     cmpi.b  #Mode_34, 3(%a0)           | Is it mode 0x34 (Tool asking PCM, ok to send X bytes to address)
     beq.w   ProcessMode34              | Process it
     cmpi.b  #Mode_35, 3(%a0)           | Is it mode 0x35 (Tool asking PCM to send data from Flash)
@@ -329,8 +324,12 @@ ProcessFlashIDFound:
     move.w  #0x1060, (SIM_CSOR0).w     | 0xFA4E
 #endif
     movea.l #FlashIDReply, %a0         | Pointer to FlashIDReply buffer
-    move.w  %d1, 5(%a0)                | Move MFG ID to FlashIDReply buffer
-    move.w  %d0, 7(%a0)                | Move Flash ID to FlashIDReply buffer
+    move.b  %d1, 6(%a0)                | Move MFG ID LO to FlashIDReply buffer
+    lsl.w   #8, %d1                    | Shift left
+    move.b  %d1, 5(%a0)                | Move MFG ID HI to FlashIDReply buffer
+    move.b  %d0, 8(%a0)                | Move Flash ID LO to FlashIDReply buffer
+    lsr.w   #8, %d0                    | Shift left
+    move.b  %d0, 7(%a0)                | Move Flash ID HI to FlashIDReply buffer
     move.l  #9, %d0                    | It's 9 bytes long
     bsr.w   VPWSend                    | Send it
     jmp     MainLoop
@@ -613,7 +612,7 @@ AMDWriteSector:
     lea     AMD_CMD_ADDRESS_B, %a3     | (0x0554) Pointer to the command address
 
 AMDWriteSectorLoop:
-    move.l  #2346, %d2                 | FlashNotReady Loop Timeout index
+    move.w  #2346, %d2                 | FlashNotReady Loop Timeout index
 
     | We cannot write by bytes, we must write by word, all data has been forced off word boundries, see NOTE in data section at EOF
     | So we make words out of bytes ...
@@ -688,13 +687,9 @@ IntelFlashUnlock:
     bsr.w   LongWaitWithWatchdog
     rts
 
-ShortWaitWithWatchdog:
-    movem.l %d5, -(%sp)                | Save d5
-    move.l  #0x5, %d1                  | 5 loops
-    bra.s   LongWaitLoop               | Re-use the long wait loop
 LongWaitWithWatchdog:
     movem.l %d5, -(%sp)                | Save d5
-    move.l  #0x8000, %d1               | 32768 loops
+    move.w  #0x8000, %d1               | 32768 loops
 LongWaitLoop:
     bsr.w   ResetWatchdog              | Scratch the dog
     bsr.w   WasteTime                  | Twiddle thumbs
@@ -747,7 +742,6 @@ IntelFlashLock:
 |   d2 - Loop Index
 |
 IntelEraseSector:
-    clr.l   %d1                           | clear scratch space
     bsr.w   IntelFlashUnlock
 
     move.w  #CLEAR_STATUS_REGISTER, (%a0) | 0x5050 Clear Status register
@@ -801,7 +795,7 @@ IntelWriteSector:
     bsr.w   IntelFlashUnlock
 
 IntelWriteSectorLoop:
-    move.l  #0x92A, %d2                | FlashNotReady Loop Timeout index (2346)
+    move.w  #0x92A, %d2                | FlashNotReady Loop Timeout index (2346)
 
     | We cannot write by bytes, we must write by word, all data has been forced off word boundries, see NOTE in data section at EOF
     | So we make words out of bytes ...
@@ -1109,23 +1103,9 @@ VPWSendBlockWaitForBuffer2:
     move.b  #0xC, (J1850_Command).l    | BTAD ...0 11.. "Load as last byte of transmit data"
     move.b  %d1, (J1850_TX_FIFO).l     | Move the Second checksum byte  to the TX FIFO
     rts
-    
-HaltNoReboot:
-    bsr.w   ResetWatchdog
-    bra.s   HaltNoReboot
 
 | ---------------------------------------------------------------------------
 .data
-
-| This 0x0D byte is required (any single byte works), ALL data must be knocked off word boundries, this causes a hella nightmare
-|  when the desire is to work with words, we should be keeping everything word based (i.e. according to hoyle).
-| It has to be before the last data declaration.
-|
-| If MessageBuffer is on a valid word boundry, VPWReceive fails, it only works when it's misaligned to word boundries.
-| I think it needs to get two bytes, make a word, then add it to MessageBuffer by Word, or shift the bytes left by one!
-| Every attempt I've made to accomplish this has failed ... Purely due to my lack of knowledge of the DLC!
-| Alignment is simple ... Remove this 0x0D and it is aligned, however VPWReceive will fail.
-
 .ascii "(c)2023 pcmhacking.net" | An Antus / Gampy collaboration
 | All AA bytes are padding for alignment
 
@@ -1160,10 +1140,6 @@ Mode60Reply:    .byte  0x6C, toolid, pcmid, 0x60, 0xAA
 | Erase Sector Reply, 7 bytes
 EraseSectorReply:   .byte  0x6C, toolid, pcmid, 0x7D, 0x05, 0x00, 0x00
 
-|used for debugging
-Ping:   .byte  0x6C, 0xFF, pcmid, 0x3F, 0x01, 0x02
-
-.byte 0xAA
 | Global buffer, it's at the end and it's not transported, thus length is irrelevant!
   .globl   MessageBuffer
   .section .kerneldata, "aw", @progbits | Kernel data section, how it's excluded from transportation.

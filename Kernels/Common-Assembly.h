@@ -43,7 +43,8 @@
 .equ pcmid,              0x10
 
 | Modes supported
-.equ KernelID_3D00,      0x3D00        | Return the Kernel version (Id).
+.equ KernelMode,         0x3D          | Mode for Kernel functions
+.equ KernelID_3D00,      0x00          | Return the Kernel version (Id).
 .equ Halt_20,            0x20          | Reset PCM (Halt Kernel)
 .equ Mode_34,            0x34          | Request Permission to upload X bytes to Address
 .equ Mode_36,            0x36          | Tool sending data for writing to RAM or Flash.

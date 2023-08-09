@@ -24,6 +24,8 @@ start:
 
 #if defined P04
     movea.l #0xFFA000, %sp             | P04: Relocate the stack
+#elif defined P08
+    movea.w #0xB800, %sp               | P08: Relocate the stack
 #endif
 
 #if defined P12
@@ -35,12 +37,15 @@ start:
 
 MainLoop:
     movea.l #MessageBuffer, %a0        | Pointer to MessageBuffer buffer
-    clr.w   3(%a0)                     | Clear last command, prevent repeating it
+    clr.b   3(%a0)                     | Clear last command, prevent repeating it
     bsr.w   ResetWatchdog              | Scratch the dog
     bsr.w   VPWReceive                 | Wait for and read next packet
     bsr.w   WasteTime                  | Twiddle thumbs
-    cmpi.w  #KernelID_3D00, 3(%a0)     | Is it mode 0x3D 00 Get Kernel ID (non-standard extension)
+    cmpi.b  #KernelMode, 3(%a0)        | Is it mode 0x3D? (Kernel extension)
+    bne.b   MainStd                    | Jump to standard functions
+    cmpi.b  #KernelID_3D00, 4(%a0)     | Is it mode 0x3D 00 Get Kernel ID (non-standard extension)
     beq.w   ProcessKernelID            | Process it
+MainStd:
     cmpi.b  #Mode_34, 3(%a0)           | Is it mode 0x34 (Tool asking PCM, ok to send X bytes to address)
     beq.w   ProcessMode34              | Process it
     cmpi.b  #Mode_36, 3(%a0)           | Is it mode 0x36 (Tool sending data to write, either to RAM or Flash)
@@ -275,7 +280,7 @@ KernelIDReply:  .byte  0x6C, toolid, pcmid, 0x7D, 0x00, 0x69, 0x00, 0x01, 0x00, 
 Mode34Reply:    .byte  0x6C, toolid, pcmid, 0x74, 0x00, 0x44
 
 | Mode36 Reply, 6 bytes - 6C F0 10 76 00 00
-Mode36Reply:    .byte  0x6C, toolid, pcmid, 0x76, 0x00, 0x01
+Mode36Reply:    .byte  0x6C, toolid, pcmid, 0x76, 0x00, 0x00
 
 | Halt Kernel Reply, 4 bytes
 Mode60Reply:   .byte  0x6C, toolid, pcmid, 0x60
