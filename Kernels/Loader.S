@@ -14,7 +14,8 @@
 #include "Common-Assembly.h"
 
 | Modes supported shared in Common-Assembly.S
-|.equ KernelID_3D00       0x3D00        | Moved to Common-Assembly.s
+|.equ KernelMode,         0x3D          | Mode for Kernel functions
+|.equ KernelID_3D00       0x00          | Moved to Common-Assembly.s
 |.equ Halt_20             0x20          | Moved to Common-Assembly.s
 |.equ Mode_34             0x34          | Moved to Common-Assembly.s
 |.equ Mode_36             0x36          | Moved to Common-Assembly.s
@@ -23,12 +24,10 @@ start:
     ori     #0x700, %sr                | Disable Interrupts
 
 #if defined P04
-    movea.l #0xFFA000, %sp             | P04: Relocate the stack
+    movea.w #0xA000, %sp               | P04: Relocate the stack
 #elif defined P08
     movea.w #0xB800, %sp               | P08: Relocate the stack
-#endif
-
-#if defined P12
+#elif defined P12
     movea.l #Mode36Reply, %a0          | Reply Success to mode 3680, only P12 needs this.
     move.l  #6, %d0                    | It's 6 bytes long
     bsr.w   VPWSend                    | Send message
@@ -42,7 +41,7 @@ MainLoop:
     bsr.w   VPWReceive                 | Wait for and read next packet
     bsr.w   WasteTime                  | Twiddle thumbs
     cmpi.b  #KernelMode, 3(%a0)        | Is it mode 0x3D? (Kernel extension)
-    bne.b   MainStd                    | Jump to standard functions
+    bne.b   MainStd               
     cmpi.b  #KernelID_3D00, 4(%a0)     | Is it mode 0x3D 00 Get Kernel ID (non-standard extension)
     beq.w   ProcessKernelID            | Process it
 MainStd:

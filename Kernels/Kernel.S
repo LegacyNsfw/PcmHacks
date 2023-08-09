@@ -25,7 +25,7 @@
 #if defined P12
   .equ SIM_BASE,             0xFA30
   .equ SIM_20,               (SIM_BASE + 0x20) | Lock functions
-  #else
+#else
   .equ SIM_BASE,             0xFA00
 #endif
 .equ SIM_CSBARBT,            (SIM_BASE + 0x48) | (SIM_BASE + 0x48) (FA48)
@@ -38,7 +38,7 @@
   .equ REG_FFF4C8,           0xF4C8
   .equ VPP_BIT,              2
   .equ HARDWARE_IO,          0xFA11
-  #else
+#else
   .equ VPP_BIT,              0
   .equ HARDWARE_IO,          0xE2FA
 #endif
@@ -76,15 +76,15 @@
 .equ POLYNOMIAL,         0x4C11DB7
 
 | Modes supported shared in Common-Assembly.S
-|.equ KernelID_3D00      0x00        | Moved to Common-Assembly.s
+|.equ KernelID_3D00       0x00       | Moved to Common-Assembly.s
 .equ FlashID_3D01,       0x01        | Return Flash chip ID
 .equ CRC_3D02,           0x02        | Return CRC for range
 .equ OsID_3D03,          0x03        | Return OsID
 .equ EraseSector_3D05,   0x05        | ProcessEraseSector
-|.equ Halt_20            0x20        | Moved to Common-Assembly.s
-|.equ Mode_34            0x34        | Moved to Common-Assembly.s
-.equ Mode_35,            0x35        | Send data from PCM to Tool
-|.equ Mode_36            0x36        | Moved to Common-Assembly.s
+|.equ Halt_20             0x20         | Moved to Common-Assembly.s
+|.equ Mode_34             0x34         | Moved to Common-Assembly.s
+.equ Mode_35,            0x35          | Send data from PCM to Tool
+|.equ Mode_36             0x36         | Moved to Common-Assembly.s
 
 start:
     ori     #0x700, %sr                | Disable Interrupts
@@ -362,23 +362,17 @@ ProcessEraseSector:
     clr.l   %d0                        | Start Clean
     movea.l #FlashIDReply, %a1         | Pointer to FlashIDReply buffer
 
-    move.w  7(%a1), %d1
+    move.b  5(%a1), %d1
+    lsl.l   #8, %d1
+    move.b  6(%a1), %d1
 
     | Intel
-    cmp.w #FLASH_ID_INTEL_28F400B, %d1 | 0x4471 512k
-    beq.s ProcessEraseSectorIntel      | Intel Flash Erase
-    cmp.w #FLASH_ID_INTEL_28F800B, %d1 | 0x889D 1m
-    beq.s ProcessEraseSectorIntel      | Intel Flash Erase
+    cmp.w   #INTEL_ID, %d1             | Intel manufacturer ID
+    beq.s   ProcessEraseSectorIntel    | Intel Flash Erase
 
     | AMD
-    cmp.w   #FLASH_ID_AMD_AM29F400BB, %d1 | 0x22AB 512k
-    beq.s   ProcessEraseSectorAMD         | AMD Flash Erase
-    cmp.w   #FLASH_ID_AMD_AM29F800BB, %d1 | 0x2258 1m
-    beq.s   ProcessEraseSectorAMD         | AMD Flash Erase
-    cmp.w   #FLASH_ID_AMD_AM29BL802C, %d1 | 0x2281 1m
-    beq.s   ProcessEraseSectorAMD         | AMD Flash Erase
-    cmp.w   #FLASH_ID_AMD_AM29BL162C, %d1 | 0x2203 2m
-    beq.s   ProcessEraseSectorAMD         | AMD Flash Erase
+    cmp.w   #AMD_ID, %d1               | AMD manufacturer ID
+    beq.s   ProcessEraseSectorAMD      | AMD Flash Erase
 
     move.b  #1, %d0                    | Set error
     bra.s   ProcessEraseSectorFinal    | Fail
@@ -422,20 +416,12 @@ ProcessWriteFlash:
     move.w  7(%a2), %d1                | Move Flash Chip ID to d1
 
     | Intel
-    cmp.w   #FLASH_ID_INTEL_28F400B, %d1  | 0x4471 512k
-    beq.s   ProcessWriteFlashIntel        | Intel Flash Erase
-    cmp.w   #FLASH_ID_INTEL_28F800B, %d1  | 0x889D 1m
-    beq.s   ProcessWriteFlashIntel        | Intel Flash Erase
+    cmp.w   #INTEL_ID, %d1             | Intel manufacturer ID
+    beq.s   ProcessWriteFlashIntel     | Intel glash write
 
     | AMD
-    cmp.w   #FLASH_ID_AMD_AM29F400BB, %d1 | 0x22AB 512k
-    beq.s   ProcessWriteFlashAMD          | AMD Flash Erase
-    cmp.w   #FLASH_ID_AMD_AM29F800BB, %d1 | 0x2258 1m
-    beq.s   ProcessWriteFlashAMD          | AMD Flash Erase
-    cmp.w   #FLASH_ID_AMD_AM29BL802C, %d1 | 0x2281 1m
-    beq.s   ProcessWriteFlashAMD          | AMD Flash Erase
-    cmp.w   #FLASH_ID_AMD_AM29BL162C, %d1 | 0x2203 2m
-    beq.s   ProcessWriteFlashAMD          | AMD Flash Erase
+    cmp.w   #AMD_ID, %d1               | AMD manufacturer ID
+    beq.s   ProcessWriteFlashAMD       | AMD flash write
 
     move.b  #1, %d0                    | Set error
     bra.s   ProcessWriteFlashFinal
@@ -632,7 +618,7 @@ AMDWriteSectorNotReady:
     move.w  (%a1), %d1                 | Read what was written
     cmp.w   %d3, %d1                   | Compare to what was written
     beq.s   AMDWriteSectorSuccess      | Jump for next byte if match
-    dbeq    %d2, AMDWriteSectorNotReady| Retry reading back written value
+    dbeq    %d2, AMDWriteSectorNotReady | Retry reading back written value
 
     move.w  (%a1), %d1                 | One last chance
     cmp.w   %d1, %d3                   | Compare to whats written
@@ -693,7 +679,7 @@ LongWaitWithWatchdog:
 LongWaitLoop:
     bsr.w   ResetWatchdog              | Scratch the dog
     bsr.w   WasteTime                  | Twiddle thumbs
-    dbf     %d1, LongWaitLoop          | If False Decrement and Branch
+    dbf     %d1, LongWaitLoop | If False Decrement and Branch
     movem.l (%sp)+, %d5                | Restore d5
     rts
 
@@ -795,7 +781,7 @@ IntelWriteSector:
     bsr.w   IntelFlashUnlock
 
 IntelWriteSectorLoop:
-    move.w  #0x92A, %d2                | FlashNotReady Loop Timeout index (2346)
+    move.w  #0x92A, %d2                | FlashNotReady Loop Timeout index (2346) (Not used?)
 
     | We cannot write by bytes, we must write by word, all data has been forced off word boundries, see NOTE in data section at EOF
     | So we make words out of bytes ...
@@ -1107,13 +1093,11 @@ VPWSendBlockWaitForBuffer2:
 | ---------------------------------------------------------------------------
 .data
 .ascii "(c)2023 pcmhacking.net" | An Antus / Gampy collaboration
-| All AA bytes are padding for alignment
-
 | Mode 35 Reply Header 10 bytes + 1 alignment
-Mode35Reply:    .byte  0x6D, toolid, pcmid, 0x36, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAA
+Mode35Reply:    .byte  0x6D, toolid, pcmid, 0x36, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00
 
 | Flash ID 9 bytes
-FlashIDReply:   .byte  0x6C, toolid, pcmid, 0x7D, 0x01, 0x00, 0x00, 0x00, 0x00, 0xAA
+FlashIDReply:   .byte  0x6C, toolid, pcmid, 0x7D, 0x01, 0x00, 0x00, 0x00, 0x00
 
 | Os ID Reply, 9 bytes
 OsIDReply:      .byte  0x6C, toolid, pcmid, 0x7D, 0x03, 0x00, 0x00, 0x00, 0x00
@@ -1135,7 +1119,7 @@ Mode34Reply:    .byte  0x6C, toolid, pcmid, 0x74, 0x00, 0x44
 Mode36Reply:    .byte  0x6C, toolid, pcmid, 0x76, 0x00, 0x00
 
 | Halt Kernel Reply, 4 bytes + 1 alignment
-Mode60Reply:    .byte  0x6C, toolid, pcmid, 0x60, 0xAA
+Mode60Reply:    .byte  0x6C, toolid, pcmid, 0x60
 
 | Erase Sector Reply, 7 bytes
 EraseSectorReply:   .byte  0x6C, toolid, pcmid, 0x7D, 0x05, 0x00, 0x00
