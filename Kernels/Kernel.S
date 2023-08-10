@@ -256,7 +256,13 @@ ProcessCRCMainLoopCheck:
     move.b  #toolid, 1(%a0)            | To: Tool
     move.b  #pcmid, 2(%a0)             | From: PCM
     move.b  #0x7D, 3(%a0)              | 3D + 40 = Mode 3D, Success
-    move.l  %d0, 11(%a0)               | Move long CRC value to reply buffer
+    move.b  %d0, 14(%a0)               | Move low byte of long CRC to reply buffer
+    lsr.l   #8, %d0                    | Prepare next byte
+    move.b  %d0, 13(%a0)               | Move next byte
+    lsr.l   #8, %d0                    | Prepare next byte
+    move.b  %d0, 12(%a0)               | Move next byte
+    lsr.l   #8, %d0                    | Prepare next byte
+    move.b  %d0, 11(%a0)               | Move last byte
     move.l  #15, %d0                   | It's 15 bytes long (6C F0 10 7D 02 01 00 00 01 00 00 67 86 6E C2)
     bsr.w   VPWSend                    | Send it
     jmp     MainLoop                   | Return to MainLoop
@@ -1112,7 +1118,7 @@ OsIDReply:      .byte  0x6C, toolid, pcmid, 0x7D, 0x03, 0x00, 0x00, 0x00, 0x00
 | P10     = 0A
 | P12     = 0C
 | E54     = 36
-KernelIDReply:  .byte  0x6C, toolid, pcmid, 0x7D, 0x00, 0x82, 0x40, 0x02, 0x00, 0xAA
+KernelIDReply:  .byte  0x6C, toolid, pcmid, 0x7D, 0x00, 0x82, 0x40, 0x02, 0x00
 
 | Mode34 Reply, 6 bytes - 6C F0 10 74 00 44, Default Success
 Mode34Reply:    .byte  0x6C, toolid, pcmid, 0x74, 0x00, 0x44
