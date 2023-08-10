@@ -362,7 +362,7 @@ ProcessEraseSector:
     clr.l   %d0                        | Start Clean
     movea.l #FlashIDReply, %a1         | Pointer to FlashIDReply buffer
 
-    move.b  5(%a1), %d1
+    move.b  5(%a1), %d1                | Copy the manufacturer ID to d1
     lsl.l   #8, %d1
     move.b  6(%a1), %d1
 
@@ -413,7 +413,9 @@ ProcessEraseSectorFinal:
 |
 ProcessWriteFlash:
     movea.l #FlashIDReply, %a2         | Pointer to FlashIDReply buffer
-    move.w  7(%a2), %d1                | Move Flash Chip ID to d1
+    move.b  5(%a2), %d1                | Copy the manufacturer ID to d1
+    lsl.l   #8, %d1
+    move.b  6(%a2), %d1
 
     | Intel
     cmp.w   #INTEL_ID, %d1             | Intel manufacturer ID
