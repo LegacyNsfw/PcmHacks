@@ -2096,9 +2096,9 @@ namespace PcmHacking
                     this.ValidationMethod = PcmType.P04;
                     this.HardwareType = PcmType.P04;
                     this.KernelFileName = "Kernel-P04.bin";
-                    this.KernelBaseAddress = 0xFF9090;
+                    this.KernelBaseAddress = 0xFF8000;
                     this.LoaderFileName = "Loader-P04.bin";
-                    this.LoaderBaseAddress = 0xFF9890;
+                    this.LoaderBaseAddress = 0xFF9800;
                     //this.ImageBaseAddress = 0x0;
                     this.ImageSize = 512 * 1024;
                     //this.RAMSize = 0x0;

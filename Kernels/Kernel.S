@@ -425,7 +425,7 @@ ProcessWriteFlash:
 
     | Intel
     cmp.w   #INTEL_ID, %d1             | Intel manufacturer ID
-    beq.s   ProcessWriteFlashIntel     | Intel glash write
+    beq.s   ProcessWriteFlashIntel     | Intel flash write
 
     | AMD
     cmp.w   #AMD_ID, %d1               | AMD manufacturer ID
@@ -670,14 +670,20 @@ IntelFlashUnlock:
     move.w  #0x0007, (SIM_CSBAR0).w    | $FFFFFA4C
     | Unlock
     move.w  #0x7060, (SIM_CSOR0).w     | $FFFFFA4E
+
     | Enable +12v Vpp
-#if defined P08
-    bset    #VPP_BIT, (HARDWARE_IO).w  | Does not work on P01, needed for P08
+#if defined P04
+    clr.w   %d0                        | P04 needs this syntax
+    bset    #VPP_BIT, %d0
+    move.w  %d0, (HARDWARE_IO).w
+#elif defined P08
+    bset    #VPP_BIT, (HARDWARE_IO).w  | P08 needs this syntax
 #else
     move.w  (HARDWARE_IO).w, %d1       | Move Vpp Latch Address value to d1
     bset    #VPP_BIT, %d1              | Set Vpp Latch Bit
     move.w  %d1, (HARDWARE_IO).w       | Move modified value back to Latch Address
 #endif
+
     bsr.w   LongWaitWithWatchdog
     rts
 
@@ -707,14 +713,19 @@ IntelFlashLock:
     move.w  #0x0007, (SIM_CSBAR0).w    | $FFFFFA4C
     | Lock
     move.w  #0x1060, (SIM_CSOR0).w     | $FFFFFA4E
+
     | Disable +12v Vpp
-#if defined P08
+#if defined P04
+    clr.w   %d0                        | P04 needs this syntax
+    move.w  %d0, (HARDWARE_IO).w
+#elif defined P08
     bclr    #VPP_BIT, (HARDWARE_IO).w  | Does not work on P01, needed for P08
 #else
     move.w  (HARDWARE_IO).w, %d1       | Move Vpp Latch Address value to d1
     bclr    #VPP_BIT, %d1              | Set Vpp Latch Bit
     move.w  %d1, (HARDWARE_IO).w       | Move modified value back to Latch Address
 #endif
+
     bsr.w   LongWaitWithWatchdog
     rts
 
@@ -816,7 +827,7 @@ IntelWriteSectorNotReady:
     cmp.w   #0x080, %d3                 | Check status
     bne.s   IntelWriteSectorFail       | Fail Jump
 
-    subq    #2, %d0                    | Deincrement byte count by two (1 word)
+    subq    #2, %d7                    | Deincrement byte count by two (1 word)
     bne.s   IntelWriteSectorLoop       | Next word if not done
 
     clr.l   %d0                        | Set Success
@@ -878,6 +889,7 @@ ProcessMode35:
 |   d2
 |   d3
 |   d4
+|   d7 - Outputs Packet Length
 |
 ProcessMode36:
     clr.l   %d0                        | Clear for Target Address
@@ -890,16 +902,16 @@ ProcessMode36:
     movea.l %d0, %a1                   | Pointer to target address
     movea.l %d0, %a2                   | Pointer to target address for execute jump
 
-    clr.l   %d0                        | Start Clean
-    or.b    MessageBuffer + 5, %d0     | First length byte
-    lsl.l   #8, %d0                    | Logical Shift Left
-    or.b    MessageBuffer + 6, %d0     | Second length byte
+    clr.l   %d7                        | Start Clean
+    or.b    MessageBuffer + 5, %d7     | First length byte
+    lsl.l   #8, %d7                    | Logical Shift Left
+    or.b    MessageBuffer + 6, %d7     | Second length byte
 
 | Process Mode36 Validate Sum          | a3 = buffer address, d2 = temp, d3 = counter, d4=sum
     clr.l   %d2                        | Init temporary register
     movea.l #MessageBuffer + 4, %a3    | Pointer to beginning of checksum range, Calculates from MessageBuffer[4] (0=6C 1=10 2=F0 3=36 4=<start>)
     clr.l   %d4                        | Init sum
-    move.l  %d0, %d3                   | Payload length (Byte count)
+    move.l  %d7, %d3                   | Payload length (Byte count)
     addq.l  #5, %d3                    | Add submode (1), address (3), length(2) = 6 bytes to sum length minus 1 for Zero Index
 
 ProcessMode36NextSum:
