@@ -407,7 +407,7 @@ ProcessEraseSectorFinal:
 | Entry
 |   a0 - Source Address
 |   a1 - Destination Address
-|   d0 - Byte Count
+|   d7 - Byte Count
 |
 | Exit
 |   d0 - Status 0=Ok, 1=Fail
@@ -584,7 +584,7 @@ AMDEraseSectorFinish:
 | Entry
 |   a0 - Source Address
 |   a1 - Destination Address
-|   d0 - Byte count - must be divisible by 2
+|   d7 - Byte count - must be divisible by 2
 |
 | Exit
 |   d0 - Status 0=Ok, 1=Fail
@@ -607,9 +607,6 @@ AMDWriteSector:
 
 AMDWriteSectorLoop:
     move.w  #2346, %d2                 | FlashNotReady Loop Timeout index
-
-    | We cannot write by bytes, we must write by word, all data has been forced off word boundries, see NOTE in data section at EOF
-    | So we make words out of bytes ...
     clr.l   %d3                        | Start clean
     or.b    (%a0)+, %d3                | First byte, increment source to next byte
     lsl.l   #8, %d3                    | Logical Shift Left (shift byte left into upper word)
@@ -634,7 +631,7 @@ AMDWriteSectorNotReady:
 
 AMDWriteSectorSuccess:
     adda.w  #2, %a1                    | Increment address by 2 bytes (1 word)
-    subq.w  #2, %d0                    | Deincrement byte count by 2 (1 word)
+    subq    #2, %d7                    | Deincrement byte count by 2 (1 word)
     bne.s   AMDWriteSectorLoop         | Next word if not done
 
     move.w  #AMD_READ_ARRAY_CMD, (%a1) | 0xF0F0 Return to Normal Read Array mode
@@ -1113,7 +1110,7 @@ VPWSendBlockWaitForBuffer2:
 | ---------------------------------------------------------------------------
 .data
 .ascii "(c)2023 pcmhacking.net" | An Antus / Gampy collaboration
-| Mode 35 Reply Header 10 bytes + 1 alignment
+| Mode 35 Reply Header 10 bytes
 Mode35Reply:    .byte  0x6D, toolid, pcmid, 0x36, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00
 
 | Flash ID 9 bytes
@@ -1122,7 +1119,7 @@ FlashIDReply:   .byte  0x6C, toolid, pcmid, 0x7D, 0x01, 0x00, 0x00, 0x00, 0x00
 | Os ID Reply, 9 bytes
 OsIDReply:      .byte  0x6C, toolid, pcmid, 0x7D, 0x03, 0x00, 0x00, 0x00, 0x00
 
-| Kernel ID Response, 9 bytes + 1 alignment
+| Kernel ID Response, 9 bytes
 | 4 bytes, the first 12 bits are a static ID, next 12 bits are version, 4th byte = PCM ID
 | P01/P59 = 01
 | P04     = 04
@@ -1138,7 +1135,7 @@ Mode34Reply:    .byte  0x6C, toolid, pcmid, 0x74, 0x00, 0x44
 | Mode36 Reply, 6 bytes - 6C F0 10 76 00 00
 Mode36Reply:    .byte  0x6C, toolid, pcmid, 0x76, 0x00, 0x00
 
-| Halt Kernel Reply, 4 bytes + 1 alignment
+| Halt Kernel Reply, 4 bytes
 Mode60Reply:    .byte  0x6C, toolid, pcmid, 0x60
 
 | Erase Sector Reply, 7 bytes
