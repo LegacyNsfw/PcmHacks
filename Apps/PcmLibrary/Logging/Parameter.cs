@@ -98,7 +98,7 @@ namespace PcmHacking
     /// <summary>
     /// Base class for various parameter types (PID, RAM, Math)
     /// </summary>
-    public abstract class Parameter
+    public abstract class Parameter : IEqualityComparer<Parameter>
     {
         public string Id { get; protected set; }
         public string Name { get; protected set; }
@@ -126,6 +126,16 @@ namespace PcmHacking
         }
 
         public abstract bool IsSupported(uint osid);
+
+        public bool Equals(Parameter x, Parameter y)
+        {
+            return x.Id == y.Id && x.Name == y.Name;
+        }
+
+        public int GetHashCode(Parameter obj)
+        {
+            return HashCode.Combine(obj.Id, obj.Name);
+        }
     }
 
     /// <summary>

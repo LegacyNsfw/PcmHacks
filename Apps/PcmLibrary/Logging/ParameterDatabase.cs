@@ -13,15 +13,19 @@ namespace PcmHacking
     {
         public class ParameterTable<T> where T : Parameter
         {
-            private Dictionary<string, T> dictionary = new Dictionary<string, T>();
+            private List<T> table = new List<T>();
+
             public void Add(string id, T parameter)
             {
-                this.dictionary[id] = parameter;
+                this.table.Add(parameter);
             }
 
-            public bool TryGetParameter(string id, out T parameter)
+            public bool TryGetParameter(string id, string name, out T parameter)
             {
-                return this.dictionary.TryGetValue(id, out parameter);
+                //String.IsNullOrEmpty(name) is to handle cases where old profiles are being loaded, because we didnt test for that before.
+                parameter = this.table.FirstOrDefault(x => x.Id == id && (x.Name == name || String.IsNullOrEmpty(name))); 
+
+                return parameter != null;
             }
         }
 

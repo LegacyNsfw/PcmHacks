@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PcmHacking
@@ -58,6 +59,8 @@ namespace PcmHacking
         /// </summary>
         public override Task<bool> SendMessage(Message message)
         {
+            Thread.Sleep(100);
+
             StringBuilder builder = new StringBuilder();
             this.Logger.AddDebugMessage("Sending message " + message.GetBytes().ToHex());
             this.port.Send(message.GetBytes());
@@ -70,6 +73,8 @@ namespace PcmHacking
         /// <returns></returns>
         protected async override Task Receive()
         {
+            Thread.Sleep(100);
+
             //List<byte> incoming = new List<byte>(5000);
             byte[] incoming = new byte[5000];
             int count = await this.port.Receive(incoming, 0, incoming.Length);
@@ -91,6 +96,8 @@ namespace PcmHacking
         /// </remarks>
         protected override Task<bool> SetVpwSpeedInternal(VpwSpeed newSpeed)
         {
+            Thread.Sleep(100);
+
             if (newSpeed == VpwSpeed.Standard)
             {
                 this.Logger.AddDebugMessage("Setting VPW 1X");

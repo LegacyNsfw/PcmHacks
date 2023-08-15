@@ -56,23 +56,18 @@ namespace PcmHacking
         /// </summary>
         public override void AddDebugMessage(string message)
         {
-            string timestamp = DateTime.Now.ToString("hh:mm:ss:fff");
+            if(this.debugLog.InvokeRequired)
+            {
+                var self = new Action<string>(AddDebugMessage);
+                this.BeginInvoke(self, new[] { message });
+                return;
+            }
 
-            Task foreground = Task.Factory.StartNew(
-                delegate ()
-                {
-                    try
-                    {
-                        this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
-                    }
-                    catch (ObjectDisposedException)
-                    {
-                        // This will happen if the window is closing. Just ignore it.
-                    }
-                },
-                CancellationToken.None,
-                TaskCreationOptions.None,
-                uiThreadScheduler);
+            lock (this)
+            {
+                string timestamp = DateTime.Now.ToString("hh:mm:ss:fff");
+                this.debugLog.AppendText("[" + timestamp + "]  " + message + Environment.NewLine);
+            }
         }
 
         public override void ResetLogs()
