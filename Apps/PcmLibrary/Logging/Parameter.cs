@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace PcmHacking
@@ -129,12 +130,12 @@ namespace PcmHacking
 
         public bool Equals(Parameter x, Parameter y)
         {
-            return x.Id == y.Id && x.Name == y.Name;
+            return x.Id == y.Id;
         }
 
         public int GetHashCode(Parameter obj)
         {
-            return HashCode.Combine(obj.Id, obj.Name);
+            return obj.Id.GetHashCode();
         }
     }
 
@@ -195,31 +196,35 @@ namespace PcmHacking
     /// </summary>
     public class PidParameter : PcmParameter
     {
+        public IEnumerable<uint> Osids { get; private set; }
         public uint PID { get; private set; }
 
         /// <summary>
         /// Constructor for standard PID parameters.
         /// </summary>
         public PidParameter(
-            uint id,
+            string id,
             string name,
             string description,
             string storageType,
             bool bitMapped,
-            IEnumerable<Conversion> conversions)
+            IEnumerable<Conversion> conversions,
+            uint pid,
+            IEnumerable<uint> osids)
         {
-            this.Id = id.ToString("X4");
-            this.PID = UnsignedHex.GetUnsignedHex("0x" + this.Id);
+            this.Id = id;
+            this.PID = pid;
             this.Name = name;
             this.Description = description;
             this.StorageType = storageType;
             this.BitMapped = bitMapped;
             this.Conversions = conversions;
+            this.Osids = osids;
         }
 
         public override bool IsSupported(uint osid)
         {
-            return true;
+            return !Osids.Any() || Osids.Contains(osid); //blank list of osids means all are supported
         }
     }
 

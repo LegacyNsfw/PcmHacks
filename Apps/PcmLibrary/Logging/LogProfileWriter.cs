@@ -36,7 +36,6 @@ namespace PcmHacking
                     {
                         XElement element = new XElement("PidParameter");
                         element.SetAttributeValue("id", column.Parameter.Id);
-                        element.SetAttributeValue("name", column.Parameter.Name);
                         element.SetAttributeValue("units", column.Conversion.Units);
                         pidParameters.Add(element);
                     }
@@ -51,7 +50,6 @@ namespace PcmHacking
                     {
                         XElement element = new XElement("RamParameter");
                         element.SetAttributeValue("id", column.Parameter.Id);
-                        element.SetAttributeValue("name", column.Parameter.Name);
                         element.SetAttributeValue("units", column.Conversion.Units);
                         ramParameters.Add(element);
                     }
@@ -66,7 +64,6 @@ namespace PcmHacking
                     {
                         XElement element = new XElement("MathParameter");
                         element.SetAttributeValue("id", column.Parameter.Id);
-                        element.SetAttributeValue("name", column.Parameter.Name);
                         element.SetAttributeValue("units", column.Conversion.Units);
                         mathParameters.Add(element);
                     }

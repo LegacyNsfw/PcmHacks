@@ -57,7 +57,7 @@ namespace PcmHacking
                     string id = parameterElement.Attribute("id").Value;
                     string name = parameterElement.Attribute("name")?.Value;
                     string units = parameterElement.Attribute("units").Value;
-                    this.AddPidParameter(id, name, units);
+                    this.AddPidParameter(id, units);
                 }
             }
         }
@@ -72,7 +72,7 @@ namespace PcmHacking
                     string id = parameterElement.Attribute("id").Value;
                     string name = parameterElement.Attribute("name")?.Value;
                     string units = parameterElement.Attribute("units").Value;
-                    this.AddRamParameter(id, name, units);
+                    this.AddRamParameter(id, units);
                 }
             }
         }
@@ -87,16 +87,16 @@ namespace PcmHacking
                     string id = parameterElement.Attribute("id").Value;
                     string name = parameterElement.Attribute("name")?.Value;
                     string units = parameterElement.Attribute("units").Value;
-                    this.AddMathParameter(id, name, units);
+                    this.AddMathParameter(id, units);
                 }
             }
         }
 
-        private void AddPidParameter(string id, string name, string units)
+        private void AddPidParameter(string id, string units)
         {
             PidParameter parameter;
 
-            if (!this.database.PidParameters.TryGetParameter(id, name, out parameter))
+            if (!this.database.PidParameters.TryGetParameter(id, out parameter))
             {
                 return;
             }
@@ -116,10 +116,10 @@ namespace PcmHacking
             this.profile.AddColumn(column);
         }
 
-        private void AddRamParameter(string id, string name, string units)
+        private void AddRamParameter(string id, string units)
         {
             RamParameter parameter;
-            if (!this.database.RamParameters.TryGetParameter(id, name, out parameter))
+            if (!this.database.RamParameters.TryGetParameter(id, out parameter))
             {
                 return;
             }
@@ -139,10 +139,10 @@ namespace PcmHacking
             this.profile.AddColumn(column);
         }
 
-        private void AddMathParameter(string id, string name, string units)
+        private void AddMathParameter(string id, string units)
         {
             MathParameter parameter;
-            if (!this.database.MathParameters.TryGetParameter(id, name, out parameter))
+            if (!this.database.MathParameters.TryGetParameter(id, out parameter))
             {
                 return;
             }

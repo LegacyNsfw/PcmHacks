@@ -14,14 +14,14 @@ namespace Tests
         {
             Conversion rpmConversion = new Conversion("RPM", "x", "0");
             LogColumn rpm = new LogColumn(
-                new PidParameter(0x3456, "Engine Speed", "", "uint16", false, 
-                    new Conversion[] { rpmConversion }),
+                new PidParameter("EngSpeed", "Engine Speed", "", "uint16", false, 
+                    new Conversion[] { rpmConversion }, 0x3456, new List<uint>()),
                 rpmConversion);
 
             Conversion mafConversion = new Conversion("RPM", "x", "0");
             LogColumn maf = new LogColumn(
-                new PidParameter(0x1234, "Mass Air Flow", "", "uint16", false,
-                    new Conversion[] { mafConversion }),
+                new PidParameter("MAF", "Mass Air Flow", "", "uint16", false,
+                    new Conversion[] { mafConversion }, 0x1234, new List<uint>()),
                 mafConversion);
 
             MathParameter load = new MathParameter(

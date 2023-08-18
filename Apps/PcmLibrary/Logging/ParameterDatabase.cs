@@ -20,10 +20,9 @@ namespace PcmHacking
                 this.table.Add(parameter);
             }
 
-            public bool TryGetParameter(string id, string name, out T parameter)
+            public bool TryGetParameter(string id, out T parameter)
             {
-                //String.IsNullOrEmpty(name) is to handle cases where old profiles are being loaded, because we didnt test for that before.
-                parameter = this.table.FirstOrDefault(x => x.Id == id && (x.Name == name || String.IsNullOrEmpty(name))); 
+                parameter = this.table.FirstOrDefault(x => x.Id == id); 
 
                 return parameter != null;
             }
@@ -80,21 +79,42 @@ namespace PcmHacking
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.Standard.xml");
             XDocument xml = XDocument.Load(pathToXml);
             this.parameters = new List<Parameter>();
+
             foreach (XElement parameterElement in xml.Root.Elements("Parameter"))
             {
                 string parameterName = null;
                 try
                 {
+                    var osElements = parameterElement.Elements("OS");
+                    List<uint> osids = new List<uint>();
+
+                    foreach (XElement os in osElements)
+                    {
+                        string osidString = os.Attribute("id").Value;
+
+                        if (osidString.ToLower() == "all")
+                        {
+                            osids.Clear(); //going to use no osids as all supported.
+                        }
+
+                        uint osid = uint.Parse(osidString);
+                        
+                        osids.Add(osid);
+                    }
+
                     List<Conversion> conversions = GetConversions(parameterElement);
 
                     parameterName = (string)parameterElement.Attribute("name").Value;
+
                     PidParameter parameter = new PidParameter(
-                        UnsignedHex.GetUnsignedHex("0x" + parameterElement.Attribute("id").Value),
+                        parameterElement.Attribute("id").Value,
                         parameterName,
                         parameterElement.Attribute("description").Value,
                         parameterElement.Attribute("storageType").Value,
                         bool.Parse(parameterElement.Attribute("bitMapped").Value),
-                        conversions);
+                        conversions,
+                        UnsignedHex.GetUnsignedHex("0x" + parameterElement.Attribute("pid").Value),
+                        osids);
 
                     parameters.Add(parameter);
                     this.PidParameters.Add(parameter.Id, parameter);

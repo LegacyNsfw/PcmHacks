@@ -4,9 +4,9 @@
       id="MathLoadFromPids"
       name="Load (from RPM and MAF)"
       description=""
-      xParameterId="0010"
+      xParameterId="MAFSensor"
       xParameterConversion="g/s"
-      yParameterId="000C"
+      yParameterId="EngineSpeed"
       yParameterConversion="RPM">
     <Conversion units="g/cyl" expression="x*15.0/(y*2)" format="0.00" />
   </MathParameter>
@@ -14,9 +14,9 @@
       id="MathIdcBank1"
       name="IDC Bank 1"
       description=""
-      xParameterId="000C"
+      xParameterId="EngineSpeed"
       xParameterConversion="RPM"
-      yParameterId="125A"
+      yParameterId="InjectorPWMLeftBankAverage"
       yParameterConversion="ms">
     <Conversion units="%" expression="(x*y)/1200" format="0.00" />
   </MathParameter>
@@ -24,9 +24,9 @@
       id="MathIdcBank2"
       name="IDC Bank 2"
       description=""
-      xParameterId="000C"
+      xParameterId="EngineSpeed"
       xParameterConversion="RPM"
-      yParameterId="125B"
+      yParameterId="InjectorPWMRightBankAverage"
       yParameterConversion="ms">
     <Conversion units="%" expression="(x*y)/1200" format="0.00" />
   </MathParameter>
