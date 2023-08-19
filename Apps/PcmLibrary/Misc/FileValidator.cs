@@ -141,7 +141,7 @@ namespace PcmHacking
         {
             int osid = 0;
 
-            if (image.Length == 512 * 1024 || image.Length == 1024 * 1024 || image.Length == 2048 * 1024) // bin valid sizes
+            if (image.Length == 256 * 1024 || image.Length == 512 * 1024 || image.Length == 1024 * 1024 || image.Length == 2048 * 1024) // bin valid sizes
             {
                 PcmType type = this.ValidateSignatures();
                 switch (type)

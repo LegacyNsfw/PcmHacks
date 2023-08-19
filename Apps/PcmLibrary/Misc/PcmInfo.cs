@@ -608,6 +608,129 @@ namespace PcmHacking
                     this.HardwareType = PcmType.BLACKBOX;
                     break;
 
+                // 1996/1997 256kb V6 Service number 16207326
+                case 9352140:
+                case 9352142:
+                case 9352143:
+                case 9352146:
+                case 9352149:
+                case 9352150:
+                case 9352340:
+                case 9352342:
+                case 9352346:
+                case 9352347:
+                case 9352553:
+                case 9354241:
+                case 9354242:
+                case 9355430:
+                case 9355433:
+                case 9355435:
+                case 9365005:
+                case 9365007:
+                case 9365012:
+                case 9365017:
+                case 9365650:
+                case 9365651:
+                case 9365652:
+                case 9365655:
+                case 9367092:
+                case 16210002:
+                case 16210010:
+                case 16219361:
+                case 16219368:
+                case 16226502:
+                case 16227925:
+                case 16230131:
+                case 16230375:
+                case 16230378:
+                case 16230380:
+                case 16230383:
+                case 16230385:
+                case 16231872:
+                case 16231877:
+                case 16231889:
+                case 16231890:
+                case 16231940:
+                case 16231941:
+                case 16232010:
+                case 16232466:
+                case 16232477:
+                case 16233470:
+                case 16233471:
+                case 16233472:
+                case 16233478:
+                case 16234097:
+                case 16234124:
+                case 16234438:
+                case 16234440:
+                case 16234441:
+                case 16234751:
+                case 16235667:
+                case 16238373:
+                case 16238443:
+                case 16238446:
+                case 16238447:
+                case 16238448:
+                case 16238450:
+                case 16238452:
+                case 16238453:
+                case 16238456:
+                case 16238457:
+                case 16238458:
+                case 16238517:
+                case 16238518:
+                case 16238519:
+                case 16238520:
+                case 16238523:
+                case 16238525:
+                case 16238532:
+                case 16238533:
+                case 16240637:
+                case 16241229:
+                case 16245321:
+                case 16246063:
+                case 16246066:
+                case 16249992:
+                case 16249995:
+                case 16251203:
+                case 16251205:
+                case 16251975:
+                case 16257917:
+                case 16257918:
+                case 16257922:
+                case 16257926:
+                case 16257935:
+                case 16257936:
+                case 16257937:
+                case 16257938:
+                case 16257940:
+                case 16257942:
+                case 16257947:
+                case 16257950:
+                case 16257952:
+                case 16257953:
+                case 16257955:
+                case 16257956:
+                    this.Description = "1996/1997 256Kb V6";
+                    this.IsSupported = true;
+                    this.LoaderRequired = true;
+                    this.ValidationMethod = PcmType.P04;
+                    this.HardwareType = PcmType.P04;
+                    this.KernelFileName = "Kernel-P04.bin";
+                    this.KernelBaseAddress = 0xFF8000;
+                    this.LoaderFileName = "Loader-P04.bin";
+                    this.LoaderBaseAddress = 0xFF9800;
+                    //this.ImageBaseAddress = 0x0;
+                    this.ImageSize = 256 * 1024;
+                    //this.RAMSize = 0x0;
+                    this.KeyAlgorithm = 6;
+                    this.ChecksumSupport = true;
+                    this.FlashCRCSupport = true;
+                    this.FlashIDSupport = true;
+                    this.KernelVersionSupport = true;
+                    //this.KernelMaxBlockSize = 4096;
+                    break;
+
                 // P04 V6 Service number 9374997
                 case 9355672:
                 case 9356706:

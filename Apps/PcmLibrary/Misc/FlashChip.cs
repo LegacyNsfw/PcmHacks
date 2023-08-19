@@ -62,24 +62,55 @@ namespace PcmHacking
                 case 0xFFFF4471:
                     var unused = new MemoryRange[]
                     {
-                        // These numbers and descriptions are straight from the intel 28F400B data sheet.
-                        // Notice that if you convert the 16 bit word sizes to decimal, they're all
-                        // half as big as the description here, in bytes, indicates.
-                        new MemoryRange(0x30000, 0x10000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x20000, 0x10000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x10000, 0x10000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x04000, 0x0C000, BlockType.Calibration), //  96kb main block
-                        new MemoryRange(0x03000, 0x01000, BlockType.Parameter), //   8kb parameter block
-                        new MemoryRange(0x02000, 0x01000, BlockType.Parameter), //   8kb parameter block
-                        new MemoryRange(0x00000, 0x02000, BlockType.Boot), //  16kb boot block
+                        // These addresses are for a bottom fill chip (B) in byte mode (not word).
+                        // Be careful which notation datasheets are using when adding more devices.
+                        new MemoryRange(0x60000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x40000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x20000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block 
+                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
                     };
                     throw new InvalidOperationException("This flash chip ID was not supposed to exist in the wild.");
 
+                // This is not a real chip, its used as a default value, then overwritten with real data if the kernel supprot flashchipid.
                 case 0x12345678:
-                    // P04 is too small to have chip ID code (at this stage). So, we use this hard coded ID to satisfy PCMHammer's need for a chip structure.
-                    // 12345678 should not exist in the wild and is less likely to trigger accidentally than using 00000000 or FFFFFFFF.
                     size = 512 * 1024;
-                    description = "Hardcoded Intel Specification 512kb";
+                    description = "Default 512Kb";
+                    memoryRanges = new MemoryRange[]
+                    {
+                        // Used by CKernelReader to initialise FlashChip default value
+                        new MemoryRange(0x60000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x40000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x20000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block 
+                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
+                    };
+                    break;
+
+                // Intel 28F200BX
+                case 0x00892274:
+                case 0x00892275:
+                    size = 256 * 1024;
+                    description = "Intel 28F200BX, 256kb";
+                    memoryRanges = new MemoryRange[]
+                    {
+                        // These addresses are for a bottom fill chip (B) in byte mode (not word)
+                        new MemoryRange(0x20000, 0x20000, BlockType.OperatingSystem), // 128kb main block
+                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block 
+                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
+                    };
+                    break;
+
+                // Intel 28F400B
+                case 0x00894471:
+                    size = 512 * 1024;
+                    description = "Intel 28F400B, 512kb";
                     memoryRanges = new MemoryRange[]
                     {
                         // These addresses are for a bottom fill chip (B) in byte mode (not word)
@@ -107,47 +138,30 @@ namespace PcmHacking
                         new MemoryRange(0x60000, 0x20000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x40000, 0x20000, BlockType.OperatingSystem), // 128kb main block
                         new MemoryRange(0x20000, 0x20000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block 
+                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block
                         new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //   8kb parameter block
                         new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
                         new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
                     };
                     break;
 
-                // Intel 28F400B
-                case 0x00894471:
+                // AM29F400BB
+                case 0x000122AB:
                     size = 512 * 1024;
-                    description = "Intel 28F400B, 512kb";
+                    description = "AMD AM29F400BB, 512kb";
                     memoryRanges = new MemoryRange[]
                     {
-                        // These addresses are for a bottom fill chip (B) in byte mode (not word)
-                        new MemoryRange(0x60000, 0x20000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x40000, 0x20000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x20000, 0x20000, BlockType.OperatingSystem), // 128kb main block
-                        new MemoryRange(0x08000, 0x18000, BlockType.Calibration), //  96kb main block 
-                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //   8kb parameter block
-                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //   8kb parameter block
+                        new MemoryRange(0x70000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x60000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x50000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x40000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x30000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x20000, 0x10000, BlockType.OperatingSystem), //  64kb main block
+                        new MemoryRange(0x10000, 0x10000, BlockType.Calibration), //  64kb calibration block
+                        new MemoryRange(0x08000, 0x08000, BlockType.Calibration), //  32kb calibration block
+                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //  8kb parameter block
+                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //  8kb parameter block
                         new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
-                    };
-                    break;
-
-                // AM29BL162C
-                case 0x00012203:
-                    size = 2048 * 1024;
-                    description = "AMD AM29BL162C, 2mb";
-                    memoryRanges = new MemoryRange[]
-                    {           // Start address, Size in Bytes
-                        new MemoryRange(0x1C0000, 0x40000, BlockType.OperatingSystem), // 256kb main block
-                        new MemoryRange(0x180000, 0x40000, BlockType.OperatingSystem), // 256kb main block
-                        new MemoryRange(0x140000, 0x40000, BlockType.OperatingSystem), // 256kb main block
-                        new MemoryRange(0x100000, 0x40000, BlockType.OperatingSystem), // 256kb main block
-                        new MemoryRange( 0xC0000, 0x40000, BlockType.OperatingSystem), // 256kb main block
-                        new MemoryRange( 0x80000, 0x40000, BlockType.OperatingSystem), // 256kb main block
-                        new MemoryRange( 0x40000, 0x40000, BlockType.Calibration),     // 256kb calibration block
-                        new MemoryRange( 0x08000, 0x38000, BlockType.Calibration),     // 229kb calibration block
-                        new MemoryRange( 0x06000, 0x02000, BlockType.Parameter),       //   8kb parameter block
-                        new MemoryRange( 0x04000, 0x02000, BlockType.Parameter),       //   8kb parameter block
-                        new MemoryRange( 0x00000, 0x04000, BlockType.Boot),            //  16kb boot block
                     };
                     break;
 
@@ -197,23 +211,23 @@ namespace PcmHacking
                     };
                     break;
 
-                // AM29F400BB   
-                case 0x000122AB:
-                    size = 512 * 1024;
-                    description = "AMD AM29F400BB, 512kb";
+                // AM29BL162C
+                case 0x00012203:
+                    size = 2048 * 1024;
+                    description = "AMD AM29BL162C, 2mb";
                     memoryRanges = new MemoryRange[]
-                    {
-                        new MemoryRange(0x70000, 0x10000, BlockType.OperatingSystem), //  64kb main block
-                        new MemoryRange(0x60000, 0x10000, BlockType.OperatingSystem), //  64kb main block
-                        new MemoryRange(0x50000, 0x10000, BlockType.OperatingSystem), //  64kb main block
-                        new MemoryRange(0x40000, 0x10000, BlockType.OperatingSystem), //  64kb main block
-                        new MemoryRange(0x30000, 0x10000, BlockType.OperatingSystem), //  64kb main block
-                        new MemoryRange(0x20000, 0x10000, BlockType.OperatingSystem), //  64kb main block
-                        new MemoryRange(0x10000, 0x10000, BlockType.Calibration), //  64kb calibration block
-                        new MemoryRange(0x08000, 0x08000, BlockType.Calibration), //  32kb calibration block
-                        new MemoryRange(0x06000, 0x02000, BlockType.Parameter), //  8kb parameter block
-                        new MemoryRange(0x04000, 0x02000, BlockType.Parameter), //  8kb parameter block
-                        new MemoryRange(0x00000, 0x04000, BlockType.Boot), //  16kb boot block
+                    {           // Start address, Size in Bytes
+                        new MemoryRange(0x1C0000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange(0x180000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange(0x140000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange(0x100000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange( 0xC0000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange( 0x80000, 0x40000, BlockType.OperatingSystem), // 256kb main block
+                        new MemoryRange( 0x40000, 0x40000, BlockType.Calibration),     // 256kb calibration block
+                        new MemoryRange( 0x08000, 0x38000, BlockType.Calibration),     // 229kb calibration block
+                        new MemoryRange( 0x06000, 0x02000, BlockType.Parameter),       //   8kb parameter block
+                        new MemoryRange( 0x04000, 0x02000, BlockType.Parameter),       //   8kb parameter block
+                        new MemoryRange( 0x00000, 0x04000, BlockType.Boot),            //  16kb boot block
                     };
                     break;
 
@@ -257,9 +271,9 @@ namespace PcmHacking
                 if (index == 0)
                 {
                     UInt32 top = memoryRanges[index].Address + memoryRanges[index].Size;
-                    if ((top != 512 * 1024) && (top != 1024 * 1024) && (top != 2048 * 1024))
+                    if ((top != 256 * 1024) && (top != 512 * 1024) && (top != 1024 * 1024) && (top != 2048 * 1024))
                     {
-                        throw new InvalidOperationException(chipIdString + " - Upper end of memory range must be 512k or 1024k, is " + top.ToString("X8"));
+                        throw new InvalidOperationException(chipIdString + " - Upper end of memory range must be 256k, 512k, 1024k or 2048k, is " + (top / 1024).ToString() + "k");
                     }
 
                     if (size != top)

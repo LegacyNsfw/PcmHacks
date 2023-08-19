@@ -200,7 +200,7 @@ namespace PcmHacking
         {
             if (timeout == 0)
             {
-                timeout = 500;
+                timeout = 1000;
             }
 
             int TempCount = 0;

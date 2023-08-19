@@ -193,6 +193,7 @@ ProcessKernelID:
 ProcessOsID:
 #if defined P04
     movea.l #0x7FFFA, %a1              | Pointer to OsID location in Flash
+    |movea.l #0x3FFFA, %a1              | Pointer to OsID location in Flash (swap to this statement for 96/97 V6 support. TODO: split this out of P04 or implement the above)
 #elif defined P08
     movea.l #0x8000, %a1               | Pointer to OsID location in Flash
 #elif defined P10
@@ -334,7 +335,7 @@ ProcessFlashIDFound:
     lsl.w   #8, %d1                    | Shift left
     move.b  %d1, 5(%a0)                | Move MFG ID HI to FlashIDReply buffer
     move.b  %d0, 8(%a0)                | Move Flash ID LO to FlashIDReply buffer
-    lsr.w   #8, %d0                    | Shift left
+    lsr.w   #8, %d0                    | Shift right
     move.b  %d0, 7(%a0)                | Move Flash ID HI to FlashIDReply buffer
     move.l  #9, %d0                    | It's 9 bytes long
     bsr.w   VPWSend                    | Send it
@@ -690,7 +691,7 @@ LongWaitWithWatchdog:
 LongWaitLoop:
     bsr.w   ResetWatchdog              | Scratch the dog
     bsr.w   WasteTime                  | Twiddle thumbs
-    dbf     %d1, LongWaitLoop | If False Decrement and Branch
+    dbf     %d1, LongWaitLoop          | If False Decrement and Branch
     movem.l (%sp)+, %d5                | Restore d5
     rts
 
