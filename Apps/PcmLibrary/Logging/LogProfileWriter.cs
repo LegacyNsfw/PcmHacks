@@ -22,54 +22,36 @@ namespace PcmHacking
             settings.OmitXmlDeclaration = true;
 
             using (XmlWriter writer = XmlWriter.Create(path, settings))
-            {    
+            {
                 XDocument document = new XDocument();
                 XElement top = new XElement("LogProfile");
                 document.Add(top);
 
-                XElement pidParameters = new XElement("PidParameters");
-                top.Add(pidParameters);
-
-                foreach(LogColumn column in profile.Columns)
-                {
-                    if (column.Parameter is PidParameter)
-                    {
-                        XElement element = new XElement("PidParameter");
-                        element.SetAttributeValue("id", column.Parameter.Id);
-                        element.SetAttributeValue("units", column.Conversion.Units);
-                        pidParameters.Add(element);
-                    }
-                }
-
-                XElement ramParameters = new XElement("RamParameters");
-                top.Add(ramParameters);
-
-                foreach (LogColumn column in profile.Columns)
-                {
-                    if (column.Parameter is RamParameter)
-                    {
-                        XElement element = new XElement("RamParameter");
-                        element.SetAttributeValue("id", column.Parameter.Id);
-                        element.SetAttributeValue("units", column.Conversion.Units);
-                        ramParameters.Add(element);
-                    }
-                }
-
-                XElement mathParameters = new XElement("MathParameters");
-                top.Add(mathParameters);
-
-                foreach (LogColumn column in profile.Columns)
-                {
-                    if (column.Parameter is MathParameter)
-                    {
-                        XElement element = new XElement("MathParameter");
-                        element.SetAttributeValue("id", column.Parameter.Id);
-                        element.SetAttributeValue("units", column.Conversion.Units);
-                        mathParameters.Add(element);
-                    }
-                }
+                WriteParameters<PidParameter>(profile, top);
+                WriteParameters<RamParameter>(profile, top);
+                WriteParameters<MathParameter>(profile, top);
 
                 document.Save(writer);
+            }
+        }
+
+        private static void WriteParameters<T>(LogProfile profile, XElement top) where T : Parameter
+        {
+            string parameterType = typeof(T).Name;
+
+            XElement parameterListElement = new XElement(string.Format("{0}s", parameterType));
+
+            top.Add(parameterListElement);
+
+            foreach (LogColumn column in profile.Columns)
+            {
+                if (column.Parameter is T)
+                {
+                    XElement element = new XElement(parameterType);
+                    element.SetAttributeValue("id", column.Parameter.Id);
+                    element.SetAttributeValue("units", column.Conversion.Units);
+                    parameterListElement.Add(element);
+                }
             }
         }
     }

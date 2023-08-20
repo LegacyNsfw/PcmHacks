@@ -28,13 +28,8 @@ namespace PcmHacking
                 throw new InvalidDataException("Unable to load parameters from XML: " + errorMessage);
             }
 
-            foreach (Parameter parameter in this.database.Parameters)
+            foreach (Parameter parameter in this.database.ListParametersBySupportedOs(osid))
             {
-                if (!parameter.IsSupported(osid))
-                {
-                    continue;
-                }
-
                 DataGridViewRow row = new DataGridViewRow();
 
                 row.CreateCells(this.parameterGrid);

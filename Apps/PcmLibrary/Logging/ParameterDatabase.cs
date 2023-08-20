@@ -11,31 +11,9 @@ namespace PcmHacking
     /// </summary>
     public class ParameterDatabase
     {
-        public class ParameterTable<T> where T : Parameter
-        {
-            private List<T> table = new List<T>();
-
-            public void Add(string id, T parameter)
-            {
-                this.table.Add(parameter);
-            }
-
-            public bool TryGetParameter(string id, out T parameter)
-            {
-                parameter = this.table.FirstOrDefault(x => x.Id == id); 
-
-                return parameter != null;
-            }
-        }
-
         private string pathToXmlDirectory;
 
         private List<Parameter> parameters;
-
-        public IEnumerable<Parameter> Parameters { get { return this.parameters; } }
-        public ParameterTable<PidParameter> PidParameters { get; private set; }
-        public ParameterTable<RamParameter> RamParameters { get; private set; }
-        public ParameterTable<MathParameter> MathParameters { get; private set; }
 
         /// <summary>
         /// Constructor
@@ -43,9 +21,30 @@ namespace PcmHacking
         public ParameterDatabase(string pathToXmlDirectory)
         {
             this.pathToXmlDirectory = pathToXmlDirectory;
-            this.PidParameters = new ParameterTable<PidParameter>();
-            this.RamParameters = new ParameterTable<RamParameter>();
-            this.MathParameters = new ParameterTable<MathParameter>();
+        }
+
+        /// <summary>
+        /// tries to get a parameter using the specified generic type, with the specified id. Returns true if one is found, false if not.
+        /// </summary>
+        /// <typeparam name="T">The type of parameter, must be subclass of Parameter</typeparam>
+        /// <param name="id">the string ID of the parameter to look for</param>
+        /// <param name="parameter">out param to return the parameter</param>
+        /// <returns>boolean representing the found state of the parameter that was being searched for.</returns>
+        public bool TryGetParameter<T>(string id, out T parameter) where T : Parameter
+        {
+            parameter = this.parameters.FirstOrDefault(p => p is T && p.Id == id) as T;
+
+            return parameter != null;
+        }
+
+        /// <summary>
+        /// returns a list of parameters that support the specified os
+        /// </summary>
+        /// <param name="osId">the os to search for</param>
+        /// <returns>an ienumerable of parameters</returns>
+        public IEnumerable<Parameter> ListParametersBySupportedOs(uint osId)
+        {
+            return this.parameters.Where(p => p.IsSupported(osId));
         }
 
         /// <summary>
@@ -78,7 +77,6 @@ namespace PcmHacking
         {
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.Standard.xml");
             XDocument xml = XDocument.Load(pathToXml);
-            this.parameters = new List<Parameter>();
 
             foreach (XElement parameterElement in xml.Root.Elements("Parameter"))
             {
@@ -117,7 +115,6 @@ namespace PcmHacking
                         osids);
 
                     parameters.Add(parameter);
-                    this.PidParameters.Add(parameter.Id, parameter);
                 }
                 catch (Exception exception)
                 {
@@ -206,6 +203,7 @@ namespace PcmHacking
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.RAM.xml");
             XDocument xml = XDocument.Load(pathToXml);
             List<Parameter> ramParameters = new List<Parameter>();
+
             foreach (XElement parameterElement in xml.Root.Elements("RamParameter"))
             {
                 string parameterName = null;
@@ -236,8 +234,7 @@ namespace PcmHacking
                         conversions,
                         addresses);
 
-                    ramParameters.Add(parameter);
-                    this.RamParameters.Add(parameter.Id, parameter);
+                    parameters.Add(parameter);
                 }
                 catch (Exception exception)
                 {
@@ -250,7 +247,6 @@ namespace PcmHacking
                 }
             }
 
-            this.parameters.AddRange(ramParameters);
             errorMessage = null;
             return true;
         }
@@ -273,12 +269,12 @@ namespace PcmHacking
 
                     string xId = parameterElement.Attribute("xParameterId").Value;
                     string xUnits = parameterElement.Attribute("xParameterConversion").Value;
-                    Parameter xParameter = this.Parameters.Where(x => (x.Id == xId)).FirstOrDefault();
+                    Parameter xParameter = this.parameters.Where(x => (x.Id == xId)).FirstOrDefault();
                     Conversion xConversion = xParameter.Conversions.Where(x => x.Units == xUnits).FirstOrDefault();
 
                     string yId = parameterElement.Attribute("yParameterId").Value;
                     string yUnits = parameterElement.Attribute("yParameterConversion").Value;
-                    Parameter yParameter = this.Parameters.Where(y => (y.Id == yId)).FirstOrDefault();
+                    Parameter yParameter = this.parameters.Where(y => (y.Id == yId)).FirstOrDefault();
                     Conversion yConversion = yParameter.Conversions.Where(y => y.Units == yUnits).FirstOrDefault();
 
                     MathParameter parameter = new MathParameter(
@@ -290,7 +286,6 @@ namespace PcmHacking
                         new LogColumn(yParameter, yConversion));
 
                     parameters.Add(parameter);
-                    this.MathParameters.Add(parameter.Id, parameter);
                 }
                 catch (Exception exception)
                 {
