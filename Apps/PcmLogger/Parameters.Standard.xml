@@ -868,9 +868,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="FuelTankPressureSensor"
+      id="FuelTankPressureSensorVoltage"
       pid="114E"
-      name="Fuel Tank Pressure Sensor"
+      name="Fuel Tank Pressure Sensor Voltage"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1049,9 +1049,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="KnockRetard"
+      id="KnockRetardDegrees"
       pid="11A6"
-      name="Knock Retard"
+      name="Knock Retard Degrees"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1230,9 +1230,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="ShortTermFTAvg"
+      id="ShortTermFTBank1"
       pid="120A"
-      name="Short Term FT Avg"
+      name="Short Term FT Bank 1"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1240,9 +1240,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="LongTermFTAvg"
+      id="LongTermFTBank1"
       pid="120B"
-      name="Long Term FT Avg"
+      name="Long Term FT Bank 1"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1250,9 +1250,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="ShortTermFTAvg"
+      id="ShortTermFTBank2"
       pid="120C"
-      name="Short Term FT Avg"
+      name="Short Term FT Bank 2"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1320,9 +1320,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="LongTermFTAvg"
+      id="LongTermFTBank2"
       pid="123A"
-      name="Long Term FT Avg"
+      name="Long Term FT Bank 2"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1360,9 +1360,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="KnockRetard"
+      id="KnockRetardRaw"
       pid="125D"
-      name="Knock Retard"
+      name="Knock Retard Raw"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1420,9 +1420,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="APPSensor1"
+      id="APPSensor1Raw"
       pid="12B4"
-      name="APP Sensor 1"
+      name="APP Sensor 1 Raw"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1430,9 +1430,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="APPSensor2"
+      id="APPSensor2Raw"
       pid="12B5"
-      name="APP Sensor 2"
+      name="APP Sensor 2 Raw"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1440,9 +1440,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="APPSensor3"
+      id="APPSensor3Raw"
       pid="12B6"
-      name="APP Sensor 3"
+      name="APP Sensor 3 Raw"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1450,9 +1450,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="TPSensor1"
+      id="TPSensor1Percent"
       pid="12B7"
-      name="TP Sensor 1"
+      name="TP Sensor 1 Percent"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1460,9 +1460,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="TPSensor2"
+      id="TPSensor2Percent"
       pid="12B8"
-      name="TP Sensor 2"
+      name="TP Sensor 2 Percent"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1470,9 +1470,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="TPSensor2"
+      id="TPSensor2Voltage"
       pid="12B9"
-      name="TP Sensor 2"
+      name="TP Sensor 2 Voltage"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1480,9 +1480,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="TPSensor1"
+      id="TPSensor1Voltage"
       pid="12BA"
-      name="TP Sensor 1"
+      name="TP Sensor 1 Voltage"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1490,9 +1490,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="APPSensor3"
+      id="APPSensor3Voltage"
       pid="12BB"
-      name="APP Sensor 3"
+      name="APP Sensor 3 Voltage"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1500,9 +1500,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="APPSensor2"
+      id="APPSensor2Voltage"
       pid="12BC"
-      name="APP Sensor 2"
+      name="APP Sensor 2 Voltage"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1510,9 +1510,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="APPSensor1"
+      id="APPSensor1Voltage"
       pid="12BD"
-      name="APP Sensor 1"
+      name="APP Sensor 1 Voltage"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1530,9 +1530,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="FuelTankPressureSensor"
+      id="FuelTankPressureSensorPressure"
       pid="12E3"
-      name="Fuel Tank Pressure Sensor"
+      name="Fuel Tank Pressure Sensor Pressure"
       description=""
       storageType="uint8"
       bitMapped="False">
@@ -1784,19 +1784,19 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="HO2SHeaterBn1Sen"
+      id="HO2SHeaterBn1Sen1"
       pid="1481"
-      name="HO2S Heater Bn 1 Sen"
+      name="HO2S Heater Bn 1 Sen 1"
       description=""
       storageType="uint16"
       bitMapped="False">
-    <Conversion units="amps" expression="((/50)" format="0.00" />
+    <Conversion units="amps" expression="(x/50)" format="0.00" />
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="HO2SHeaterBn1Sen"
+      id="HO2SHeaterBn1Sen2"
       pid="1482"
-      name="HO2S Heater Bn 1 Sen"
+      name="HO2S Heater Bn 1 Sen 2"
       description=""
       storageType="uint16"
       bitMapped="False">
@@ -1804,9 +1804,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="HO2SHeaterBn2Sen"
+      id="HO2SHeaterBn2Sen1"
       pid="1484"
-      name="HO2S Heater Bn 2 Sen"
+      name="HO2S Heater Bn 2 Sen 1"
       description=""
       storageType="uint16"
       bitMapped="False">
@@ -1814,9 +1814,9 @@
     <OS id="all" />
   </Parameter>
   <Parameter
-      id="HO2SHeaterBn1Sen"
+      id="HO2SHeaterBn2Sen2"
       pid="1485"
-      name="HO2S Heater Bn 1 Sen"
+      name="HO2S Heater Bn 1 Sen 2"
       description=""
       storageType="uint16"
       bitMapped="False">
