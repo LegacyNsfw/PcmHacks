@@ -13,7 +13,7 @@ namespace PcmHacking
     {
         private string pathToXmlDirectory;
 
-        private List<Parameter> parameters;
+        private List<Parameter> parameters = new List<Parameter>();
 
         /// <summary>
         /// Constructor
@@ -45,6 +45,21 @@ namespace PcmHacking
         public IEnumerable<Parameter> ListParametersBySupportedOs(uint osId)
         {
             return this.parameters.Where(p => p.IsSupported(osId));
+        }
+
+        /// <summary>
+        /// tries to add a parameter to the database, will not allow parameters with duplicate IDs
+        /// </summary>
+        /// <param name="parameter">the parameter to add</param>
+        /// <exception cref="Exception">if the parameter to add has the same id as another parameter already in the database, this exception will fire.</exception>
+        public void AddParameter(Parameter parameter)
+        {
+            if (this.parameters.Any(P => P.Id == parameter.Id))
+            {
+                throw new Exception(string.Format("Duplicate parameter ID:{0}", parameter.Id));
+            }
+
+            this.parameters.Add(parameter);
         }
 
         /// <summary>
@@ -93,6 +108,7 @@ namespace PcmHacking
                         if (osidString.ToLower() == "all")
                         {
                             osids.Clear(); //going to use no osids as all supported.
+                            break;
                         }
 
                         uint osid = uint.Parse(osidString);
@@ -114,7 +130,7 @@ namespace PcmHacking
                         UnsignedHex.GetUnsignedHex("0x" + parameterElement.Attribute("pid").Value),
                         osids);
 
-                    parameters.Add(parameter);
+                    AddParameter(parameter);
                 }
                 catch (Exception exception)
                 {
@@ -234,7 +250,7 @@ namespace PcmHacking
                         conversions,
                         addresses);
 
-                    parameters.Add(parameter);
+                    AddParameter(parameter);
                 }
                 catch (Exception exception)
                 {
@@ -285,7 +301,7 @@ namespace PcmHacking
                         new LogColumn(xParameter, xConversion),
                         new LogColumn(yParameter, yConversion));
 
-                    parameters.Add(parameter);
+                    AddParameter(parameter);
                 }
                 catch (Exception exception)
                 {
