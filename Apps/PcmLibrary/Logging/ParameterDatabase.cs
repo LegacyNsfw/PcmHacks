@@ -24,23 +24,15 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// tries to get a parameter using the specified generic type, with the specified id. Returns true if one is found, false if not.
+        ///Gets a parameter using the specified generic type, with the specified id. Will throw if a parameter is not found.
         /// </summary>
         /// <typeparam name="T">The type of parameter, must be subclass of Parameter</typeparam>
         /// <param name="id">the string ID of the parameter to look for</param>
-        /// <param name="parameter">out param to return the parameter</param>
-        /// <returns>boolean representing the found state of the parameter that was being searched for.</returns>
-        public bool TryGetParameter<T>(string id, out T parameter) where T : Parameter
+        /// <returns>The parameter, if found.</returns>
+        public T GetParameter<T>(string id) where T : Parameter
         {
-            parameter = this.parameters.FirstOrDefault(p => p is T && p.Id == id) as T;
-
-            return parameter != null;
-        }/// <summary>
-         /// 
-         /// </summary>
-         /// <param name="parameter">the parameter to add</param>
-         /// <exception cref="Exception">if the parameter to add has the same id as another parameter already in the database, this exception will fire.</exception>
-
+            return this.parameters.First(p => p is T && p.Id == id) as T;
+        }
 
         /// <summary>
         /// returns a list of parameters that support the specified os
@@ -54,43 +46,33 @@ namespace PcmHacking
 
 
         /// <summary>
-        /// tries to add a parameter to the database, will not allow parameters with duplicate IDs
+        /// adds a parameter to the database, will not allow parameters with duplicate IDs, throws exception in that case.
         /// </summary>
         /// <param name="parameter">the parameter to add</param>
-        /// <param name="errorMessage">if the parameter to add has the same id as another parameter already in the database, this message will be populated</param>
-        /// <returns>false if it could not add the parameter, true if the parameter was added successfully</returns>
-        public bool TryAddParameter(Parameter parameter, out string errorMessage)
+        public void AddParameter(Parameter parameter)
         {
             if (this.parameters.Any(P => P.Id == parameter.Id))
             {
-                errorMessage = string.Format("Duplicate parameter ID:{0}", parameter.Id);
-                return false;
+                throw new Exception(String.Format("Duplicate parameter ID:{0}", parameter.Id));
             }
 
             this.parameters.Add(parameter);
-            errorMessage = null;
-            return true;
         }
 
         /// <summary>
         /// Load everything.
         /// </summary>
-        public bool TryLoad(out string errorMessage)
+        public void LoadDatabase()
         {
-            if (!this.TryLoadStandardParameters(out errorMessage) ||
-                !this.TryLoadRamParameters(out errorMessage) ||
-                !this.TryLoadMathParameters(out errorMessage))
-            {
-                return false;
-            }
-
-            return true;
+            this.LoadStandardParameters();
+            this.LoadRamParameters();
+            this.LoadMathParameters();
         }
 
         /// <summary>
         /// Load standard parameters.
         /// </summary>
-        private bool TryLoadStandardParameters(out string errorMessage)
+        private void LoadStandardParameters()
         {
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.Standard.xml");
             XDocument xml = XDocument.Load(pathToXml);
@@ -115,10 +97,7 @@ namespace PcmHacking
                     osids.Add(osid);
                 }
 
-                if (!TryGetConversions(parameterElement, out List<Conversion> conversions, out errorMessage))
-                {
-                    return false;
-                }
+                List<Conversion> conversions = GetConversions(parameterElement);
 
                 PidParameter parameter = new PidParameter(
                     parameterElement.Attribute("id").Value,
@@ -130,20 +109,14 @@ namespace PcmHacking
                     UnsignedHex.GetUnsignedHex("0x" + parameterElement.Attribute("pid").Value),
                     osids);
 
-                if (!TryAddParameter(parameter, out errorMessage))
-                {
-                    return false;
-                }
+                AddParameter(parameter);
             }
-
-            errorMessage = null;
-            return true;
         }
 
         /// <summary>
         /// Load RAM parameters.
         /// </summary>
-        private bool TryLoadRamParameters(out string errorMessage)
+        private void LoadRamParameters()
         {
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.RAM.xml");
             XDocument xml = XDocument.Load(pathToXml);
@@ -162,10 +135,7 @@ namespace PcmHacking
                     addresses[osid] = address;
                 }
 
-                if (!TryGetConversions(parameterElement, out List<Conversion> conversions, out errorMessage))
-                {
-                    return false;
-                }
+                List<Conversion> conversions = GetConversions(parameterElement);
 
                 RamParameter parameter = new RamParameter(
                     parameterElement.Attribute("id").Value,
@@ -176,20 +146,14 @@ namespace PcmHacking
                     conversions,
                     addresses);
 
-                if (!TryAddParameter(parameter, out errorMessage))
-                {
-                    return false;
-                }
+                AddParameter(parameter);
             }
-
-            errorMessage = null;
-            return true;
         }
 
         /// <summary>
         /// Load math parameters.
         /// </summary>
-        private bool TryLoadMathParameters(out string errorMessage)
+        private void LoadMathParameters()
         {
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.Math.xml");
             XDocument xml = XDocument.Load(pathToXml);
@@ -197,22 +161,15 @@ namespace PcmHacking
             {
                 string parameterName = parameterElement.Attribute("name").Value;
 
-                if (!TryGetConversions(parameterElement, out List<Conversion> conversions, out errorMessage))
-                {
-                    return false;
-                }
+                List<Conversion> conversions = GetConversions(parameterElement);
 
                 string xId = parameterElement.Attribute("xParameterId").Value;
                 string xUnits = parameterElement.Attribute("xParameterConversion").Value;
                 string yId = parameterElement.Attribute("yParameterId").Value;
                 string yUnits = parameterElement.Attribute("yParameterConversion").Value;
 
-                string logColumnErrorMessage = null;
-                if (!TryBuildLogColumnForMathParameter(xId, xUnits, parameterName, out LogColumn xLogColumn, out errorMessage) ||
-                    !TryBuildLogColumnForMathParameter(yId, yUnits, parameterName, out LogColumn yLogColumn, out errorMessage))
-                {
-                    return false;
-                }
+                LogColumn xLogColumn = BuildLogColumnForMathParameter(xId, xUnits, parameterName);
+                LogColumn yLogColumn = BuildLogColumnForMathParameter(yId, yUnits, parameterName);
 
                 MathParameter parameter = new MathParameter(
                     parameterElement.Attribute("id").Value,
@@ -222,65 +179,47 @@ namespace PcmHacking
                     xLogColumn,
                     yLogColumn);
 
-                if (!TryAddParameter(parameter, out errorMessage))
-                {
-                    return false;
-                }
+                AddParameter(parameter);
             }
-
-            errorMessage = null;
-            return true;
         }
 
-        private bool TryBuildLogColumnForMathParameter(string id, string units, string parameterName, out LogColumn logColumn, out string errorMessage)
+        private LogColumn BuildLogColumnForMathParameter(string id, string units, string parameterName)
         {
             Parameter xParameter = this.parameters.Where(x => (x.Id == id)).FirstOrDefault();
 
             if (xParameter == null)
             {
-                logColumn = null;
-                errorMessage = String.Format("No parameter found for {0} in {1}", id, parameterName);
-                return false;
+                throw new Exception(String.Format("No parameter found for {0} in {1}", id, parameterName));
             }
 
             Conversion xConversion = xParameter.Conversions.Where(x => x.Units == units).FirstOrDefault();
 
             if (xConversion == null)
             {
-                logColumn = null;
-                errorMessage = String.Format("No conversion found for {0} in {1}", units, parameterName);
-                return false;
+                throw new Exception(String.Format("No conversion found for {0} in {1}", units, parameterName));
             }
 
-            logColumn = new LogColumn(xParameter, xConversion);
-            errorMessage = null;
-            return true;
+            return new LogColumn(xParameter, xConversion);
         }
 
-        bool TryGetConversions(XElement parameterElement, out List<Conversion> conversions, out string errorMessage)
+        List<Conversion> GetConversions(XElement parameterElement)
         {
             List<Conversion> returnConversions = new List<Conversion>();
 
             foreach (XElement conversionXml in parameterElement.Elements("Conversion"))
             {
-                int bitIndex = Convert.ToInt32(parameterElement.Attribute("bitIndex")?.Value);
-                Conversion conversion = null;
-
-                if (IsBitmapped(parameterElement) && TryCreateBooleanConversion(conversionXml, bitIndex, out conversion, out errorMessage) ||
-                    TryCreateNumericConversion(conversionXml, out conversion, out errorMessage))
+                if (IsBitmapped(parameterElement))
                 {
-                    returnConversions.Add(conversion);
+                    int bitIndex = Convert.ToInt32(parameterElement.Attribute("bitIndex")?.Value);
+                    returnConversions.Add(CreateBooleanConversion(conversionXml, bitIndex));
                 }
                 else
                 {
-                    conversions = null;
-                    return false;
+                    returnConversions.Add(CreateNumericConversion(conversionXml));
                 }
             }
 
-            conversions = returnConversions;
-            errorMessage = null;
-            return true;
+            return returnConversions;
         }
 
         private bool IsBitmapped(XElement parameterElement)
@@ -299,34 +238,28 @@ namespace PcmHacking
             return false;
         }
 
-        private bool TryCreateBooleanConversion(XElement conversionXml, int bitIndex, out Conversion conversion, out string errorMessage)
+        private Conversion CreateBooleanConversion(XElement conversionXml, int bitIndex)
         {
             string[] values = conversionXml.Attribute("expression").Value.Split(',');
+
             if (values.Length != 2)
             {
-                conversion = null;
-                errorMessage = "Boolean expression must have two values separated by a comma";
-                return false;
+                throw new Exception("Boolean expression must have two values separated by a comma");
             }
 
-            conversion = new Conversion(
+            return new Conversion(
                 conversionXml.Attribute("units").Value,
                 bitIndex,
                 values[0],
                 values[1]);
-            errorMessage = null;
-            return true;
         }
 
-        private bool TryCreateNumericConversion(XElement conversionXml, out Conversion conversion, out string errorMessage)
+        private Conversion CreateNumericConversion(XElement conversionXml)
         {
-            errorMessage = null;
-            conversion = new Conversion(
+            return new Conversion(
                 conversionXml.Attribute("units").Value,
                 conversionXml.Attribute("expression").Value,
                 conversionXml.Attribute("format").Value);
-
-            return true; // can probably add validation here now.
         }
     }
 }

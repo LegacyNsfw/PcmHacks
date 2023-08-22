@@ -66,19 +66,18 @@ namespace PcmHacking
 
         private void AddParameterToProfile<T>(string id, string units) where T : Parameter
         {
-            if (!this.database.TryGetParameter<T>(id, out T parameter))
-            {
-                return;
-            }
+            T parameter = this.database.GetParameter<T>(id);
 
             if (!parameter.IsSupported(this.osid))
             {
                 return;
             }
 
-            if (!parameter.TryGetConversion(units, out Conversion conversion))
+            Conversion conversion = parameter.GetConversion(units);
+
+            if (conversion == null)
             {
-                conversion = parameter.Conversions.First();
+                throw new Exception(String.Format("Conversion {0} for parameter {1} not found when loading profile.", units, id));
             }
 
             LogColumn column = new LogColumn(parameter, conversion);

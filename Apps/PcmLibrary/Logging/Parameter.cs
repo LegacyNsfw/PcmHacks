@@ -111,19 +111,9 @@ namespace PcmHacking
             return this.Name;
         }
 
-        public bool TryGetConversion(string units, out Conversion conversion)
+        public Conversion GetConversion(string units)
         {
-            foreach(Conversion candidate in this.Conversions)
-            {
-                if (candidate.Units == units)
-                {
-                    conversion = candidate;
-                    return true;
-                }
-            }
-
-            conversion = null;
-            return false;
+            return this.Conversions.FirstOrDefault(c => c.Units == units);
         }
 
         public abstract bool IsSupported(uint osid);
