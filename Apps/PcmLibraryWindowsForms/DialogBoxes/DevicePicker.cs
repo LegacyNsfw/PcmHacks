@@ -155,9 +155,9 @@ namespace PcmHacking
             }
 
             // This is useful for testing without an actual PCM.
-#if DEBUG
-            this.serialPortList.Items.Add(MockPort.PortName);
-#endif
+            // This is useful for testing without an actual PCM. 
+            // You'll need to uncomment a line in FillSerialDeviceList as well as this one.
+            // this.serialPortList.Items.Add(MockPort.PortName);
         }
 
         /// <summary>
@@ -172,9 +172,8 @@ namespace PcmHacking
             this.serialDeviceList.Items.Add(OBDXProDevice.DeviceType);
 
             // This is useful for testing without an actual PCM.
-#if DEBUG
-            this.serialDeviceList.Items.Add(MockDevice.DeviceType);
-#endif
+            // You'll need to uncomment a line in FillPortList as well as this one.
+            // this.serialDeviceList.Items.Add(MockDevice.DeviceType);
         }
 
         /// <summary>
