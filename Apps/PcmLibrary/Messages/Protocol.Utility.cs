@@ -12,10 +12,10 @@ namespace PcmHacking
         internal Response<byte> ParseByte(Message responseMessage, byte mode, byte submode)
         {
             ResponseStatus status;
-            byte[] expected = { 0x6C, DeviceId.Tool, DeviceId.Pcm, (byte)(mode | 0x40), submode };
+            byte[] expected = { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, (byte)(mode | Mode.Response), submode };
             if (!TryVerifyInitialBytes(responseMessage, expected, out status))
             {
-                byte[] refused = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7F, mode, submode };
+                byte[] refused = { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.NegativeResponse, mode, submode };
                 if (TryVerifyInitialBytes(responseMessage, refused, out status))
                 {
                     return Response.Create(ResponseStatus.Refused, (byte)0);
@@ -41,10 +41,10 @@ namespace PcmHacking
         internal Response<UInt32> ParseUInt32(Message responseMessage, byte mode, byte submode)
         {
             ResponseStatus status;
-            byte[] expected = { 0x6C, DeviceId.Tool, DeviceId.Pcm, (byte)(mode | 0x40), submode };
+            byte[] expected = { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, (byte)(mode | Mode.Response), submode };
             if (!TryVerifyInitialBytes(responseMessage, expected, out status))
             {
-                byte[] refused = { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7F, mode, submode };
+                byte[] refused = { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.NegativeResponse, mode, submode };
                 if (TryVerifyInitialBytes(responseMessage, refused, out status))
                 {
                     return Response.Create(ResponseStatus.Refused, (UInt32)0);
@@ -80,7 +80,7 @@ namespace PcmHacking
             byte[] actual = message.GetBytes();
             ResponseStatus status;
 
-            byte[] success = new byte[] { priority, DeviceId.Tool, DeviceId.Pcm, (byte)(mode + 0x40), };
+            byte[] success = new byte[] { priority, DeviceId.Tool, DeviceId.Pcm, (byte)(mode + Mode.Response), };
             if (this.TryVerifyInitialBytes(actual, success, out status))
             {
                 if (data != null && data.Length > 0)
@@ -111,7 +111,7 @@ namespace PcmHacking
                 return Response.Create(ResponseStatus.Success, true);
             }
 
-            byte[] failure = new byte[] { priority, DeviceId.Tool, DeviceId.Pcm, 0x7F, mode };
+            byte[] failure = new byte[] { priority, DeviceId.Tool, DeviceId.Pcm, Mode.NegativeResponse, mode };
             if (this.TryVerifyInitialBytes(actual, failure, out status))
             {
                 return Response.Create(ResponseStatus.Refused, false);

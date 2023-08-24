@@ -247,7 +247,7 @@ namespace PcmHacking
 
             for (int iterations = 0; iterations < 10; iterations++)
             {
-                await this.TrySendMessage(new Message(new byte[] { 0x6C, 0x10, 0xF0, 0x62 }), "recovery query", 2);
+                await this.TrySendMessage(new Message(new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, 0x62 }), "recovery query", 2);
                 Message response = await this.device.ReceiveMessage();
                 if (response == null)
                 {

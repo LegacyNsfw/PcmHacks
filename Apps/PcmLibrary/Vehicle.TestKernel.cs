@@ -143,9 +143,9 @@ namespace PcmHacking
                 }
 
                 byte[] message = new byte[length + 5];
-                message[0] = 0x6C;
-                message[1] = 0x10;
-                message[2] = 0xF0;
+                message[0] = Priority.Physical0;
+                message[1] = DeviceId.Pcm;
+                message[2] = DeviceId.Tool;
                 message[3] = 0x3E;
                 message[4] = (byte)length; // to indicate what the loop counter is
 
