@@ -51,12 +51,12 @@ namespace PcmHacking
         private async Task<Response<bool>> WriteBlock(byte block, byte[] data)
         {
             Message m;
-            Message ok = new Message(new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, 0x7B, block });
+            Message ok = new Message(new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, 0x7B, block });
 
             switch (data.Length)
             {
                 case 6:
-                    m = new Message(new byte[] { 0x6C, DeviceId.Pcm, DeviceId.Tool, 0x3B, block, data[0], data[1], data[2], data[3], data[4], data[5] });
+                    m = new Message(new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, 0x3B, block, data[0], data[1], data[2], data[3], data[4], data[5] });
                     break;
                 default:
                     logger.AddDebugMessage("Cant write block size " + data.Length);

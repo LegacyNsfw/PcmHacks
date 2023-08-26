@@ -138,13 +138,13 @@ namespace PcmHacking
             {
                 if (this.payload[0] == 0x01)
                 {
-                    this.responseBuffer = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x01, 0x2A, 0xED, 0x03 };
+                    this.responseBuffer = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, 0x67, 0x01, 0x2A, 0xED, 0x03 };
                 }
                 else if (this.payload[0] == 0x02)
                 {
                     // TODO: validate the key.
                     // For now we'll just return a 'success' response every time.
-                    this.responseBuffer = new byte[] { 0x6C, 0xF0, 0x10, 0x67, 0x02, 0x34 };
+                    this.responseBuffer = new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, 0x67, 0x02, 0x34 };
                 }
             }
             else if (this.modeByte == 0x3C)
@@ -203,7 +203,7 @@ namespace PcmHacking
                 }
 
                 List<byte> response = new List<byte>();
-                response.AddRange(new byte[] { 0x6C, 0xF0, 0x10, 0x7C, this.readWriteBlockId });
+                response.AddRange(new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, 0x7C, this.readWriteBlockId });
 
                 if (this.readWriteBlockId == 1)
                 {

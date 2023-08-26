@@ -187,7 +187,7 @@ namespace PcmHacking
             ResponseStatus status;
             if (!this.TryVerifyInitialBytes(
                 message.GetBytes(), 
-                new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, Mode.GetPid + 0x40 }, out status))
+                new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.GetPid + Mode.Response }, out status))
             {
                 return Response.Create(status, 0);    
             }
@@ -217,7 +217,7 @@ namespace PcmHacking
         /// </summary>
         public Message CreateRamRequest(int address)
         { 
-            Message request = new Message(new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, 0x23,
+            Message request = new Message(new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, Mode.GetRam,
                 (byte)(address >> 16), (byte)(address >> 8), (byte)address, 0x01 });
 
             return request;
@@ -228,7 +228,7 @@ namespace PcmHacking
         /// </summary>
         public Response<uint> ParseRamResponse(Message message)
         {                        
-            if (message[3] == 0x7f && message[4] == Mode.GetRam)
+            if (message[3] == Mode.NegativeResponse && message[4] == Mode.GetRam)
             {
                 // Illegal address.
                 if (message[9] == 0x31)
@@ -242,7 +242,7 @@ namespace PcmHacking
             ResponseStatus status;
             if (!this.TryVerifyInitialBytes(
                 message.GetBytes(),
-                new byte[] { 0x6C, DeviceId.Tool, DeviceId.Pcm, Mode.GetRam + 0x40 }, out status))
+                new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, Mode.GetRam + Mode.Response }, out status))
             {
                 return Response.Create(status, (uint)0);
             }

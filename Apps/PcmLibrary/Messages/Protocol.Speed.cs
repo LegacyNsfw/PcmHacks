@@ -58,7 +58,7 @@ namespace PcmHacking
                 return new HighSpeedPermissionResult() { IsValid = true, DeviceId = moduleId, PermissionGranted = true };
             }
 
-            if ((actual[3] == Mode.Rejected) || (actual[3] == 0x7F))
+            if ((actual[3] == Mode.Rejected) || (actual[3] == Mode.NegativeResponse))
             {
                 return new HighSpeedPermissionResult() { IsValid = true, DeviceId = moduleId, PermissionGranted = false };
             }
@@ -86,7 +86,7 @@ namespace PcmHacking
             // Source
             byte moduleId = refusal[2];
 
-            if ((actual[3] == Mode.Rejected) || (actual[3] == 0x7F))
+            if ((actual[3] == Mode.Rejected) || (actual[3] == Mode.NegativeResponse))
             {
                 if (actual[4] == Mode.HighSpeed)
                 {

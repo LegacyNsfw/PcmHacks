@@ -141,8 +141,8 @@ namespace PcmHacking
         /// <returns></returns>
         public Message CreateReadRequest(int startAddress, int length)
         {
-            byte[] request = { 0x6D, DeviceId.Pcm, DeviceId.Tool, 0x35, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
-            byte[] request2 = { 0x6D, DeviceId.Pcm, DeviceId.Tool, 0x37, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 24), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
+            byte[] request = { Priority.Block, DeviceId.Pcm, DeviceId.Tool, 0x35, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
+            byte[] request2 = { Priority.Block, DeviceId.Pcm, DeviceId.Tool, 0x37, 0x01, (byte)(length >> 8), (byte)(length & 0xFF), (byte)(startAddress >> 24), (byte)(startAddress >> 16), (byte)((startAddress >> 8) & 0xFF), (byte)(startAddress & 0xFF) };
 
             if (startAddress > 0xFFFFFF)
             {
@@ -163,7 +163,7 @@ namespace PcmHacking
         public Response<byte[]> ParsePayload(Message message, int length, int expectedAddress)
         {
             byte[] actual = message.GetBytes();
-            byte[] expected = new byte[] { 0x6D, 0xF0, 0x10, 0x36 };
+            byte[] expected = new byte[] { Priority.Block, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUpload };
             if (!TryVerifyInitialBytes(actual, expected, out ResponseStatus status))
             {
                 return Response.Create(status, new byte[0]);
