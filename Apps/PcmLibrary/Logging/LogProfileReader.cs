@@ -33,9 +33,9 @@ namespace PcmHacking
             {
                 XDocument xml = XDocument.Load(path);
 
-                this.LoadPidParameters(xml);
-                this.LoadRamParameters(xml);
-                this.LoadMathParameters(xml);
+                this.LoadParameters<PidParameter>(xml);
+                this.LoadParameters<RamParameter>(xml);
+                this.LoadParameters<MathParameter>(xml);
             }
             catch(Exception exception)
             {
@@ -47,118 +47,41 @@ namespace PcmHacking
             return profile;
         }
 
-        private void LoadPidParameters(XDocument xml)
+        private void LoadParameters<T>(XDocument xml) where T : Parameter
         {
-            XElement container = xml.Root.Elements("PidParameters").FirstOrDefault();
+            string parameterType = typeof(T).Name;
+
+            XElement container = xml.Root.Elements(string.Format("{0}s", parameterType)).FirstOrDefault();
+
             if (container != null)
             {
-                foreach (XElement parameterElement in container.Elements("PidParameter"))
+                foreach (XElement parameterElement in container.Elements(parameterType))
                 {
                     string id = parameterElement.Attribute("id").Value;
-                    string name = parameterElement.Attribute("name")?.Value;
                     string units = parameterElement.Attribute("units").Value;
-                    this.AddPidParameter(id, name, units);
+                    this.AddParameterToProfile<T>(id, units);
                 }
             }
         }
 
-        private void LoadRamParameters(XDocument xml)
+        private void AddParameterToProfile<T>(string id, string units) where T : Parameter
         {
-            XElement container = xml.Root.Elements("RamParameters").FirstOrDefault();
-            if (container != null)
-            {
-                foreach (XElement parameterElement in container.Elements("RamParameter"))
-                {
-                    string id = parameterElement.Attribute("id").Value;
-                    string name = parameterElement.Attribute("name")?.Value;
-                    string units = parameterElement.Attribute("units").Value;
-                    this.AddRamParameter(id, name, units);
-                }
-            }
-        }
-
-        private void LoadMathParameters(XDocument xml)
-        {
-            XElement container = xml.Root.Elements("MathParameters").FirstOrDefault();
-            if (container != null)
-            {
-                foreach (XElement parameterElement in container.Elements("MathParameter"))
-                {
-                    string id = parameterElement.Attribute("id").Value;
-                    string name = parameterElement.Attribute("name")?.Value;
-                    string units = parameterElement.Attribute("units").Value;
-                    this.AddMathParameter(id, name, units);
-                }
-            }
-        }
-
-        private void AddPidParameter(string id, string name, string units)
-        {
-            PidParameter parameter;
-
-            if (!this.database.PidParameters.TryGetParameter(id, name, out parameter))
-            {
-                return;
-            }
+            T parameter = this.database.GetParameter<T>(id);
 
             if (!parameter.IsSupported(this.osid))
             {
                 return;
             }
 
-            Conversion conversion;
-            if (!parameter.TryGetConversion(units, out conversion))
+            Conversion conversion = parameter.GetConversion(units);
+
+            if (conversion == null)
             {
-                conversion = parameter.Conversions.First();
+                throw new Exception(String.Format("Conversion {0} for parameter {1} not found when loading profile.", units, id));
             }
 
             LogColumn column = new LogColumn(parameter, conversion);
-            this.profile.AddColumn(column);
-        }
 
-        private void AddRamParameter(string id, string name, string units)
-        {
-            RamParameter parameter;
-            if (!this.database.RamParameters.TryGetParameter(id, name, out parameter))
-            {
-                return;
-            }
-
-            if (!parameter.IsSupported(this.osid))
-            {
-                return;
-            }
-
-            Conversion conversion;
-            if (!parameter.TryGetConversion(units, out conversion))
-            {
-                conversion = parameter.Conversions.First();
-            }
-
-            LogColumn column = new LogColumn(parameter, conversion);
-            this.profile.AddColumn(column);
-        }
-
-        private void AddMathParameter(string id, string name, string units)
-        {
-            MathParameter parameter;
-            if (!this.database.MathParameters.TryGetParameter(id, name, out parameter))
-            {
-                return;
-            }
-
-            if (!parameter.IsSupported(this.osid))
-            {
-                return;
-            }
-
-            Conversion conversion;
-            if (!parameter.TryGetConversion(units, out conversion))
-            {
-                conversion = parameter.Conversions.First();
-            }
-
-            LogColumn column = new LogColumn(parameter, conversion);
             this.profile.AddColumn(column);
         }
     }

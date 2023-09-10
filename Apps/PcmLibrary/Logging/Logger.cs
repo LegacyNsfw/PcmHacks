@@ -124,7 +124,7 @@ namespace PcmHacking
             {
                 MathParameter mathParameter = (MathParameter)column.Parameter;
 
-                LogColumn xColumn = pcmColumns.Where(x => x.Parameter.Id == mathParameter.XColumn.Parameter.Id).FirstOrDefault();
+                LogColumn xColumn = pcmColumns.Where(x => x.Parameter == mathParameter.XColumn.Parameter).FirstOrDefault();
 
                 if (xColumn == null)
                 {
@@ -132,7 +132,7 @@ namespace PcmHacking
                     pcmColumns.Add(xColumn);
                 }
 
-                LogColumn yColumn = pcmColumns.Where(y => y.Parameter.Id == mathParameter.YColumn.Parameter.Id).FirstOrDefault();
+                LogColumn yColumn = pcmColumns.Where(y => y.Parameter == mathParameter.YColumn.Parameter).FirstOrDefault();
                 if (yColumn == null)
                 {
                     yColumn = new LogColumn(mathParameter.YColumn.Parameter, mathParameter.YColumn.Conversion);

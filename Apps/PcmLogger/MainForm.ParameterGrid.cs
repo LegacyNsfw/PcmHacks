@@ -22,19 +22,10 @@ namespace PcmHacking
 
             this.database = new ParameterDatabase(appDirectory);
 
-            string errorMessage;
-            if (!this.database.TryLoad(out errorMessage))
-            {
-                throw new InvalidDataException("Unable to load parameters from XML: " + errorMessage);
-            }
+            this.database.LoadDatabase();
 
-            foreach (Parameter parameter in this.database.Parameters)
+            foreach (Parameter parameter in this.database.ListParametersBySupportedOs(osid))
             {
-                if (!parameter.IsSupported(osid))
-                {
-                    continue;
-                }
-
                 DataGridViewRow row = new DataGridViewRow();
 
                 row.CreateCells(this.parameterGrid);

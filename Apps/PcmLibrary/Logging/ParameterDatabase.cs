@@ -11,32 +11,9 @@ namespace PcmHacking
     /// </summary>
     public class ParameterDatabase
     {
-        public class ParameterTable<T> where T : Parameter
-        {
-            private List<T> table = new List<T>();
-
-            public void Add(string id, T parameter)
-            {
-                this.table.Add(parameter);
-            }
-
-            public bool TryGetParameter(string id, string name, out T parameter)
-            {
-                //String.IsNullOrEmpty(name) is to handle cases where old profiles are being loaded, because we didnt test for that before.
-                parameter = this.table.FirstOrDefault(x => x.Id == id && (x.Name == name || String.IsNullOrEmpty(name))); 
-
-                return parameter != null;
-            }
-        }
-
         private string pathToXmlDirectory;
 
-        private List<Parameter> parameters;
-
-        public IEnumerable<Parameter> Parameters { get { return this.parameters; } }
-        public ParameterTable<PidParameter> PidParameters { get; private set; }
-        public ParameterTable<RamParameter> RamParameters { get; private set; }
-        public ParameterTable<MathParameter> MathParameters { get; private set; }
+        private List<Parameter> parameters = new List<Parameter>();
 
         /// <summary>
         /// Constructor
@@ -44,101 +21,208 @@ namespace PcmHacking
         public ParameterDatabase(string pathToXmlDirectory)
         {
             this.pathToXmlDirectory = pathToXmlDirectory;
-            this.PidParameters = new ParameterTable<PidParameter>();
-            this.RamParameters = new ParameterTable<RamParameter>();
-            this.MathParameters = new ParameterTable<MathParameter>();
+        }
+
+        /// <summary>
+        ///Gets a parameter using the specified generic type, with the specified id. Will throw if a parameter is not found.
+        /// </summary>
+        /// <typeparam name="T">The type of parameter, must be subclass of Parameter</typeparam>
+        /// <param name="id">the string ID of the parameter to look for</param>
+        /// <returns>The parameter, if found.</returns>
+        public T GetParameter<T>(string id) where T : Parameter
+        {
+            return this.parameters.First(p => p is T && p.Id == id) as T;
+        }
+
+        /// <summary>
+        /// returns a list of parameters that support the specified os
+        /// </summary>
+        /// <param name="osId">the os to search for</param>
+        /// <returns>an ienumerable of parameters</returns>
+        public IEnumerable<Parameter> ListParametersBySupportedOs(uint osId)
+        {
+            return this.parameters.Where(p => p.IsSupported(osId));
+        }
+
+
+        /// <summary>
+        /// adds a parameter to the database, will not allow parameters with duplicate IDs, throws exception in that case.
+        /// </summary>
+        /// <param name="parameter">the parameter to add</param>
+        public void AddParameter(Parameter parameter)
+        {
+            if (this.parameters.Any(P => P.Id == parameter.Id))
+            {
+                throw new Exception(String.Format("Duplicate parameter ID:{0}", parameter.Id));
+            }
+
+            this.parameters.Add(parameter);
         }
 
         /// <summary>
         /// Load everything.
         /// </summary>
-        public bool TryLoad(out string errorMessage)
+        public void LoadDatabase()
         {
-            if (!this.TryLoadStandardParameters(out errorMessage))
-            {
-                return false;
-            }
-
-            if (!this.TryLoadRamParameters(out errorMessage))
-            {
-                return false;
-            }
-
-            if (!this.TryLoadMathParameters(out errorMessage))
-            {
-                return false;
-            }
-
-            return true;
+            this.LoadStandardParameters();
+            this.LoadRamParameters();
+            this.LoadMathParameters();
         }
 
         /// <summary>
         /// Load standard parameters.
         /// </summary>
-        private bool TryLoadStandardParameters(out string errorMessage)
+        private void LoadStandardParameters()
         {
             string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.Standard.xml");
             XDocument xml = XDocument.Load(pathToXml);
-            this.parameters = new List<Parameter>();
+
             foreach (XElement parameterElement in xml.Root.Elements("Parameter"))
             {
-                string parameterName = null;
-                try
-                {
-                    List<Conversion> conversions = GetConversions(parameterElement);
+                var osElements = parameterElement.Elements("OS");
+                List<uint> osids = new List<uint>();
 
-                    parameterName = (string)parameterElement.Attribute("name").Value;
-                    PidParameter parameter = new PidParameter(
-                        UnsignedHex.GetUnsignedHex("0x" + parameterElement.Attribute("id").Value),
-                        parameterName,
-                        parameterElement.Attribute("description").Value,
-                        parameterElement.Attribute("storageType").Value,
-                        bool.Parse(parameterElement.Attribute("bitMapped").Value),
-                        conversions);
-
-                    parameters.Add(parameter);
-                    this.PidParameters.Add(parameter.Id, parameter);
-                }
-                catch (Exception exception)
+                foreach (XElement os in osElements)
                 {
-                    errorMessage =
-                        string.Format("Error in parameter '{0}'{1}{2}",
-                        parameterName,
-                        Environment.NewLine,
-                        exception.ToString());
-                    return false;
+                    string osidString = os.Attribute("id").Value;
+
+                    if (osidString.ToLower() == "all")
+                    {
+                        osids.Clear(); //going to use no osids as all supported.
+                        break;
+                    }
+
+                    uint osid = uint.Parse(osidString);
+                        
+                    osids.Add(osid);
                 }
+
+                List<Conversion> conversions = GetConversions(parameterElement);
+
+                PidParameter parameter = new PidParameter(
+                    parameterElement.Attribute("id").Value,
+                    parameterElement.Attribute("name").Value,
+                    parameterElement.Attribute("description").Value,
+                    parameterElement.Attribute("storageType").Value,
+                    bool.Parse(parameterElement.Attribute("bitMapped").Value),
+                    conversions,
+                    UnsignedHex.GetUnsignedHex("0x" + parameterElement.Attribute("pid").Value),
+                    osids);
+
+                AddParameter(parameter);
+            }
+        }
+
+        /// <summary>
+        /// Load RAM parameters.
+        /// </summary>
+        private void LoadRamParameters()
+        {
+            string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.RAM.xml");
+            XDocument xml = XDocument.Load(pathToXml);
+
+            foreach (XElement parameterElement in xml.Root.Elements("RamParameter"))
+            {
+                Dictionary<uint, uint> addresses = new Dictionary<uint, uint>();
+                foreach (XElement location in parameterElement.Elements("Location"))
+                {
+                    string osidString = location.Attribute("os").Value;
+                    uint osid = uint.Parse(osidString);
+
+                    string addressString = location.Attribute("address").Value;
+                    uint address = UnsignedHex.GetUnsignedHex(addressString);
+
+                    addresses[osid] = address;
+                }
+
+                List<Conversion> conversions = GetConversions(parameterElement);
+
+                RamParameter parameter = new RamParameter(
+                    parameterElement.Attribute("id").Value,
+                    parameterElement.Attribute("name").Value,
+                    parameterElement.Attribute("description").Value,
+                    parameterElement.Attribute("storageType").Value,
+                    bool.Parse(parameterElement.Attribute("bitMapped").Value),
+                    conversions,
+                    addresses);
+
+                AddParameter(parameter);
+            }
+        }
+
+        /// <summary>
+        /// Load math parameters.
+        /// </summary>
+        private void LoadMathParameters()
+        {
+            string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.Math.xml");
+            XDocument xml = XDocument.Load(pathToXml);
+            foreach (XElement parameterElement in xml.Root.Elements("MathParameter"))
+            {
+                string parameterName = parameterElement.Attribute("name").Value;
+
+                List<Conversion> conversions = GetConversions(parameterElement);
+
+                string xId = parameterElement.Attribute("xParameterId").Value;
+                string xUnits = parameterElement.Attribute("xParameterConversion").Value;
+                string yId = parameterElement.Attribute("yParameterId").Value;
+                string yUnits = parameterElement.Attribute("yParameterConversion").Value;
+
+                LogColumn xLogColumn = BuildLogColumnForMathParameter(xId, xUnits, parameterName);
+                LogColumn yLogColumn = BuildLogColumnForMathParameter(yId, yUnits, parameterName);
+
+                MathParameter parameter = new MathParameter(
+                    parameterElement.Attribute("id").Value,
+                    parameterName,
+                    parameterElement.Attribute("description").Value,
+                    conversions,
+                    xLogColumn,
+                    yLogColumn);
+
+                AddParameter(parameter);
+            }
+        }
+
+        private LogColumn BuildLogColumnForMathParameter(string id, string units, string parameterName)
+        {
+            Parameter xParameter = this.parameters.Where(x => (x.Id == id)).FirstOrDefault();
+
+            if (xParameter == null)
+            {
+                throw new Exception(String.Format("No parameter found for {0} in {1}", id, parameterName));
             }
 
-            errorMessage = null;
-            return true;
+            Conversion xConversion = xParameter.Conversions.Where(x => x.Units == units).FirstOrDefault();
+
+            if (xConversion == null)
+            {
+                throw new Exception(String.Format("No conversion found for {0} in {1}", units, parameterName));
+            }
+
+            return new LogColumn(xParameter, xConversion);
         }
 
         List<Conversion> GetConversions(XElement parameterElement)
         {
-            List<Conversion> conversions = new List<Conversion>();
-            bool bitMapped = GetBitMappedFlag(parameterElement);
-            if (bitMapped)
+            List<Conversion> returnConversions = new List<Conversion>();
+
+            foreach (XElement conversionXml in parameterElement.Elements("Conversion"))
             {
-                string bitIndexString = parameterElement.Attribute("bitIndex").Value;
-                int bitIndex = int.Parse(bitIndexString);
-                foreach (XElement conversion in parameterElement.Elements("Conversion"))
+                if (IsBitmapped(parameterElement))
                 {
-                    conversions.Add(CreateBooleanConversion(conversion, bitIndex));
+                    int bitIndex = Convert.ToInt32(parameterElement.Attribute("bitIndex")?.Value);
+                    returnConversions.Add(CreateBooleanConversion(conversionXml, bitIndex));
                 }
-            }
-            else
-            {
-                foreach (XElement conversion in parameterElement.Elements("Conversion"))
+                else
                 {
-                    conversions.Add(CreateNumericConversion(conversion));
+                    returnConversions.Add(CreateNumericConversion(conversionXml));
                 }
             }
 
-            return conversions;
+            return returnConversions;
         }
 
-        private bool GetBitMappedFlag(XElement parameterElement)
+        private bool IsBitmapped(XElement parameterElement)
         {
             string bitMappedAttributeValue = parameterElement.Attribute("bitMapped")?.Value;
             if (string.IsNullOrEmpty(bitMappedAttributeValue))
@@ -146,8 +230,7 @@ namespace PcmHacking
                 return false;
             }
 
-            bool result;
-            if (bool.TryParse(bitMappedAttributeValue, out result))
+            if (bool.TryParse(bitMappedAttributeValue, out bool result))
             {
                 return result;
             }
@@ -155,136 +238,28 @@ namespace PcmHacking
             return false;
         }
 
-        private Conversion CreateBooleanConversion(XElement conversion, int bitIndex)
+        private Conversion CreateBooleanConversion(XElement conversionXml, int bitIndex)
         {
-            string[] values = conversion.Attribute("expression").Value.Split(',');
+            string[] values = conversionXml.Attribute("expression").Value.Split(',');
+
             if (values.Length != 2)
             {
-                throw new InvalidDataException("Boolean expression must have two values separated by a comma");
+                throw new Exception("Boolean expression must have two values separated by a comma");
             }
 
             return new Conversion(
-                conversion.Attribute("units").Value,
+                conversionXml.Attribute("units").Value,
                 bitIndex,
                 values[0],
                 values[1]);
         }
 
-        private Conversion CreateNumericConversion(XElement conversion)
+        private Conversion CreateNumericConversion(XElement conversionXml)
         {
             return new Conversion(
-                conversion.Attribute("units").Value,
-                conversion.Attribute("expression").Value,
-                conversion.Attribute("format").Value);
-        }
-
-        /// <summary>
-        /// Load RAM parameters.
-        /// </summary>
-        private bool TryLoadRamParameters(out string errorMessage)
-        {
-            string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.RAM.xml");
-            XDocument xml = XDocument.Load(pathToXml);
-            List<Parameter> ramParameters = new List<Parameter>();
-            foreach (XElement parameterElement in xml.Root.Elements("RamParameter"))
-            {
-                string parameterName = null;
-                try
-                {
-                    parameterName = (string)parameterElement.Attribute("name").Value;
-
-                    List<Conversion> conversions = GetConversions(parameterElement);
-
-                    Dictionary<uint, uint> addresses = new Dictionary<uint, uint>();
-                    foreach (XElement location in parameterElement.Elements("Location"))
-                    {
-                        string osidString = location.Attribute("os").Value;
-                        uint osid = uint.Parse(osidString);
-
-                        string addressString = location.Attribute("address").Value;
-                        uint address = UnsignedHex.GetUnsignedHex(addressString);
-
-                        addresses[osid] = address;
-                    }
-
-                    RamParameter parameter = new RamParameter(
-                        parameterElement.Attribute("id").Value,
-                        parameterName,
-                        parameterElement.Attribute("description").Value,
-                        parameterElement.Attribute("storageType").Value,
-                        bool.Parse(parameterElement.Attribute("bitMapped").Value),
-                        conversions,
-                        addresses);
-
-                    ramParameters.Add(parameter);
-                    this.RamParameters.Add(parameter.Id, parameter);
-                }
-                catch (Exception exception)
-                {
-                    errorMessage =
-                        string.Format("Error in parameter '{0}'{1}{2}",
-                        parameterName,
-                        Environment.NewLine,
-                        exception.ToString());
-                    return false;
-                }
-            }
-
-            this.parameters.AddRange(ramParameters);
-            errorMessage = null;
-            return true;
-        }
-
-        /// <summary>
-        /// Load math parameters.
-        /// </summary>
-        private bool TryLoadMathParameters(out string errorMessage)
-        {
-            string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.Math.xml");
-            XDocument xml = XDocument.Load(pathToXml);
-            foreach (XElement parameterElement in xml.Root.Elements("MathParameter"))
-            {
-                string parameterName = null;
-                try
-                {
-                    List<Conversion> conversions = GetConversions(parameterElement);
-
-                    parameterName = (string)parameterElement.Attribute("name").Value;
-
-                    string xId = parameterElement.Attribute("xParameterId").Value;
-                    string xUnits = parameterElement.Attribute("xParameterConversion").Value;
-                    Parameter xParameter = this.Parameters.Where(x => (x.Id == xId)).FirstOrDefault();
-                    Conversion xConversion = xParameter.Conversions.Where(x => x.Units == xUnits).FirstOrDefault();
-
-                    string yId = parameterElement.Attribute("yParameterId").Value;
-                    string yUnits = parameterElement.Attribute("yParameterConversion").Value;
-                    Parameter yParameter = this.Parameters.Where(y => (y.Id == yId)).FirstOrDefault();
-                    Conversion yConversion = yParameter.Conversions.Where(y => y.Units == yUnits).FirstOrDefault();
-
-                    MathParameter parameter = new MathParameter(
-                        parameterElement.Attribute("id").Value,
-                        parameterName,
-                        parameterElement.Attribute("description").Value,
-                        conversions,
-                        new LogColumn(xParameter, xConversion),
-                        new LogColumn(yParameter, yConversion));
-
-                    parameters.Add(parameter);
-                    this.MathParameters.Add(parameter.Id, parameter);
-                }
-                catch (Exception exception)
-                {
-                    errorMessage =
-                        string.Format("Error in parameter '{0}'{1}{2}",
-                        parameterName,
-                        Environment.NewLine,
-                        exception.ToString());
-                    return false;
-                }
-            }
-
-            errorMessage = null;
-            return true;
+                conversionXml.Attribute("units").Value,
+                conversionXml.Attribute("expression").Value,
+                conversionXml.Attribute("format").Value);
         }
     }
 }

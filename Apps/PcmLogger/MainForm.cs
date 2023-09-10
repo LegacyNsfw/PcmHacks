@@ -148,7 +148,17 @@ namespace PcmHacking
                 this.startStopSaving.Enabled = true;
                 this.parameterGrid.Enabled = true;
                 this.EnableProfileButtons(true);
-                this.FillParameterGrid();
+                
+                try
+                {
+                    this.FillParameterGrid();
+                } 
+                catch (Exception ex)
+                {
+                    this.AddUserMessage("Error Loading Parameter Database:" + ex.Message);
+                    this.AddDebugMessage(ex.ToString());
+                }
+                
             });
 
             string lastProfile = Configuration.Settings.LastProfile;
