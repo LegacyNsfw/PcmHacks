@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -31,7 +32,25 @@ namespace PcmHacking
         /// <returns>The parameter, if found.</returns>
         public T GetParameter<T>(string id) where T : Parameter
         {
-            return this.parameters.First(p => p is T && p.Id == id) as T;
+            try
+            {
+                return this.parameters.First(p => p is T && p.Id == id) as T;
+            }
+            catch(InvalidOperationException)
+            {
+                uint pid;
+                if (typeof(T) == typeof(PidParameter) &&
+                    uint.TryParse(id, System.Globalization.NumberStyles.HexNumber, CultureInfo.InvariantCulture, out pid))
+                {
+                    var result = this.parameters.FirstOrDefault(p => (p as PidParameter)?.PID == pid);
+                    if (result != null)
+                    {
+                        return result as T;
+                    }                    
+                }
+
+                throw new Exception($"Unable to find matching parameter for ${typeof(T).Name} '{id}'");
+            }
         }
 
         /// <summary>
