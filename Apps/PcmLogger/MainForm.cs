@@ -171,6 +171,7 @@ namespace PcmHacking
             }
 
             // Start pulling data from the PCM
+            this.logStopRequested = false;
             ThreadPool.QueueUserWorkItem(new WaitCallback(LoggingThread), null);
 
             this.AddDebugMessage("ValidDeviceSelectedAsync ended.");
