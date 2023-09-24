@@ -163,7 +163,7 @@ namespace PcmHacking
         public Response<byte[]> ParsePayload(Message message, int length, int expectedAddress)
         {
             byte[] actual = message.GetBytes();
-            byte[] expected = new byte[] { Priority.Block, DeviceId.Pcm, DeviceId.Tool, Mode.PCMUpload };
+            byte[] expected = new byte[] { Priority.Block, DeviceId.Tool, DeviceId.Pcm, Mode.PCMUpload };
             if (!TryVerifyInitialBytes(actual, expected, out ResponseStatus status))
             {
                 return Response.Create(status, new byte[0]);
