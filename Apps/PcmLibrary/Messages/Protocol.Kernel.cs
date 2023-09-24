@@ -135,8 +135,8 @@ namespace PcmHacking
             return new Message(new byte[]
             {
                 Priority.Physical0,
-                DeviceId.Tool,
                 DeviceId.Pcm,
+                DeviceId.Tool,
                 0x3D,
                 0x05,
                 (byte)(baseAddress >> 16),
@@ -158,7 +158,7 @@ namespace PcmHacking
         /// </summary>
         public Message CreateDebugQuery()
         {
-            return new Message(new byte[] { Priority.Physical0, DeviceId.Tool, DeviceId.Pcm, 0x3D, 0xFF });
+            return new Message(new byte[] { Priority.Physical0, DeviceId.Pcm, DeviceId.Tool, 0x3D, 0xFF });
         }
 
         /// <summary>
