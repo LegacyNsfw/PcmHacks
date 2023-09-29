@@ -28,6 +28,7 @@
     storageType="uint16"
     bitMapped="False">
     <Location os="12593358" address="0xFF97F0" />
+    <Location os="12587603" address="0xFF951E" />
     <Conversion units="g/s" expression="x/1024.0" format="0.00" />
   </RamParameter>
 
@@ -38,6 +39,7 @@
     storageType="uint16"
     bitMapped="False">
     <Location os="12593358" address="0xFF980A" />
+    <Location os="12587603" address="0xFF9536" />
     <Conversion units="g/s" expression="x/1024.0" format="0.00" />
   </RamParameter>
 
@@ -48,6 +50,7 @@
     storageType="uint16"
     bitMapped="False">
     <Location os="12593358" address="0xFFA2A2" />
+    <Location os="12587603" address="0xFFA716" />
     <Conversion units="g/s" expression="x/16.0" format="0.00" />
   </RamParameter>
 
@@ -58,6 +61,7 @@
     storageType="uint16"
     bitMapped="False">
     <Location os="12593358" address="0xFFA296" />
+    <Location os="12587603" address="0xFFA6FC" />
     <Conversion units="g/s" expression="x/16.0" format="0.00" />
   </RamParameter>
 
@@ -68,6 +72,7 @@
     storageType="uint16"
     bitMapped="False">
     <Location os="12593358" address="0xFFA28C" />
+    <Location os="12587603" address="0xFFA6FE" />
     <Conversion units="g/s" expression="x/16.0" format="0.00" />
   </RamParameter>
 
@@ -78,6 +83,7 @@
     storageType="uint16"
     bitMapped="False">
     <Location os="12593358" address="0xFF8250" />
+    <Location os="12587603" address="0xFF82DA" />
     <Conversion units="Factor" expression="x/4096.0" format="0.00" />
   </RamParameter>
   
@@ -96,4 +102,74 @@
     <Conversion units="kPa" expression="x/51.2" format="0.00" />
   </RamParameter>
 
+  <RamParameter
+    id="RamKnockRetardFast"
+    name="Knock Retard Fast"
+    description="2-Byte Fast Knock Retard"
+    storageType="uint16"
+    bitMapped="False">
+    <Location os="12587603" address="0xFF9D30" />
+    <Conversion units="deg?" expression="x" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamDesiredIdleAirflowBase"
+    name="Desired Idle Airflow Base"
+    description="2-Byte Desired Idle Airflow Base (cracker, follower, and learning will be added). The conversion factor is approximate, so this value may be off by a percent or so."
+    storageType="uint16"
+    bitMapped="False">
+    <Location os="12587603" address="0xFF9544" />
+    <Conversion units="g/s" expression="x*0.0010537" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+  id="RamDesiredIdleArea"
+  name="Desired Idle Throttle Area"
+  description="2-Byte Desired Idle Area."
+  storageType="uint16"
+  bitMapped="False">
+    <Location os="12587603" address="0xFF94CC" />
+    <Conversion units="g/s" expression="x/32" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamIdleControlMode"
+    name="Idle Control Mode"
+    description="1-Byte Idle control mode. 0=none, 1=speed, 2=PID, 3=startup"
+    storageType="uint8"
+    bitMapped="False">
+    <Location os="12587603" address="0xFFA6F7" />
+    <Conversion units="mode" expression="x" format="0" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamThrottleControlMode"
+    name="Throttle Control Mode"
+    description="1-Byte Throttle control mode. 0=pedal, 1=idle, 2=cruise, 7=max-torque, 9=max-rpm"
+    storageType="uint8"
+    bitMapped="False">
+    <Location os="12587603" address="0xFF905F" />
+    <Conversion units="mode" expression="x" format="0" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamMafRationalityTestSD"
+    name="MAF Rationality Test - SpeedDensity"
+    description="2-Byte MAF airflow value used for MAF sanity check, from speed-density"
+    storageType="uint16"
+    bitMapped="False">
+    <Location os="12587603" address="0xFFB0FA" />
+    <Conversion units="g/s" expression="x*0.00009765625" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamMafRationalityTestSensor"
+    name="MAF Rationality Test - MAF"
+    description="2-Byte SD airflow value used for MAF sanity check, from the sensor"
+    storageType="uint16"
+    bitMapped="False">
+    <Location os="12587603" address="0xFFB0F8" />
+    <Conversion units="g/s" expression="x*0.00009765625" format="0.00" />
+  </RamParameter>
+  
 </RamParameters>
