@@ -20,14 +20,17 @@
     </Parameter>
 
 
-    <Parameter Name="Idle P term (TODO)" DefineBy="Address" ByteCount="2" Address="0xFF0000">
+    <Parameter Name="Idle P term" DefineBy="Address" ByteCount="2" Address="0xFFA716">
       <Conversion Name="g/cyl" Expression="x/16.0" />
     </Parameter>
-    <Parameter Name="Idle I term (TODO)" DefineBy="Address" ByteCount="2" Address="0xFF0000">
+    <Parameter Name="Idle I term" DefineBy="Address" ByteCount="2" Address="0xFFA6FC">
       <Conversion Name="g/cyl" Expression="x/16.0" />
     </Parameter>
-    <Parameter Name="Idle D term (TODO)" DefineBy="Address" ByteCount="2" Address="0xFF0000">
+    <Parameter Name="Idle D term" DefineBy="Address" ByteCount="2" Address="0xFF0000">
       <Conversion Name="g/cyl but wrong" Expression="(x-2000.0)/1000.0" />
+    </Parameter>
+    <Parameter Name="Idle Total PID" DefineBy="Address" ByteCount="2" Address="0xFFA718">
+      <Conversion Name="g/cyl" Expression="x/16.0" />
     </Parameter>
 
     <Parameter Name="Desired Idle Airflow Base" DefineBy="Pid" ByteCount="2" Address="0xFF9544">
