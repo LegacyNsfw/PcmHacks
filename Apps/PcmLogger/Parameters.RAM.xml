@@ -129,7 +129,17 @@
   storageType="uint16"
   bitMapped="False">
     <Location os="12587603" address="0xFF94CC" />
-    <Conversion units="g/s" expression="x/32" format="0.00" />
+    <Conversion units="sqmm" expression="x/32" format="0.00" />
+  </RamParameter>
+
+  <RamParameter
+    id="RamDesiredIdleOpening"
+    name="Desired Idle Throttle Opening"
+    description="2-Byte Desired Idle Opening."
+    storageType="uint16"
+    bitMapped="False">
+    <Location os="12587603" address="0xFF94CE" />
+    <Conversion units="%" expression="x*0.0097625625" format="0.00" />
   </RamParameter>
 
   <RamParameter
