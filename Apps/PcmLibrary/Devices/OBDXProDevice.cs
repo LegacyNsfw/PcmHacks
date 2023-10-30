@@ -24,6 +24,8 @@ namespace PcmHacking
         public bool TimeStampsEnabled = false;
         public bool CRCInReceivedFrame = false;
 
+        
+
         // This default is probably excessive but it should always be
         // overwritten by a call to SetTimeout before use anyhow.
         private VpwSpeed vpwSpeed = VpwSpeed.Standard;
@@ -101,7 +103,7 @@ namespace PcmHacking
 
         public override string GetDeviceType()
         {
-            return DeviceType;
+            return ToolConnected == "" ? DeviceType : ToolConnected;         
         }
 
         public override async Task<bool> Initialize()
