@@ -37,7 +37,7 @@ namespace PcmHacking
         /// Read the full contents of the PCM.
         /// Assumes the PCM is unlocked and we're ready to go.
         /// </summary>
-        public async Task<Response<Stream>> ReadContents(CancellationToken cancellationToken)
+        public async Task<Response<Stream>> ReadContents( CancellationToken cancellationToken)
         {
             try
             {
@@ -49,7 +49,7 @@ namespace PcmHacking
                 if (this.vehicle.Enable4xReadWrite)
                 {
                     // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                    if (!await this.vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
+                    if (!await this.vehicle.VehicleSetVPW4x(this.pcmInfo, VpwSpeed.FourX))
                     {
                         this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
                         return Response.Create(ResponseStatus.Error, (Stream)null);
@@ -267,7 +267,9 @@ namespace PcmHacking
                     (payloadMessage) => this.protocol.ParsePayload(payloadMessage, length, startAddress),
                     cancellationToken);
 
-                if(readResponse.Status != ResponseStatus.Success)
+               
+
+                if (readResponse.Status != ResponseStatus.Success)
                 {
                     this.logger.AddDebugMessage("Unable to read segment: " + readResponse.Status);
                     continue;

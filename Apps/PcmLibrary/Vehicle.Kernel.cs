@@ -449,7 +449,7 @@ namespace PcmHacking
         /// <summary>
         /// Does everything required to switch to VPW 4x
         /// </summary>
-        public async Task<bool> VehicleSetVPW4x(VpwSpeed newSpeed)
+        public async Task<bool> VehicleSetVPW4x(PcmInfo info, VpwSpeed newSpeed)
         {
             if (!device.Supports4X) 
             {
@@ -460,6 +460,22 @@ namespace PcmHacking
                 }
                 return true;
             }
+
+            //Use this location to set whether a tool should be forced to use 1x!
+            //OBDX Pro VT should be 1x due to P04 VPW load not high enough when on bench
+            //Load is right in car, but car modules wake up and cause bus to crash to 1x regardless.
+            if (info.HardwareType == PcmType.P04)
+            {
+                if (this.device.ToString().Contains("OBDX Pro VT"))
+                {
+                    this.device.Enable4xReadWrite = false;
+                    // DeviceConfiguration.Settings.Enable4xReadWrite = false; // turn off 4x for the VT!
+                    return true;
+                }
+            }
+          
+
+
 
             if ((newSpeed == VpwSpeed.FourX) && !this.device.Enable4xReadWrite)
             {

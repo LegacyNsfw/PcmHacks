@@ -818,16 +818,7 @@ namespace PcmHacking
                     this.AddUserMessage("Hardware Type: " + pcmInfo.HardwareType.ToString());
                     if (pcmInfo.HardwareType == PcmType.P04)
                     {
-                        //Use this location to set whether a tool should be forced to use 1x!
-                        //OBDX Pro VT should be 1x due to P04 VPW load not high enough when on bench
-                        //Load is right in car, but car modules wake up and cause bus to crash to 1x regardless.
-                        if (Vehicle.DeviceDescription.Contains("OBDX Pro VT"))
-                        {
-                            this.AddUserMessage("OBDX Pro VT and P04 detected, 4x mode disabled.");
-                            Vehicle.Enable4xReadWrite = false;
-                           // DeviceConfiguration.Settings.Enable4xReadWrite = false; // turn off 4x for the VT!
-                        }
-
+                       
                         this.AddUserMessage("**********************************************");
                         this.AddUserMessage("WARNING: P04 Support is still in development.");
                         this.AddUserMessage("It may or may not read your P04 correctly.");
@@ -1287,7 +1278,7 @@ namespace PcmHacking
                         pcmInfo,
                         this);
 
-                    Response<Stream> readResponse = await reader.ReadContents(cancellationTokenSource.Token);
+                    Response<Stream> readResponse = await reader.ReadContents( cancellationTokenSource.Token);
 
                     this.AddUserMessage("Elapsed time " + DateTime.Now.Subtract(start));
                     if (readResponse.Status != ResponseStatus.Success)

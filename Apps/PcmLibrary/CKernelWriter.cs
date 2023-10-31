@@ -65,7 +65,7 @@ namespace PcmHacking
                     if (this.vehicle.Enable4xReadWrite)
                     {
                         // if the vehicle bus switches but the device does not, the bus will need to time out to revert back to 1x, and the next steps will fail.
-                        if (!await this.vehicle.VehicleSetVPW4x(VpwSpeed.FourX))
+                        if (!await this.vehicle.VehicleSetVPW4x(this.pcmInfo ,VpwSpeed.FourX))
                         {
                             this.logger.AddUserMessage("Stopping here because we were unable to switch to 4X.");
                             return false;
