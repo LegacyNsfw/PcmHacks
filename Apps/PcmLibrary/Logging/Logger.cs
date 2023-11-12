@@ -61,13 +61,13 @@ namespace PcmHacking
 
         public MathValueProcessor MathValueProcessor {  get { return this.mathValueProcessor; } }
 
+        public CanLogger CanLogger { get { return this.canLogger; } }
+
         protected Vehicle Vehicle { get { return this.vehicle; } }
 
         protected DpidCollection Dpids {  get { return this.dpids; } }
 
         protected ILogger UILogger { get { return this.uiLogger; } }
-
-        protected CanLogger CanLogger { get {  return this.canLogger; } }
 
         /// <summary>
         /// Constructor.
@@ -97,7 +97,7 @@ namespace PcmHacking
             IEnumerable<LogColumn> columns, 
             bool deviceSupportsSingleDpid,
             bool deviceSupportsStreaming,
-            IPort canPort,
+            CanLogger canLogger,
             ILogger uiLogger)
         {
             DpidConfiguration dpidConfiguration = new DpidConfiguration();
@@ -223,12 +223,6 @@ namespace PcmHacking
                 throw new NeedMoreParametersException("Add more parameters to begin logging.");
             }
 
-            CanLogger canLogger = null;
-            if (canPort != null)
-            {
-                canLogger = new CanLogger(canPort);
-            }
-
             // In theory we could also create a "mixed logger" that gets the 
             // FE, FD, FC DPIDs at 10hz and the FB & FA DPIDs at 5hz.
             //
@@ -263,7 +257,11 @@ namespace PcmHacking
 
         public IEnumerable<string> GetColumnNames()
         {
-            return this.dpidConfiguration.GetParameterNames().Concat(this.mathValueProcessor.GetHeaderNames());
+            IEnumerable<string> columns = this.dpidConfiguration.GetParameterNames();
+            columns = columns.Concat(this.mathValueProcessor.GetHeaderNames());
+            columns = columns.Concat(this.canLogger.GetParameterNames());
+            return columns;
+            // return this.dpidConfiguration.GetParameterNames().Concat(this.mathValueProcessor.GetHeaderNames());
         }
 
         /// <summary>
@@ -280,6 +278,12 @@ namespace PcmHacking
 
             // This part differs for the fast and slow loggers.
             await this.StartLoggingInternal();
+
+            // TODO: Is this useful?
+            if (this.canLogger != null)
+            {
+                this.canLogger.Start();
+            }
 
             return true;
         }
@@ -302,10 +306,12 @@ namespace PcmHacking
                 PcmParameterValues dpidValues = row.Evaluate();
 
                 IEnumerable<string> mathValues = this.mathValueProcessor.GetMathValues(dpidValues);
+                IEnumerable<string> canValues = this.canLogger.GetParameterValues().Select(x => x.Value);
 
                 return dpidValues
                         .Select(x => x.Value.ValueAsString)
                         .Concat(mathValues)
+                        .Concat(canValues)
                         .ToArray();
             }
             else

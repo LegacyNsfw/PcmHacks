@@ -49,9 +49,7 @@ namespace PcmHacking
         }
 
         private void FillPortList()
-        {
-            this.serialPortList.SelectedIndex = 0;
-
+        {            
             foreach (SerialPortInfo portInfo in PortDiscovery.GetPorts(this.logger))
             {
                 this.serialPortList.Items.Add(portInfo);

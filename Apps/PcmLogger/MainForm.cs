@@ -27,7 +27,7 @@ namespace PcmHacking
         private const string defaultFileName = "New Profile";
         private string fileName = defaultFileName;
 
-        private SerialPortInfo canPortInfo;
+        private string canPortName;
 
         /// <summary>
         /// Constructor
@@ -208,13 +208,15 @@ namespace PcmHacking
 
             this.LoadProfileHistory();
 
+            this.canPortName = DeviceConfiguration.Settings.CanPort;
+
             ThreadPool.QueueUserWorkItem(BackgroundInitialization);
 
             this.logFilePath.Text = logDirectory;
 
             this.AddDebugMessage("MainForm_Load ended.");
         }
-        
+
         private async void BackgroundInitialization(object unused)
         {
             try
@@ -347,7 +349,11 @@ namespace PcmHacking
             switch(canForm.ShowDialog())
             {
                 case DialogResult.OK:
-                    this.canPortInfo = canForm.SelectedPort;
+                    this.canPortName = canForm.SelectedPort.PortName;
+                    DeviceConfiguration.Settings.CanPort = this.canPortName;
+                    DeviceConfiguration.Settings.Save();
+                    
+                    // TODO: Re-create the logger, so it starts using the new port.
                     break;
 
                 case DialogResult.Cancel:

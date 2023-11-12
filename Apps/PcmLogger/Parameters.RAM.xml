@@ -187,7 +187,7 @@
     name="Knock noise (global)"
     description="Background noise from the knock sensor. Only valid when per-cylinder knock is disabled."
     storageType="uint16"
-    bitmapped="False">
+    bitMapped="False">
     <Location os="12587603" address="0xFF9D4" />
     <Conversion units="v" expression="x*0.003906250" format="0.000" />
   </RamParameter>

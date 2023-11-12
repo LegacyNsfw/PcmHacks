@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.CompilerServices;
+using System.Data;
 
 namespace PcmHacking
 {
@@ -31,6 +33,8 @@ namespace PcmHacking
         }
 
         private LogState logState = LogState.Nothing;
+
+        CanLogger canLogger = null;
 
         /// <summary>
         /// Create a string that will look reasonable in the UI's main text box.
@@ -63,6 +67,15 @@ namespace PcmHacking
                 builder.AppendLine(mathColumn.Parameter.Name);
             }
 
+            foreach (CanLogger.ParameterValue pv in logger.CanLogger.GetParameterValues())
+            {
+                builder.Append(pv.Value);
+                builder.Append('\t');
+                builder.Append(pv.Units);
+                builder.Append('\t');
+                builder.AppendLine(pv.Name);
+            }
+        
             DateTime now = DateTime.Now;
             builder.AppendLine((now - lastLogTime).TotalMilliseconds.ToString("0.00") + "\tms\tQuery time");
             lastLogTime = now;
@@ -72,13 +85,18 @@ namespace PcmHacking
 
         private async Task<Logger> RecreateLogger()
         {
-            IPort canPort = null;
-            if (this.canPortInfo != null)
+            if (this.canPortName != null)
             {
-                canPort = new StandardPort(canPortInfo.PortName);
+                // This creation is hacky, but the CanLogger class is at a deeper layer
+                // that serial port abstraction, and thus doesn't have access to the
+                // StandardPort constructor.
+                // TODO: Find a way to de-tangle this.
+                this.canLogger = new CanLogger();
+                await this.canLogger.SetPort(new StandardPort(canPortName));
+
             }
 
-            Logger logger = this.Vehicle.CreateLogger(this.osid, canPort, this.currentProfile.Columns, this);
+            Logger logger = this.Vehicle.CreateLogger(this.osid, canLogger, this.currentProfile.Columns, this);
 
             if (!await logger.StartLogging())
             {
