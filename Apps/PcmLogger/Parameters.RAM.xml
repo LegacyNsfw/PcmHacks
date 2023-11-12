@@ -47,33 +47,33 @@
     id="RamIdleProportional"
     name="Idle Proportional Term"
     description=""
-    storageType="uint16"
+    storageType="int16"
     bitMapped="False">
     <Location os="12593358" address="0xFFA2A2" />
     <Location os="12587603" address="0xFFA716" />
-    <Conversion units="g/s" expression="x/16.0" format="0.00" />
+    <Conversion units="g/s" expression="0.0009765625" format="0.00" />
   </RamParameter>
 
   <RamParameter
     id="RamIdleIntegral"
     name="Idle Integral Term"
     description=""
-    storageType="uint16"
+    storageType="int16"
     bitMapped="False">
     <Location os="12593358" address="0xFFA296" />
-    <Location os="12587603" address="0xFFA6FC" />
-    <Conversion units="g/s" expression="x/16.0" format="0.00" />
+    <Location os="12587603" address="0xFFA6F2" />
+    <Conversion units="g/s" expression="0.0009765625" format="0.00" />
   </RamParameter>
 
   <RamParameter
     id="RamIdleDerivative"
     name="Idle Derivative Term"
     description=""
-    storageType="uint16"
+    storageType="int16"
     bitMapped="False">
     <Location os="12593358" address="0xFFA28C" />
     <Location os="12587603" address="0xFFA6FE" />
-    <Conversion units="g/s" expression="x/16.0" format="0.00" />
+    <Conversion units="g/s" expression="0.0009765625" format="0.00" />
   </RamParameter>
 
   <RamParameter
@@ -114,7 +114,7 @@
 
   <RamParameter
     id="RamDesiredIdleAirflowBase"
-    name="Desired Idle Airflow Base"
+    name="Desired Idle Airflow Base - but it's always zero?"
     description="2-Byte Desired Idle Airflow Base (cracker, follower, and learning will be added). The conversion factor is approximate, so this value may be off by a percent or so."
     storageType="uint16"
     bitMapped="False">
@@ -124,8 +124,8 @@
 
   <RamParameter
   id="RamDesiredIdleArea"
-  name="Desired Idle Throttle Area"
-  description="2-Byte Desired Idle Area."
+  name="Desired Idle Throttle Area (sqmm)"
+  description="2-Byte Throttle area desired for idle, in square millimeters."
   storageType="uint16"
   bitMapped="False">
     <Location os="12587603" address="0xFF94CC" />
@@ -134,8 +134,8 @@
 
   <RamParameter
     id="RamDesiredIdleOpening"
-    name="Desired Idle Throttle Opening"
-    description="2-Byte Desired Idle Opening."
+    name="Desired Idle Throttle Area (%)"
+    description="2-Byte Fraction of the total throttle area desired for idle."
     storageType="uint16"
     bitMapped="False">
     <Location os="12587603" address="0xFF94CE" />
@@ -169,7 +169,7 @@
     storageType="uint16"
     bitMapped="False">
     <Location os="12587603" address="0xFFB0FA" />
-    <Conversion units="g/s" expression="x*0.00009765625" format="0.00" />
+    <Conversion units="g/s" expression="x*0.009765625" format="0.0000" />
   </RamParameter>
 
   <RamParameter
@@ -179,7 +179,17 @@
     storageType="uint16"
     bitMapped="False">
     <Location os="12587603" address="0xFFB0F8" />
-    <Conversion units="g/s" expression="x*0.00009765625" format="0.00" />
+    <Conversion units="g/s" expression="x*0.009765625" format="0.0000" />
   </RamParameter>
   
+  <RamParameter
+    id="RamKnockSensorAverage"
+    name="Knock noise (global)"
+    description="Background noise from the knock sensor. Only valid when per-cylinder knock is disabled."
+    storageType="uint16"
+    bitmapped="False">
+    <Location os="12587603" address="0xFF9D4" />
+    <Conversion units="v" expression="x*0.003906250" format="0.000" />
+  </RamParameter>
+
 </RamParameters>
