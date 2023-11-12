@@ -11,7 +11,7 @@ namespace PcmHacking
     /// This class is responsible for sending and receiving data over a serial port.
     /// I would have called it 'SerialPort' but that name was already taken...
     /// </summary>
-    class StandardPort : IPort
+    public class StandardPort : IPort
     {
         private string name;
         private SerialPort port;

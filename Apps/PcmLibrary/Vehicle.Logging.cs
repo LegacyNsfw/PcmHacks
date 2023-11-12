@@ -30,6 +30,7 @@ namespace PcmHacking
         /// </remarks>
         public Logger CreateLogger(
             uint osid,
+            IPort canPort,
             IEnumerable<LogColumn> columns,
             ILogger uiLogger)
         {
@@ -39,6 +40,7 @@ namespace PcmHacking
                 columns, 
                 this.device.SupportsSingleDpidLogging,
                 this.device.SupportsStreamLogging, 
+                canPort,
                 uiLogger);
         }
 

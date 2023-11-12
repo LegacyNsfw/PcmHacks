@@ -27,6 +27,8 @@ namespace PcmHacking
         private const string defaultFileName = "New Profile";
         private string fileName = defaultFileName;
 
+        private SerialPortInfo canPortInfo;
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -336,5 +338,21 @@ namespace PcmHacking
         }
 
         #endregion
+
+        private void selectCanButton_Click(object sender, EventArgs e)
+        {
+            string canPort = DeviceConfiguration.Settings.CanPort;
+            CanForm canForm = new CanForm(this, canPort);
+
+            switch(canForm.ShowDialog())
+            {
+                case DialogResult.OK:
+                    this.canPortInfo = canForm.SelectedPort;
+                    break;
+
+                case DialogResult.Cancel:
+                    break;
+            }
+        }
     }
 }

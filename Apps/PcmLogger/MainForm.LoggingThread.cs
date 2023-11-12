@@ -72,7 +72,13 @@ namespace PcmHacking
 
         private async Task<Logger> RecreateLogger()
         {
-            Logger logger = this.Vehicle.CreateLogger(this.osid, this.currentProfile.Columns, this);
+            IPort canPort = null;
+            if (this.canPortInfo != null)
+            {
+                canPort = new StandardPort(canPortInfo.PortName);
+            }
+
+            Logger logger = this.Vehicle.CreateLogger(this.osid, canPort, this.currentProfile.Columns, this);
 
             if (!await logger.StartLogging())
             {

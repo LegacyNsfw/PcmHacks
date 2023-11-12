@@ -54,6 +54,7 @@ namespace PcmHacking
         private readonly DpidConfiguration dpidConfiguration;
         private readonly MathValueProcessor mathValueProcessor;
         private DpidCollection dpids;
+        private CanLogger canLogger;
         private ILogger uiLogger;
 
         public DpidConfiguration DpidConfiguration {  get { return this.dpidConfiguration; } }
@@ -66,11 +67,14 @@ namespace PcmHacking
 
         protected ILogger UILogger { get { return this.uiLogger; } }
 
+        protected CanLogger CanLogger { get {  return this.canLogger; } }
+
         /// <summary>
         /// Constructor.
         /// </summary>
         protected Logger(
             Vehicle vehicle, 
+            CanLogger canLogger,
             uint osid, 
             DpidConfiguration dpidConfiguration, 
             MathValueProcessor mathValueProcessor, 
@@ -81,6 +85,7 @@ namespace PcmHacking
             this.dpidConfiguration = dpidConfiguration;
             this.mathValueProcessor = mathValueProcessor;
             this.uiLogger = uiLogger;
+            this.canLogger = canLogger;
         }
 
         /// <summary>
@@ -92,6 +97,7 @@ namespace PcmHacking
             IEnumerable<LogColumn> columns, 
             bool deviceSupportsSingleDpid,
             bool deviceSupportsStreaming,
+            IPort canPort,
             ILogger uiLogger)
         {
             DpidConfiguration dpidConfiguration = new DpidConfiguration();
@@ -217,6 +223,12 @@ namespace PcmHacking
                 throw new NeedMoreParametersException("Add more parameters to begin logging.");
             }
 
+            CanLogger canLogger = null;
+            if (canPort != null)
+            {
+                canLogger = new CanLogger(canPort);
+            }
+
             // In theory we could also create a "mixed logger" that gets the 
             // FE, FD, FC DPIDs at 10hz and the FB & FA DPIDs at 5hz.
             //
@@ -227,6 +239,7 @@ namespace PcmHacking
             {
                 return new FastLogger(
                     vehicle,
+                    canLogger,
                     osid,
                     dpidConfiguration,
                     new MathValueProcessor(
@@ -238,6 +251,7 @@ namespace PcmHacking
             {
                 return new SlowLogger(
                     vehicle,
+                    canLogger,
                     osid,
                     dpidConfiguration,
                     new MathValueProcessor(

@@ -35,6 +35,7 @@
             this.loggerProgress = new System.Windows.Forms.ProgressBar();
             this.tabs = new System.Windows.Forms.TabControl();
             this.configurationTab = new System.Windows.Forms.TabPage();
+            this.disclaimer = new System.Windows.Forms.Label();
             this.logFilePath = new System.Windows.Forms.Label();
             this.openDirectory = new System.Windows.Forms.Button();
             this.selectButton = new System.Windows.Forms.Button();
@@ -59,7 +60,7 @@
             this.debugLog = new System.Windows.Forms.TextBox();
             this.dashboardTab = new System.Windows.Forms.TabPage();
             this.startStopSaving = new System.Windows.Forms.Button();
-            this.disclaimer = new System.Windows.Forms.Label();
+            this.selectCanButton = new System.Windows.Forms.Button();
             this.tabs.SuspendLayout();
             this.configurationTab.SuspendLayout();
             this.profilesTab.SuspendLayout();
@@ -77,10 +78,11 @@
             this.loggerProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.loggerProgress.Enabled = false;
-            this.loggerProgress.Location = new System.Drawing.Point(244, 11);
+            this.loggerProgress.Location = new System.Drawing.Point(325, 14);
+            this.loggerProgress.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.loggerProgress.MarqueeAnimationSpeed = 0;
             this.loggerProgress.Name = "loggerProgress";
-            this.loggerProgress.Size = new System.Drawing.Size(519, 23);
+            this.loggerProgress.Size = new System.Drawing.Size(692, 28);
             this.loggerProgress.Step = 0;
             this.loggerProgress.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.loggerProgress.TabIndex = 5;
@@ -95,43 +97,58 @@
             this.tabs.Controls.Add(this.profilesTab);
             this.tabs.Controls.Add(this.parametersTab);
             this.tabs.Controls.Add(this.debugTab);
-            this.tabs.Location = new System.Drawing.Point(12, 40);
+            this.tabs.Location = new System.Drawing.Point(16, 49);
+            this.tabs.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.tabs.Name = "tabs";
             this.tabs.SelectedIndex = 0;
-            this.tabs.Size = new System.Drawing.Size(751, 453);
+            this.tabs.Size = new System.Drawing.Size(1001, 558);
             this.tabs.TabIndex = 8;
             // 
             // configurationTab
             // 
+            this.configurationTab.Controls.Add(this.selectCanButton);
             this.configurationTab.Controls.Add(this.disclaimer);
             this.configurationTab.Controls.Add(this.logFilePath);
             this.configurationTab.Controls.Add(this.openDirectory);
             this.configurationTab.Controls.Add(this.selectButton);
             this.configurationTab.Controls.Add(this.setDirectory);
             this.configurationTab.Controls.Add(this.deviceDescription);
-            this.configurationTab.Location = new System.Drawing.Point(4, 22);
-            this.configurationTab.Margin = new System.Windows.Forms.Padding(2);
+            this.configurationTab.Location = new System.Drawing.Point(4, 25);
+            this.configurationTab.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.configurationTab.Name = "configurationTab";
-            this.configurationTab.Size = new System.Drawing.Size(743, 427);
+            this.configurationTab.Size = new System.Drawing.Size(993, 529);
             this.configurationTab.TabIndex = 3;
             this.configurationTab.Text = "Configuration";
             this.configurationTab.UseVisualStyleBackColor = true;
+            // 
+            // disclaimer
+            // 
+            this.disclaimer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.disclaimer.Location = new System.Drawing.Point(5, 178);
+            this.disclaimer.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.disclaimer.Name = "disclaimer";
+            this.disclaimer.Size = new System.Drawing.Size(985, 172);
+            this.disclaimer.TabIndex = 10;
+            this.disclaimer.Text = resources.GetString("disclaimer.Text");
             // 
             // logFilePath
             // 
             this.logFilePath.AutoSize = true;
             this.logFilePath.BackColor = System.Drawing.Color.Transparent;
-            this.logFilePath.Location = new System.Drawing.Point(115, 69);
+            this.logFilePath.Location = new System.Drawing.Point(153, 85);
+            this.logFilePath.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.logFilePath.Name = "logFilePath";
-            this.logFilePath.Size = new System.Drawing.Size(49, 13);
+            this.logFilePath.Size = new System.Drawing.Size(61, 16);
             this.logFilePath.TabIndex = 7;
             this.logFilePath.Text = "Directory";
             // 
             // openDirectory
             // 
-            this.openDirectory.Location = new System.Drawing.Point(4, 93);
+            this.openDirectory.Location = new System.Drawing.Point(5, 114);
+            this.openDirectory.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.openDirectory.Name = "openDirectory";
-            this.openDirectory.Size = new System.Drawing.Size(104, 23);
+            this.openDirectory.Size = new System.Drawing.Size(139, 28);
             this.openDirectory.TabIndex = 9;
             this.openDirectory.Text = "&Open Log Folder";
             this.openDirectory.UseVisualStyleBackColor = true;
@@ -139,19 +156,21 @@
             // 
             // selectButton
             // 
-            this.selectButton.Location = new System.Drawing.Point(3, 3);
+            this.selectButton.Location = new System.Drawing.Point(4, 4);
+            this.selectButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.selectButton.Name = "selectButton";
-            this.selectButton.Size = new System.Drawing.Size(216, 25);
+            this.selectButton.Size = new System.Drawing.Size(288, 31);
             this.selectButton.TabIndex = 0;
-            this.selectButton.Text = "&Select Device";
+            this.selectButton.Text = "&Select OBD2 Device";
             this.selectButton.UseVisualStyleBackColor = true;
             this.selectButton.Click += new System.EventHandler(this.selectButton_Click);
             // 
             // setDirectory
             // 
-            this.setDirectory.Location = new System.Drawing.Point(4, 64);
+            this.setDirectory.Location = new System.Drawing.Point(5, 79);
+            this.setDirectory.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.setDirectory.Name = "setDirectory";
-            this.setDirectory.Size = new System.Drawing.Size(105, 23);
+            this.setDirectory.Size = new System.Drawing.Size(140, 28);
             this.setDirectory.TabIndex = 6;
             this.setDirectory.Text = "Set Log &Folder";
             this.setDirectory.UseVisualStyleBackColor = true;
@@ -160,9 +179,10 @@
             // deviceDescription
             // 
             this.deviceDescription.AutoSize = true;
-            this.deviceDescription.Location = new System.Drawing.Point(225, 9);
+            this.deviceDescription.Location = new System.Drawing.Point(300, 11);
+            this.deviceDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.deviceDescription.Name = "deviceDescription";
-            this.deviceDescription.Size = new System.Drawing.Size(88, 13);
+            this.deviceDescription.Size = new System.Drawing.Size(111, 16);
             this.deviceDescription.TabIndex = 1;
             this.deviceDescription.Text = "[selected device]";
             // 
@@ -174,10 +194,10 @@
             this.profilesTab.Controls.Add(this.profileList);
             this.profilesTab.Controls.Add(this.saveAsButton);
             this.profilesTab.Controls.Add(this.saveButton);
-            this.profilesTab.Location = new System.Drawing.Point(4, 22);
-            this.profilesTab.Margin = new System.Windows.Forms.Padding(2);
+            this.profilesTab.Location = new System.Drawing.Point(4, 25);
+            this.profilesTab.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.profilesTab.Name = "profilesTab";
-            this.profilesTab.Size = new System.Drawing.Size(743, 427);
+            this.profilesTab.Size = new System.Drawing.Size(993, 529);
             this.profilesTab.TabIndex = 4;
             this.profilesTab.Text = "Profiles";
             this.profilesTab.UseVisualStyleBackColor = true;
@@ -185,10 +205,10 @@
             // removeProfileButton
             // 
             this.removeProfileButton.Enabled = false;
-            this.removeProfileButton.Location = new System.Drawing.Point(666, 3);
-            this.removeProfileButton.Margin = new System.Windows.Forms.Padding(2);
+            this.removeProfileButton.Location = new System.Drawing.Point(888, 4);
+            this.removeProfileButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.removeProfileButton.Name = "removeProfileButton";
-            this.removeProfileButton.Size = new System.Drawing.Size(75, 25);
+            this.removeProfileButton.Size = new System.Drawing.Size(100, 31);
             this.removeProfileButton.TabIndex = 5;
             this.removeProfileButton.Text = "&Remove";
             this.removeProfileButton.UseVisualStyleBackColor = true;
@@ -196,10 +216,10 @@
             // 
             // openButton
             // 
-            this.openButton.Location = new System.Drawing.Point(82, 2);
-            this.openButton.Margin = new System.Windows.Forms.Padding(2);
+            this.openButton.Location = new System.Drawing.Point(109, 2);
+            this.openButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.openButton.Name = "openButton";
-            this.openButton.Size = new System.Drawing.Size(75, 25);
+            this.openButton.Size = new System.Drawing.Size(100, 31);
             this.openButton.TabIndex = 4;
             this.openButton.Text = "&Open";
             this.openButton.UseVisualStyleBackColor = true;
@@ -207,10 +227,10 @@
             // 
             // newButton
             // 
-            this.newButton.Location = new System.Drawing.Point(2, 2);
-            this.newButton.Margin = new System.Windows.Forms.Padding(2);
+            this.newButton.Location = new System.Drawing.Point(3, 2);
+            this.newButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.newButton.Name = "newButton";
-            this.newButton.Size = new System.Drawing.Size(75, 25);
+            this.newButton.Size = new System.Drawing.Size(100, 31);
             this.newButton.TabIndex = 3;
             this.newButton.Text = "&New";
             this.newButton.UseVisualStyleBackColor = true;
@@ -222,19 +242,20 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.profileList.FormattingEnabled = true;
-            this.profileList.Location = new System.Drawing.Point(2, 32);
-            this.profileList.Margin = new System.Windows.Forms.Padding(2);
+            this.profileList.ItemHeight = 16;
+            this.profileList.Location = new System.Drawing.Point(3, 39);
+            this.profileList.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.profileList.Name = "profileList";
-            this.profileList.Size = new System.Drawing.Size(739, 394);
+            this.profileList.Size = new System.Drawing.Size(984, 484);
             this.profileList.TabIndex = 2;
             this.profileList.SelectedIndexChanged += new System.EventHandler(this.profileList_SelectedIndexChanged);
             // 
             // saveAsButton
             // 
-            this.saveAsButton.Location = new System.Drawing.Point(241, 2);
-            this.saveAsButton.Margin = new System.Windows.Forms.Padding(2);
+            this.saveAsButton.Location = new System.Drawing.Point(321, 2);
+            this.saveAsButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.saveAsButton.Name = "saveAsButton";
-            this.saveAsButton.Size = new System.Drawing.Size(75, 25);
+            this.saveAsButton.Size = new System.Drawing.Size(100, 31);
             this.saveAsButton.TabIndex = 1;
             this.saveAsButton.Text = "Save &As";
             this.saveAsButton.UseVisualStyleBackColor = true;
@@ -242,10 +263,10 @@
             // 
             // saveButton
             // 
-            this.saveButton.Location = new System.Drawing.Point(161, 2);
-            this.saveButton.Margin = new System.Windows.Forms.Padding(2);
+            this.saveButton.Location = new System.Drawing.Point(215, 2);
+            this.saveButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.saveButton.Name = "saveButton";
-            this.saveButton.Size = new System.Drawing.Size(75, 25);
+            this.saveButton.Size = new System.Drawing.Size(100, 31);
             this.saveButton.TabIndex = 0;
             this.saveButton.Text = "&Save";
             this.saveButton.UseVisualStyleBackColor = true;
@@ -254,10 +275,10 @@
             // parametersTab
             // 
             this.parametersTab.Controls.Add(this.parametersSplitter);
-            this.parametersTab.Location = new System.Drawing.Point(4, 22);
-            this.parametersTab.Margin = new System.Windows.Forms.Padding(2);
+            this.parametersTab.Location = new System.Drawing.Point(4, 25);
+            this.parametersTab.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.parametersTab.Name = "parametersTab";
-            this.parametersTab.Size = new System.Drawing.Size(743, 427);
+            this.parametersTab.Size = new System.Drawing.Size(993, 529);
             this.parametersTab.TabIndex = 2;
             this.parametersTab.Text = "Parameters";
             this.parametersTab.UseVisualStyleBackColor = true;
@@ -266,6 +287,7 @@
             // 
             this.parametersSplitter.Dock = System.Windows.Forms.DockStyle.Fill;
             this.parametersSplitter.Location = new System.Drawing.Point(0, 0);
+            this.parametersSplitter.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.parametersSplitter.Name = "parametersSplitter";
             // 
             // parametersSplitter.Panel1
@@ -277,17 +299,19 @@
             // parametersSplitter.Panel2
             // 
             this.parametersSplitter.Panel2.Controls.Add(this.logValues);
-            this.parametersSplitter.Size = new System.Drawing.Size(743, 427);
-            this.parametersSplitter.SplitterDistance = 400;
+            this.parametersSplitter.Size = new System.Drawing.Size(993, 529);
+            this.parametersSplitter.SplitterDistance = 534;
+            this.parametersSplitter.SplitterWidth = 5;
             this.parametersSplitter.TabIndex = 1;
             // 
             // parameterSearch
             // 
             this.parameterSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.parameterSearch.Location = new System.Drawing.Point(3, 3);
+            this.parameterSearch.Location = new System.Drawing.Point(4, 4);
+            this.parameterSearch.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.parameterSearch.Name = "parameterSearch";
-            this.parameterSearch.Size = new System.Drawing.Size(394, 20);
+            this.parameterSearch.Size = new System.Drawing.Size(525, 22);
             this.parameterSearch.TabIndex = 1;
             this.parameterSearch.TextChanged += new System.EventHandler(this.parameterSearch_TextChanged);
             this.parameterSearch.Enter += new System.EventHandler(this.parameterSearch_Enter);
@@ -308,16 +332,17 @@
             this.enabledColumn,
             this.nameColumn,
             this.unitsColumn});
-            this.parameterGrid.Location = new System.Drawing.Point(0, 28);
-            this.parameterGrid.Margin = new System.Windows.Forms.Padding(2);
+            this.parameterGrid.Location = new System.Drawing.Point(0, 34);
+            this.parameterGrid.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.parameterGrid.Name = "parameterGrid";
             this.parameterGrid.RowHeadersVisible = false;
+            this.parameterGrid.RowHeadersWidth = 51;
             this.parameterGrid.RowTemplate.Height = 24;
             this.parameterGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.parameterGrid.ShowCellErrors = false;
             this.parameterGrid.ShowEditingIcon = false;
             this.parameterGrid.ShowRowErrors = false;
-            this.parameterGrid.Size = new System.Drawing.Size(400, 399);
+            this.parameterGrid.Size = new System.Drawing.Size(534, 494);
             this.parameterGrid.TabIndex = 0;
             this.parameterGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.parameterGrid_CellContentClick);
             this.parameterGrid.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.parameterGrid_CellValueChanged);
@@ -329,7 +354,7 @@
             this.enabledColumn.HeaderText = "Enabled";
             this.enabledColumn.MinimumWidth = 50;
             this.enabledColumn.Name = "enabledColumn";
-            this.enabledColumn.Width = 52;
+            this.enabledColumn.Width = 64;
             // 
             // nameColumn
             // 
@@ -351,19 +376,21 @@
             // 
             this.logValues.Dock = System.Windows.Forms.DockStyle.Fill;
             this.logValues.Location = new System.Drawing.Point(0, 0);
+            this.logValues.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.logValues.Multiline = true;
             this.logValues.Name = "logValues";
             this.logValues.ReadOnly = true;
-            this.logValues.Size = new System.Drawing.Size(339, 427);
+            this.logValues.Size = new System.Drawing.Size(454, 529);
             this.logValues.TabIndex = 0;
             // 
             // debugTab
             // 
             this.debugTab.Controls.Add(this.debugLog);
-            this.debugTab.Location = new System.Drawing.Point(4, 22);
+            this.debugTab.Location = new System.Drawing.Point(4, 25);
+            this.debugTab.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.debugTab.Name = "debugTab";
-            this.debugTab.Padding = new System.Windows.Forms.Padding(3);
-            this.debugTab.Size = new System.Drawing.Size(743, 427);
+            this.debugTab.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.debugTab.Size = new System.Drawing.Size(993, 529);
             this.debugTab.TabIndex = 1;
             this.debugTab.Text = "Debug";
             this.debugTab.UseVisualStyleBackColor = true;
@@ -371,12 +398,13 @@
             // debugLog
             // 
             this.debugLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.debugLog.Location = new System.Drawing.Point(3, 3);
+            this.debugLog.Location = new System.Drawing.Point(4, 4);
+            this.debugLog.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.debugLog.Multiline = true;
             this.debugLog.Name = "debugLog";
             this.debugLog.ReadOnly = true;
             this.debugLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.debugLog.Size = new System.Drawing.Size(737, 421);
+            this.debugLog.Size = new System.Drawing.Size(985, 521);
             this.debugLog.TabIndex = 0;
             // 
             // dashboardTab
@@ -392,32 +420,35 @@
             // startStopSaving
             // 
             this.startStopSaving.Enabled = false;
-            this.startStopSaving.Location = new System.Drawing.Point(12, 11);
+            this.startStopSaving.Location = new System.Drawing.Point(16, 14);
+            this.startStopSaving.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.startStopSaving.Name = "startStopSaving";
-            this.startStopSaving.Size = new System.Drawing.Size(215, 23);
+            this.startStopSaving.Size = new System.Drawing.Size(287, 28);
             this.startStopSaving.TabIndex = 4;
             this.startStopSaving.Text = "Start &Recording";
             this.startStopSaving.UseVisualStyleBackColor = true;
             this.startStopSaving.Click += new System.EventHandler(this.startStopSaving_Click);
             // 
-            // disclaimer
+            // selectCanButton
             // 
-            this.disclaimer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.disclaimer.Location = new System.Drawing.Point(4, 145);
-            this.disclaimer.Name = "disclaimer";
-            this.disclaimer.Size = new System.Drawing.Size(739, 140);
-            this.disclaimer.TabIndex = 10;
-            this.disclaimer.Text = resources.GetString("disclaimer.Text");
+            this.selectCanButton.Location = new System.Drawing.Point(5, 40);
+            this.selectCanButton.Margin = new System.Windows.Forms.Padding(4);
+            this.selectCanButton.Name = "selectCanButton";
+            this.selectCanButton.Size = new System.Drawing.Size(288, 31);
+            this.selectCanButton.TabIndex = 11;
+            this.selectCanButton.Text = "Select &CAN Device";
+            this.selectCanButton.UseVisualStyleBackColor = true;
+            this.selectCanButton.Click += new System.EventHandler(this.selectCanButton_Click);
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(775, 505);
+            this.ClientSize = new System.Drawing.Size(1033, 622);
             this.Controls.Add(this.loggerProgress);
             this.Controls.Add(this.tabs);
             this.Controls.Add(this.startStopSaving);
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "MainForm";
             this.Text = "(window title is set programmatically)";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
@@ -468,6 +499,7 @@
         private System.Windows.Forms.TextBox parameterSearch;
         private System.Windows.Forms.Button removeProfileButton;
         private System.Windows.Forms.Label disclaimer;
+        private System.Windows.Forms.Button selectCanButton;
     }
 }
 
