@@ -14,6 +14,11 @@ namespace PcmHacking
             public string Name { get; set; }
             public string Units { get; set; }
             public string Value { get; set; }
+
+            public override string ToString()
+            {
+                return this.Name;
+            }
         }
 
         private IPort canPort;
@@ -30,7 +35,7 @@ namespace PcmHacking
             configuration.DataReceived = this.DataReceived;
             await this.canPort.OpenAsync(configuration);
 
-            Thread.Sleep(250);
+            Thread.Sleep(2500);
             this.keySnapshot.Clear();
 
             foreach (UInt32 key in this.messages.Keys)
@@ -84,11 +89,21 @@ namespace PcmHacking
             double value;
             switch (this.messageId)
             {
+                case (uint)0x000a0301:
+                    valueRaw = (this.messageData[0] << 8) | this.messageData[1];
+                    value = valueRaw;
+                    value = value * 0.01; // bar
+                    value = value * 14.5037738; // psi
+                    result.Value = ((int)value).ToString("0.00");
+                    result.Units = "F";
+                    result.Name = "Pressue";
+                    return result;
+
                 case (uint)0x000a0302:
                     valueRaw = (this.messageData[0] << 8) | this.messageData[1];
                     value = valueRaw;
                     value = (value * 1.8) + 32.0;
-                    result.Value = ((int)value).ToString();
+                    result.Value = ((int)value).ToString("0.00");
                     result.Units = "F";
                     result.Name = "Temperature";
                     return result;
@@ -97,7 +112,7 @@ namespace PcmHacking
                     valueRaw = (this.messageData[0] << 8) | this.messageData[1];
                     value = valueRaw;
                     value = (value * 0.0001) * 14.7;
-                    result.Value = value.ToString();
+                    result.Value = value.ToString("0.00");
                     result.Units = "AFR";
                     result.Name = "AFR 1";
                     return result;
@@ -106,7 +121,7 @@ namespace PcmHacking
                     valueRaw = (this.messageData[0] << 8) | this.messageData[1];
                     value = valueRaw;
                     value = (value * 0.0001) * 14.7;
-                    result.Value = value.ToString();
+                    result.Value = value.ToString("0.00");
                     result.Units = "AFR";
                     result.Name = "AFR 2";
                     return result;
