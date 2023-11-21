@@ -349,11 +349,22 @@ namespace PcmHacking
             switch(canForm.ShowDialog())
             {
                 case DialogResult.OK:
-                    this.canPortName = canForm.SelectedPort.PortName;
-                    DeviceConfiguration.Settings.CanPort = this.canPortName;
+                    if (canForm.SelectedPort == null)
+                    {
+                        this.canPortName = null;
+                        DeviceConfiguration.Settings.CanPort = null;
+                    }
+                    else
+                    {
+                        this.canPortName = canForm.SelectedPort.PortName;
+                        DeviceConfiguration.Settings.CanPort = this.canPortName;
+                    }
+
                     DeviceConfiguration.Settings.Save();
-                    
-                    // TODO: Re-create the logger, so it starts using the new port.
+
+                    // Re-create the logger, so it starts using the new port.
+                    this.ResetProfile();
+                    this.CreateProfileFromGrid();
                     break;
 
                 case DialogResult.Cancel:

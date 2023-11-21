@@ -12,6 +12,7 @@ namespace PcmHacking
 {
     public partial class CanForm : Form
     {
+        private const string NoPort = "None";
         private ILogger logger;
         private string defaultPort;
 
@@ -24,6 +25,18 @@ namespace PcmHacking
             InitializeComponent();
         }
 
+        private void CanForm_Load(object sender, EventArgs e)
+        {
+            this.FillPortList();
+
+            // Set the link in the help text.
+            const string thisDevice = "this device";
+            int start = this.labelRecommendedInterface.Text.IndexOf(thisDevice);
+            int length = thisDevice.Length;
+            this.labelRecommendedInterface.LinkArea = new LinkArea(start, length);
+
+        }
+
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
 
@@ -32,7 +45,15 @@ namespace PcmHacking
         private void buttonOk_Click(object sender, EventArgs e)
         {
             this.DialogResult = DialogResult.OK;
-            this.SelectedPort = this.serialPortList.SelectedItem as SerialPortInfo;
+            if (this.serialPortList.SelectedItem as string == NoPort)
+            {
+                this.SelectedPort = null;
+            }
+            else
+            {
+                this.SelectedPort = this.serialPortList.SelectedItem as SerialPortInfo;
+            }
+
             this.Close();
         }
 
@@ -42,14 +63,9 @@ namespace PcmHacking
             this.Close();
         }
 
-
-        private void CanForm_Load(object sender, EventArgs e)
-        {
-            this.FillPortList();
-        }
-
         private void FillPortList()
-        {            
+        {
+            this.serialPortList.Items.Add(NoPort);
             foreach (SerialPortInfo portInfo in PortDiscovery.GetPorts(this.logger))
             {
                 this.serialPortList.Items.Add(portInfo);
@@ -59,8 +75,14 @@ namespace PcmHacking
             {
                 if (this.defaultPort != null)
                 {
-                    foreach(SerialPortInfo portInfo in this.serialPortList.Items)
+                    foreach(object portInfoObject in this.serialPortList.Items)
                     {
+                        SerialPortInfo portInfo = portInfoObject as SerialPortInfo;
+                        if (portInfo == null)
+                        {
+                            continue;
+                        }
+
                         if (portInfo.PortName == this.defaultPort)
                         {
                             this.serialPortList.SelectedItem = portInfo;
@@ -73,6 +95,11 @@ namespace PcmHacking
                     this.serialPortList.SelectedIndex = 0;
                 }
             }
+        }
+
+        private void labelRecommendedInterface_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://www.seeedstudio.com/USB-CAN-Analyzer-p-2888.html");
         }
     }
 }

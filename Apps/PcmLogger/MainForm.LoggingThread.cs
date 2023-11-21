@@ -34,7 +34,7 @@ namespace PcmHacking
 
         private LogState logState = LogState.Nothing;
 
-        CanLogger canLogger = null;
+        CanLogger canLogger = new CanLogger();
 
         /// <summary>
         /// Create a string that will look reasonable in the UI's main text box.
@@ -85,13 +85,14 @@ namespace PcmHacking
 
         private async Task<Logger> RecreateLogger()
         {
-            if (this.canPortName != null)
+            this.canLogger?.Dispose();
+
+            if (string.IsNullOrEmpty(this.canPortName))
             {
-                // This creation is hacky, but the CanLogger class is at a deeper layer
-                // that serial port abstraction, and thus doesn't have access to the
-                // StandardPort constructor.
-                // TODO: Find a way to de-tangle this.
-                this.canLogger = new CanLogger();
+                await this.canLogger.SetPort(null);
+            }
+            else
+            {
                 await this.canLogger.SetPort(new StandardPort(canPortName));
 
             }
