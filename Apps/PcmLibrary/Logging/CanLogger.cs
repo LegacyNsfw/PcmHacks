@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PcmHacking;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace PcmHacking
 {
-    public class CanLogger
+    public class CanLogger : IDisposable
     {
         public class ParameterValue
         {
@@ -22,28 +23,51 @@ namespace PcmHacking
         }
 
         private IPort canPort;
+        private CanParser parser = new CanParser();
 
         public CanLogger()
         {
         }
 
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                this.canPort?.Dispose();
+            }
+        }
+
         public async Task SetPort(IPort port)
         {
+            this.canPort?.Dispose();
             this.canPort = port;
-            SerialPortConfiguration configuration = new SerialPortConfiguration();
-            configuration.BaudRate = 115200;
-            configuration.DataReceived = this.DataReceived;
-            await this.canPort.OpenAsync(configuration);
 
-            Thread.Sleep(2500);
+            // Remove all known messages
             this.keySnapshot.Clear();
+            this.messages.Clear();
 
-            foreach (UInt32 key in this.messages.Keys)
+            if (this.canPort != null)
             {
-                this.keySnapshot.Add(key);
-            }
+                SerialPortConfiguration configuration = new SerialPortConfiguration();
+                configuration.BaudRate = 2000000;
+                configuration.DataReceived = this.DataReceived;
+                await this.canPort.OpenAsync(configuration);
 
-            this.keySnapshot.Sort();
+                // Discover what messages are available on the bus.
+                Thread.Sleep(1500);                
+                foreach (UInt32 key in this.messages.Keys)
+                {
+                    this.keySnapshot.Add(key);
+                }
+
+                this.keySnapshot.Sort();
+            }
         }
 
         Dictionary<UInt32, ParameterValue> messages = new Dictionary<uint, ParameterValue>();
@@ -54,17 +78,14 @@ namespace PcmHacking
         {
             for(int i = 0; i < bytesReceived; i++)
             {
-                this.StateMachine(buffer[i]);
-                if (this.state == State.Done)
+                CanMessage message;
+                if (this.parser.IsCompleteMessage(buffer[i], out message))
                 {
-                    StringBuilder builder = new StringBuilder();
-                    for (int payloadIndex = 0; payloadIndex < 8; payloadIndex++)
+                    ParameterValue pv = this.TranslateValue(message);
+                    if (pv != null)
                     {
-                        builder.Append(messageData[payloadIndex].ToString("X2"));
+                        messages[message.MessageId] = pv;
                     }
-
-                    ParameterValue pv = this.TranslateValue();
-                    messages[this.messageId] = pv;
                 }
             }
         }
@@ -82,12 +103,12 @@ namespace PcmHacking
 
         }
 
-        private ParameterValue TranslateValue()
+        private ParameterValue TranslateValue(CanMessage message)
         {
             ParameterValue result = new ParameterValue();
             int valueRaw = 0;
             double value;
-            switch (this.messageId)
+            switch (message.MessageId)
             {
                 case (uint)0x000a0301:
                     valueRaw = (this.messageData[0] << 8) | this.messageData[1];
@@ -100,7 +121,7 @@ namespace PcmHacking
                     return result;
 
                 case (uint)0x000a0302:
-                    valueRaw = (this.messageData[0] << 8) | this.messageData[1];
+                    valueRaw = (message.Payload[0] << 8) | message.Payload[1];
                     value = valueRaw;
                     value = (value * 1.8) + 32.0;
                     result.Value = ((int)value).ToString("0.00");
@@ -109,7 +130,7 @@ namespace PcmHacking
                     return result;
 
                 case (uint)0x00000180:
-                    valueRaw = (this.messageData[0] << 8) | this.messageData[1];
+                    valueRaw = (message.Payload[0] << 8) | message.Payload[1];
                     value = valueRaw;
                     value = (value * 0.0001) * 14.7;
                     result.Value = value.ToString("0.00");
@@ -118,7 +139,7 @@ namespace PcmHacking
                     return result;
 
                 case (uint)0x00000181:
-                    valueRaw = (this.messageData[0] << 8) | this.messageData[1];
+                    valueRaw = (message.Payload[0] << 8) | message.Payload[1];
                     value = valueRaw;
                     value = (value * 0.0001) * 14.7;
                     result.Value = value.ToString("0.00");
@@ -127,7 +148,7 @@ namespace PcmHacking
                     return result;
 
                 default:
-                    valueRaw = (this.messageData[0] << 8) | this.messageData[1];
+                    valueRaw = (message.Payload[0] << 8) | message.Payload[1];
                     result.Value = valueRaw.ToString();
                     result.Units = "raw";
                     result.Name = this.messageId.ToString("X8");
@@ -145,11 +166,6 @@ namespace PcmHacking
 
         public IEnumerable<ParameterValue> GetParameterValues()
         {
-            if (this.keySnapshot.Count == 0)
-            {
-                this.GetParameterNames();
-            }
-
             foreach(UInt32 key in this.keySnapshot)
             {
                 yield return this.messages[key];
@@ -159,121 +175,5 @@ namespace PcmHacking
         UInt32 messageId = 0;
         byte[] messageData = new byte[8];
 
-        enum State
-        {
-            Start,
-            SeenFF,
-            SeenIdByte1,
-            SeenIdByte2,
-            SeenIdByte3,
-            SeenIdByte4,
-            SeenFE,
-            SeenMessageByte0,
-            SeenMessageByte1,
-            SeenMessageByte2,
-            SeenMessageByte3,
-            SeenMessageByte4,
-            SeenMessageByte5,
-            SeenMessageByte6,
-            Done,
-        }
-
-        State state = State.Start;
-
-        public void StateMachine(byte value)
-        {
-            switch (state)
-            {
-                case State.Start:
-                    if (value == 0xFF)
-                    {
-                        state = State.SeenFF;
-                        messageId = 0;
-                    }
-                    break;
-
-                case State.SeenFF:
-                    messageId |= value;
-                    state = State.SeenIdByte1;
-                    break;
-
-                case State.SeenIdByte1:
-                    messageId <<= 8;
-                    messageId |= value;
-                    state = State.SeenIdByte2;
-                    break;
-
-                case State.SeenIdByte2:
-                    messageId <<= 8;
-                    messageId |= value;
-                    state = State.SeenIdByte3;
-                    break;
-
-                case State.SeenIdByte3:
-                    messageId <<= 8;
-                    messageId |= value;
-                    state = State.SeenIdByte4;
-                    break;
-
-                case State.SeenIdByte4:
-                    if (value == 0xFE)
-                    {
-                        state = State.SeenFE;
-                        for (int index = 0; index < messageData.Length; index++)
-                        {
-                            messageData[index] = 0;
-                        }
-                    }
-                    else
-                    {
-                        state = State.Start;
-                    }
-                    break;
-
-                case State.SeenFE:
-                    messageData[0] = value;
-                    state = State.SeenMessageByte0;
-                    break;
-
-                case State.SeenMessageByte0:
-                    messageData[1] = value;
-                    state = State.SeenMessageByte1;
-                    break;
-
-                case State.SeenMessageByte1:
-                    messageData[2] = value;
-                    state = State.SeenMessageByte2;
-                    break;
-
-                case State.SeenMessageByte2:
-                    messageData[3] = value;
-                    state = State.SeenMessageByte3;
-                    break;
-
-                case State.SeenMessageByte3:
-                    messageData[4] = value;
-                    state = State.SeenMessageByte4;
-                    break;
-
-                case State.SeenMessageByte4:
-                    messageData[5] = value;
-                    state = State.SeenMessageByte5;
-                    break;
-
-                case State.SeenMessageByte5:
-                    messageData[6] = value;
-                    state = State.SeenMessageByte6;
-                    break;
-
-                case State.SeenMessageByte6:
-                    messageData[7] = value;
-                    state = State.Done;
-                    break;
-
-                default:
-                    state = State.Start;
-                    break;
-            }
-        }
     }
 }
