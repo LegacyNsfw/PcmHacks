@@ -373,7 +373,7 @@ namespace PcmHacking
                 this.Enqueue(new Message(StrippedFrame, timestampmicro, 0));
 
                 // This can be useful for debugging, but is generally too noisy.
-                 this.Logger.AddDebugMessage("RX: " + StrippedFrame.ToHex());
+                // this.Logger.AddDebugMessage("RX: " + StrippedFrame.ToHex());
                 return null;
             }
             else if (receive[0] == 0x7F)
