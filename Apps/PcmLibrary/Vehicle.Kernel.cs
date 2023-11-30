@@ -347,6 +347,7 @@ namespace PcmHacking
                 return false;
             }
 
+            logger.AddUserMessage("Upload permission granted.");
             logger.AddDebugMessage($"Going to load a {payload.Length} byte {(info.LoaderRequired ? "loader" : "kernel")} to 0x{loadAddress.ToString("X6")}");
 
             await this.device.SetTimeout(TimeoutScenario.SendKernel);

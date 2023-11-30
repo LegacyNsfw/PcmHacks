@@ -361,6 +361,7 @@ namespace PcmHacking
                     }
 
                     DeviceConfiguration.Settings.Save();
+                    this.canDeviceDescription.Text = this.canPortName;
 
                     // Re-create the logger, so it starts using the new port.
                     this.ResetProfile();
