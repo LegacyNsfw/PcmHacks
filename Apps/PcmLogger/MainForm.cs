@@ -209,6 +209,7 @@ namespace PcmHacking
             this.LoadProfileHistory();
 
             this.canPortName = DeviceConfiguration.Settings.CanPort;
+            this.canDeviceDescription.Text = this.canPortName;
 
             ThreadPool.QueueUserWorkItem(BackgroundInitialization);
 

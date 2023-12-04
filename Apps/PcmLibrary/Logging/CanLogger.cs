@@ -24,6 +24,10 @@ namespace PcmHacking
 
         private IPort canPort;
         private CanParser parser = new CanParser();
+        List<UInt32> keySnapshot = new List<UInt32>();
+
+        // Note that this is accessed by multiple threads, so it must only be used within "lock(messages)"
+        Dictionary<UInt32, ParameterValue> messages = new Dictionary<uint, ParameterValue>();
 
         public CanLogger()
         {
@@ -50,7 +54,11 @@ namespace PcmHacking
 
             // Remove all known messages
             this.keySnapshot.Clear();
-            this.messages.Clear();
+
+            lock (this.messages)
+            {
+                this.messages.Clear();
+            }
 
             if (this.canPort != null)
             {
@@ -60,19 +68,18 @@ namespace PcmHacking
                 await this.canPort.OpenAsync(configuration);
 
                 // Discover what messages are available on the bus.
-                Thread.Sleep(1500);                
-                foreach (UInt32 key in this.messages.Keys)
+                Thread.Sleep(1500);
+                lock (this.messages)
                 {
-                    this.keySnapshot.Add(key);
+                    foreach (UInt32 key in this.messages.Keys)
+                    {
+                        this.keySnapshot.Add(key);
+                    }
                 }
 
                 this.keySnapshot.Sort();
             }
         }
-
-        Dictionary<UInt32, ParameterValue> messages = new Dictionary<uint, ParameterValue>();
-
-        List<UInt32> keySnapshot = new List<UInt32>();
 
         public void DataReceived(byte[] buffer, int bytesReceived)
         {
@@ -84,7 +91,10 @@ namespace PcmHacking
                     ParameterValue pv = this.TranslateValue(message);
                     if (pv != null)
                     {
-                        messages[message.MessageId] = pv;
+                        lock (this.messages)
+                        {
+                            this.messages[message.MessageId] = pv;
+                        }
                     }
                 }
             }
@@ -117,7 +127,7 @@ namespace PcmHacking
                     value = value * 14.5037738; // psi
                     result.Value = ((int)value).ToString("0.00");
                     result.Units = "F";
-                    result.Name = "Pressue";
+                    result.Name = "AEM Pressue";
                     return result;
 
                 case (uint)0x000a0302:
@@ -126,7 +136,7 @@ namespace PcmHacking
                     value = (value * 1.8) + 32.0;
                     result.Value = ((int)value).ToString("0.00");
                     result.Units = "F";
-                    result.Name = "Temperature";
+                    result.Name = "AEM Temperature";
                     return result;
 
                 case (uint)0x00000180:
@@ -135,7 +145,7 @@ namespace PcmHacking
                     value = (value * 0.0001) * 14.7;
                     result.Value = value.ToString("0.00");
                     result.Units = "AFR";
-                    result.Name = "AFR 1";
+                    result.Name = "AEM AFR 1";
                     return result;
 
                 case (uint)0x00000181:
@@ -144,7 +154,7 @@ namespace PcmHacking
                     value = (value * 0.0001) * 14.7;
                     result.Value = value.ToString("0.00");
                     result.Units = "AFR";
-                    result.Name = "AFR 2";
+                    result.Name = "AEM AFR 2";
                     return result;
 
                 default:
@@ -160,7 +170,12 @@ namespace PcmHacking
         {
             foreach (UInt32 key in this.keySnapshot)
             {
-                yield return this.messages[key].Name + "(" + this.messages[key].Units + ")";
+                string name;
+                lock(this.messages)
+                {
+                    name = this.messages[key].Name + "(" + this.messages[key].Units + ")";
+                }
+                yield return name;
             }
         }
 
@@ -168,7 +183,12 @@ namespace PcmHacking
         {
             foreach(UInt32 key in this.keySnapshot)
             {
-                yield return this.messages[key];
+                ParameterValue value;
+                lock(this.messages)
+                {
+                    value = this.messages[key];
+                }
+                yield return value;
             }
         }
 

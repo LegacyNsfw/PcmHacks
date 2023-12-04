@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CanForm));
             this.label1 = new System.Windows.Forms.Label();
             this.serialPortList = new System.Windows.Forms.ListBox();
             this.buttonOk = new System.Windows.Forms.Button();
@@ -40,7 +41,7 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(7, 15);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(70, 17);
+            this.label1.Size = new System.Drawing.Size(65, 16);
             this.label1.TabIndex = 0;
             this.label1.Text = "CAN &Port:";
             // 
@@ -54,7 +55,7 @@
             this.serialPortList.ItemHeight = 16;
             this.serialPortList.Location = new System.Drawing.Point(83, 12);
             this.serialPortList.Name = "serialPortList";
-            this.serialPortList.Size = new System.Drawing.Size(265, 160);
+            this.serialPortList.Size = new System.Drawing.Size(265, 174);
             this.serialPortList.TabIndex = 1;
             this.serialPortList.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             // 
@@ -85,12 +86,12 @@
             // 
             this.labelRecommendedInterface.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelRecommendedInterface.Location = new System.Drawing.Point(83, 188);
+            this.labelRecommendedInterface.Location = new System.Drawing.Point(10, 199);
             this.labelRecommendedInterface.Name = "labelRecommendedInterface";
-            this.labelRecommendedInterface.Size = new System.Drawing.Size(265, 66);
+            this.labelRecommendedInterface.Size = new System.Drawing.Size(447, 101);
             this.labelRecommendedInterface.TabIndex = 4;
             this.labelRecommendedInterface.TabStop = true;
-            this.labelRecommendedInterface.Text = "Currently, the only supported CAN interface is this device from Seeed Studio.";
+            this.labelRecommendedInterface.Text = resources.GetString("labelRecommendedInterface.Text");
             this.labelRecommendedInterface.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.labelRecommendedInterface_LinkClicked);
             // 
             // CanForm
@@ -98,7 +99,7 @@
             this.AcceptButton = this.buttonOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(469, 263);
+            this.ClientSize = new System.Drawing.Size(469, 309);
             this.Controls.Add(this.labelRecommendedInterface);
             this.Controls.Add(this.buttonCancel);
             this.Controls.Add(this.buttonOk);

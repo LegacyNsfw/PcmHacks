@@ -117,4 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="labelRecommendedInterface.Text" xml:space="preserve">
+    <value>Currently, the only supported CAN interface is this device from Seeed Studio. It will appear in the list as "USB-SERIAL CH340."
+
+You must use the manufacturer's software to configure it to match your CAN bus speed, and a serial speed of 2,000,000.</value>
+  </data>
 </root>

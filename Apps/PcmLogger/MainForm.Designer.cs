@@ -35,6 +35,7 @@
             this.loggerProgress = new System.Windows.Forms.ProgressBar();
             this.tabs = new System.Windows.Forms.TabControl();
             this.configurationTab = new System.Windows.Forms.TabPage();
+            this.canDeviceDescription = new System.Windows.Forms.Label();
             this.selectCanButton = new System.Windows.Forms.Button();
             this.disclaimer = new System.Windows.Forms.Label();
             this.logFilePath = new System.Windows.Forms.Label();
@@ -53,15 +54,14 @@
             this.parametersSplitter = new System.Windows.Forms.SplitContainer();
             this.parameterSearch = new System.Windows.Forms.TextBox();
             this.parameterGrid = new System.Windows.Forms.DataGridView();
-            this.enabledColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.nameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.unitsColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.logValues = new System.Windows.Forms.TextBox();
             this.debugTab = new System.Windows.Forms.TabPage();
             this.debugLog = new System.Windows.Forms.TextBox();
             this.dashboardTab = new System.Windows.Forms.TabPage();
             this.startStopSaving = new System.Windows.Forms.Button();
-            this.canDeviceDescription = new System.Windows.Forms.Label();
+            this.enabledColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.nameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.unitsColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.tabs.SuspendLayout();
             this.configurationTab.SuspendLayout();
             this.profilesTab.SuspendLayout();
@@ -123,6 +123,16 @@
             this.configurationTab.Text = "Configuration";
             this.configurationTab.UseVisualStyleBackColor = true;
             // 
+            // canDeviceDescription
+            // 
+            this.canDeviceDescription.AutoSize = true;
+            this.canDeviceDescription.Location = new System.Drawing.Point(300, 47);
+            this.canDeviceDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.canDeviceDescription.Name = "canDeviceDescription";
+            this.canDeviceDescription.Size = new System.Drawing.Size(111, 16);
+            this.canDeviceDescription.TabIndex = 12;
+            this.canDeviceDescription.Text = "[selected device]";
+            // 
             // selectCanButton
             // 
             this.selectCanButton.Location = new System.Drawing.Point(5, 40);
@@ -152,7 +162,7 @@
             this.logFilePath.Location = new System.Drawing.Point(153, 85);
             this.logFilePath.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.logFilePath.Name = "logFilePath";
-            this.logFilePath.Size = new System.Drawing.Size(65, 17);
+            this.logFilePath.Size = new System.Drawing.Size(61, 16);
             this.logFilePath.TabIndex = 7;
             this.logFilePath.Text = "Directory";
             // 
@@ -195,7 +205,7 @@
             this.deviceDescription.Location = new System.Drawing.Point(300, 11);
             this.deviceDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.deviceDescription.Name = "deviceDescription";
-            this.deviceDescription.Size = new System.Drawing.Size(114, 17);
+            this.deviceDescription.Size = new System.Drawing.Size(111, 16);
             this.deviceDescription.TabIndex = 1;
             this.deviceDescription.Text = "[selected device]";
             // 
@@ -324,7 +334,7 @@
             this.parameterSearch.Location = new System.Drawing.Point(4, 4);
             this.parameterSearch.Margin = new System.Windows.Forms.Padding(4);
             this.parameterSearch.Name = "parameterSearch";
-            this.parameterSearch.Size = new System.Drawing.Size(525, 22);
+            this.parameterSearch.Size = new System.Drawing.Size(526, 22);
             this.parameterSearch.TabIndex = 1;
             this.parameterSearch.TextChanged += new System.EventHandler(this.parameterSearch_TextChanged);
             this.parameterSearch.Enter += new System.EventHandler(this.parameterSearch_Enter);
@@ -355,35 +365,10 @@
             this.parameterGrid.ShowCellErrors = false;
             this.parameterGrid.ShowEditingIcon = false;
             this.parameterGrid.ShowRowErrors = false;
-            this.parameterGrid.Size = new System.Drawing.Size(534, 494);
+            this.parameterGrid.Size = new System.Drawing.Size(379, 494);
             this.parameterGrid.TabIndex = 0;
             this.parameterGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.parameterGrid_CellContentClick);
             this.parameterGrid.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.parameterGrid_CellValueChanged);
-            // 
-            // enabledColumn
-            // 
-            this.enabledColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
-            this.enabledColumn.FillWeight = 1F;
-            this.enabledColumn.HeaderText = "Enabled";
-            this.enabledColumn.MinimumWidth = 50;
-            this.enabledColumn.Name = "enabledColumn";
-            this.enabledColumn.Width = 66;
-            // 
-            // nameColumn
-            // 
-            this.nameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.nameColumn.HeaderText = "Name";
-            this.nameColumn.MinimumWidth = 100;
-            this.nameColumn.Name = "nameColumn";
-            this.nameColumn.ReadOnly = true;
-            // 
-            // unitsColumn
-            // 
-            this.unitsColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
-            this.unitsColumn.FillWeight = 1F;
-            this.unitsColumn.HeaderText = "Units";
-            this.unitsColumn.MinimumWidth = 100;
-            this.unitsColumn.Name = "unitsColumn";
             // 
             // logValues
             // 
@@ -442,15 +427,31 @@
             this.startStopSaving.UseVisualStyleBackColor = true;
             this.startStopSaving.Click += new System.EventHandler(this.startStopSaving_Click);
             // 
-            // canDeviceDescription
+            // enabledColumn
             // 
-            this.canDeviceDescription.AutoSize = true;
-            this.canDeviceDescription.Location = new System.Drawing.Point(300, 47);
-            this.canDeviceDescription.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.canDeviceDescription.Name = "canDeviceDescription";
-            this.canDeviceDescription.Size = new System.Drawing.Size(114, 17);
-            this.canDeviceDescription.TabIndex = 12;
-            this.canDeviceDescription.Text = "[selected device]";
+            this.enabledColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
+            this.enabledColumn.FillWeight = 1F;
+            this.enabledColumn.HeaderText = "Enabled";
+            this.enabledColumn.MinimumWidth = 50;
+            this.enabledColumn.Name = "enabledColumn";
+            this.enabledColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.enabledColumn.Width = 87;
+            // 
+            // nameColumn
+            // 
+            this.nameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.nameColumn.HeaderText = "Name";
+            this.nameColumn.MinimumWidth = 100;
+            this.nameColumn.Name = "nameColumn";
+            this.nameColumn.ReadOnly = true;
+            // 
+            // unitsColumn
+            // 
+            this.unitsColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
+            this.unitsColumn.FillWeight = 1F;
+            this.unitsColumn.HeaderText = "Units";
+            this.unitsColumn.MinimumWidth = 100;
+            this.unitsColumn.Name = "unitsColumn";
             // 
             // MainForm
             // 
@@ -504,15 +505,15 @@
         private System.Windows.Forms.Button saveAsButton;
         private System.Windows.Forms.Button saveButton;
         private System.Windows.Forms.Button openButton;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn enabledColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn nameColumn;
-        private System.Windows.Forms.DataGridViewComboBoxColumn unitsColumn;
         private System.Windows.Forms.SplitContainer parametersSplitter;
         private System.Windows.Forms.TextBox parameterSearch;
         private System.Windows.Forms.Button removeProfileButton;
         private System.Windows.Forms.Label disclaimer;
         private System.Windows.Forms.Button selectCanButton;
         private System.Windows.Forms.Label canDeviceDescription;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn enabledColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn nameColumn;
+        private System.Windows.Forms.DataGridViewComboBoxColumn unitsColumn;
     }
 }
 
