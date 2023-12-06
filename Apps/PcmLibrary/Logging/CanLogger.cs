@@ -158,10 +158,19 @@ namespace PcmHacking
                     return result;
 
                 default:
-                    valueRaw = (message.Payload[0] << 8) | message.Payload[1];
-                    result.Value = valueRaw.ToString();
-                    result.Units = "raw";
-                    result.Name = this.messageId.ToString("X8");
+                    if (message.Payload.Length >= 2)
+                    {
+                        valueRaw = (message.Payload[0] << 8) | message.Payload[1];
+                        result.Value = valueRaw.ToString();
+                        result.Units = "raw";
+                        result.Name = this.messageId.ToString("X8");
+                    }
+                    else
+                    {
+                        result.Value = "";
+                        result.Units = "";
+                        result.Name = "Empty";
+                    }
                     return result;
             }
         }

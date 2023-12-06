@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Messages>
   <Message
-    id="0x000a0301">
+    id="000a0301">
     <Parameter
       id="CAN_AEM_Pressure"
       firstByte="0"
@@ -14,7 +14,7 @@
     </Parameter>
   </Message>
   <Message
-    id="0x000a0302">
+    id="000a0302">
     <Parameter
       id="CAN_AEM_Temperature"
       firstByte="0"
@@ -27,7 +27,7 @@
     </Parameter>
   </Message>
   <Message
-    id="0x00000180">
+    id="00000180">
     <Parameter
       id="CAN_AEM_AFR1"
       firstByte="0"
@@ -40,7 +40,7 @@
     </Parameter>
   </Message>
   <Message
-    id="0x00000181">
+    id="00000181">
     <Parameter
       id="CAN_AEM_AFR2"
       firstByte="0"
@@ -53,7 +53,7 @@
     </Parameter>
   </Message>
   <Message
-    id="0x00000800">
+    id="00000800">
     <Parameter
       id="CAN_Plex_KnockCountS1"
       firstByte="0"
@@ -92,7 +92,7 @@
     </Parameter>
   </Message>
   <Message
-    id="0x00000801">
+    id="00000801">
     <Parameter
       id="CAN_Plex_VBatt"
       firstByte="0"

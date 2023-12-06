@@ -887,6 +887,16 @@ namespace PcmHacking
                 {
                     this.AddUserMessage("MEC query failed: " + mecResponse.Status.ToString());
                 }
+
+                var voltageResponse = await this.Vehicle.QueryVoltage();
+                if (voltageResponse.Status == ResponseStatus.Success)
+                {
+                    this.AddUserMessage("Voltage: " + voltageResponse.Value.ToString());
+                }
+                else
+                {
+                    this.AddUserMessage("Voltage query failed: " + voltageResponse.Status.ToString());
+                }
             }
             catch (Exception exception)
             {

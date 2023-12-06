@@ -72,7 +72,7 @@ namespace PcmHacking
         {
             if (this.parameters.Any(P => P.Id == parameter.Id))
             {
-                throw new Exception(String.Format("Duplicate parameter ID:{0}", parameter.Id));
+                throw new Exception(String.Format("Duplicate parameter ID: {0}", parameter.Id));
             }
 
             this.parameters.Add(parameter);
@@ -210,11 +210,11 @@ namespace PcmHacking
             foreach (XElement messageElement in xml.Root.Elements("Message"))
             {
                 string messageIdString = messageElement.Attribute("id").Value;
-                UInt32 messageId = UInt32.Parse(messageIdString);
+                UInt32 messageId = UInt32.Parse(messageIdString, NumberStyles.HexNumber);
 
                 List<CanParameter> parameters = new List<CanParameter>();
 
-                foreach (XElement parameterElement in xml.Root.Elements("CanParameter"))
+                foreach (XElement parameterElement in messageElement.Elements("Parameter"))
                 {
                     string id = parameterElement.Attribute("id").Value;
                     string name = parameterElement.Attribute("name").Value;
