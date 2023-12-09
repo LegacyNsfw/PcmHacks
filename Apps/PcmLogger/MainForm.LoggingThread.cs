@@ -34,7 +34,7 @@ namespace PcmHacking
 
         private LogState logState = LogState.Nothing;
 
-        CanLogger canLogger = new CanLogger();
+        CanLogger canLogger;
 
         /// <summary>
         /// Create a string that will look reasonable in the UI's main text box.
@@ -83,9 +83,10 @@ namespace PcmHacking
             return builder.ToString();
         }
 
-        private async Task<Logger> RecreateLogger()
+        private async Task<Logger> RecreateLogger(ParameterDatabase parameterDatabase)
         {
             this.canLogger?.Dispose();
+            this.canLogger = new CanLogger(parameterDatabase);
 
             if (string.IsNullOrEmpty(this.canPortName))
             {
@@ -208,7 +209,7 @@ namespace PcmHacking
                                         // It may be counterintuitive that we update lastProfile here, but that 
                                         // prevents the invalid parameter exception from being thrown repeatedly.
                                         lastProfile = this.currentProfile;
-                                        logger = await this.RecreateLogger();
+                                        logger = await this.RecreateLogger(this.database);
 
                                         // If this was the first profile to load...
                                         if (this.logState == LogState.Nothing)

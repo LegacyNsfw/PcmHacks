@@ -54,6 +54,11 @@ namespace PcmHacking
             }
         }
 
+        public IReadOnlyDictionary<UInt32, IEnumerable<CanParameter>> GetCanParameters()
+        {
+            return this.canParameters;
+        }
+
         /// <summary>
         /// returns a list of parameters that support the specified os
         /// </summary>

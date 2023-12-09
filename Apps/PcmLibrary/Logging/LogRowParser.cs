@@ -184,42 +184,8 @@ namespace PcmHacking
                 {
                     double convertedValue = 0;
                     string formattedValue;
+                    formattedValue = ValueConverter.Convert(value, column.Parameter.Name, column.Conversion);
 
-                    if (column.Conversion.IsBitMapped)
-                    {
-                        int bits = (int)value;
-                        bits = bits >> column.Conversion.BitIndex;
-                        bool flag = (bits & 1) != 0;
-
-                        convertedValue = value;
-                        formattedValue = flag ? column.Conversion.TrueValue : column.Conversion.FalseValue;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            Interpreter interpreter = new Interpreter();
-                            interpreter.SetVariable("x", value);
-
-                            convertedValue = interpreter.Eval<double>(column.Conversion.Expression);
-                        }
-                        catch (Exception exception)
-                        {
-                            throw new InvalidOperationException(
-                                string.Format("Unable to evaluate expression \"{0}\" for parameter \"{1}\"",
-                                    column.Conversion.Expression,
-                                    column.Parameter.Name),
-                                exception);
-                        }
-
-                        string format = column.Conversion.Format;
-                        if (string.IsNullOrWhiteSpace(format))
-                        {
-                            format = "0.00";
-                        }
-
-                        formattedValue = convertedValue.ToString(format);
-                    }
 
                     results.Add(
                         column,

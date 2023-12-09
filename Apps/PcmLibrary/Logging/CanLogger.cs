@@ -25,12 +25,14 @@ namespace PcmHacking
         private IPort canPort;
         private CanParser parser = new CanParser();
         List<UInt32> keySnapshot = new List<UInt32>();
+        ParameterDatabase parameterDatabase;
 
         // Note that this is accessed by multiple threads, so it must only be used within "lock(messages)"
         Dictionary<UInt32, ParameterValue> messages = new Dictionary<uint, ParameterValue>();
 
-        public CanLogger()
+        public CanLogger(ParameterDatabase parameterDatabase)
         {
+            this.parameterDatabase = parameterDatabase;
         }
 
         public void Dispose()
@@ -115,6 +117,103 @@ namespace PcmHacking
 
         private ParameterValue TranslateValue(CanMessage message)
         {
+            IReadOnlyDictionary<UInt32, IEnumerable<CanParameter>> canParameters = this.parameterDatabase.GetCanParameters();
+            IEnumerable<CanParameter> parameters;
+            ParameterValue result = new ParameterValue();
+            double rawValue = 0;
+
+            if (!canParameters.TryGetValue(message.MessageId, out parameters))
+            {
+                if (message.Payload.Length >= 2)
+                {
+                    rawValue = (message.Payload[0] << 8) | message.Payload[1];
+                    result.Value = rawValue.ToString();
+                    result.Units = "raw";
+                    result.Name = this.messageId.ToString("X8");
+                }
+                else
+                {
+                    result.Value = "Unknown";
+                    result.Units = "";
+                    result.Name = message.MessageId.ToString("X8");
+                }
+            }
+            else
+            {
+                foreach(CanParameter parameter in parameters)
+                {
+                    switch(parameter.ByteCount)
+                    {
+                        case 0:
+                            rawValue = 1; // TODO: this should probably increment with each new message.
+                            result.Units = "";
+                            result.Name = parameter.Name;
+                            break;
+
+                        case 1:
+                            rawValue = message.Payload[(int)parameter.ByteIndex];
+                            break;
+
+                        case 2:
+                            if (parameter.HighByteFirst)
+                            {
+                                rawValue = (message.Payload[(int)parameter.ByteIndex] << 8)
+                                    + message.Payload[(int)parameter.ByteIndex + 1];
+                            }
+                            else
+                            {
+                                rawValue = (message.Payload[(int)parameter.ByteIndex + 1] << 8)
+                                    + message.Payload[(int)parameter.ByteIndex];
+                            }
+                            break;
+
+                        case 3:
+                            if (parameter.HighByteFirst)
+                            {
+                                rawValue = (message.Payload[(int)parameter.ByteIndex] << 16)
+                                    + (message.Payload[(int)parameter.ByteIndex + 1] << 8)
+                                    + message.Payload[(int)parameter.ByteIndex + 2];
+                            }
+                            else
+                            {
+                                rawValue = (message.Payload[(int)parameter.ByteIndex + 2] << 16)
+                                    + (message.Payload[(int)parameter.ByteIndex + 1] << 8)
+                                    + message.Payload[(int)parameter.ByteIndex];
+                            }
+                            break;
+
+                        case 4:
+                            if (parameter.HighByteFirst)
+                            {
+                                rawValue = (message.Payload[(int)parameter.ByteIndex] << 24) +
+                                    + (message.Payload[(int)parameter.ByteIndex + 1] << 16) +
+                                    + (message.Payload[(int)parameter.ByteIndex + 2] << 8) +
+                                    + message.Payload[(int)parameter.ByteIndex + 3];
+                            }
+                            else
+                            {
+                                rawValue = (message.Payload[(int)parameter.ByteIndex + 3] << 24) +
+                                    + (message.Payload[(int)parameter.ByteIndex + 2] << 16) +
+                                    + (message.Payload[(int)parameter.ByteIndex + 1] << 8) +
+                                    + message.Payload[(int)parameter.ByteIndex];
+                            }
+                            break;
+                    }
+
+                    // TODO: persist preferred conversions somehwere - in the log profile?
+                    Conversion conversion = parameter.Conversions.First();
+                    result.Value = ValueConverter.Convert(rawValue, parameter.Name, parameter.Conversions.First());
+                    result.Units = conversion.Units;
+                    result.Name = parameter.Name;
+                }
+            }
+
+            return result;
+
+        }
+
+        private ParameterValue Deprecated(CanMessage message)
+        { 
             ParameterValue result = new ParameterValue();
             int valueRaw = 0;
             double value;

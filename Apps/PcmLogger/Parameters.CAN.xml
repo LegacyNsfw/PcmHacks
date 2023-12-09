@@ -9,8 +9,8 @@
       highByteFirst="true"
       name="AEM Pressure"
       description="">
-      <Conversion units="bar" expression="x * 0.01" format="0.00"/>
       <Conversion units="psi" expression="x * 0.01 * 14.5037738" format="0.00"/>
+      <Conversion units="bar" expression="x * 0.01" format="0.00"/>
     </Parameter>
   </Message>
   <Message
@@ -22,8 +22,8 @@
       highByteFirst="true"
       name="AEM Temperature"
       description="">
-      <Conversion units="C" expression="x" format="0"/>
       <Conversion units="F" expression="x * 1.8 + 32.0" format="0.0"/>
+      <Conversion units="C" expression="x" format="0"/>
     </Parameter>
   </Message>
   <Message
@@ -35,8 +35,8 @@
       highByteFirst="true"
       name="AEM Lambda 1"
       description="">
-      <Conversion units="Lambda" expression="x * 0.0001" format="0.000"/>
       <Conversion units="AFR (gasoline)" expression="x * 0.00147" format="0.00"/>
+      <Conversion units="Lambda" expression="x * 0.0001" format="0.000"/>
     </Parameter>
   </Message>
   <Message
@@ -48,8 +48,8 @@
       highByteFirst="true"
       name="AEM Lambda 2"
       description="">
-      <Conversion units="Lambda" expression="x * 0.0001" format="0.000"/>
       <Conversion units="AFR (gasoline)" expression="x * 0.00147" format="0.00"/>
+      <Conversion units="Lambda" expression="x * 0.0001" format="0.000"/>
     </Parameter>
   </Message>
   <Message
