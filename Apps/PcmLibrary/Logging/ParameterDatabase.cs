@@ -17,6 +17,20 @@ namespace PcmHacking
         private List<Parameter> parameters = new List<Parameter>();
         private Dictionary<UInt32, IEnumerable<CanParameter>> canParameters = new Dictionary<UInt32, IEnumerable<CanParameter>>();
 
+        public IEnumerable<CanParameter> CanParameters
+        {
+            get
+            {
+                foreach(IEnumerable<CanParameter> parameterSet in canParameters.Values)
+                {
+                    foreach(CanParameter parameter in parameterSet)
+                    {
+                        yield return parameter;
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Constructor
         /// </summary>

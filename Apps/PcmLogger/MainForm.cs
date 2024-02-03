@@ -208,9 +208,20 @@ namespace PcmHacking
 
             this.LoadProfileHistory();
 
+            // CAN UI Initialization
             this.canPortName = DeviceConfiguration.Settings.CanPort;
             this.canDeviceDescription.Text = this.canPortName;
+            this.initializeCanParameterGrid();
+            if (this.canDeviceDescription.Text?.Length > 0)
+            {
+                this.enableCanControls(true, false);
+            }
+            else
+            {
+                this.enableCanControls(false, false);
+            }
 
+            // Begin logging
             ThreadPool.QueueUserWorkItem(BackgroundInitialization);
 
             this.logFilePath.Text = logDirectory;
@@ -347,7 +358,7 @@ namespace PcmHacking
             string canPort = DeviceConfiguration.Settings.CanPort;
             CanForm canForm = new CanForm(this, canPort);
 
-            switch(canForm.ShowDialog())
+            switch (canForm.ShowDialog())
             {
                 case DialogResult.OK:
                     if (canForm.SelectedPort == null)
@@ -372,6 +383,50 @@ namespace PcmHacking
                 case DialogResult.Cancel:
                     break;
             }
+        }
+
+        private void canDeviceDescription_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void enableCanLogging_CheckedChanged(object sender, EventArgs e)
+        {
+            this.enableCanControls(true, true);
+        }
+
+        private void disableCanLogging_CheckedChanged(object sender, EventArgs e)
+        {
+            this.enableCanControls(false, true);
+        }
+
+        private void enableCanControls(bool enabled, bool reset)
+        {
+            this.selectCanButton.Enabled = enabled;
+            this.canDeviceDescription.Enabled = enabled;
+
+            if (enabled)
+            {
+                this.canDeviceDescription.Text = this.canPortName;
+            }
+            else
+            {
+                this.canDeviceDescription.Text = string.Empty;
+            }
+
+            DeviceConfiguration.Settings.CanPort = this.canDeviceDescription.Text;
+            DeviceConfiguration.Settings.Save();
+
+            if (reset)
+            {
+                this.ResetProfile();
+                this.CreateProfileFromGrid();
+            }
+        }
+
+        private void initializeCanParameterGrid()
+        {
+
         }
     }
 }
