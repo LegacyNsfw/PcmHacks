@@ -200,8 +200,7 @@ namespace PcmHacking
                             break;
                     }
 
-                    // TODO: persist preferred conversions somehwere - in the log profile?
-                    Conversion conversion = parameter.Conversions.First();
+                    Conversion conversion = parameter.SelectedConversion ?? parameter.Conversions.First();
                     result.Value = ValueConverter.Convert(rawValue, parameter.Name, parameter.Conversions.First());
                     result.Units = conversion.Units;
                     result.Name = parameter.Name;
