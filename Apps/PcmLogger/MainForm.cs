@@ -1,14 +1,8 @@
 ﻿//#define Vpw4x
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -26,6 +20,8 @@ namespace PcmHacking
         private const string appName = "PCM Logger";
         private const string defaultFileName = "New Profile";
         private string fileName = defaultFileName;
+
+        private string canPortName;
 
         /// <summary>
         /// Constructor
@@ -56,7 +52,7 @@ namespace PcmHacking
         /// </summary>
         public override void AddDebugMessage(string message)
         {
-            if(this.debugLog.InvokeRequired)
+            if (this.debugLog.InvokeRequired)
             {
                 var self = new Action<string>(AddDebugMessage);
                 this.BeginInvoke(self, new[] { message });
@@ -141,24 +137,25 @@ namespace PcmHacking
             // This must be assigned prior to calling FillParameterGrid(), 
             // otherwise the RAM parameters will not appear in the grid.
             this.osid = response.Value;
-            
+
             this.Invoke((MethodInvoker)delegate ()
             {
                 this.deviceDescription.Text = deviceName + " " + osid.ToString();
                 this.startStopSaving.Enabled = true;
                 this.parameterGrid.Enabled = true;
                 this.EnableProfileButtons(true);
-                
+
                 try
                 {
                     this.FillParameterGrid();
-                } 
+                    this.FillCanParameterGrid();
+
+                }
                 catch (Exception ex)
                 {
                     this.AddUserMessage("Error Loading Parameter Database:" + ex.Message);
                     this.AddDebugMessage(ex.ToString());
                 }
-                
             });
 
             string lastProfile = Configuration.Settings.LastProfile;
@@ -189,7 +186,7 @@ namespace PcmHacking
             // Order matters - the scheduler must be set before adding messages.
             this.uiThreadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             this.AddDebugMessage("MainForm_Load started.");
-                        
+
             string logDirectory = Configuration.Settings.LogDirectory;
             if (string.IsNullOrWhiteSpace(logDirectory))
             {
@@ -206,13 +203,26 @@ namespace PcmHacking
 
             this.LoadProfileHistory();
 
+            // CAN UI Initialization
+            this.canPortName = DeviceConfiguration.Settings.CanPort;
+            this.canDeviceDescription.Text = this.canPortName;
+            if (this.canDeviceDescription.Text?.Length > 0)
+            {
+                this.enableCanControls(true, false);
+            }
+            else
+            {
+                this.enableCanControls(false, false);
+            }
+
+            // Begin logging
             ThreadPool.QueueUserWorkItem(BackgroundInitialization);
 
             this.logFilePath.Text = logDirectory;
 
             this.AddDebugMessage("MainForm_Load ended.");
         }
-        
+
         private async void BackgroundInitialization(object unused)
         {
             try
@@ -232,7 +242,7 @@ namespace PcmHacking
                 // There is still a race condition around using logStopRequested for
                 // this, but the only deterministic solution involves cross-thread 
                 // access to the Form object, which isn't allowed.
-                if (!this.logStopRequested) 
+                if (!this.logStopRequested)
                 {
                     this.Invoke(
                         (MethodInvoker)

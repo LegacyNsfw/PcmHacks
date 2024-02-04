@@ -4,14 +4,17 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace PcmHacking
 {
+    public delegate void DataReceived();
+
     /// <summary>
     /// This class is responsible for sending and receiving data over a serial port.
     /// I would have called it 'SerialPort' but that name was already taken...
     /// </summary>
-    class StandardPort : IPort
+    public class StandardPort : IPort
     {
         private string name;
         private SerialPort port;
@@ -20,6 +23,7 @@ namespace PcmHacking
         /// This is an experiment that did not end well the first time, but I still think it should work.
         /// </summary>
         // private Action<object, SerialDataReceivedEventArgs> dataReceivedCallback;
+        Action<byte[], int> dataReceived;
 
         /// <summary>
         /// Constructor.
@@ -27,6 +31,12 @@ namespace PcmHacking
         public StandardPort(string name)
         {
             this.name = name;
+        }
+
+        public StandardPort(string name, Action<byte[], int> dataReceived)
+        {
+            this.name = name;
+            this.dataReceived = dataReceived;
         }
 
         /// <summary>
@@ -60,12 +70,11 @@ namespace PcmHacking
 
             if (this.port.IsOpen == true) this.port.Close();
 
-/*            if (config.DataReceived != null)
+            if (config.DataReceived != null)
             {
-                this.dataReceivedCallback = config.DataReceived;
-                this.port.DataReceived += this.DataReceived;
+                this.dataReceived= config.DataReceived;
+                this.port.DataReceived += this.Port_DataReceived;
             }
-*/
 
             this.port.Open();
 
@@ -132,11 +141,17 @@ namespace PcmHacking
         }
 
         /// <summary>
-        /// Serial data callback. Didn't work the first time, but I still have hopes...
+        /// Serial data callback.
         /// </summary>
-        private void DataReceived(object sender, SerialDataReceivedEventArgs args)
+        private async void Port_DataReceived(object sender, SerialDataReceivedEventArgs args)
         {
-//            this.dataReceivedCallback(sender, args);
+            if (args.EventType == SerialData.Chars)
+            {
+                byte[] buffer = new byte[1000];
+                int bytesReceived = await this.port.BaseStream.ReadAsync(buffer, 0, buffer.Length);
+                this.dataReceived(buffer, bytesReceived);
+
+            }
         }
 
         /// <summary>

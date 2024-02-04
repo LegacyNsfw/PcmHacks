@@ -23,12 +23,14 @@ namespace PcmHacking
         /// </summary>
         public SlowLogger(
             Vehicle vehicle,
+            CanLogger canLogger,
             uint osid,
             DpidConfiguration dpidConfiguration,
             MathValueProcessor mathValueProcessor,
             ILogger uiLogger)
             : base(
                   vehicle,
+                  canLogger,
                   osid,
                   dpidConfiguration,
                   mathValueProcessor,

@@ -289,4 +289,32 @@ namespace PcmHacking
             return this.XColumn.Parameter.IsSupported(osid) && this.YColumn.Parameter.IsSupported(osid);
         }
     }
+
+    public class CanParameter : Parameter
+    {
+        public uint MessageId { get; private set; }
+        public uint ByteIndex { get; private set; }
+        public uint ByteCount { get; private set; }
+        public bool HighByteFirst { get; private set; }
+        public Conversion SelectedConversion { get; set; }
+
+        /// <summary>
+        /// This doesn't really make sense in the context of CAN logging, but
+        /// it's very useful for other parameters so I'm not sure it's worth
+        /// the trouble to factor it out.
+        /// </summary>
+        public override bool IsSupported(uint osid) { return true; }
+
+        public CanParameter(uint messageId, uint byteIndex, uint byteCount, bool highByteFirst, string id, string name, string description, IEnumerable<Conversion> conversions)
+        {
+            this.MessageId = messageId;
+            this.ByteIndex = byteIndex;
+            this.ByteCount = byteCount;
+            this.HighByteFirst = highByteFirst;
+            this.Id = id;
+            this.Name = name;
+            this.Description = description;
+            this.Conversions = conversions;
+        }
+    }
 }

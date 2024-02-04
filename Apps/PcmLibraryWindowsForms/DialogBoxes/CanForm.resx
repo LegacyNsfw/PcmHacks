@@ -117,29 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="disclaimer.Text" xml:space="preserve">
-    <value>Please keep in mind that this software is still in development. 
+  <data name="labelRecommendedInterface.Text" xml:space="preserve">
+    <value>Currently, the only supported CAN interface is this device from Seeed Studio. It will appear in the list as "USB-SERIAL CH340."
 
-Many parameters have not yet been defined, and some of the existing parameters may not be defined correctly. 
-
-If you are able to help, please do! Open an issue or send a pull request at GitHub, or send email to nsfw@outlook.com.
-
-Thanks!
-</value>
+You must use the manufacturer's software to configure it to match your CAN bus speed, and a serial speed of 2,000,000.</value>
   </data>
-  <metadata name="enabledColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="nameColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="unitsColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="canParameterNameColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="canParameterUnitsColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
 </root>

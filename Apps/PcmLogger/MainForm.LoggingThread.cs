@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.CompilerServices;
+using System.Data;
 
 namespace PcmHacking
 {
@@ -31,6 +33,8 @@ namespace PcmHacking
         }
 
         private LogState logState = LogState.Nothing;
+
+        CanLogger canLogger;
 
         /// <summary>
         /// Create a string that will look reasonable in the UI's main text box.
@@ -63,6 +67,15 @@ namespace PcmHacking
                 builder.AppendLine(mathColumn.Parameter.Name);
             }
 
+            foreach (CanLogger.ParameterValue pv in logger.CanLogger.GetParameterValues())
+            {
+                builder.Append(pv.Value);
+                builder.Append('\t');
+                builder.Append(pv.Units);
+                builder.Append('\t');
+                builder.AppendLine(pv.Name);
+            }
+        
             DateTime now = DateTime.Now;
             builder.AppendLine((now - lastLogTime).TotalMilliseconds.ToString("0.00") + "\tms\tQuery time");
             lastLogTime = now;
@@ -70,9 +83,22 @@ namespace PcmHacking
             return builder.ToString();
         }
 
-        private async Task<Logger> RecreateLogger()
+        private async Task<Logger> RecreateLogger(ParameterDatabase parameterDatabase)
         {
-            Logger logger = this.Vehicle.CreateLogger(this.osid, this.currentProfile.Columns, this);
+            this.canLogger?.Dispose();
+            this.canLogger = new CanLogger(parameterDatabase);
+
+            if (string.IsNullOrEmpty(this.canPortName))
+            {
+                await this.canLogger.SetPort(null);
+            }
+            else
+            {
+                await this.canLogger.SetPort(new StandardPort(canPortName));
+
+            }
+
+            Logger logger = this.Vehicle.CreateLogger(this.osid, canLogger, this.currentProfile.Columns, this);
 
             if (!await logger.StartLogging())
             {
@@ -183,7 +209,7 @@ namespace PcmHacking
                                         // It may be counterintuitive that we update lastProfile here, but that 
                                         // prevents the invalid parameter exception from being thrown repeatedly.
                                         lastProfile = this.currentProfile;
-                                        logger = await this.RecreateLogger();
+                                        logger = await this.RecreateLogger(this.database);
 
                                         // If this was the first profile to load...
                                         if (this.logState == LogState.Nothing)

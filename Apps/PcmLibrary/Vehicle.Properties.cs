@@ -137,6 +137,23 @@ namespace PcmHacking
         }
 
         /// <summary>
+        /// Query the PCM's voltage PID.
+        /// </summary>
+        public async Task<Response<string>> QueryVoltage()
+        {
+            await this.device.SetTimeout(TimeoutScenario.ReadProperty);
+
+            var query = this.CreateQuery(
+                ()=>this.protocol.CreatePidRequest(0x1141),
+                this.protocol.ParsePidResponse,
+                CancellationToken.None);
+
+            Response<int> intResponse = await query.Execute();
+            double voltage = intResponse.Value / 10.0;
+            return new Response<string>(intResponse.Status, voltage.ToString());
+        }
+
+        /// <summary>
         /// Update the PCM's VIN
         /// </summary>
         /// <remarks>

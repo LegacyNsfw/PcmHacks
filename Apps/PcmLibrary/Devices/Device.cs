@@ -306,6 +306,7 @@ namespace PcmHacking
         {
             lock (this.queue)
             {
+                this.Logger.AddDebugMessage("Received: " + message.ToString());
                 this.queue.Enqueue(message);
             }
         }

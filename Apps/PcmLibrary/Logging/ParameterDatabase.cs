@@ -15,6 +15,21 @@ namespace PcmHacking
         private string pathToXmlDirectory;
 
         private List<Parameter> parameters = new List<Parameter>();
+        private Dictionary<UInt32, IEnumerable<CanParameter>> canParameters = new Dictionary<UInt32, IEnumerable<CanParameter>>();
+
+        public IEnumerable<CanParameter> CanParameters
+        {
+            get
+            {
+                foreach(IEnumerable<CanParameter> parameterSet in canParameters.Values)
+                {
+                    foreach(CanParameter parameter in parameterSet)
+                    {
+                        yield return parameter;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Constructor
@@ -53,6 +68,11 @@ namespace PcmHacking
             }
         }
 
+        public IReadOnlyDictionary<UInt32, IEnumerable<CanParameter>> GetCanParameters()
+        {
+            return this.canParameters;
+        }
+
         /// <summary>
         /// returns a list of parameters that support the specified os
         /// </summary>
@@ -63,7 +83,6 @@ namespace PcmHacking
             return this.parameters.Where(p => p.IsSupported(osId));
         }
 
-
         /// <summary>
         /// adds a parameter to the database, will not allow parameters with duplicate IDs, throws exception in that case.
         /// </summary>
@@ -72,7 +91,7 @@ namespace PcmHacking
         {
             if (this.parameters.Any(P => P.Id == parameter.Id))
             {
-                throw new Exception(String.Format("Duplicate parameter ID:{0}", parameter.Id));
+                throw new Exception(String.Format("Duplicate parameter ID: {0}", parameter.Id));
             }
 
             this.parameters.Add(parameter);
@@ -86,6 +105,7 @@ namespace PcmHacking
             this.LoadStandardParameters();
             this.LoadRamParameters();
             this.LoadMathParameters();
+            this.LoadCanParameters();
         }
 
         /// <summary>
@@ -199,6 +219,38 @@ namespace PcmHacking
                     yLogColumn);
 
                 AddParameter(parameter);
+            }
+        }
+
+        private void LoadCanParameters()
+        {
+            string pathToXml = Path.Combine(this.pathToXmlDirectory, "Parameters.CAN.xml");
+            XDocument xml = XDocument.Load (pathToXml);
+            foreach (XElement messageElement in xml.Root.Elements("Message"))
+            {
+                string messageIdString = messageElement.Attribute("id").Value;
+                UInt32 messageId = UInt32.Parse(messageIdString, NumberStyles.HexNumber);
+
+                List<CanParameter> parameters = new List<CanParameter>();
+
+                foreach (XElement parameterElement in messageElement.Elements("Parameter"))
+                {
+                    string id = parameterElement.Attribute("id").Value;
+                    string name = parameterElement.Attribute("name").Value;
+                    string description = parameterElement.Attribute("description").Value;
+
+                    uint firstByte = uint.Parse(parameterElement.Attribute("firstByte").Value);
+                    uint byteCount = uint.Parse(parameterElement.Attribute("byteCount").Value);
+                    bool highByteFirst = bool.Parse(parameterElement.Attribute("highByteFirst").Value);
+
+                    List<Conversion> conversions = GetConversions(parameterElement);
+
+                    CanParameter parameter = new CanParameter(messageId, firstByte, byteCount, highByteFirst, id, name, description, conversions);
+
+                    parameters.Add(parameter);
+                }
+
+                this.canParameters[messageId] = parameters;
             }
         }
 

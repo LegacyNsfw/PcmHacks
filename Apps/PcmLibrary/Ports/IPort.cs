@@ -51,6 +51,9 @@ namespace PcmHacking
     public class SerialPortConfiguration : PortConfiguration
     {
         public int BaudRate { get; set; }
+
         public int Timeout { get; set; }
+
+        public Action<byte[], int> DataReceived { get; set; }
     }
 }

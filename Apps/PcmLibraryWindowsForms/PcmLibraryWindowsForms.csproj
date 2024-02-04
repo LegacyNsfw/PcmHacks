@@ -55,6 +55,12 @@
     <Compile Include="Devices\DeviceFactory.cs" />
     <Compile Include="Devices\J2534Device.cs" />
     <Compile Include="Devices\J2534DeviceFinder.cs" />
+    <Compile Include="DialogBoxes\CanForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DialogBoxes\CanForm.Designer.cs">
+      <DependentUpon>CanForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="DialogBoxes\DevicePicker.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -87,6 +93,9 @@
     <Content Include="Devices\J2534.dll" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="DialogBoxes\CanForm.resx">
+      <DependentUpon>CanForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DialogBoxes\DevicePicker.resx">
       <DependentUpon>DevicePicker.cs</DependentUpon>
     </EmbeddedResource>

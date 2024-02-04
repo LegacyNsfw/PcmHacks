@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Messages>
+  <Message
+    id="000a0301">
+    <Parameter
+      id="CAN_AEM_Pressure"
+      firstByte="0"
+      byteCount ="2"
+      highByteFirst="true"
+      name="AEM Pressure"
+      description="">
+      <Conversion units="psi" expression="x * 0.01 * 14.5037738" format="0.00"/>
+      <Conversion units="bar" expression="x * 0.01" format="0.00"/>
+    </Parameter>
+  </Message>
+  <Message
+    id="000a0302">
+    <Parameter
+      id="CAN_AEM_Temperature"
+      firstByte="0"
+      byteCount ="2"
+      highByteFirst="true"
+      name="AEM Temperature"
+      description="">
+      <Conversion units="F" expression="x * 1.8 + 32.0" format="0.0"/>
+      <Conversion units="C" expression="x" format="0"/>
+    </Parameter>
+  </Message>
+  <Message
+    id="00000180">
+    <Parameter
+      id="CAN_AEM_AFR1"
+      firstByte="0"
+      byteCount ="2"
+      highByteFirst="true"
+      name="AEM Lambda 1"
+      description="">
+      <Conversion units="AFR (gasoline)" expression="x * 0.00147" format="0.00"/>
+      <Conversion units="Lambda" expression="x * 0.0001" format="0.000"/>
+    </Parameter>
+  </Message>
+  <Message
+    id="00000181">
+    <Parameter
+      id="CAN_AEM_AFR2"
+      firstByte="0"
+      byteCount ="2"
+      highByteFirst="true"
+      name="AEM Lambda 2"
+      description="">
+      <Conversion units="AFR (gasoline)" expression="x * 0.00147" format="0.00"/>
+      <Conversion units="Lambda" expression="x * 0.0001" format="0.000"/>
+    </Parameter>
+  </Message>
+  <Message
+    id="00000800">
+    <Parameter
+      id="CAN_Plex_KnockCountS1"
+      firstByte="0"
+      byteCount ="2"
+      highByteFirst="true"
+      name="Knock Count S1"
+      description="">
+      <Conversion units="Count" expression="x" format="0"/>
+    </Parameter>
+    <Parameter
+      id="CAN_Plex_KnockCountS2"
+      firstByte="2"
+      byteCount ="2"
+      highByteFirst="true"
+      name="Knock Count S2"
+      description="">
+      <Conversion units="Count" expression="x" format="0"/>
+    </Parameter>
+    <Parameter
+      id="CAN_Plex_KnockRateS1"
+      firstByte="4"
+      byteCount ="2"
+      highByteFirst="true"
+      name="Knock Rate S1"
+      description="">
+      <Conversion units="Rate" expression="x" format="0"/>
+    </Parameter>
+    <Parameter
+      id="CAN_Plex_KnockRateS2"
+      firstByte="6"
+      byteCount ="2"
+      highByteFirst="true"
+      name="Knock Rate S2"
+      description="">
+      <Conversion units="Rate" expression="x" format="0"/>
+    </Parameter>
+  </Message>
+  <Message
+    id="00000801">
+    <Parameter
+      id="CAN_Plex_VBatt"
+      firstByte="0"
+      byteCount ="2"
+      highByteFirst="true"
+      name="Battery Voltage"
+      description="">
+      <Conversion units="Voltage" expression="x/256" format="0.00"/>
+    </Parameter>
+    <Parameter
+      id="CAN_Plex_RPM"
+      firstByte="2"
+      byteCount ="2"
+      highByteFirst="true"
+      name="Engine Speed"
+      description="">
+      <Conversion units="RPM" expression="x" format="0"/>
+    </Parameter>
+  </Message>
+  </Messages>
