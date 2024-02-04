@@ -1,14 +1,8 @@
 ﻿//#define Vpw4x
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -58,7 +52,7 @@ namespace PcmHacking
         /// </summary>
         public override void AddDebugMessage(string message)
         {
-            if(this.debugLog.InvokeRequired)
+            if (this.debugLog.InvokeRequired)
             {
                 var self = new Action<string>(AddDebugMessage);
                 this.BeginInvoke(self, new[] { message });
@@ -143,24 +137,25 @@ namespace PcmHacking
             // This must be assigned prior to calling FillParameterGrid(), 
             // otherwise the RAM parameters will not appear in the grid.
             this.osid = response.Value;
-            
+
             this.Invoke((MethodInvoker)delegate ()
             {
                 this.deviceDescription.Text = deviceName + " " + osid.ToString();
                 this.startStopSaving.Enabled = true;
                 this.parameterGrid.Enabled = true;
                 this.EnableProfileButtons(true);
-                
+
                 try
                 {
                     this.FillParameterGrid();
-                } 
+                    this.FillCanParameterGrid();
+
+                }
                 catch (Exception ex)
                 {
                     this.AddUserMessage("Error Loading Parameter Database:" + ex.Message);
                     this.AddDebugMessage(ex.ToString());
                 }
-                
             });
 
             string lastProfile = Configuration.Settings.LastProfile;
@@ -191,7 +186,7 @@ namespace PcmHacking
             // Order matters - the scheduler must be set before adding messages.
             this.uiThreadScheduler = TaskScheduler.FromCurrentSynchronizationContext();
             this.AddDebugMessage("MainForm_Load started.");
-                        
+
             string logDirectory = Configuration.Settings.LogDirectory;
             if (string.IsNullOrWhiteSpace(logDirectory))
             {
@@ -211,7 +206,6 @@ namespace PcmHacking
             // CAN UI Initialization
             this.canPortName = DeviceConfiguration.Settings.CanPort;
             this.canDeviceDescription.Text = this.canPortName;
-            this.initializeCanParameterGrid();
             if (this.canDeviceDescription.Text?.Length > 0)
             {
                 this.enableCanControls(true, false);
@@ -248,7 +242,7 @@ namespace PcmHacking
                 // There is still a race condition around using logStopRequested for
                 // this, but the only deterministic solution involves cross-thread 
                 // access to the Form object, which isn't allowed.
-                if (!this.logStopRequested) 
+                if (!this.logStopRequested)
                 {
                     this.Invoke(
                         (MethodInvoker)
@@ -352,81 +346,5 @@ namespace PcmHacking
         }
 
         #endregion
-
-        private void selectCanButton_Click(object sender, EventArgs e)
-        {
-            string canPort = DeviceConfiguration.Settings.CanPort;
-            CanForm canForm = new CanForm(this, canPort);
-
-            switch (canForm.ShowDialog())
-            {
-                case DialogResult.OK:
-                    if (canForm.SelectedPort == null)
-                    {
-                        this.canPortName = null;
-                        DeviceConfiguration.Settings.CanPort = null;
-                    }
-                    else
-                    {
-                        this.canPortName = canForm.SelectedPort.PortName;
-                        DeviceConfiguration.Settings.CanPort = this.canPortName;
-                    }
-
-                    DeviceConfiguration.Settings.Save();
-                    this.canDeviceDescription.Text = this.canPortName;
-
-                    // Re-create the logger, so it starts using the new port.
-                    this.ResetProfile();
-                    this.CreateProfileFromGrid();
-                    break;
-
-                case DialogResult.Cancel:
-                    break;
-            }
-        }
-
-        private void canDeviceDescription_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void enableCanLogging_CheckedChanged(object sender, EventArgs e)
-        {
-            this.enableCanControls(true, true);
-        }
-
-        private void disableCanLogging_CheckedChanged(object sender, EventArgs e)
-        {
-            this.enableCanControls(false, true);
-        }
-
-        private void enableCanControls(bool enabled, bool reset)
-        {
-            this.selectCanButton.Enabled = enabled;
-            this.canDeviceDescription.Enabled = enabled;
-
-            if (enabled)
-            {
-                this.canDeviceDescription.Text = this.canPortName;
-            }
-            else
-            {
-                this.canDeviceDescription.Text = string.Empty;
-            }
-
-            DeviceConfiguration.Settings.CanPort = this.canDeviceDescription.Text;
-            DeviceConfiguration.Settings.Save();
-
-            if (reset)
-            {
-                this.ResetProfile();
-                this.CreateProfileFromGrid();
-            }
-        }
-
-        private void initializeCanParameterGrid()
-        {
-
-        }
     }
 }

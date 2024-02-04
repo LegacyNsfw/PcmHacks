@@ -296,6 +296,7 @@ namespace PcmHacking
         public uint ByteIndex { get; private set; }
         public uint ByteCount { get; private set; }
         public bool HighByteFirst { get; private set; }
+        public Conversion SelectedConversion { get; set; }
 
         /// <summary>
         /// This doesn't really make sense in the context of CAN logging, but
