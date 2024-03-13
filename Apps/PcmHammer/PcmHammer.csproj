@@ -36,7 +36,7 @@
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\brand\AppData\Local\Temp\vs3795.tmp\Debug\</IntermediateOutputPath>
+    <IntermediateOutputPath>C:\Users\Jouko\AppData\Local\Temp\vsD06A.tmp\Debug\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -46,7 +46,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\brand\AppData\Local\Temp\vs3795.tmp\Release\</IntermediateOutputPath>
+    <IntermediateOutputPath>C:\Users\Jouko\AppData\Local\Temp\vsD06A.tmp\Release\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>0411_256px.ico</ApplicationIcon>
@@ -61,9 +61,8 @@
     <Reference Include="CommandLine, Version=2.8.0.0, Culture=neutral, PublicKeyToken=5a870481e358d379, processorArchitecture=MSIL">
       <HintPath>..\packages\CommandLineParser.2.8.0\lib\net461\CommandLine.dll</HintPath>
     </Reference>
-    <Reference Include="J2534, Version=1.0.1.37629, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\PcmLibraryWindowsForms\Devices\J2534.dll</HintPath>
+    <Reference Include="J2534DotNet">
+      <HintPath>..\J2534DotNet\J2534DotNet\bin\Debug\J2534DotNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
