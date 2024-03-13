@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32630.194
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "J2534DotNet", "J2534DotNet\J2534DotNet\J2534DotNet.csproj", "{D99E0DE7-2F06-41E3-B33E-687E1B425A7F}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PcmHammer", "PcmHammer\PcmHammer.csproj", "{A6B28831-A16F-48F3-8C48-9B02CF0B6678}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{0AA6F273-995D-4ADE-8CBB-DB1B6E8A0FCE}"
@@ -14,8 +16,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PcmLibraryWindowsForms", "PcmLibraryWindowsForms\PcmLibraryWindowsForms.csproj", "{4ADB5D87-D4D5-4D12-8681-A9E2D4C52DF6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VpwExplorer", "VpwExplorer\VpwExplorer.csproj", "{2B57ABC7-9994-4DB3-9403-B22471A0DDA1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "J2534DotNet", "J2534DotNet\J2534DotNet\J2534DotNet.csproj", "{D99E0DE7-2F06-41E3-B33E-687E1B425A7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
