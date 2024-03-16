@@ -83,9 +83,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Devices\J2534.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="DialogBoxes\DevicePicker.resx">
       <DependentUpon>DevicePicker.cs</DependentUpon>
     </EmbeddedResource>
