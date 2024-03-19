@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using J2534;
+using J2534DotNet;
 using Microsoft.Win32;
 using System.Runtime.InteropServices;
 
@@ -28,8 +28,8 @@ namespace PcmHacking
         /// </summary>
         private J2534_Struct J2534Port;
         public List<ulong> Filters;
-        private uint DeviceID;
-        private uint ChannelID;
+        private int DeviceID;
+        private int ChannelID;
         private ProtocolID Protocol;
         public bool IsProtocolOpen;
         public bool IsJ2534Open;
@@ -50,14 +50,14 @@ namespace PcmHacking
         /// </summary>
         struct J2534_Struct
         {
-            public J2534Extended Functions;
-            public J2534.J2534Device LoadedDevice;
+            public J2534 Functions;
+            public J2534DotNet.J2534Device LoadedDevice;
         }
 
-        public J2534Device(J2534.J2534Device jport, ILogger logger) : base(logger)
+        public J2534Device(J2534DotNet.J2534Device jport, ILogger logger) : base(logger)
         {
             J2534Port = new J2534_Struct();
-            J2534Port.Functions = new J2534Extended();
+            J2534Port.Functions = new J2534();
             J2534Port.LoadedDevice = jport;
 
             // Reduced from 4096+12 for the MDI2
@@ -220,10 +220,10 @@ namespace PcmHacking
         {
             //this.Logger.AddDebugMessage("Trace: Read Network Packet");
 
-            PassThruMsg PassMess = new PassThruMsg();
             int NumMessages = 1;
-            IntPtr rxMsgs = Marshal.AllocHGlobal((int)(Marshal.SizeOf(typeof(PassThruMsg)) * NumMessages));
-
+            //IntPtr rxMsgs = Marshal.AllocHGlobal((int)(Marshal.SizeOf(typeof(PassThruMsg)) * NumMessages));
+            List<PassThruMsg> rxMsgs = new List<PassThruMsg>();
+            PassThruMsg PassMess;
             OBDError = 0; // Clear any previous faults
 
             Stopwatch sw = new Stopwatch();
@@ -232,29 +232,27 @@ namespace PcmHacking
             do
             {
                 NumMessages = 1;
-                OBDError = J2534Port.Functions.PassThruReadMsgs((int)ChannelID, rxMsgs, ref NumMessages, ReadTimeout);
+                OBDError = J2534Port.Functions.ReadMsgs((int)ChannelID, ref rxMsgs, ref NumMessages, ReadTimeout);
                 if (OBDError != J2534Err.STATUS_NOERROR)
                 {
                     this.Logger.AddDebugMessage("ReadMsgs OBDError: " + OBDError);
-                    Marshal.FreeHGlobal(rxMsgs);
                     return Task.FromResult(0);
                 }
 
-                PassMess = rxMsgs.AsMsgList(1).Last();
-                if ((int)PassMess.RxStatus == (((int)RxStatus.TX_INDICATION_SUCCESS) + ((int)RxStatus.TX_MSG_TYPE)) || (PassMess.RxStatus == RxStatus.START_OF_MESSAGE))
+                PassMess = rxMsgs.Last();
+                if ((int)PassMess.RxStatus == (((int)RxStatus.NONE) + ((int)RxStatus.TX_MSG_TYPE)) || (PassMess.RxStatus == RxStatus.START_OF_MESSAGE))
                 {
                     continue;
                 }
                 else
                 {
-                    byte[] TempBytes = PassMess.GetBytes();
+                    byte[] TempBytes = PassMess.Data;
                     // Perform additional filter check if required here... or show to debug
                     break; // Exit loop
                 }
             } while (OBDError == J2534Err.STATUS_NOERROR || sw.ElapsedMilliseconds > (long)ReadTimeout);
             sw.Stop();
 
-            Marshal.FreeHGlobal(rxMsgs);
 
             if (OBDError != J2534Err.STATUS_NOERROR || sw.ElapsedMilliseconds > (long)ReadTimeout)
             {
@@ -262,8 +260,8 @@ namespace PcmHacking
                 return Task.FromResult(0);
             }
 
-            this.Logger.AddDebugMessage("RX: " + PassMess.GetBytes().ToHex());
-            this.Enqueue(new Message(PassMess.GetBytes(), PassMess.Timestamp, (ulong)OBDError));
+            this.Logger.AddDebugMessage("RX: " + PassMess.Data.ToHex());
+            this.Enqueue(new Message(PassMess.Data, (ulong)PassMess.Timestamp, (ulong)OBDError));
             return Task.FromResult(0);
         }
 
@@ -274,17 +272,11 @@ namespace PcmHacking
         {
             //this.Logger.AddDebugMessage("Trace: Send Network Packet");
 
-            PassThruMsg TempMsg = new PassThruMsg();
-            TempMsg.ProtocolID = Protocol;
-            TempMsg.TxFlags = Flags;
-            TempMsg.SetBytes(message.GetBytes());
+            PassThruMsg TempMsg = new PassThruMsg(Protocol, Flags, message.GetBytes());
 
             int NumMsgs = 1;
 
-            IntPtr MsgPtr = TempMsg.ToIntPtr();
-
-            OBDError = J2534Port.Functions.PassThruWriteMsgs((int)ChannelID, MsgPtr, ref NumMsgs, WriteTimeout);
-            Marshal.FreeHGlobal(MsgPtr);
+            OBDError = J2534Port.Functions.WriteMsgs((int)ChannelID, ref TempMsg, ref NumMsgs, WriteTimeout);
             if (OBDError != J2534Err.STATUS_NOERROR)
             {
                 // Debug messages here...check why failed..
@@ -312,7 +304,7 @@ namespace PcmHacking
         /// <summary>
         /// Load in dll
         /// </summary>
-        private Response<bool> LoadLibrary(J2534.J2534Device TempDevice)
+        private Response<bool> LoadLibrary(J2534DotNet.J2534Device TempDevice)
         {
             ToolName = TempDevice.Name;
             J2534Port.LoadedDevice = TempDevice;
@@ -350,7 +342,7 @@ namespace PcmHacking
             ChannelID = 0;
             Filters.Clear();
             OBDError = 0;
-            OBDError = J2534Port.Functions.PassThruOpen(IntPtr.Zero, ref DeviceID);
+            OBDError = J2534Port.Functions.Open(ref DeviceID);
             if (OBDError != J2534Err.STATUS_NOERROR)
             {
                 IsJ2534Open = false;
@@ -368,7 +360,7 @@ namespace PcmHacking
         /// </summary>
         private Response<J2534Err> DisconnectTool()
         {
-            OBDError = J2534Port.Functions.PassThruClose(DeviceID);
+            OBDError = J2534Port.Functions.Close((int)DeviceID);
             if (OBDError != J2534Err.STATUS_NOERROR)
             {
                 // Big problems, do something here
@@ -382,8 +374,27 @@ namespace PcmHacking
         /// </summary>
         public bool IsLoaded
         {
-            get { return J2534Port.Functions.IsLoaded; }
-            set {; }
+            get 
+            {
+                try
+                {
+
+                    Process proc = Process.GetCurrentProcess();
+                    foreach (ProcessModule dll in proc.Modules)
+                    {
+                        if (dll.FileName == J2534Port.LoadedDevice.FunctionLibrary)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.AddDebugMessage(ex.Message);
+
+                }
+                return false;
+            }
         }
 
         /// <summary>
@@ -392,7 +403,7 @@ namespace PcmHacking
         /// </summary>
         private Response<J2534Err> ConnectToProtocol(ProtocolID ReqProtocol, BaudRate Speed, ConnectFlag ConnectFlags)
         {
-            OBDError = J2534Port.Functions.PassThruConnect(DeviceID, ReqProtocol,  ConnectFlags,  Speed, ref ChannelID);
+            OBDError = J2534Port.Functions.Connect(DeviceID, ReqProtocol,  ConnectFlags,  Speed, ref ChannelID);
             if (OBDError != J2534Err.STATUS_NOERROR)
             {
                 return Response.Create(ResponseStatus.Error, OBDError);
@@ -407,7 +418,7 @@ namespace PcmHacking
         /// </summary>
         private Response<J2534Err> DisconnectFromProtocol()
         {
-            OBDError = J2534Port.Functions.PassThruDisconnect((int)ChannelID);
+            OBDError = J2534Port.Functions.Disconnect((int)ChannelID);
             if (OBDError != J2534Err.STATUS_NOERROR)
             {
                 return Response.Create(ResponseStatus.Error, OBDError);
@@ -440,25 +451,11 @@ namespace PcmHacking
         /// </summary>
         private Response<J2534Err> SetFilter(UInt32 Mask,UInt32 Pattern,UInt32 FlowControl,TxFlag txflag,FilterType Filtertype)
         {
-            PassThruMsg maskMsg;
-            PassThruMsg patternMsg;
-
-            IntPtr MaskPtr;
-            IntPtr PatternPtr;
-            IntPtr FlowPtr;
-
-            maskMsg = new PassThruMsg(Protocol, txflag, new Byte[] { (byte)(0xFF & (Mask >> 16)), (byte)(0xFF & (Mask >> 8)), (byte)(0xFF & Mask) });
-            patternMsg = new PassThruMsg(Protocol, txflag, new Byte[] { (byte)(0xFF & (Pattern >> 16)), (byte)(0xFF & (Pattern >> 8)), (byte)(0xFF & Pattern) });
-            MaskPtr = maskMsg.ToIntPtr();
-            PatternPtr = patternMsg.ToIntPtr();
-            FlowPtr = IntPtr.Zero;
-
+            PassThruMsg maskMsg = new PassThruMsg(Protocol, txflag, new Byte[] { (byte)(0xFF & (Mask >> 16)), (byte)(0xFF & (Mask >> 8)), (byte)(0xFF & Mask) });
+            PassThruMsg patternMsg = new PassThruMsg(Protocol, txflag, new Byte[] { (byte)(0xFF & (Pattern >> 16)), (byte)(0xFF & (Pattern >> 8)), (byte)(0xFF & Pattern) });
             int tempfilter = 0;
-            OBDError = J2534Port.Functions.PassThruStartMsgFilter((int)ChannelID, Filtertype, MaskPtr, PatternPtr, FlowPtr, ref tempfilter);
+            OBDError = J2534Port.Functions.StartMsgFilter(ChannelID, Filtertype, ref maskMsg,ref patternMsg, ref tempfilter);
 
-            Marshal.FreeHGlobal(MaskPtr);
-            Marshal.FreeHGlobal(PatternPtr);
-            Marshal.FreeHGlobal(FlowPtr);
             if (OBDError != J2534Err.STATUS_NOERROR)
             {
                 return Response.Create(ResponseStatus.Error, OBDError);

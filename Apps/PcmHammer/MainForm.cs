@@ -1,5 +1,4 @@
 ﻿using CommandLine;
-using J2534;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;

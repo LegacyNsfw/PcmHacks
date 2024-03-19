@@ -31,9 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="J2534, Version=1.0.1.37629, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Devices\J2534.dll</HintPath>
+    <Reference Include="J2534DotNet">
+      <HintPath>..\J2534DotNet\J2534DotNet\bin\Debug\J2534DotNet.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -82,9 +81,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Devices\J2534.dll" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="DialogBoxes\DevicePicker.resx">
