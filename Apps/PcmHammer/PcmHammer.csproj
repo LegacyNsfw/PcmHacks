@@ -1,16 +1,7 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A6B28831-A16F-48F3-8C48-9B02CF0B6678}</ProjectGuid>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>PcmHammer</RootNamespace>
-    <AssemblyName>PcmHammer</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -26,26 +17,14 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <IntermediateOutputPath>C:\Users\nate\AppData\Local\Temp\vsAB0C.tmp\Debug\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
     <IntermediateOutputPath>C:\Users\nate\AppData\Local\Temp\vsAB0C.tmp\Release\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup>
@@ -57,101 +36,6 @@
       <Compile Include="$(IntermediateOutputPath)generated.cs" />
     </ItemGroup>
   </Target>
-  <ItemGroup>
-    <Reference Include="CommandLine, Version=2.8.0.0, Culture=neutral, PublicKeyToken=5a870481e358d379, processorArchitecture=MSIL">
-      <HintPath>..\packages\CommandLineParser.2.8.0\lib\net461\CommandLine.dll</HintPath>
-    </Reference>
-    <Reference Include="J2534DotNet">
-      <HintPath>..\J2534DotNet\J2534DotNet\bin\Debug\J2534DotNet.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-    <Reference Include="netstandard" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="CommandLineOptions.cs" />
-    <Compile Include="DialogBoxes\DelayDialogBox.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DialogBoxes\DelayDialogBox.Designer.cs">
-      <DependentUpon>DelayDialogBox.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DialogBoxes\SettingsDialogBox.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DialogBoxes\SettingsDialogBox.Designer.cs">
-      <DependentUpon>SettingsDialogBox.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DialogBoxes\UserDefinedKeyDialogBox.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DialogBoxes\UserDefinedKeyDialogBox.Designer.cs">
-      <DependentUpon>UserDefinedKeyDialogBox.cs</DependentUpon>
-    </Compile>
-    <Compile Include="DialogBoxes\VinForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DialogBoxes\VinForm.Designer.cs">
-      <DependentUpon>VinForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Configuration.cs" />
-    <Compile Include="MainForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MainForm.Designer.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="DialogBoxes\DelayDialogBox.resx">
-      <DependentUpon>DelayDialogBox.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DialogBoxes\SettingsDialogBox.resx">
-      <DependentUpon>SettingsDialogBox.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DialogBoxes\UserDefinedKeyDialogBox.resx">
-      <DependentUpon>UserDefinedKeyDialogBox.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DialogBoxes\VinForm.resx">
-      <DependentUpon>VinForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="MainForm.resx">
-      <DependentUpon>MainForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <None Include="packages.config" />
-    <None Include="Properties\Settings.settings">
-      <Generator>PublicSettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
       <Visible>False</Visible>
@@ -169,14 +53,14 @@
     <EmbeddedResource Include="help.html" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PcmLibraryWindowsForms\PcmLibraryWindowsForms.csproj">
-      <Project>{4adb5d87-d4d5-4d12-8681-a9e2d4c52df6}</Project>
-      <Name>PcmLibraryWindowsForms</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\PcmLibrary\PcmLibrary.csproj">
-      <Project>{0b317c5a-e078-4a96-8e7a-00601bca1429}</Project>
-      <Name>PcmLibrary</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\PcmLibraryWindowsForms\PcmLibraryWindowsForms.csproj" />
+    <ProjectReference Include="..\PcmLibrary\PcmLibrary.csproj" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="1.3.2" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+  </ItemGroup>
 </Project>
