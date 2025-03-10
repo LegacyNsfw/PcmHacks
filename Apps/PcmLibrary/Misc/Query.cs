@@ -129,6 +129,11 @@ namespace PcmHacking
                         return result;
                     }
 
+                    if (this.notifier != null)
+                    {
+                        await this.notifier.Notify();
+                    }
+
                     this.logger.AddDebugMessage(
                         string.Format(
                             "Received an unexpected response. Attempt #{0}, status {1}.",

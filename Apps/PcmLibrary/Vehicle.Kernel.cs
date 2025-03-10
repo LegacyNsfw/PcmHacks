@@ -137,6 +137,7 @@ namespace PcmHacking
                 return Response.Create(ResponseStatus.Error, file);
             }
 
+            logger.AddUserMessage("Kernel loaded from file.");
             return Response.Create(ResponseStatus.Success, file);
         }
 
@@ -332,6 +333,7 @@ namespace PcmHacking
                 return false;
             }
 
+            logger.AddUserMessage("Upload permission granted.");
             logger.AddDebugMessage("Going to load a " + payload.Length + " byte kernel to 0x" + info.KernelBaseAddress.ToString("X6"));
 
             await this.device.SetTimeout(TimeoutScenario.SendKernel);
@@ -458,6 +460,8 @@ namespace PcmHacking
                     return false;
                 }
 
+                logger.AddUserMessage("Switching to high speed mode.");
+
                 // Since we had some issue with other modules not staying quiet...
                 await this.ForceSendToolPresentNotification();
 
@@ -486,6 +490,7 @@ namespace PcmHacking
                         continue;
                     }
 
+                    await notifier.Notify();
                     if (refused.Value == false)
                     {
                         // TODO: Add module number.
@@ -522,12 +527,14 @@ namespace PcmHacking
             List<byte> result = new List<byte>();
             Message response = null;
             bool anyRefused = false;
-            while ((response = await this.device.ReceiveMessage()) != null)
+            int stopTime = Environment.TickCount + 2000;
+            while ((response = await this.device.ReceiveMessage()) != null && Environment.TickCount < stopTime)
             {
                 this.logger.AddDebugMessage("Parsing " + response.GetBytes().ToHex());
                 Protocol.HighSpeedPermissionResult parsed = this.protocol.ParseHighSpeedPermissionResponse(response);
                 if (!parsed.IsValid)
                 {
+                    await notifier.Notify();
                     await Task.Delay(100);
                     continue;
                 }
